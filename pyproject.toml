@@ -48,7 +48,7 @@ mkl = "^2021.1.1"
 mkl-include = "^2021.1.1"
 python-dotenv = "^0.15.0"
 jupyterlab = "^2.2.9"
-certifi = {version = "2020.6.20", python = "<3.8", platform = "Windows"}
+certifi = {version = "2020.12.5", python = "<3.8", platform = "Windows"}
 
 [tool.poetry.dev-dependencies]
 Pygments = "^2.7.2"
