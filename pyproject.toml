@@ -92,7 +92,7 @@ xdoctest = "^0.15.0"
 wheel = "^0.35.1"
 sphinx-autobuild = "^2020.9.1"
 jupyterlab = "^2.2.9"
-cmake = "3.18.4"
+cmake = "3.18.4.post1"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
