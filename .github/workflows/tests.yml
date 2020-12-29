@@ -21,11 +21,11 @@ jobs:
         python-version: ['3.7', '3.8', '3.9']
         exclude:
           - os: windows-latest
-          - python-version: 3.7   # py37 on Windows takes too much
+            python-version: 3.7   # py37 on Windows takes too much
       fail-fast: false
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2s
       - uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
