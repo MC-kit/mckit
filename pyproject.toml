@@ -47,7 +47,7 @@ mkl-devel = "^2021.1.1"
 mkl = "^2021.1.1"
 mkl-include = "^2021.1.1"
 python-dotenv = "^0.15.0"
-jupyterlab = "^2.2.9"
+jupyterlab = "^3.0.0"
 certifi = {version = "2020.6.20", python = "<3.8", platform = "Windows"}
 
 [tool.poetry.dev-dependencies]
@@ -80,7 +80,7 @@ sphinxcontrib-napoleon = "^0.7"
 xdoctest = "^0.15.0"
 wheel = "^0.35.1"
 sphinx-autobuild = "^2020.9.1"
-jupyterlab = "^2.2.9"
+jupyterlab = "^3.0.0"
 cmake = "3.18.4"
 
 [build-system]
