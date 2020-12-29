@@ -21,7 +21,7 @@ jobs:
         python-version: ['3.7', '3.8', '3.9']
         exclude:
           - os: windows-latest
-          - python-version: 3.7   # py37 on Windows takes too much
+            python-version: 3.7   # py37 on Windows takes too much
       fail-fast: false
     steps:
       - name: Checkout repository
