@@ -46,7 +46,7 @@ importlib-metadata = {version = "^2.0.0", python = "<3.8"}
 numpy = "^1.19.4"
 numpydoc = "^1.1.0"
 ply = "^3.11"
-scipy = "^1.5.3"
+scipy = "^1.6.0"
 sly = "^0.4"
 tomlkit = "^0.7.0"
 toolz = "^0.11.1"
