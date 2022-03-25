@@ -67,7 +67,7 @@ tbb = [
     {version = "2021.5.1", markers = "sys_platform == 'linux'"},
     {version = "2021.5.2", markers = "sys_platform == 'win32'"}
 ]
-python-dotenv = "^0.19.0"
+python-dotenv = ">=0.19,<0.21"
 ply = "^3.11"
 loguru = "^0.6.0"
 
