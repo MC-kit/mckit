@@ -73,7 +73,7 @@ loguru = "^0.6.0"
 
 [tool.poetry.dev-dependencies]
 Pygments = "^2.7.2"
-Sphinx = "^4.2.0"
+Sphinx = "^4.5.0"
 black = "^22.1.0"
 codecov = "^2.1.12"
 darglint = "^1.5.5"
