@@ -99,7 +99,7 @@ sphinx-autorun = "^1.1.1"
 sphinx-click = "^3.0.2"
 sphinx-rtd-theme = "^1.0.0"
 sphinxcontrib-napoleon = "^0.7"
-xdoctest = {extras = ["colors"], version = "^0.15.10"}
+xdoctest = {extras = ["colors"], version = "^1.0.0"}
 wheel = "^0.35.1"
 sphinx-autobuild = "^2021.3.14"
 cmake = "^3.22.2"
