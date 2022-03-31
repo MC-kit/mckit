@@ -30,7 +30,7 @@ jobs:
         run: git submodule update --init --recursive --depth=1
 
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
