@@ -417,7 +417,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 name = "importlib-metadata"
 version = "4.11.3"
 description = "Read metadata from Python packages"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -441,22 +441,6 @@ python-versions = "*"
 name = "intel-openmp"
 version = "2022.0.0"
 description = "Intel® OpenMP* Runtime Library"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
-name = "intel-openmp"
-version = "2022.0.2"
-description = "Intel® OpenMP* Runtime Library"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
-name = "intel-openmp"
-version = "2022.0.3"
-description = "Intel OpenMP* Runtime Library"
 category = "main"
 optional = false
 python-versions = "*"
@@ -545,30 +529,6 @@ intel-openmp = ">=2022.0.0,<2023.0.0"
 tbb = ">=2021.0.0,<2022.0.0"
 
 [[package]]
-name = "mkl"
-version = "2022.0.2"
-description = "Intel® oneAPI Math Kernel Library"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-intel-openmp = ">=2022.0.0,<2023.0.0"
-tbb = ">=2021.0.0,<2022.0.0"
-
-[[package]]
-name = "mkl"
-version = "2022.0.3"
-description = "Intel® oneAPI Math Kernel Library"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-intel-openmp = ">=2022.0.0,<2023.0.0"
-tbb = ">=2021.0.0,<2022.0.0"
-
-[[package]]
 name = "mkl-devel"
 version = "2022.0.0"
 description = "Intel® oneAPI Math Kernel Library"
@@ -581,48 +541,8 @@ mkl = "2022.0.0"
 mkl-include = "2022.0.0"
 
 [[package]]
-name = "mkl-devel"
-version = "2022.0.2"
-description = "Intel® oneAPI Math Kernel Library"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-mkl = "2022.0.2"
-mkl-include = "2022.0.2"
-
-[[package]]
-name = "mkl-devel"
-version = "2022.0.3"
-description = "Intel® oneAPI Math Kernel Library"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-mkl = "2022.0.3"
-mkl-include = "2022.0.3"
-
-[[package]]
 name = "mkl-include"
 version = "2022.0.0"
-description = "Intel® oneAPI Math Kernel Library"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
-name = "mkl-include"
-version = "2022.0.2"
-description = "Intel® oneAPI Math Kernel Library"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
-name = "mkl-include"
-version = "2022.0.3"
 description = "Intel® oneAPI Math Kernel Library"
 category = "main"
 optional = false
@@ -703,15 +623,15 @@ python-versions = ">=3.8"
 
 [[package]]
 name = "numpydoc"
-version = "1.2.1"
+version = "1.3.1"
 description = "Sphinx extension to support docstrings in Numpy format"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
-Jinja2 = ">=2.10,<3.1"
-sphinx = ">=1.8"
+Jinja2 = ">=2.10"
+sphinx = ">=3.0"
 
 [package.extras]
 testing = ["pytest", "pytest-cov", "matplotlib"]
@@ -1255,22 +1175,6 @@ optional = false
 python-versions = "*"
 
 [[package]]
-name = "tbb"
-version = "2021.5.1"
-description = "Intel® oneAPI Threading Building Blocks (oneTBB)"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
-name = "tbb"
-version = "2021.5.2"
-description = "Intel® oneAPI Threading Building Blocks"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
@@ -1404,7 +1308,7 @@ test = ["gevent (>=20.6.2)"]
 name = "zipp"
 version = "3.8.0"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -1427,8 +1331,8 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
 lock-version = "1.1"
-python-versions = "^3.8,<3.11"   # TODO dvp: increase upper version bound along with scipy updates
-content-hash = "e1eb0b131a1ba53c0e95d90045cd447b01f6f20adcfd22174f0ce6a9dfcea46e"
+python-versions = "^3.8,<3.11"
+content-hash = "5df54c7baaf56c9084520efb40b0234c3c2128300478b6e6c6f89f21e6d12c9d"
 
 [metadata.files]
 alabaster = [
@@ -1662,12 +1566,6 @@ intel-openmp = [
     {file = "intel_openmp-2022.0.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:98f989a4c82bd147eb70685a8e1f644c8fecfbcdcfdbcc3cbe795e685f495092"},
     {file = "intel_openmp-2022.0.0-py2.py3-none-win32.whl", hash = "sha256:883d3075df4967f93859f1dc8442406bff3328fc0e63c501d9786bc31203923d"},
     {file = "intel_openmp-2022.0.0-py2.py3-none-win_amd64.whl", hash = "sha256:ee571ad749ce12f3bb294277d258b6d44d98feb192d9496a57167b1ba6e161d3"},
-    {file = "intel_openmp-2022.0.2-py2.py3-none-manylinux1_i686.whl", hash = "sha256:4297da43d469c744164ee8989c88fb203f240a1fca778c028d2125dbf74007a1"},
-    {file = "intel_openmp-2022.0.2-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:78ea3d8ec9e3d244dcb17df909740432547159166b41e46bb5bff28068b184c4"},
-    {file = "intel_openmp-2022.0.2-py2.py3-none-win32.whl", hash = "sha256:f1afb839382f50367b08fef557debd81a8e95edd15a7f233074515858eabfdbd"},
-    {file = "intel_openmp-2022.0.2-py2.py3-none-win_amd64.whl", hash = "sha256:346ad5dca716a077ab3c600e71939a80569ab7b1985ae1f43c40ff81917d9e99"},
-    {file = "intel_openmp-2022.0.3-py2.py3-none-win32.whl", hash = "sha256:32de57b65d3cd2da29a057b5a57d98d70736cfc73c9d9bc4cb52563c56be2e75"},
-    {file = "intel_openmp-2022.0.3-py2.py3-none-win_amd64.whl", hash = "sha256:6585f004740f2271a353cf58732060c161c8f82826b58832a27501b36c106f0d"},
 ]
 isort = [
     {file = "isort-5.10.1-py3-none-any.whl", hash = "sha256:6f62d78e2f89b4500b080fe3a81690850cd254227f27f75c3a0c491a1f351ba7"},
@@ -1734,34 +1632,16 @@ mkl = [
     {file = "mkl-2022.0.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:ab274aa76d4a3535ddf08b566ee0240acd0840f87692f1b8a5e6461cd1d44bdc"},
     {file = "mkl-2022.0.0-py2.py3-none-win32.whl", hash = "sha256:2ebd20c70c2828c8b437ae4005b3ee2a6560a1dd7978f375aeac21b82a00836c"},
     {file = "mkl-2022.0.0-py2.py3-none-win_amd64.whl", hash = "sha256:ca8343af6b381226400dc231d01c68989e94c59578132ef6cfc0d4676c8f35da"},
-    {file = "mkl-2022.0.2-py2.py3-none-manylinux1_i686.whl", hash = "sha256:0d400f3818ec67d9643dec0faf738271b28532f2ff25edc15002c951b2aed442"},
-    {file = "mkl-2022.0.2-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:c5c79d9287cdcfb650986e3123fdb81e9dc110af90c7eef38afafc11b4224678"},
-    {file = "mkl-2022.0.2-py2.py3-none-win32.whl", hash = "sha256:37f47a202ac68d1da217b31573ae0534db3542327d1807a56b54158f3e6bb41f"},
-    {file = "mkl-2022.0.2-py2.py3-none-win_amd64.whl", hash = "sha256:07fa7c2dfab146d1411ccd6e3e2fa6e3ab9efa8186706e0421c7d49d7986efe0"},
-    {file = "mkl-2022.0.3-py2.py3-none-win32.whl", hash = "sha256:24d5c35ff42199d318c6fd24ad4b58f9d00eb91bb18dbf8acf11ba435cf57e75"},
-    {file = "mkl-2022.0.3-py2.py3-none-win_amd64.whl", hash = "sha256:706f74f142f7f7f7ed184eadb1472b95bce6f61bfd1a35e41daa362d089cec93"},
 ]
 mkl-devel = [
     {file = "mkl_devel-2022.0.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:fdbd4f0d82fb75c35999a0c8d01b22e39ae3cdee9f6b2665baccfddcbfb5fb4b"},
     {file = "mkl_devel-2022.0.0-py2.py3-none-win32.whl", hash = "sha256:db3423a312d731d2ae74afa7f7b79b02c3ac548aee82f4c8f70cf3ae86c27665"},
     {file = "mkl_devel-2022.0.0-py2.py3-none-win_amd64.whl", hash = "sha256:8f132ad33c0978a1262d7ca622831812b637abdead6ccdbfa79b0d6eee842725"},
-    {file = "mkl_devel-2022.0.2-py2.py3-none-manylinux1_i686.whl", hash = "sha256:1e5c4e30cd02b7aa84f778fbf6d260a46432fed96c5c2b49a7ff4e58e5cbc918"},
-    {file = "mkl_devel-2022.0.2-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:bec339487d465614b7d7bea6917fa35e21acbd8be01befc30ce9854e0c4ac7d0"},
-    {file = "mkl_devel-2022.0.2-py2.py3-none-win32.whl", hash = "sha256:22fcec2a1d7716085db34c05019edddfbb6f94095808fb5c799a540a2f92e360"},
-    {file = "mkl_devel-2022.0.2-py2.py3-none-win_amd64.whl", hash = "sha256:377ac0ad512f930bed58f5081fe7b2bb9eed89864b2ba25334dd406b4f61145e"},
-    {file = "mkl_devel-2022.0.3-py2.py3-none-win32.whl", hash = "sha256:434097fec438441157f99bb2edd28e52cc44a8ab642f933451f0a84a0d82e922"},
-    {file = "mkl_devel-2022.0.3-py2.py3-none-win_amd64.whl", hash = "sha256:5a0a355a48e2bda43d7b4543b4732bfde0c7c727435d0f3ce8b90660ab9388a4"},
 ]
 mkl-include = [
     {file = "mkl_include-2022.0.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:9ab59bfa9d6b8e03be08587cb0b2c702be9bb76a94967468bd45eda86f612754"},
     {file = "mkl_include-2022.0.0-py2.py3-none-win32.whl", hash = "sha256:6b87bcb09e2b76d3dca7b10465200abb15d10d13c822465c35173ab6fea6ceb6"},
     {file = "mkl_include-2022.0.0-py2.py3-none-win_amd64.whl", hash = "sha256:ef934d7b880319a3edd9e36ccb0c240f4461e09fb3b96d8f8988029a77943768"},
-    {file = "mkl_include-2022.0.2-py2.py3-none-manylinux1_i686.whl", hash = "sha256:13564fee9c2161b3f316e8fef5b215aeaa5e0b6d66197ef6b7df8b6943e6c791"},
-    {file = "mkl_include-2022.0.2-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:8dd257c37ca0093f221cd875cc8b4024b6b7c5f54ebacfb117b56c1406078043"},
-    {file = "mkl_include-2022.0.2-py2.py3-none-win32.whl", hash = "sha256:e689f13c90672d1201e683a7fdad1d18a02e9ac50a3c5d1b23f7806597ae7613"},
-    {file = "mkl_include-2022.0.2-py2.py3-none-win_amd64.whl", hash = "sha256:57397b269bc03dac0511666f84db8a19a44b39749eecd866355071b8acb52169"},
-    {file = "mkl_include-2022.0.3-py2.py3-none-win32.whl", hash = "sha256:24b133cd16fcfa6b6bc6ee2399b1036bfba9883a9dc10633bee6a6cfef8f1aa9"},
-    {file = "mkl_include-2022.0.3-py2.py3-none-win_amd64.whl", hash = "sha256:04cfa83ad8f0f35cf1a86e1a401b71c6795fcf372ab23a50706cbd1560e4e68c"},
 ]
 mypy = [
     {file = "mypy-0.942-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:5bf44840fb43ac4074636fd47ee476d73f0039f4f54e86d7265077dc199be24d"},
@@ -1827,8 +1707,8 @@ numpy = [
     {file = "numpy-1.22.3.zip", hash = "sha256:dbc7601a3b7472d559dc7b933b18b4b66f9aa7452c120e87dfb33d02008c8a18"},
 ]
 numpydoc = [
-    {file = "numpydoc-1.2.1-py3-none-any.whl", hash = "sha256:2d317df5fd9404a5199bb993c1b6627436b2804582d2775bf9ccf3c5912ebe99"},
-    {file = "numpydoc-1.2.1.tar.gz", hash = "sha256:7ce826ed0d54c3fdc9097992a8d73a4d459dc468611351c68e444fec44a45af6"},
+    {file = "numpydoc-1.3.1-py3-none-any.whl", hash = "sha256:a49822cb225e71b7ef7889dd42576b5aa14c56ce62e0bc030f97abc8a3ae240f"},
+    {file = "numpydoc-1.3.1.tar.gz", hash = "sha256:349ff29e00a5caf119141967e579f8f17b24d41c46740b13ea4e8dba9971b20f"},
 ]
 packaging = [
     {file = "packaging-21.3-py3-none-any.whl", hash = "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"},
@@ -2059,12 +1939,6 @@ tbb = [
     {file = "tbb-2021.5.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:c2875e8b47ff614b54099928131dba0b87aeaed79aa430c37ea97ff9f30c829b"},
     {file = "tbb-2021.5.0-py3-none-win32.whl", hash = "sha256:b8949f344396dc29764a3fc98a941591df967d6e9221d51fe11cf59799b320b0"},
     {file = "tbb-2021.5.0-py3-none-win_amd64.whl", hash = "sha256:9408418267f45c2ddb3000a3bba479b9614bc3644c8d8065846d5f13f5b20a29"},
-    {file = "tbb-2021.5.1-py2.py3-none-manylinux1_i686.whl", hash = "sha256:ccb6bad2891d3b1234e7c8d053cdf52e5a546438657924882247d25d461f25c9"},
-    {file = "tbb-2021.5.1-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:6578ae9485140efc0dccde98ccec03706d5c9aa7645f06ecfe1bb3cd720c0432"},
-    {file = "tbb-2021.5.1-py3-none-win32.whl", hash = "sha256:e120162a188bd8a51b3817bba16573c594374473241278ab07c921bdfebd3c8e"},
-    {file = "tbb-2021.5.1-py3-none-win_amd64.whl", hash = "sha256:949fade8d1542ab0bb42bf2d84b674e9de14978ef7dc5dcf87d9c4c70be2a05a"},
-    {file = "tbb-2021.5.2-py3-none-win32.whl", hash = "sha256:6673a1102b755f0a3a396288eae63272a578dd4cc4ba0ec65d360f4f5984f1fc"},
-    {file = "tbb-2021.5.2-py3-none-win_amd64.whl", hash = "sha256:0e1e8e02c322b46b373cbc06fcfa88790d00e438115d0b9f2bfc6fc3d87badd4"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
