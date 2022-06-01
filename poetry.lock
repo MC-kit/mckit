@@ -417,7 +417,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 name = "importlib-metadata"
 version = "4.11.3"
 description = "Read metadata from Python packages"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -1309,7 +1309,7 @@ tests = ["cmake", "codecov", "ninja", "pybind11", "pytest-cov", "pytest-cov", "p
 
 [[package]]
 name = "yappi"
-version = "1.3.3"
+version = "1.3.5"
 description = "Yet Another Python Profiler"
 category = "dev"
 optional = false
@@ -1322,7 +1322,7 @@ test = ["gevent (>=20.6.2)"]
 name = "zipp"
 version = "3.8.0"
 description = "Backport of pathlib-compatible object wrapper for zip files"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -1345,8 +1345,8 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
 lock-version = "1.1"
-python-versions = "^3.8,<3.11"   # TODO dvp: increase upper version bound along with scipy updates
-content-hash = "772fac7da9005a1a2a336f1cfdae38c67f7317766fa77cc599aabe697472640a"
+python-versions = "^3.8,<3.11"
+content-hash = "8af252525eb95fb7e57667e0c6dafd9ece2e718d0d6d933489b0f6b1bb27c880"
 
 [metadata.files]
 alabaster = [
@@ -2050,7 +2050,7 @@ xdoctest = [
     {file = "xdoctest-1.0.0.tar.gz", hash = "sha256:7ebba7e71457e6e7cf86c463699575e52b1c9cc32ee2ee5e72256d6cd3aaeb2d"},
 ]
 yappi = [
-    {file = "yappi-1.3.3.tar.gz", hash = "sha256:855890cd9a90d833dd2df632d648de8ccd0a4c3131f1edc8abd004db0625b5e8"},
+    {file = "yappi-1.3.5.tar.gz", hash = "sha256:f54c25f04aa7c613633b529bffd14e0699a4363f414dc9c065616fd52064a49b"},
 ]
 zipp = [
     {file = "zipp-3.8.0-py3-none-any.whl", hash = "sha256:c4f6e5bbf48e74f7a38e7cc5b0480ff42b0ae5178957d564d18932525d5cf099"},
