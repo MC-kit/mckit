@@ -90,7 +90,7 @@ cmake = "^3.22.2"
 rstcheck = "^5.0.0"
 isort = "^5.7.0"
 yappi = "^1.3.2"
-coverage = {version = "^6.3", extras = ["toml"]}
+coverage = {version = "^6.4", extras = ["toml"]}
 blacken-docs = "^1.12.1"
 
 [build-system]
