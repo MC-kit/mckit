@@ -34,7 +34,7 @@ jobs:
 #      - name: Checkout submodules
 #        run: git submodule update --init --recursive --depth=1
 #
-#      - uses: actions/setup-python@v3.1.2
+#      - uses: actions/setup-python@v4.0.0
 #        with:
 #          python-version: ${{ env.PYTHON_VERSION }}
 #          architecture: x64
@@ -70,7 +70,7 @@ jobs:
           fetch-depth: 2    # need previous revision to define tag
 
       - name: Set up Python
-        uses: actions/setup-python@v3.1.2
+        uses: actions/setup-python@v4.0.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
