@@ -41,7 +41,7 @@ python = "^3.8,<3.11"   # TODO dvp: increase upper version bound along with scip
 DateTime = "^4.3"
 Pygments = "^2.7.2"
 atomicwrites = "^1.4.0"
-attrs = "^21.2.0"
+attrs = ">=21.2,<23.0"
 click = "^8.0.1"
 colorama = "^0.4.4"
 importlib-metadata = {version = ">=2,<5", python = "<3.8"}
