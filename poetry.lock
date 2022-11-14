@@ -585,7 +585,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "mkl"
-version = "2022.2.0"
+version = "2022.2.1"
 description = "Intel® oneAPI Math Kernel Library"
 category = "main"
 optional = false
@@ -597,19 +597,19 @@ tbb = ">=2021.0.0,<2022.0.0"
 
 [[package]]
 name = "mkl-devel"
-version = "2022.2.0"
+version = "2022.2.1"
 description = "Intel® oneAPI Math Kernel Library"
 category = "main"
 optional = false
 python-versions = "*"
 
 [package.dependencies]
-mkl = "2022.2.0"
-mkl-include = "2022.2.0"
+mkl = "2022.2.1"
+mkl-include = "2022.2.1"
 
 [[package]]
 name = "mkl-include"
-version = "2022.2.0"
+version = "2022.2.1"
 description = "Intel® oneAPI Math Kernel Library"
 category = "main"
 optional = false
@@ -1933,25 +1933,25 @@ mccabe = [
     {file = "mccabe-0.7.0.tar.gz", hash = "sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325"},
 ]
 mkl = [
-    {file = "mkl-2022.2.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:9d49859cabd0295045c4ef271b65051b04e0dc3c3d5fc8f55f599529ae5846af"},
-    {file = "mkl-2022.2.0-py2.py3-none-manylinux1_i686.whl", hash = "sha256:7160cf1f16ae4c3428d716ca0a9933495bd5561a8f32bb7bf99f9ac1c2bbc8c1"},
-    {file = "mkl-2022.2.0-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:d01ff8775d9e270acc8ea894b294600cfcb32b328bf07b7a0af4e1ad6d430bb1"},
-    {file = "mkl-2022.2.0-py2.py3-none-win32.whl", hash = "sha256:b5195f1e34622af82713fae6ea2c3d8b9d949065dea05420d76e0975f1952587"},
-    {file = "mkl-2022.2.0-py2.py3-none-win_amd64.whl", hash = "sha256:50632b1edc474551ca9d6af0224bcc2f7de607c2689314b80c344837b1b5b09e"},
+    {file = "mkl-2022.2.1-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:d49ca0b0f435bc7b7a28a5c51e8e214e08eea719e4564b0b0f90b3b35727e56a"},
+    {file = "mkl-2022.2.1-py2.py3-none-manylinux1_i686.whl", hash = "sha256:25310f6901e7295276a93d6c4d4406a221e6aa2f75846110cbac9f5d854015f5"},
+    {file = "mkl-2022.2.1-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:0cf6cbb639bc4ecf3b77e5337d4ceb2e24ef025043f764e2abcc32f6797a7138"},
+    {file = "mkl-2022.2.1-py2.py3-none-win32.whl", hash = "sha256:98ca4b8de23d361d7a5c314d23ec9490d5377bec68421c57d564d99adc60bab8"},
+    {file = "mkl-2022.2.1-py2.py3-none-win_amd64.whl", hash = "sha256:67f6ed435c2fd6b526d0d360259fa2be9453365ecde75f589db61c3624ef1cd8"},
 ]
 mkl-devel = [
-    {file = "mkl_devel-2022.2.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:0aab3f919fa1e625c11a3357f96d0f31a2490d39a20db26375d0039125985ba1"},
-    {file = "mkl_devel-2022.2.0-py2.py3-none-manylinux1_i686.whl", hash = "sha256:6e29342900232696561fd448a0c38bbd11ee5e452aaeb08c139acdc8828cee66"},
-    {file = "mkl_devel-2022.2.0-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:a83f9733f355f860b2156feabb83cc10be4f5f942c2349e23c5d0826330cea71"},
-    {file = "mkl_devel-2022.2.0-py2.py3-none-win32.whl", hash = "sha256:e19dedab495630970db1518cd5d60308c6a5d895bf7fde34666394e59183e7b8"},
-    {file = "mkl_devel-2022.2.0-py2.py3-none-win_amd64.whl", hash = "sha256:5f64d7ac1e320141b381e22212768f66552a86964ab8703a79aa0e37dc55fc78"},
+    {file = "mkl_devel-2022.2.1-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:2824ce9f34309f32adf27cd69390af3b28c94df72513aea6a7f794f2345d07ec"},
+    {file = "mkl_devel-2022.2.1-py2.py3-none-manylinux1_i686.whl", hash = "sha256:3803c381a116fa82ab05898c53109d51f8f4627077500ae1113e1cf18335b757"},
+    {file = "mkl_devel-2022.2.1-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:187b1a087369fb4ebfb28aaf2ed7abb27ad703fe9c9feb339d758406b7febc9c"},
+    {file = "mkl_devel-2022.2.1-py2.py3-none-win32.whl", hash = "sha256:755663fec8661b7009b77ec021e8b0082d1ce53f793282747a77b699adde43a7"},
+    {file = "mkl_devel-2022.2.1-py2.py3-none-win_amd64.whl", hash = "sha256:7a000cf0d680cc6acd3c513949d2e8c50aa34cf2b618e7235f98ec1b2b9b3b09"},
 ]
 mkl-include = [
-    {file = "mkl_include-2022.2.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:a587d9014f15226590f4cf55e7430d92e20e5809ef9e2c8e49fd2759611da572"},
-    {file = "mkl_include-2022.2.0-py2.py3-none-manylinux1_i686.whl", hash = "sha256:162ac1bee7d908c92a9fd7262788263e28ebcbe392071246572555f288c7d114"},
-    {file = "mkl_include-2022.2.0-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:430e69fdd75d635a7ffe2ad56d6b663e77858d6f9c6be909e7e3b3cb19e6d985"},
-    {file = "mkl_include-2022.2.0-py2.py3-none-win32.whl", hash = "sha256:dde47043692b920442bfe53f44560fe27a93eb13ecf5f7a1c9739b6d8dda6d1d"},
-    {file = "mkl_include-2022.2.0-py2.py3-none-win_amd64.whl", hash = "sha256:31beb52bc8d4d4cfaba2ae9972244d8cd3fb750e1738e10d5fb90d7c6cdbbb5d"},
+    {file = "mkl_include-2022.2.1-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:623c904257b6aa3df6dbefab5e672ad4c38151a071d3a0b329f194b295f5f96a"},
+    {file = "mkl_include-2022.2.1-py2.py3-none-manylinux1_i686.whl", hash = "sha256:b5cf93f476449dceff4c99478382a0cb3ee17c1a997c8d8268749a82a1eb4bea"},
+    {file = "mkl_include-2022.2.1-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:1af7c95646c58ce269e252cd52a2e36118d1c0df4a58fd3229297fbf11b653d1"},
+    {file = "mkl_include-2022.2.1-py2.py3-none-win32.whl", hash = "sha256:cc968ccb3d22f437871c1f67ec53f9646e451f7c4134633851bc4a28a6c22948"},
+    {file = "mkl_include-2022.2.1-py2.py3-none-win_amd64.whl", hash = "sha256:460874c6e4b7ce5e569fe0ec846ec4de282fc1a9556215201d57ee10c7cfbdd6"},
 ]
 mypy = [
     {file = "mypy-0.982-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:5085e6f442003fa915aeb0a46d4da58128da69325d8213b4b35cc7054090aed5"},
