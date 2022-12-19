@@ -504,7 +504,7 @@ python-versions = "*"
 
 [[package]]
 name = "intel-openmp"
-version = "2022.2.1"
+version = "2023.0.0"
 description = "Intel® OpenMP* Runtime Library"
 category = "main"
 optional = false
@@ -599,31 +599,31 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "mkl"
-version = "2022.2.1"
+version = "2023.0.0"
 description = "Intel® oneAPI Math Kernel Library"
 category = "main"
 optional = false
 python-versions = "*"
 
 [package.dependencies]
-intel-openmp = ">=2022.0.0,<2023.0.0"
+intel-openmp = ">=2023.0.0,<2024.0.0"
 tbb = ">=2021.0.0,<2022.0.0"
 
 [[package]]
 name = "mkl-devel"
-version = "2022.2.1"
+version = "2023.0.0"
 description = "Intel® oneAPI Math Kernel Library"
 category = "main"
 optional = false
 python-versions = "*"
 
 [package.dependencies]
-mkl = "2022.2.1"
-mkl-include = "2022.2.1"
+mkl = "2023.0.0"
+mkl-include = "2023.0.0"
 
 [[package]]
 name = "mkl-include"
-version = "2022.2.1"
+version = "2023.0.0"
 description = "Intel® oneAPI Math Kernel Library"
 category = "main"
 optional = false
@@ -1606,7 +1606,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
 lock-version = "1.1"
-python-versions = ">=3.8,<3.12"  # TODO dvp: increase the upper limit along with scipy updates
+python-versions = ">=3.8,<3.12"
 content-hash = "006fbd4ca1436e2b908ef764755b3de353d1f6d7d973f1eda66112c44c114f87"
 
 [metadata.files]
@@ -1848,11 +1848,9 @@ iniconfig = [
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
 ]
 intel-openmp = [
-    {file = "intel_openmp-2022.2.1-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:6ae4a878135ec08aa16dd97b6d72ac16bb92fad4c6ba40f28b3558d70b1f447a"},
-    {file = "intel_openmp-2022.2.1-py2.py3-none-manylinux1_i686.whl", hash = "sha256:c8b95fc493e2945b259153f7b0dd34a3d849e8e1e43b6c14ac04f613b3b45433"},
-    {file = "intel_openmp-2022.2.1-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:342c9e2b6e1500a9fb8d39828293ab5f9bb310b81fad7eba5c9d865001b95a7e"},
-    {file = "intel_openmp-2022.2.1-py2.py3-none-win32.whl", hash = "sha256:22e09934d9f8f8b864ae68cab95bf43667f00d24e4675eb6d2a4ee089754c439"},
-    {file = "intel_openmp-2022.2.1-py2.py3-none-win_amd64.whl", hash = "sha256:77414289c14cb48d7f99926da69c9ced9e70c27feb825b0608f304f9d49844ae"},
+    {file = "intel_openmp-2023.0.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:77131c2cda75ace2060f6e9cdcc9f9c672ec838c4602fc544ce0858cfe8f416e"},
+    {file = "intel_openmp-2023.0.0-py2.py3-none-manylinux1_i686.whl", hash = "sha256:adfb32b0dde6b3a95ced62608b05a45a7cfad928054136ddbfe0563e16cbf33c"},
+    {file = "intel_openmp-2023.0.0-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:1ebce47df0b5ddad77992a70689fd3185df25f47cf901dd8384fd6d05a974f81"},
 ]
 isort = [
     {file = "isort-5.10.1-py3-none-any.whl", hash = "sha256:6f62d78e2f89b4500b080fe3a81690850cd254227f27f75c3a0c491a1f351ba7"},
@@ -1948,25 +1946,19 @@ mccabe = [
     {file = "mccabe-0.7.0.tar.gz", hash = "sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325"},
 ]
 mkl = [
-    {file = "mkl-2022.2.1-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:d49ca0b0f435bc7b7a28a5c51e8e214e08eea719e4564b0b0f90b3b35727e56a"},
-    {file = "mkl-2022.2.1-py2.py3-none-manylinux1_i686.whl", hash = "sha256:25310f6901e7295276a93d6c4d4406a221e6aa2f75846110cbac9f5d854015f5"},
-    {file = "mkl-2022.2.1-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:0cf6cbb639bc4ecf3b77e5337d4ceb2e24ef025043f764e2abcc32f6797a7138"},
-    {file = "mkl-2022.2.1-py2.py3-none-win32.whl", hash = "sha256:98ca4b8de23d361d7a5c314d23ec9490d5377bec68421c57d564d99adc60bab8"},
-    {file = "mkl-2022.2.1-py2.py3-none-win_amd64.whl", hash = "sha256:67f6ed435c2fd6b526d0d360259fa2be9453365ecde75f589db61c3624ef1cd8"},
+    {file = "mkl-2023.0.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:e75ce244cd8ba36c497404fa166896f9042531a2f838ae83c75591c9af15589e"},
+    {file = "mkl-2023.0.0-py2.py3-none-manylinux1_i686.whl", hash = "sha256:7c5c1f3aa4d129e0ae004e1f35d4e6bbdd0720715e5139b218b559c8901c7d97"},
+    {file = "mkl-2023.0.0-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:9c9309dc7a394d935b50996772b35b95b4056c668e0deca5939de55b6e9995b4"},
 ]
 mkl-devel = [
-    {file = "mkl_devel-2022.2.1-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:2824ce9f34309f32adf27cd69390af3b28c94df72513aea6a7f794f2345d07ec"},
-    {file = "mkl_devel-2022.2.1-py2.py3-none-manylinux1_i686.whl", hash = "sha256:3803c381a116fa82ab05898c53109d51f8f4627077500ae1113e1cf18335b757"},
-    {file = "mkl_devel-2022.2.1-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:187b1a087369fb4ebfb28aaf2ed7abb27ad703fe9c9feb339d758406b7febc9c"},
-    {file = "mkl_devel-2022.2.1-py2.py3-none-win32.whl", hash = "sha256:755663fec8661b7009b77ec021e8b0082d1ce53f793282747a77b699adde43a7"},
-    {file = "mkl_devel-2022.2.1-py2.py3-none-win_amd64.whl", hash = "sha256:7a000cf0d680cc6acd3c513949d2e8c50aa34cf2b618e7235f98ec1b2b9b3b09"},
+    {file = "mkl_devel-2023.0.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:365c1b05cb1acd741c4b09242664dc57e954b8b177c3ccf53347d550ed457b13"},
+    {file = "mkl_devel-2023.0.0-py2.py3-none-manylinux1_i686.whl", hash = "sha256:4595efb5215f62abcb37f2e6476687024499b7992c7e8e3453b391ef2b6b11c7"},
+    {file = "mkl_devel-2023.0.0-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:1f2fd9941e8d4f010fa7f3f237ea0da513429348d9cce2a32f424dcb53ffeef7"},
 ]
 mkl-include = [
-    {file = "mkl_include-2022.2.1-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:623c904257b6aa3df6dbefab5e672ad4c38151a071d3a0b329f194b295f5f96a"},
-    {file = "mkl_include-2022.2.1-py2.py3-none-manylinux1_i686.whl", hash = "sha256:b5cf93f476449dceff4c99478382a0cb3ee17c1a997c8d8268749a82a1eb4bea"},
-    {file = "mkl_include-2022.2.1-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:1af7c95646c58ce269e252cd52a2e36118d1c0df4a58fd3229297fbf11b653d1"},
-    {file = "mkl_include-2022.2.1-py2.py3-none-win32.whl", hash = "sha256:cc968ccb3d22f437871c1f67ec53f9646e451f7c4134633851bc4a28a6c22948"},
-    {file = "mkl_include-2022.2.1-py2.py3-none-win_amd64.whl", hash = "sha256:460874c6e4b7ce5e569fe0ec846ec4de282fc1a9556215201d57ee10c7cfbdd6"},
+    {file = "mkl_include-2023.0.0-py2.py3-none-macosx_10_15_x86_64.macosx_11_0_x86_64.whl", hash = "sha256:b5645757a5fe4e8add2c9f2946556d03169ac9e6a2e3db2a92acbec837bfde0d"},
+    {file = "mkl_include-2023.0.0-py2.py3-none-manylinux1_i686.whl", hash = "sha256:1f9514cec32ab1e467c7fc44674485622d9b151e91b9318e4d97249a28595671"},
+    {file = "mkl_include-2023.0.0-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:14b0958dff799378975d83fbd00ce756645aa36b9f924bdfdb0fb031f72b734d"},
 ]
 mypy = [
     {file = "mypy-0.991-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:7d17e0a9707d0772f4a7b878f04b4fd11f6f5bcb9b3813975a9b13c9332153ab"},
@@ -2241,6 +2233,7 @@ ruamel-yaml-clib = [
     {file = "ruamel.yaml.clib-0.2.7-cp310-cp310-win_amd64.whl", hash = "sha256:d000f258cf42fec2b1bbf2863c61d7b8918d31ffee905da62dede869254d3b8a"},
     {file = "ruamel.yaml.clib-0.2.7-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:045e0626baf1c52e5527bd5db361bc83180faaba2ff586e763d3d5982a876a9e"},
     {file = "ruamel.yaml.clib-0.2.7-cp311-cp311-macosx_12_6_arm64.whl", hash = "sha256:721bc4ba4525f53f6a611ec0967bdcee61b31df5a56801281027a3a6d1c2daf5"},
+    {file = "ruamel.yaml.clib-0.2.7-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl", hash = "sha256:41d0f1fa4c6830176eef5b276af04c89320ea616655d01327d5ce65e50575c94"},
     {file = "ruamel.yaml.clib-0.2.7-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:4b3a93bb9bc662fc1f99c5c3ea8e623d8b23ad22f861eb6fce9377ac07ad6072"},
     {file = "ruamel.yaml.clib-0.2.7-cp36-cp36m-macosx_12_0_arm64.whl", hash = "sha256:a234a20ae07e8469da311e182e70ef6b199d0fbeb6c6cc2901204dd87fb867e8"},
     {file = "ruamel.yaml.clib-0.2.7-cp36-cp36m-manylinux2014_aarch64.whl", hash = "sha256:15910ef4f3e537eea7fe45f8a5d19997479940d9196f357152a09031c5be59f3"},
