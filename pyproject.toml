@@ -41,7 +41,7 @@ requires = [
     "setuptools >= 65.6.3",
     "cmake >= 3.25.0",
     "mkl-devel == 2022.2.1",
-    "tbb == 2021.7.1",
+    "tbb == 2021.8.0",
 #    Note: keep in sync with main dependencies
     "numpy>=1.23.2",
     "wheel>=0.37.1",
@@ -76,7 +76,7 @@ tomli-w = ">=1.0.0"
 tqdm = ">=4.55.1"
 # mkl again has different versions for different platforms
 mkl-devel = "2022.2.1"
-tbb = "2021.7.1"
+tbb = "2021.8.0"
 # The following works for linux and windows, but not for macos
 # besides we need to have the same versions on build (see [build-system]),
 # so, we use the most recent version compatbile to all the OS.
