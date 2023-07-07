@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterable, Iterator, List, Literal, NewType, Union
+from typing import TYPE_CHECKING, Any, Iterable, Iterator, List, Literal, NewType, Union
 
 import os
 
@@ -28,6 +28,8 @@ from .transformation import Transformation
 from .utils import filter_dict
 
 if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
     from mckit import Universe
 
 __all__ = ["Shape", "Body", "simplify", "GLOBAL_BOX", "Card", "TGeometry", "TGeometry"]
@@ -123,7 +125,7 @@ class Shape(_Shape):
     def __repr__(self):
         return f"Shape({self.opc}, {self.args})"
 
-    def _get_words(self, parent_opc: str = None) -> list[str]:
+    def _get_words(self, parent_opc: str | None = None) -> list[str]:
         """Gets list of words that describe the shape.
 
         Args:
@@ -223,7 +225,7 @@ class Shape(_Shape):
         c_args = [a.complement() for a in args]
         return Shape(opc, *c_args)
 
-    def is_complement(self, other) -> bool:
+    def is_complement(self, other: Shape) -> bool:
         """Checks if this shape is complement to the other.
 
         Returns:
@@ -249,19 +251,15 @@ class Shape(_Shape):
     def intersection(self, *other: Shape | Body) -> Shape:
         """Gets intersection with other shape.
 
-        Parameters
-        ----------
-        other : tuple
-            A list of Shape or Body objects, which must be intersected.
+        Args:
+            other: A list of Shape or Body objects, which must be intersected.
 
         Returns:
-        -------
-        result : Shape
             New shape.
         """
         return Shape("I", self, *other)
 
-    def union(self, *other):
+    def union(self, *other: Shape | Body) -> Shape:
         """Gets union with other shape.
 
         Args:
@@ -272,11 +270,11 @@ class Shape(_Shape):
         """
         return Shape("U", self, *other)
 
-    def transform(self, tr):
+    def transform(self, transformation: Transformation) -> Shape:
         """Transforms the shape.
 
         Args:
-            tr : Transformation to be applied.
+            transformation : Transformation to be applied.
 
         Returns:
             New shape.
@@ -284,7 +282,7 @@ class Shape(_Shape):
         opc = self.opc
         args = []
         for a in self.args:
-            a = a.transform(tr)  # noqa: PLW2901 - `a` is to be reassigned
+            a = a.transform(transformation)  # noqa: PLW2901 - `a` is to be reassigned
             if isinstance(a, Surface):
                 a = a.apply_transformation()  # noqa: PLW2901 `a` is to be reassigned
                 # TODO dvp: check if call of apply_transformation() should be moved to caller site
@@ -335,10 +333,11 @@ class Shape(_Shape):
         """Checks if the shape represents an empty set."""
         return self.opc == "E"
 
-    def split_shape(self):
+    def split_shape(self, stat: NDArray | None = None) -> list[Shape]:
         shape_groups = []
         if self.opc == "U":
-            stat = self.get_stat_table()
+            if stat is None:
+                stat = self.collect_statistics(GLOBAL_BOX, MIN_BOX_VOLUME)
             drop_index = np.nonzero(np.all(stat == -1, axis=1))[0]
             arg_results = np.delete(stat, drop_index, axis=0)
             index_groups = self._find_groups(arg_results == +1)
@@ -352,6 +351,7 @@ class Shape(_Shape):
                 shape_groups.append(Shape("I", *args))
         else:
             shape_groups.append(self)
+
         return shape_groups
 
     @staticmethod
@@ -368,10 +368,15 @@ class Shape(_Shape):
                 break
         return groups
 
-    def get_simplest(self, trim_size: int = 0) -> list[Shape]:  # noqa: PLR0911
+    def get_simplest(  # noqa: PLR0911
+        self,
+        trim_size: int = 0,
+        stat: NDArray | None = None,
+    ) -> list[Shape] | None:
         """Gets the simplest found description of the shape.
 
         Args:
+            stat: statistics of the shape
             trim_size : Shape variants with complexity greater than minimal one more than
                 trim_size are thrown away.
 
@@ -380,49 +385,63 @@ class Shape(_Shape):
         """
         if self.opc != "I" and self.opc != "U":
             return [self]
+
         node_cases = []
         complexities = []
-        stat = self.get_stat_table()
+
         if self.opc == "I":
             val = -1
         elif self.opc == "U":
             val = +1
         else:
-            return {self}
+            return [self]
+
+        if stat is None:
+            self.collect_statistics(GLOBAL_BOX, MIN_BOX_VOLUME)
 
         drop_index = np.nonzero(np.all(stat == -val, axis=1))[0]
+
         if len(drop_index) == 0:
             if self.opc == "I":
                 return [Shape("E")]
             if self.opc == "U":
                 return [Shape("R")]
+
         arg_results = np.delete(stat, drop_index, axis=0)
+
         if arg_results.shape[0] == 0:
             if self.opc == "I":
                 return [Shape("R")]
             if self.opc == "U":
                 return [Shape("E")]
+
         cases = self._find_coverages(arg_results, value=val)
         final_cases = {tuple(c) for c in cases}
+
         if len(final_cases) == 0:
             _LOG.debug(self)
             return None
+
         unique = reduce(set.union, map(set, final_cases))
         args = self.args
         node_variants = {i: args[i].get_simplest(trim_size) for i in unique}
+
         for indices in final_cases:
             variants = [node_variants[i] for i in indices]
             for args in product(*variants):
                 node = Shape(self.opc, *args)
                 node_cases.append(node)
                 complexities.append(node.complexity())
+
         sort_ind = np.argsort(complexities)
         final_nodes = []
         min_complexity = complexities[sort_ind[0]]
+
         for i in sort_ind:
             final_nodes.append(node_cases[i])
             if complexities[i] > min_complexity + trim_size:
                 break
+
         return final_nodes
 
     @staticmethod
@@ -431,6 +450,7 @@ class Shape(_Shape):
         cnt = np.count_nonzero(results == value, axis=1)
         i = np.argmin(cnt)
         cases = []
+
         for j in range(n):
             if results[i][j] == value:
                 reminder = np.compress(results[:, j] != value, results, axis=0)
@@ -443,6 +463,7 @@ class Shape(_Shape):
                 cases.extend(sub_cases)
         for c in cases:
             c.sort()
+
         return cases
 
     def replace_surfaces(self, replace_dict: dict[Surface, Surface]) -> Shape:
@@ -689,43 +710,37 @@ class Body(Card):
         assert composition is None or isinstance(composition, mm.Material)
         return composition
 
-    def intersection(self, other):
+    def intersection(self, other: Body) -> Body:
         """Gets an intersection if this cell with the other.
 
         Other cell is a geometry that bounds this one. The resulting cell
         inherits all options of this one (the caller).
 
-        Parameters
-        ----------
-        other : Cell
-            Other cell.
+        Args:
+            other:  Other cell.
 
         Returns:
-        -------
-        cell : Cell
-            The result.
+            The resulting Body.
         """
         geometry = self._shape.intersection(other)
         options = filter_dict(self.options, "original")
+
         return Body(geometry, **options)
 
-    def union(self, other):
+    def union(self, other: Body) -> Body:
         """Gets a union if this cell with the other.
 
         The resulting cell inherits all options of this one (the caller).
 
-        Parameters
-        ----------
-        other : Cell
-            Other cell.
+        Args:
+            other: Other cell.
 
         Returns:
-        -------
-        cell : Cell
             The result.
         """
         geometry = self._shape.union(other)
         options = filter_dict(self.options, "original")
+
         return Body(geometry, **options)
 
     def simplify(
@@ -754,8 +769,8 @@ class Body(Card):
         Returns:
             Simplified version of this cell.
         """
-        self._shape.collect_statistics(box, min_volume)
-        variants = self._shape.get_simplest(trim_size)
+        stat = self._shape.collect_statistics(box, min_volume)
+        variants = self._shape.get_simplest(stat, trim_size)
         options = filter_dict(self.options, "original")
 
         return Body(variants[0], **options)
@@ -766,17 +781,17 @@ class Body(Card):
         Returns:
             cells list
         """
-        self.shape.collect_statistics(box, min_volume)
-        shape_groups = self.shape.split_shape()
+        stat = self.shape.collect_statistics(box, min_volume)
+        shape_groups = self.shape.split_shape(stat)
         return [Body(shape, **self.options) for shape in shape_groups]
 
     # noinspection PyShadowingNames
     def fill(
         self,
-        universe: Universe = None,
+        universe: Universe | None = None,
         recurrent: bool = False,
         simplify: bool = False,
-        **kwargs: dict[str, any],
+        **kwargs: dict[str, Any],
     ) -> list[Body]:
         """Fills this cell by filling universe.
 
@@ -823,27 +838,25 @@ class Body(Card):
             cells.append(new_cell)
         return cells
 
-    def transform(self, tr):
+    def transform(self, tr: Transformation) -> Body:
         """Applies transformation to this cell.
 
-        Parameters
-        ----------
-        tr : Transform
-            Transformation to be applied.
+        Args:
+            tr: Transformation to be applied.
 
         Returns:
-        -------
-        cell : Cell
             The result of this cell transformation.
         """
         geometry = self._shape.transform(tr)
         options = filter_dict(self.options, "original")
         cell = Body(geometry, **options)
         fill = cell.options.get("FILL", None)
+
         if fill:
             tr_in = fill.get("transform", Transformation())
             new_tr = tr.apply2transform(tr_in)
             fill["transform"] = new_tr
+
         return cell
 
     def apply_transformation(self) -> Body:
@@ -904,16 +917,14 @@ def simplify_mp(
 ) -> Iterator[Body]:
     """Simplifies the cells in multiprocessing mode.
 
-    Parameters
-    ----------
-
-    cells:
-        iterable over cells to simplify
-    box :
-        Box, from which simplification process starts. Default: GLOBAL_BOX.
-    min_volume : float
-        Minimal volume of the box, when splitting process terminates.
-    chunk_size: size of chunks to pass to child processes
+    Args:
+        cells:
+            iterable over cells to simplify
+        box :
+            Box, from which simplification process starts. Default: GLOBAL_BOX.
+        min_volume : float
+            Minimal volume of the box, when splitting process terminates.
+        chunk_size: size of chunks to pass to child processes
     """
     cpus = os.cpu_count()
     with Pool(processes=cpus) as pool:

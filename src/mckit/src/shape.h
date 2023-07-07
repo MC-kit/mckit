@@ -39,96 +39,158 @@ struct Shape {
         Surface * surface;
         Shape ** shapes;
     } args;                 ///< Pointer to arguments. It can be either Shape or Surface structures
-    uint64_t last_box;      ///< Subdivision code of last tested box
-    int last_box_result;    ///< Result of last test_box call.
-    RBTree * stats;         ///< Statistics about argument results.
 };
 
-/// Initializes Shape struct/
+
+typedef struct ShapeCache ShapeCache;
+
+struct ShapeCache {
+    const Shape* shape;
+    union {
+        SurfaceCache surface_cache;
+        ShapeCache ** shape_caches;
+    } args;                 ///< Pointer to  either ShapeCache array or SurfaceCache object
+    uint64_t last_box;      ///< Subdivision code of last tested box
+    int last_box_result;    ///< Result of last test_box call.
+    RBTree* stats;          ///< Statistics about argument results.
+};
+
+/**
+  Initializes Shape struct.
+
+  \param shape Pointer to struct to be initialized
+  \param opc   Operation code
+  \param alen  Length of arguments
+  \param args  A surface or an array of Shapes
+
+  \return SHAPE_NO_MEMORY on memory allocation failure, SHAPE_SUCCESS otherwise
+ */
 int shape_init(
-        Shape * shape,          ///< Pointer to struct to be initialized
-        char opc,               ///< Operation code
-        size_t alen,            ///< Length of arguments
-        const void * args       ///< Argument array.
+    Shape * shape,
+    char opc,
+    size_t alen,
+    const void * args
 );
 
 void shape_dealloc(Shape * shape);
 
+/// Init ShapeCache for a given Shape.
+///
+/// \param cache Pointer to cache object to be initialized
+/// \param shape Pointer to original shape
+/// \return SHAPE_SUCCESS | SHAPE_NO_MEMORY
+int shape_cache_init(
+    ShapeCache* cache,
+    const Shape * shape
+);
+
+void shape_cache_dealloc(ShapeCache* shape);
+
 /// Tests box location with respect to the shape.
 ///
-/// @return BOX_INSIDE_SHAPE | BOX_CAN_INTERSECT_SHAPE | BOX_OUTSIDE_SHAPE
+/// \return BOX_INSIDE_SHAPE | BOX_CAN_INTERSECT_SHAPE | BOX_OUTSIDE_SHAPE
 int shape_test_box(
-        Shape * shape,          ///< Shape to test.
-        const Box * box,        ///< Box to test.
-        char collect,           ///< Collect statistics about results.
-        int * zero_surfaces     ///< The number of surfaces that was tested to be zero.
+    ShapeCache * cache,          ///< Shape cache to test.
+    const Box * box,        ///< Box to test.
+    char collect,           ///< Collect statistics about results.
+    size_t * zero_surfaces     ///< The number of surfaces that was tested to be zero.
 );
 
 /// Tests box location with respect to a Shape.
 ///
 /// It tries to find out if the box really intersects the shape with desired accuracy.
 ///
-/// @return BOX_INSIDE_SHAPE | BOX_CAN_INTERSECT_SHAPE | BOX_OUTSIDE_SHAPE
+/// \param cache [inout] Pointer to cache with a shape
+/// \param box   [in] box
+/// \param min_vol [in] minimal volume until which splitting process goes.
+/// \param collect [in] Whether to collect statistics about results.
+/// \return BOX_INSIDE_SHAPE | BOX_CAN_INTERSECT_SHAPE | BOX_OUTSIDE_SHAPE
 int shape_ultimate_test_box(
-        Shape * shape,          ///< Pointer to shape
-        const Box * box,        ///< box
-        double min_vol,         ///< minimal volume until which splitting process goes.
-        char collect            ///< Whether to collect statistics about results.
+    ShapeCache * cache,
+    const Box * box,
+    double min_vol,
+    char collect
 );
 
 /// Tests whether points belong to this shape.
 ///
 /// @return status - SHAPE_SUCCESS | SHAPE_NO_MEMORY
 int shape_test_points(
-        const Shape * shape,    ///< test shape
-        size_t npts,            ///< the number of points
-        const double * points,  ///< array of points - NDIM * npts
-        char * result           ///< Result - +1 if point belongs to shape, -1
+    const Shape * shape,    ///< test shape
+    size_t npts,            ///< the number of points
+    const double * points,  ///< array of points - NDIM * npts
+    char * result           ///< Result - +1 if point belongs to shape, -1
                                 ///< otherwise. It must have length npts.
 );
 
 /// Gets bounding box, that bounds the shape.
+///
+/// \param cache  [in] cache for a Shape to de bound
+/// \param box    [inout] Start box. It is modified to obtain bounding box.
+/// \param tol    [in] Absolute tolerance. When change of box dimensions become smaller than tol
+///                    the process of box reduction finishes.
+//);
+/// \return
 int shape_bounding_box(
-        const Shape * shape,    ///< Shape to de bound
-        Box * box,              ///< INOUT: Start box. It is modified to obtain bounding box.
-        double tol              ///< Absolute tolerance. When change of box dimensions become smaller than tol
-                                ///< the process of box reduction finishes.
+    ShapeCache * cache,
+    Box * box,
+    double tol
 );
 
-/// Gets volume of the shape
+
+/// Compute volume of a shape.
+///
+/// \param cache a cache for a Shape to compute volume for
+/// \param box Box from which the process of volume finding starts
+/// \param min_vol Minimum volume - when volume of the box become smaller than min_vol the process
+///                of box splitting finishes.
+/// \return computed volume
 double shape_volume(
-        const Shape * shape,    ///< Shape
-        const Box * box,        ///< Box from which the process of volume finding starts
-        double min_vol          ///< Minimum volume - when volume of the box become smaller than min_vol the process
-                                ///< of box splitting finishes.
+    ShapeCache * cache,
+    const Box * box,
+    double min_vol
 );
 
-/// Gets shape's contour
+/// Gets shape's contour.
+///
+/// \return the number of points in the contour.
 size_t shape_contour(
-        const Shape * shape,    ///< Shape
-        const Box * box,        ///< Box, where contour is needed.
-        double min_vol,         ///< Size of volume to be considered as point
-        double * buffer         ///< Buffer, where points are put.
+    ShapeCache * cache,    ///< cache for a Shape
+    const Box * box,        ///< Box, where contour is needed.
+    double min_vol,         ///< Size of volume to be considered as point
+    double * buffer         ///< Buffer, where points are put.
 );
 
-/// Resets collected statistics or initializes statistics storage
-void shape_reset_stat(Shape * shape);
+/// Resets collected statistics or initializes statistics storage.
+///
+/// \param  cache a Shape cache to reset statistics members: stats and last_box.
+void shape_reset_stat(ShapeCache * cache);
 
 /// Resets cache of shape and all objects involved.
-void shape_reset_cache(Shape * shape);
+void shape_reset_cache(ShapeCache * shape);
 
 /// Collects statistics about shapes.
+///
+/// \param cache [inout] cache for a Shape
+/// \param box  [in] Global box, where statistics is collected
+/// \param min_vol [in] minimal volume, when splitting process stops.
 void shape_collect_statistics(
-        Shape * shape,          ///< Shape
-        const Box * box,        ///< Global box, where statistics is collected
-        double min_vol          ///< minimal volume, when splitting process stops.
+    ShapeCache * cache,
+    const Box * box,
+    double min_vol
 );
 
 /// Gets statistics table
+///
+/// \param cache Shape cache
+/// \param nrows number of rows
+/// \param ncols number of columns
+///
+/// \return
 char * shape_get_stat_table(
-        Shape * shape,          ///< Shape
-        size_t * nrows,         ///< number of rows
-        size_t * ncols          ///< number of columns
+    const ShapeCache * cache,
+    size_t * nrows,
+    size_t * ncols
 );
 
 #endif //MCKIT_SHAPE_H

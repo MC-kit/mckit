@@ -19,13 +19,17 @@ static int
 convert_to_dbl_vec(PyObject * obj, PyObject ** addr)
 {
     PyObject * arr = PyArray_FROM_OTF(obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-    if (arr == NULL) return 0;
+
+    if (arr == NULL)
+        return 0;
 
     if (PyArray_SIZE((PyArrayObject *) arr) != NDIM) {
         PyErr_SetString(PyExc_ValueError, "Vector of length 3 is expected");
         Py_DECREF(arr);
     }
+
     *addr = arr;
+
     return 1;
 }
 
@@ -33,24 +37,33 @@ static int
 convert_to_dbl_vec_array(PyObject * obj, PyObject ** addr)
 {
     PyObject * arr = PyArray_FROM_OTF(obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-    if (arr == NULL) return 0;
+
+    if (arr == NULL)
+        return 0;
 
     int n = PyArray_NDIM(arr);
+
     if (n == 0 || n > 2) {
         PyErr_SetString(PyExc_ValueError, "Vector or matrix are expected");
         goto error;
     }
+
     npy_intp size, last_dim;
     size = PyArray_SIZE(arr);
     last_dim = PyArray_DIM(arr, n - 1);
+
     if (last_dim != NDIM) {
         PyErr_SetString(PyExc_ValueError, "Shape (n, 3) is expected");
         goto error;
     }
+
     *addr = arr;
+
     return 1;
+
     error:
     Py_DECREF(arr);
+
     return 0;
 }
 
@@ -180,8 +193,12 @@ static PyObject *
 boxobj_copy(BoxObject * self)
 {
     BoxObject * box = (BoxObject *) PyType_GenericNew(&BoxType, NULL, NULL);
-    if (box == NULL) return NULL;
+
+    if (box == NULL)
+        return NULL;
+
     box_copy(&box->box, &self->box);
+
     return (PyObject *) box;
 }
 
@@ -426,12 +443,16 @@ static PyObject *
 surfobj_test_points(SurfaceObject * self, PyObject * points)
 {
     PyObject * pts;
-    if (! convert_to_dbl_vec_array(points, &pts)) return NULL;
+
+    if (! convert_to_dbl_vec_array(points, &pts))
+        return NULL;
 
     npy_intp size = PyArray_SIZE((PyArrayObject *) pts);
     size_t npts = size > NDIM ? PyArray_DIM((PyArrayObject *) pts, 0) : 1;
     npy_intp dims[] = {npts};
+
     PyObject * result = PyArray_EMPTY(1, dims, NPY_BYTE, 0);
+
     if (result == NULL) {
         Py_DECREF(pts);
         return NULL;
@@ -440,6 +461,7 @@ surfobj_test_points(SurfaceObject * self, PyObject * points)
     surface_test_points(&self->surf, npts, (double *) PyArray_DATA(pts), \
                                            (char *) PyArray_DATA(result));
     Py_DECREF(pts);
+
     return result;
 }
 
@@ -451,8 +473,11 @@ surfobj_test_box(SurfaceObject * self, PyObject * box)
         return NULL;
     }
 
-    self->surf.last_box = 0;
-    int result = surface_test_box(&self->surf, &((BoxObject *) box)->box);
+    struct SurfaceCache cache;
+    int result;
+
+    surface_cache_init(&cache, &self->surf);
+    result = surface_test_box(&cache, &((BoxObject *) box)->box);
 
     return Py_BuildValue("i", result);
 }
@@ -468,10 +493,13 @@ planeobj_init(PlaneObject * self, PyObject * args, PyObject * kwds)
 {
     PyObject * norm;
     double offset;
-    if (! PyArg_ParseTuple(args, "O&d", convert_to_dbl_vec, &norm, &offset)) return -1;
+
+    if (! PyArg_ParseTuple(args, "O&d", convert_to_dbl_vec, &norm, &offset))
+        return -1;
 
     plane_init(&self->surf, (double *) PyArray_DATA(norm), offset);
     Py_DECREF(norm);
+
     return 0;
 }
 
@@ -480,10 +508,13 @@ sphereobj_init(SphereObject * self, PyObject * args, PyObject * kwds)
 {
     PyObject * center;
     double radius;
-    if (! PyArg_ParseTuple(args, "O&d", convert_to_dbl_vec, &center, &radius)) return -1;
+
+    if (! PyArg_ParseTuple(args, "O&d", convert_to_dbl_vec, &center, &radius))
+        return -1;
 
     sphere_init(&self->surf, (double *) PyArray_DATA(center), radius);
     Py_DECREF(center);
+
     return 0;
 }
 
@@ -492,11 +523,14 @@ cylinderobj_init(CylinderObject * self, PyObject * args, PyObject * kwds)
 {
     PyObject * point, *axis;
     double radius;
-    if (! PyArg_ParseTuple(args, "O&O&d", convert_to_dbl_vec, &point, convert_to_dbl_vec, &axis, &radius)) return -1;
+
+    if (! PyArg_ParseTuple(args, "O&O&d", convert_to_dbl_vec, &point, convert_to_dbl_vec, &axis, &radius))
+        return -1;
 
     cylinder_init(&self->surf, (double *) PyArray_DATA(point), (double *) PyArray_DATA(axis), radius);
     Py_DECREF(point);
     Py_DECREF(axis);
+
     return 0;
 }
 
@@ -515,6 +549,7 @@ coneobj_init(ConeObject * self, PyObject * args, PyObject * kwds)
                            ta, sheet);
     Py_DECREF(apex);
     Py_DECREF(axis);
+
     return 0;
 }
 
@@ -523,12 +558,15 @@ torusobj_init(TorusObject * self, PyObject * args, PyObject * kwds)
 {
     PyObject *center, *axis;
     double r, a, b;
-    if (! PyArg_ParseTuple(args, "O&O&ddd", convert_to_dbl_vec, &center, convert_to_dbl_vec, &axis, &r, &a, &b)) return -1;
+    if (! PyArg_ParseTuple(args, "O&O&ddd", convert_to_dbl_vec, &center, convert_to_dbl_vec, &axis, &r, &a, &b))
+        return -1;
 
     int status = torus_init(&self->surf,
                             (double *) PyArray_DATA(center), (double *) PyArray_DATA(axis), r, a, b);
+
     Py_DECREF(center);
     Py_DECREF(axis);
+
     return 0;
 }
 
@@ -537,12 +575,14 @@ gqobj_init(GQuadraticObject * self, PyObject * args, PyObject * kwds)
 {
     PyObject *m, *v;
     double k, f;
-    if (! PyArg_ParseTuple(args, "O&O&dd", convert_to_dbl_vec_array, &m, convert_to_dbl_vec, &v, &k, &f)) return -1;
+
+    if (! PyArg_ParseTuple(args, "O&O&dd", convert_to_dbl_vec_array, &m, convert_to_dbl_vec, &v, &k, &f))
+        return -1;
 
     gq_init(&self->surf, (double *) PyArray_DATA(m), (double *) PyArray_DATA(v), k, f);
-
     Py_DECREF(m);
     Py_DECREF(v);
+
     return 0;
 }
 
@@ -562,7 +602,10 @@ planeobj_getnorm(PlaneObject * self, void * closure)
     npy_intp dims[] = {NDIM};
     PyObject * norm = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     double * data = (double *) PyArray_DATA(norm);
-    for (int i = 0; i < NDIM; ++i) data[i] = self->surf.norm[i];
+
+    for (int i = 0; i < NDIM; ++i)
+        data[i] = self->surf.norm[i];
+
     return norm;
 }
 
@@ -596,7 +639,10 @@ sphereobj_getcenter(SphereObject * self, void * closure)
     npy_intp dims[] = {NDIM};
     PyObject * center = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     double * data = (double *) PyArray_DATA(center);
-    for (int i = 0; i < NDIM; ++i) data[i] = self->surf.center[i];
+
+    for (int i = 0; i < NDIM; ++i)
+        data[i] = self->surf.center[i];
+
     return center;
 }
 
@@ -630,7 +676,10 @@ cylinderobj_getpt(CylinderObject * self, void * closure)
     npy_intp dims[] = {NDIM};
     PyObject * pt = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     double * data = (double *) PyArray_DATA(pt);
-    for (int i = 0; i < NDIM; ++i) data[i] = self->surf.point[i];
+
+    for (int i = 0; i < NDIM; ++i)
+        data[i] = self->surf.point[i];
+
     return pt;
 }
 
@@ -640,7 +689,10 @@ cylinderobj_getaxis(CylinderObject * self, void * closure)
     npy_intp dims[] = {NDIM};
     PyObject * axis = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     double * data = (double *) PyArray_DATA(axis);
-    for (int i = 0; i < NDIM; ++i) data[i] = self->surf.axis[i];
+
+    for (int i = 0; i < NDIM; ++i)
+        data[i] = self->surf.axis[i];
+
     return axis;
 }
 
@@ -673,7 +725,10 @@ static PyObject *
 rccobj_surfaces(RCCObject * self, void * closure)
 {
     PyObject * args = PyTuple_New(3);
-    if (args == NULL) return NULL;
+
+    if (args == NULL)
+        return NULL;
+
     PyObject * cyl = parent_pyobject(CylinderObject, surf, self->surf.cyl);
     PyTuple_SET_ITEM(args, 0, cyl);
     Py_INCREF(cyl);
@@ -683,6 +738,7 @@ rccobj_surfaces(RCCObject * self, void * closure)
     PyObject * bot = parent_pyobject(PlaneObject, surf, self->surf.bot);
     PyTuple_SET_ITEM(args, 2, bot);
     Py_INCREF(bot);
+
     return args;
 }
 
@@ -690,6 +746,7 @@ static int
 rccobj_init(RCCObject * self, PyObject * args, PyObject * kwds)
 {
     size_t arglen = PyTuple_Size(args);
+
     if (arglen != 3) {
         PyErr_SetString(PyExc_TypeError, "3 Surfaces expected.");
         return -1;
@@ -697,21 +754,27 @@ rccobj_init(RCCObject * self, PyObject * args, PyObject * kwds)
 
     int status;
     PyObject * cyl, *top, *bot;
+
     cyl = PyTuple_GetItem(args, 0);
+
     if (!PyObject_TypeCheck(cyl, &CylinderType)) {
         PyErr_SetString(PyExc_TypeError, "Cylinder instance is expected");
         return -1;
     }
+
     top = PyTuple_GetItem(args, 1);
+
     if (!PyObject_TypeCheck(top, &PlaneType)) {
         PyErr_SetString(PyExc_TypeError, "Plane Instance is expected");
         return -1;
     }
     bot = PyTuple_GetItem(args, 2);
+
     if (!PyObject_TypeCheck(bot, &PlaneType)) {
         PyErr_SetString(PyExc_TypeError, "Plane Instance is expected");
         return -1;
     }
+
     Py_INCREF(cyl);
     Py_INCREF(top);
     Py_INCREF(bot);
@@ -721,7 +784,10 @@ rccobj_init(RCCObject * self, PyObject * args, PyObject * kwds)
         &((PlaneObject *) top)->surf,
         &((PlaneObject *) bot)->surf
     );
-    if (status != SURFACE_SUCCESS) return -1;
+
+    if (status != SURFACE_SUCCESS)
+        return -1;
+
     return 0;
 }
 
@@ -758,12 +824,16 @@ static PyObject *
 mboxobj_surfaces(BOXObject * self, void * closure)
 {
     PyObject * args = PyTuple_New(BOX_PLANE_NUM);
-    if (args == NULL) return NULL;
+
+    if (args == NULL)
+        return NULL;
+
     for (int i = 0; i < BOX_PLANE_NUM; ++i) {
         PyObject * p = parent_pyobject(PlaneObject, surf, self->surf.planes[i]);
         PyTuple_SET_ITEM(args, i, p);
         Py_INCREF(p);
     }
+
     return args;
 }
 
@@ -771,6 +841,7 @@ static int
 mboxobj_init(BOXObject * self, PyObject * args, PyObject * kwds)
 {
     size_t arglen = PyTuple_Size(args);
+
     if (arglen != BOX_PLANE_NUM) {
         PyErr_SetString(PyExc_TypeError, "6 Planes expected.");
         return -1;
@@ -778,6 +849,7 @@ mboxobj_init(BOXObject * self, PyObject * args, PyObject * kwds)
 
     int status;
     PyObject* planes[BOX_PLANE_NUM];
+
     for (int i = 0; i < BOX_PLANE_NUM; ++i) {
         planes[i] = PyTuple_GetItem(args, i);
         if (!PyObject_TypeCheck(planes[i], &PlaneType)) {
@@ -785,14 +857,19 @@ mboxobj_init(BOXObject * self, PyObject * args, PyObject * kwds)
             return -1;
         }
     }
+
     Plane* planes_ref[BOX_PLANE_NUM];
+
     for (int i = 0; i < BOX_PLANE_NUM; ++i) {
         planes_ref[i] = &((PlaneObject *) planes[i])->surf;
         Py_INCREF(planes[i]);
     }
 
     status = BOX_init(&self->surf, planes_ref);
-    if (status != SURFACE_SUCCESS) return -1;
+
+    if (status != SURFACE_SUCCESS)
+        return -1;
+
     return 0;
 }
 
@@ -829,7 +906,10 @@ coneobj_getapex(ConeObject * self, void * closure)
     npy_intp dims[] = {NDIM};
     PyObject * apex = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     double * data = (double *) PyArray_DATA(apex);
-    for (int i = 0; i < NDIM; ++i) data[i] = self->surf.apex[i];
+
+    for (int i = 0; i < NDIM; ++i)
+        data[i] = self->surf.apex[i];
+
     return apex;
 }
 
@@ -839,7 +919,10 @@ coneobj_getaxis(ConeObject * self, void * closure)
     npy_intp dims[] = {NDIM};
     PyObject * axis = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     double * data = (double *) PyArray_DATA(axis);
-    for (int i = 0; i < NDIM; ++i) data[i] = self->surf.axis[i];
+
+    for (int i = 0; i < NDIM; ++i)
+        data[i] = self->surf.axis[i];
+
     return axis;
 }
 
@@ -881,7 +964,10 @@ torusobj_getcenter(TorusObject * self, void * closure)
     npy_intp dims[] = {NDIM};
     PyObject * center = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     double * data = (double *) PyArray_DATA(center);
-    for (int i = 0; i < NDIM; ++i) data[i] = self->surf.center[i];
+
+    for (int i = 0; i < NDIM; ++i)
+        data[i] = self->surf.center[i];
+
     return center;
 }
 
@@ -891,7 +977,10 @@ torusobj_getaxis(TorusObject * self, void * closure)
     npy_intp dims[] = {NDIM};
     PyObject * axis = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     double * data = (double *) PyArray_DATA(axis);
-    for (int i = 0; i < NDIM; ++i) data[i] = self->surf.axis[i];
+
+    for (int i = 0; i < NDIM; ++i)
+        data[i] = self->surf.axis[i];
+
     return axis;
 }
 
@@ -927,7 +1016,10 @@ gqobj_get_m(GQuadraticObject * self, void * closure)
     npy_intp dims[] = {NDIM, NDIM};
     PyObject * m = PyArray_EMPTY(2, dims, NPY_DOUBLE, 0);
     double * data = (double *) PyArray_DATA(m);
-    for (int i = 0; i < NDIM * NDIM; ++i) data[i] = self->surf.m[i];
+
+    for (int i = 0; i < NDIM * NDIM; ++i)
+        data[i] = self->surf.m[i];
+
     return m;
 }
 
@@ -937,7 +1029,10 @@ gqobj_get_v(GQuadraticObject * self, void * closure)
     npy_intp dims[] = {NDIM};
     PyObject * v = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     double * data = (double *) PyArray_DATA(v);
-    for (int i = 0; i < NDIM; ++i) data[i] = self->surf.v[i];
+
+    for (int i = 0; i < NDIM; ++i)
+        data[i] = self->surf.v[i];
+
     return v;
 }
 
@@ -1011,7 +1106,10 @@ static PyObject *
 shapeobj_getargs(ShapeObject * self, void * closure)
 {
     PyObject * args = PyTuple_New(self->shape.alen);
-    if (args == NULL) return NULL;
+
+    if (args == NULL)
+        return NULL;
+
     if (self->shape.opc == COMPLEMENT || self->shape.opc == IDENTITY) {
         PyObject * pysurf = parent_pyobject(SurfaceObject, surf, self->shape.args.surface);
         PyTuple_SET_ITEM(args, 0, pysurf);
@@ -1024,6 +1122,7 @@ shapeobj_getargs(ShapeObject * self, void * closure)
             Py_INCREF(pyshape);
         }
     }
+
     return args;
 }
 
@@ -1041,7 +1140,7 @@ static PyMethodDef shapeobj_methods[] = {
         {"volume", (PyCFunctionWithKeywords) shapeobj_volume, METH_VARARGS | METH_KEYWORDS, ""},
         {"bounding_box", (PyCFunctionWithKeywords) shapeobj_bounding_box, METH_VARARGS | METH_KEYWORDS, ""},
         {"collect_statistics", (PyCFunction) shapeobj_collect_statistics, METH_VARARGS, ""},
-        {"get_stat_table", (PyCFunction) shapeobj_get_stat_table, METH_NOARGS, ""},
+//        {"get_stat_table", (PyCFunction) shapeobj_get_stat_table, METH_NOARGS, ""},
         {"test_points", (PyCFunction) shapeobj_test_points, METH_O, "Tests senses of the points with respect to the surface."},
         {NULL}
 };
@@ -1064,11 +1163,14 @@ static int
 shapeobj_init(ShapeObject * self, PyObject * args, PyObject * kwds)
 {
     size_t arglen = PyTuple_Size(args);
+
     if (arglen < 1) {
         PyErr_SetString(PyExc_TypeError, "Operation identifier is expected.");
         return -1;
     }
+
     PyObject * pyopc = PyTuple_GetItem(args, 0);
+
     if (! PyUnicode_Check(pyopc)) {
         PyErr_SetString(PyExc_TypeError, "String object is expected.");
         return -1;
@@ -1076,36 +1178,49 @@ shapeobj_init(ShapeObject * self, PyObject * args, PyObject * kwds)
     char * opcstr = PyUnicode_AS_DATA(pyopc);
 
     char opc;
-    if      (strcmp(opcstr, opcodes[INTERSECTION]) == 0) opc = INTERSECTION;
-    else if (strcmp(opcstr, opcodes[COMPLEMENT])   == 0) opc = COMPLEMENT;
-    else if (strcmp(opcstr, opcodes[UNION])        == 0) opc = UNION;
-    else if (strcmp(opcstr, opcodes[EMPTY])        == 0) opc = EMPTY;
-    else if (strcmp(opcstr, opcodes[UNIVERSE])     == 0) opc = UNIVERSE;
-    else if (strcmp(opcstr, opcodes[IDENTITY])     == 0) opc = IDENTITY;
+
+    if      (strcmp(opcstr, opcodes[INTERSECTION]) == 0)
+        opc = INTERSECTION;
+    else if (strcmp(opcstr, opcodes[COMPLEMENT])   == 0)
+        opc = COMPLEMENT;
+    else if (strcmp(opcstr, opcodes[UNION])        == 0)
+        opc = UNION;
+    else if (strcmp(opcstr, opcodes[EMPTY])        == 0)
+        opc = EMPTY;
+    else if (strcmp(opcstr, opcodes[UNIVERSE])     == 0)
+        opc = UNIVERSE;
+    else if (strcmp(opcstr, opcodes[IDENTITY])     == 0)
+        opc = IDENTITY;
     else {
         PyErr_SetString(PyExc_ValueError, "Unknown operation");
         return -1;
     }
 
     int status;
+
     if (opc == IDENTITY || opc == COMPLEMENT) {
         PyObject * surf = PyTuple_GetItem(args, 1);
+
         if (surf == NULL || ! PyObject_TypeCheck(surf, &SurfaceType)) {
             PyErr_SetString(PyExc_TypeError, "Surface instance is expected...");
             return -1;
         }
+
         Py_INCREF(surf);
         status = shape_init(&self->shape, opc, 1, &((SurfaceObject *) surf)->surf);
     } else if (opc == UNIVERSE || opc == EMPTY) {
         status = shape_init(&self->shape, opc, 0, NULL);
     } else {
         size_t i, alen = arglen - 1;
+
         if (alen <= 1) {
             PyErr_SetString(PyExc_ValueError, "More than one shape object is expected");
             return -1;
         }
+
         PyObject * item;
         Shape ** operands = (Shape **) malloc(alen * sizeof(Shape *));
+
         for (i = 0; i < alen; ++i) {
             item = PyTuple_GetItem(args, i + 1);
             if (PyObject_TypeCheck(item, &ShapeType)) {
@@ -1117,10 +1232,14 @@ shapeobj_init(ShapeObject * self, PyObject * args, PyObject * kwds)
                 return -1;
             }
         }
+
         status = shape_init(&self->shape, opc, alen, operands);
         free(operands);
     }
-    if (status != SHAPE_SUCCESS) return -1;
+
+    if (status != SHAPE_SUCCESS)
+        return -1;
+
     return 0;
 }
 
@@ -1131,7 +1250,7 @@ static void shapeobj_dealloc(ShapeObject * self)
         Py_DECREF(pysurf);
     } else if (self->shape.opc == UNION || self->shape.opc == INTERSECTION) {
         PyObject * pyshape;
-        for (int i = 0; i < self->shape.alen; ++i) {
+        for (size_t i = 0; i < self->shape.alen; ++i) {
             pyshape = parent_pyobject(ShapeObject, shape, self->shape.args.shapes[i]);
             Py_DECREF(pyshape);
         }
@@ -1144,20 +1263,31 @@ static PyObject *
 shapeobj_test_box(ShapeObject * self, PyObject * args, PyObject * kwds)
 {
     PyObject * box = NULL;
-    char collect = 0;
     static char * kwlist[] = {"box", NULL};
+    int result = 0;
 
-    if (! PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &box)) return NULL;
+    if (! PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &box))
+        return NULL;
 
-    if (box == NULL) box = GET_NAME(GLOBAL_BOX);
+    if (box == NULL)
+        box = GET_NAME(GLOBAL_BOX);
 
     if (! PyObject_TypeCheck(box, &BoxType)) {
         PyErr_SetString(PyExc_TypeError, "Box instance is expected...");
         return NULL;
     }
 
-    shape_reset_cache(&self->shape);
-    int result = shape_test_box(&self->shape, &((BoxObject *) box)->box, 0, NULL);
+
+    Py_BEGIN_ALLOW_THREADS
+
+    ShapeCache cache;
+
+    shape_cache_init(&cache, &self->shape);
+    result = shape_test_box(&cache, &((BoxObject *) box)->box, 0, NULL);
+    shape_cache_dealloc(&cache);
+
+    Py_END_ALLOW_THREADS
+
     return Py_BuildValue("i", result);
 }
 
@@ -1167,6 +1297,7 @@ shapeobj_ultimate_test_box(ShapeObject * self, PyObject * args, PyObject * kwds)
     PyObject * box = NULL;
     char collect = 0;
     double min_vol = MIN_VOLUME;
+    int result = 0;
 
     static char * kwlist[] = {"box", "min_volume", "collect", NULL};
 
@@ -1179,8 +1310,16 @@ shapeobj_ultimate_test_box(ShapeObject * self, PyObject * args, PyObject * kwds)
         return NULL;
     }
 
-    shape_reset_cache(&self->shape);
-    int result = shape_ultimate_test_box(&self->shape, &((BoxObject *) box)->box, min_vol, collect);
+    Py_BEGIN_ALLOW_THREADS
+
+    ShapeCache cache;
+
+    shape_cache_init(&cache, &self->shape);
+    result = shape_ultimate_test_box(&cache, &((BoxObject *) box)->box, min_vol, collect);
+    shape_cache_dealloc(&cache);
+
+    Py_END_ALLOW_THREADS
+
     return Py_BuildValue("i", result);
 }
 
@@ -1188,20 +1327,30 @@ static PyObject *
 shapeobj_test_points(ShapeObject * self, PyObject * points)
 {
     PyObject * pts;
-    if (! convert_to_dbl_vec_array(points, &pts)) return NULL;
+
+    if (! convert_to_dbl_vec_array(points, &pts))
+        return NULL;
 
     npy_intp size = PyArray_SIZE((PyArrayObject *) pts);
     size_t npts = size > NDIM ? PyArray_DIM((PyArrayObject *) pts, 0) : 1;
     npy_intp dims[] = {npts};
     PyObject * result = PyArray_EMPTY(1, dims, NPY_BYTE, 0);
+
     if (result == NULL) {
         Py_DECREF(pts);
         return NULL;
     }
+    double * _pts = (double *) PyArray_DATA(pts);
+    char * _result = (char *) PyArray_DATA(result);
 
-    shape_test_points(&self->shape, npts, (double *) PyArray_DATA(pts), \
-                                          (char *) PyArray_DATA(result));
+    Py_BEGIN_ALLOW_THREADS
+
+    shape_test_points(&self->shape, npts, _pts, _result);
+
+    Py_END_ALLOW_THREADS
+
     Py_DECREF(pts);
+
     return result;
 }
 
@@ -1214,9 +1363,11 @@ shapeobj_bounding_box(ShapeObject * self, PyObject * args, PyObject * kwds)
 
     static char * kwlist[] = {"tol", "box", NULL};
 
-    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|dO", kwlist, &tol, &start_box)) return NULL;
+    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|dO", kwlist, &tol, &start_box))
+        return NULL;
 
-    if (start_box == NULL) start_box = GET_NAME(GLOBAL_BOX);
+    if (start_box == NULL)
+        start_box = GET_NAME(GLOBAL_BOX);
 
     if (! PyObject_TypeCheck(start_box, &BoxType)) {
         PyErr_SetString(PyExc_ValueError, "Box instance is expected");
@@ -1224,15 +1375,20 @@ shapeobj_bounding_box(ShapeObject * self, PyObject * args, PyObject * kwds)
     }
 
     BoxObject * box = (BoxObject *) boxobj_copy((BoxObject *) start_box);
-    if (box == NULL) return NULL;
+
+    if (box == NULL)
+        return NULL;
 
 
-//    Py_BEGIN_ALLOW_THREADS
+    Py_BEGIN_ALLOW_THREADS
 
-    shape_reset_cache(&self->shape);
-    status = shape_bounding_box(&self->shape, &box->box, tol);
+    ShapeCache cache;
 
-//    Py_END_ALLOW_THREADS
+    shape_cache_init(&cache, &self->shape);
+    status = shape_bounding_box(&cache, &box->box, tol);
+    shape_cache_dealloc(&cache);
+
+    Py_END_ALLOW_THREADS
 
     if (status == SHAPE_SUCCESS)
         return (PyObject *) box;
@@ -1252,9 +1408,11 @@ shapeobj_volume(ShapeObject * self, PyObject * args, PyObject * kwds)
 
     static char * kwlist[] = {"box", "min_volume", NULL};
 
-    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|Od", kwlist, &box, &min_vol)) return NULL;
+    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|Od", kwlist, &box, &min_vol))
+        return NULL;
 
-    if (box == NULL) box = GET_NAME(GLOBAL_BOX);
+    if (box == NULL)
+        box = GET_NAME(GLOBAL_BOX);
 
     if (! PyObject_TypeCheck(box, &BoxType)) {
         PyErr_SetString(PyExc_ValueError, "Box instance is expected");
@@ -1262,12 +1420,15 @@ shapeobj_volume(ShapeObject * self, PyObject * args, PyObject * kwds)
     }
 
 
-//    Py_BEGIN_ALLOW_THREADS
+    Py_BEGIN_ALLOW_THREADS
 
-    shape_reset_cache(&self->shape);
-    vol = shape_volume(&self->shape, &((BoxObject *) box)->box, min_vol);
+    ShapeCache cache;
 
-//    Py_END_ALLOW_THREADS
+    shape_cache_init(&cache, &self->shape);
+    vol = shape_volume(&cache, &((BoxObject *) box)->box, min_vol);
+    shape_cache_dealloc(&cache);
+
+    Py_END_ALLOW_THREADS
 
     return Py_BuildValue("d", vol);
 }
@@ -1325,27 +1486,43 @@ shapeobj_collect_statistics(ShapeObject * self, PyObject * args)
 {
     PyObject * box;
     double min_vol;
-    if (! PyArg_ParseTuple(args, "Od", &box, &min_vol)) return NULL;
+
+    if (! PyArg_ParseTuple(args, "Od", &box, &min_vol))
+        return NULL;
 
     if (! PyObject_TypeCheck(box, &BoxType)) {
         PyErr_SetString(PyExc_ValueError, "Box instance is expected");
         return NULL;
     }
 
-    shape_reset_cache(&self->shape);
-    shape_collect_statistics(&self->shape, &((BoxObject *) box)->box, min_vol);
-    Py_RETURN_NONE;
-}
-
-static PyObject *
-shapeobj_get_stat_table(ShapeObject * self)
-{
+    ShapeCache cache;
     size_t nrows = 0, ncols = 0;
-    char * table_data = shape_get_stat_table(&self->shape, &nrows, &ncols);
+    char * table_data = NULL;
+
+    Py_BEGIN_ALLOW_THREADS
+
+    shape_cache_init(&cache, &self->shape);
+    shape_collect_statistics(&cache, &((BoxObject *) box)->box, min_vol);
+    table_data = shape_get_stat_table(&cache, &nrows, &ncols);
+    shape_cache_dealloc(&cache);
+
+    Py_END_ALLOW_THREADS
+
     npy_intp dims[] = {nrows, ncols};
     PyObject * table = PyArray_SimpleNewFromData(2, dims, NPY_BYTE, table_data);
+
     return table;
 }
+
+//static PyObject *
+//shapeobj_get_stat_table(ShapeObject * self)
+//{
+//    size_t nrows = 0, ncols = 0;
+//    char * table_data = shape_get_stat_table(&self->shape, &nrows, &ncols);
+//    npy_intp dims[] = {nrows, ncols};
+//    PyObject * table = PyArray_SimpleNewFromData(2, dims, NPY_BYTE, table_data);
+//    return table;
+//}
 
 // ========================================================================================== //
 // =================================== Module =============================================== //
@@ -1364,27 +1541,47 @@ PyInit_geometry(void)
 {
     PyObject* m;
 
-    if (PyType_Ready(&BoxType) < 0) return NULL;
+    if (PyType_Ready(&BoxType) < 0)
+        return NULL;
 
-    if (PyType_Ready(&SurfaceType) < 0) return NULL;
-    if (PyType_Ready(&PlaneType) < 0) return NULL;
-    if (PyType_Ready(&SphereType) < 0) return NULL;
-    if (PyType_Ready(&CylinderType) < 0) return NULL;
-    if (PyType_Ready(&ConeType) < 0) return NULL;
-    if (PyType_Ready(&TorusType) < 0) return NULL;
-    if (PyType_Ready(&GQuadraticType) < 0) return NULL;
-    if (PyType_Ready(&RCCType) < 0) return NULL;
-    if (PyType_Ready(&BOXType) < 0) return NULL;
+    if (PyType_Ready(&SurfaceType) < 0)
+        return NULL;
 
-    if (PyType_Ready(&ShapeType) < 0) return NULL;
+    if (PyType_Ready(&PlaneType) < 0)
+        return NULL;
+
+    if (PyType_Ready(&SphereType) < 0)
+        return NULL;
+
+    if (PyType_Ready(&CylinderType) < 0)
+        return NULL;
+
+    if (PyType_Ready(&ConeType) < 0)
+        return NULL;
+
+    if (PyType_Ready(&TorusType) < 0)
+        return NULL;
+
+    if (PyType_Ready(&GQuadraticType) < 0)
+        return NULL;
+
+    if (PyType_Ready(&RCCType) < 0)
+        return NULL;
+
+    if (PyType_Ready(&BOXType) < 0)
+        return NULL;
+
+    if (PyType_Ready(&ShapeType) < 0)
+        return NULL;
 
     m = PyModule_Create(&geometry_module);
+
     if (m == NULL)
         return NULL;
+
     import_array();
 
     Py_INCREF(&BoxType);
-
     Py_INCREF(&SphereType);
     Py_INCREF(&PlaneType);
     Py_INCREF(&SphereType);
@@ -1394,12 +1591,9 @@ PyInit_geometry(void)
     Py_INCREF(&GQuadraticType);
     Py_INCREF(&RCCType);
     Py_INCREF(&BOXType);
-
     Py_INCREF(&ShapeType);
 
-
     PyModule_AddObject(m, "Box", (PyObject *) &BoxType);
-
     PyModule_AddObject(m, "Surface",    (PyObject *) &SurfaceType);
     PyModule_AddObject(m, "Plane",      (PyObject *) &PlaneType);
     PyModule_AddObject(m, "Sphere",     (PyObject *) &SphereType);
@@ -1409,7 +1603,6 @@ PyInit_geometry(void)
     PyModule_AddObject(m, "GQuadratic", (PyObject *) &GQuadraticType);
     PyModule_AddObject(m, "RCC",        (PyObject *) &RCCType);
     PyModule_AddObject(m, "BOX",        (PyObject *) &BOXType);
-
     PyModule_AddObject(m, "Shape", (PyObject *) &ShapeType);
 
     // Create Module constants

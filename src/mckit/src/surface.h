@@ -12,6 +12,7 @@
 #define BOX_PLANE_NUM 6
 
 typedef struct Surface      Surface;
+typedef struct SurfaceCache SurfaceCache;
 typedef struct Plane        Plane;
 typedef struct Sphere       Sphere;
 typedef struct Cylinder     Cylinder;
@@ -26,14 +27,20 @@ enum SurfType {PLANE=1, SPHERE, CYLINDER, CONE, TORUS, GQUADRATIC, MRCC, MBOX};
 /// surface common data
 struct Surface {
     char type;              ///< surface type
+};
+
+/// surface box computing cache
+struct SurfaceCache {
+    const Surface* surface;  ///< reference to original surface
     uint64_t last_box;      ///< subdivision code of last tested box
     int last_box_result;    ///< last test_box result
 };
 
+/// Plane object.
 struct Plane {
-    Surface base;
-    double norm[NDIM];
-    double offset;
+    Surface base;     ///< Type
+    double norm[NDIM];      ///< Normal to a plane
+    double offset;          ///< Offset from coordinates origin
 };
 
 struct Sphere {
@@ -88,7 +95,8 @@ struct BOX {
     Plane* planes[BOX_PLANE_NUM];
 };
 
-// Methods //
+
+void surface_cache_init(SurfaceCache* cache, const Surface* surface);
 
 int plane_init(
     Plane * surf,
@@ -164,7 +172,7 @@ void surface_test_points(
  *    -1 - box lies on the negative side of surface.
  */
 int surface_test_box(
-    Surface * surf,  ///< surface to test
+    SurfaceCache * surf,  ///< surface cache to compute
     const Box * box  ///< box to test
 );
 

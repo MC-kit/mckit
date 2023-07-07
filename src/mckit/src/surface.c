@@ -4,15 +4,18 @@
 #include "mkl.h"
 #include "surface.h"
 
-// dvp:
-// Don't use "standard" macro "max": it can cause not obvious effects.
-// To avoid this, libraries usually undefine it, we'd better follow this
-// practice.
 #ifdef max
 # undef max
 #endif
 
-#define surface_INIT(surf) (surf)->last_box = 0; (surf)->last_box_result = 0;
+
+void surface_cache_init(SurfaceCache* sc, const Surface* surface)
+{
+    sc->surface = surface;
+    sc->last_box = 0;
+    sc->last_box_result = 0;
+}
+
 
 static double _max(double a, double b)
 {
@@ -25,14 +28,13 @@ static double _max(double a, double b)
  */
 
 /// Calculates deviation of point x from the plane.
-double plane_func(
-    unsigned int n,     // Space dimension (must be NDIM)
+static double plane_func(
     const double * x,   // Point to be checked
     double * grad,      // Gradient - calculated if not NULL
-    void * f_data       // Surface data - parameters of the function.
+    const Plane* data       // Surface data - parameters of the function.
 )
 {
-    Plane * data = (Plane *) f_data;
+//    Plane * data = (Plane *) f_data;
     if (grad != NULL) {
         cblas_dcopy(NDIM, data->norm, 1, grad, 1);
     }
@@ -40,14 +42,12 @@ double plane_func(
 }
 
 /// Calculates deviation of point x from the sphere.
-double sphere_func(
-    unsigned int n,
+static double sphere_func(
     const double * x,
     double * grad,
-    void * f_data
+    const Sphere* data
 )
 {
-    Sphere * data = (Sphere *) f_data;
     if (grad != NULL) {
         cblas_dcopy(NDIM, x, 1, grad, 1);
         cblas_daxpy(NDIM, -1, data->center, 1, grad, 1);
@@ -59,14 +59,12 @@ double sphere_func(
     return cblas_ddot(NDIM, delta, 1, delta, 1) - pow(data->radius, 2);
 }
 
-double cylinder_func(
-    unsigned int n,
-    const double * x,
-    double * grad,
-    void * f_data
+static double cylinder_func(
+    const double* x,
+    double* grad,
+    const Cylinder* data
 )
 {
-    Cylinder * data = (Cylinder *) f_data;
     double a[NDIM];
     cblas_dcopy(NDIM, x, 1, a, 1);
     cblas_daxpy(NDIM, -1, data->point, 1, a, 1);
@@ -79,14 +77,13 @@ double cylinder_func(
     return cblas_ddot(NDIM, a, 1, a, 1) - pow(an, 2) - pow(data->radius, 2);
 }
 
-double RCC_func(
-    unsigned int n,
+static double RCC_func(
     const double * x,
     double * grad,
-    void * f_data
+    const RCC* data
 )
 {
-    RCC * data = (RCC *) f_data;
+//    RCC * data = (RCC *) f_data;
     double gcyl[NDIM];
     double gtop[NDIM];
     double gbot[NDIM];
@@ -95,15 +92,15 @@ double RCC_func(
         gtop[i] = 0;
         gbot[i] = 0;
     }
-    double cyl_obj = cylinder_func(n, x, gcyl, data->cyl);
-    double top_obj = plane_func(n, x, gtop, data->top);
-    double bot_obj = plane_func(n, x, gbot, data->bot);
+    double cyl_obj = cylinder_func(x, gcyl, data->cyl);
+    double top_obj = plane_func(x, gtop, data->top);
+    double bot_obj = plane_func(x, gbot, data->bot);
 
     double tot_wgt = fabs(top_obj + bot_obj);
     double top_wgt = fabs(top_obj) / tot_wgt;
     double bot_wgt = fabs(bot_obj) / tot_wgt;
 
-    double h = fabs(data->top->offset + data->bot->offset);
+//    double h = fabs(data->top->offset + data->bot->offset);
     if (grad != NULL) {
         cblas_daxpy(NDIM, top_wgt, gtop, 1, grad, 1);
         cblas_daxpy(NDIM, bot_wgt, gbot, 1, grad, 1);
@@ -112,22 +109,23 @@ double RCC_func(
     return _max(cyl_obj, _max(top_obj, bot_obj));
 }
 
-double BOX_func(
-    unsigned int n,
+static double BOX_func(
     const double * x,
     double * grad,
-    void * f_data
+    const BOX* data
 )
 {
-    BOX * data = (BOX *) f_data;
+//    BOX * data = (BOX *) f_data;
     double gp[NDIM * BOX_PLANE_NUM];
     double result[BOX_PLANE_NUM];
-    for (int i = 0; i < NDIM * BOX_PLANE_NUM; ++i) gp[i] = 0;
+    for (int i = 0; i < NDIM * BOX_PLANE_NUM; ++i)
+        gp[i] = 0;
 
     int index = 0;
     for (int i = 0; i < BOX_PLANE_NUM; ++i) {
-        result[i] = plane_func(n, x, gp + i * NDIM, data->planes[i]);
-        if (result[i] > result[index]) index = i;
+        result[i] = plane_func(x, gp + i * NDIM, data->planes[i]);
+        if (result[i] > result[index])
+            index = i;
     }
 
     if (grad != NULL) {
@@ -137,14 +135,13 @@ double BOX_func(
     return result[index];
 }
 
-double cone_func(
-    unsigned int n,
+static double cone_func(
     const double * x,
     double * grad,
-    void * f_data
+    const Cone* data
 )
 {
-    Cone * data = (Cone *) f_data;
+//    Cone * data = (Cone *) f_data;
     double a[NDIM];
     cblas_dcopy(NDIM, x, 1, a, 1);
     cblas_daxpy(NDIM, -1, data->apex, 1, a, 1);
@@ -158,14 +155,13 @@ double cone_func(
     return cblas_ddot(NDIM, a, 1, a, 1) - pow(an, 2) * (1 + data->ta);
 }
 
-double gq_func(
-    unsigned int n,
-    const double * x,
-    double * grad,
-    void * f_data
+static double gq_func(
+    const double* x,
+    double* grad,
+    const GQuadratic* data
 )
 {
-    GQuadratic * data = (GQuadratic *) f_data;
+//    GQuadratic * data = (GQuadratic *) f_data;
     if (grad != NULL) {
         cblas_dcopy(NDIM, data->v, 1, grad, 1);
         cblas_dgemv(CblasRowMajor, CblasNoTrans, NDIM, NDIM, 2, data->m, NDIM, x, 1, 1, grad, 1);
@@ -177,19 +173,18 @@ double gq_func(
     return (cblas_ddot(NDIM, y, 1, x, 1) + data->k) * data->factor;
 }
 
-double clip_negative_values(double value)
+static double clip_negative_values(double value)
 {
     return (value > 0.0) ? value : 0.0;
 }
 
-double torus_func(
-    unsigned int n,
+static double torus_func(
     const double * x,
     double * grad,
-    void * f_data
+    const Torus* data
 )
 {
-    Torus * data = (Torus *) f_data;
+//    Torus * data = (Torus *) f_data;
     double p[NDIM];
     cblas_dcopy(NDIM, x, 1, p, 1);
     cblas_daxpy(NDIM, -1, data->center, 1, p, 1);
@@ -208,43 +203,42 @@ double torus_func(
     return pow(pn / data->a, 2) + pow((sq - data->radius) / data->b, 2) - 1;
 }
 
-// Interface to all surface functions. Decides, which function to apply.
+/// Interface to all surface functions. Decides, which function to apply.
 double surface_func(
-    unsigned int n,     // Space dimension (NDIM)
-    const double * x,   // Point to be checked
-    double * grad,      // Gradient - calculated if not NULL (array of size NDIM)
-    void * f_data       // Surface data
+    const double* x,            ///< Point to be checked
+    double* grad,               ///< Gradient - calculated if not NULL (array of size NDIM)
+    const Surface* data       ///< Surface data
 )
 {
-    Surface * surf = (Surface *) f_data;
+//    Surface * surf = (Surface *) f_data;
     double fval;
-    switch (surf->type) {
+    switch (data->type) {
         case PLANE:
-            fval = plane_func(n, x, grad, f_data);
+            fval = plane_func(x, grad, (const Plane*)data);
             break;
         case SPHERE:
-            fval = sphere_func(n, x, grad, f_data);
+            fval = sphere_func(x, grad, (const Sphere*)data);
             break;
         case CYLINDER:
-            fval = cylinder_func(n, x, grad, f_data);
+            fval = cylinder_func(x, grad, (const Cylinder*)data);
             break;
         case CONE:
-            fval = cone_func(n, x, grad, f_data);
+            fval = cone_func(x, grad, (const Cone*) data);
             break;
         case TORUS:
-            fval = torus_func(n, x, grad, f_data);
+            fval = torus_func(x, grad, (const Torus*) data);
             break;
         case GQUADRATIC:
-            fval = gq_func(n, x, grad, f_data);
+            fval = gq_func(x, grad, (const GQuadratic*) data);
             break;
         case MRCC:
-            fval = RCC_func(n, x, grad, f_data);
+            fval = RCC_func(x, grad, (const RCC*) data);
             break;
         case MBOX:
-            fval = BOX_func(n, x, grad, f_data);
+            fval = BOX_func(x, grad, (const BOX*) data);
             break;
         default:
-            fval = 0;
+            fval = 0.0;
             break;
     }
     return fval;
@@ -256,13 +250,15 @@ int plane_init(
     double offset
 )
 {
-    int i;
-    surface_INIT((Surface *) surf)
+    size_t i;
+
     surf->base.type = PLANE;
     surf->offset = offset;
+
     for (i = 0; i < NDIM; ++i) {
         surf->norm[i] = norm[i];
     }
+
     return SURFACE_SUCCESS;
 }
 
@@ -272,14 +268,18 @@ int sphere_init(
     double radius
 )
 {
-    if (radius <= 0) return SURFACE_FAILURE;
-    int i;
-    surface_INIT((Surface *) surf);
+    if (radius <= 0)
+        return SURFACE_FAILURE;
+
+    size_t i;
+
     surf->base.type = SPHERE;
     surf->radius = radius;
+
     for (i = 0; i < NDIM; ++i) {
         surf->center[i] = center[i];
     }
+
     return SURFACE_SUCCESS;
 }
 
@@ -290,15 +290,19 @@ int cylinder_init(
     double radius
 )
 {
-    if (radius <= 0) return SURFACE_FAILURE;
-    int i;
-    surface_INIT((Surface *) surf);
+    if (radius <= 0)
+        return SURFACE_FAILURE;
+
+    size_t i;
+
     surf->base.type = CYLINDER;
     surf->radius = radius;
+
     for (i = 0; i < NDIM; ++i) {
         surf->point[i] = point[i];
         surf->axis[i] = axis[i];
     }
+
     return SURFACE_SUCCESS;
 }
 
@@ -309,7 +313,6 @@ int RCC_init(
     Plane * bot
 )
 {
-    surface_INIT((Surface *) surf);
     surf->base.type = MRCC;
     surf->cyl = cyl;
     surf->top = top;
@@ -322,9 +325,8 @@ int BOX_init(
     Plane ** planes
 )
 {
-    surface_INIT((Surface *) surf);
     surf->base.type = MBOX;
-    for (int i = 0; i < BOX_PLANE_NUM; ++i) {
+    for (size_t i = 0; i < BOX_PLANE_NUM; ++i) {
         surf->planes[i] = planes[i];
     }
     return SURFACE_SUCCESS;
@@ -338,12 +340,15 @@ int cone_init(
     int sheet
 )
 {
-    if (ta <= 0) return SURFACE_FAILURE;
-    int i;
-    surface_INIT((Surface *) surf);
+    if (ta <= 0)
+        return SURFACE_FAILURE;
+
+    size_t i;
+
     surf->base.type = CONE;
     surf->ta = ta;
     surf->sheet = sheet;
+
     for (i = 0; i < NDIM; ++i) {
         surf->apex[i] = apex[i];
         surf->axis[i] = axis[i];
@@ -360,17 +365,21 @@ int torus_init(
     double b
 )
 {
-    if (a <= 0 || b <= 0) return SURFACE_FAILURE;
-    int i;
-    surface_INIT((Surface *) surf);
+    if (a <= 0 || b <= 0)
+        return SURFACE_FAILURE;
+
+    size_t i;
+
     surf->base.type = TORUS;
     surf->radius = radius;
     surf->a = a;
     surf->b = b;
+
     for (i = 0; i < NDIM; ++i) {
         surf->center[i] = center[i];
         surf->axis[i] = axis[i];
     }
+
     if (surf->b > surf->radius) {
         surf->degenerate = 1;
         double offset = a * sqrt(1 - pow(radius / b, 2));
@@ -378,7 +387,9 @@ int torus_init(
         cblas_dcopy(NDIM, center, 1, surf->specpts + NDIM, 1);
         cblas_daxpy(NDIM, offset, axis, 1, surf->specpts, 1);
         cblas_daxpy(NDIM, -offset, axis, 1, surf->specpts + NDIM, 1);
-    } else surf->degenerate = 0;
+    } else
+        surf->degenerate = 0;
+
     return SURFACE_SUCCESS;
 }
 
@@ -390,8 +401,7 @@ int gq_init(
     double factor
 )
 {
-    int i, j;
-    surface_INIT((Surface *) surf);
+    size_t i, j;
     surf->base.type = GQUADRATIC;
     surf->k = k;
     surf->factor = factor;
@@ -410,41 +420,50 @@ void surface_test_points(
     char * result
 )
 {
-    int i;
+    size_t i;
     double fval;
     for (i = 0; i < npts; ++i) {
-        fval = surface_func(NDIM, points + NDIM * i, NULL, (void*) surf);
+        fval = surface_func(points + NDIM * i, NULL, surf);
         result[i] = (int) copysign(1, fval);
     }
 }
 
-int surface_test_box(Surface * surf, const Box * box)
+int surface_test_box(SurfaceCache * surf_cache, const Box * box)
 {
-    if (surf->last_box != 0) {
-        int bc = box_is_in(box, surf->last_box);
+    if (surf_cache->last_box != 0) {
+        int bc = box_is_in(box, surf_cache->last_box);
         // if it is the box already tested (bc == 0) then returns cached result;
         // if it is inner box - then returns cached result only if it is not 0. For inner box result may be different.
-        if (bc == 0 || bc > 0 && surf->last_box_result != 0)
-            return surf->last_box_result;
+        if (bc == 0 || bc > 0 && surf_cache->last_box_result != 0)
+            return surf_cache->last_box_result;
     }
 
     // First, test corner points of the box. If they have different senses,
     // then surface definitely intersects the box.
     char corner_tests[NCOR];
-    surface_test_points(surf, NCOR, box->corners, corner_tests);
+
+    surface_test_points(surf_cache->surface, NCOR, box->corners, corner_tests);
+
     int mins = 1, maxs = -1, i;
 
     for (i = 0; i < NCOR; ++i) {
-        if (corner_tests[i] < mins) mins = corner_tests[i];
-        if (corner_tests[i] > maxs) maxs = corner_tests[i];
+        if (corner_tests[i] < mins)
+            mins = corner_tests[i];
+        if (corner_tests[i] > maxs)
+            maxs = corner_tests[i];
     }
+
     // sign == 0 only if both -1 and +1 present in corner_tests.
     int sign = mins + maxs;
-    if (sign == 2) sign = 1;
-    else if (sign == -2) sign = -1;
+
+    if (sign == 2)
+        sign = 1;
+    else if (sign == -2)
+        sign = -1;
 
     // The test performed above is sufficient for the plane.
     // But for other surfaces further tests must be done if sign != 0.
+    const Surface* surf = &surf_cache->surface;
     if (sign != 0 && surf->type != PLANE) {
         // Additional tests for degenerate torus.
         if (surf->type == TORUS && ((Torus*) surf)->degenerate) {
@@ -454,7 +473,7 @@ int surface_test_box(Surface * surf, const Box * box)
         }
 
         // General test. The purpose is to clarify if there is a point inside the box with
-        // positive sense if all corner results are negative; or a point with nefative sense
+        // positive sense if all corner results are negative; or a point with negative sense
         // exists inside the box if all corner results are negative. SLSQP optimization method
         // is used.
         double x[NDIM], opt_val;
@@ -466,10 +485,13 @@ int surface_test_box(Surface * surf, const Box * box)
         nlopt_set_lower_bounds(opt, box->lb);
         nlopt_set_upper_bounds(opt, box->ub);
 
-        if (sign > 0) nlopt_set_min_objective(opt, surface_func, surf);
-        else          nlopt_set_max_objective(opt, surface_func, surf);
+        if (sign > 0)
+            nlopt_set_min_objective(opt, surface_func, surf);
+        else
+            nlopt_set_max_objective(opt, surface_func, surf);
 
-        for (i = 0; i < NDIM; ++i) xtol[i] = box->dims[i] / 1000;
+        for (i = 0; i < NDIM; ++i)
+            xtol[i] = box->dims[i] / 1000;
 
         nlopt_add_inequality_mconstraint(opt, 6, box_ieqcons, (void*) box, NULL);
         nlopt_set_stopval(opt, 0);
@@ -490,8 +512,8 @@ int surface_test_box(Surface * surf, const Box * box)
     }
     // Cache test result;
     if (!(box->subdiv & HIGHEST_BIT)) {
-        surf->last_box = box->subdiv;
-        surf->last_box_result = sign;
+        surf_cache->last_box = box->subdiv;
+        surf_cache->last_box_result = sign;
     }
 
     return sign;

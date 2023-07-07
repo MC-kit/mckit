@@ -2199,7 +2199,6 @@ class TestBody:
             )
         gb = Box([0, 0, 0], 100, 100, 100)
         split_bodies = body.split(min_volume=0.001, box=gb)
-        body.shape.get_stat_table()
         assert len(split_bodies) == len(expected)
         split_shapes = {b.shape for b in split_bodies}
         assert split_shapes == expected
