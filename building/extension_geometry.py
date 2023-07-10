@@ -3,14 +3,21 @@ from __future__ import annotations
 
 from typing import Iterable
 
-import os
-import shlex
 import sys
+import sysconfig
 
 from pathlib import Path
 
 from building.extension_utils import MACOS, WIN, get_library_dir
 from setuptools import Extension as _Extension
+
+# Debugging
+# Example: https://pythonextensionpatterns.readthedocs.io/en/latest/compiler_flags.html
+_DEBUG = False
+_DEBUG_LEVEL = 0
+# _DEBUG = True
+# _DEBUG_LEVEL = 2
+
 
 # See MKL linking options for various versions of MKL and OS:
 # https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-advisor.html
@@ -75,16 +82,20 @@ class GeometryExtension(_Extension):
                 "nlopt",
             ]
         else:
-            cflags = [
-                "-O3",
-                "-Wall",
-                "-m64",
-            ]
-            env_cflags = os.environ.get("CFLAGS", "")
-            env_cppflags = os.environ.get("CPPFLAGS", "")
-            c_cpp_flags = shlex.split(env_cflags) + shlex.split(env_cppflags)
-            if not any(opt.startswith("-g") for opt in c_cpp_flags):
-                cflags += ["-g0"]
+            # Common flags for both release and debug builds.
+            cflags = sysconfig.get_config_var("CFLAGS").split()
+            cflags += ["-Wall", "-Wextra", "-m64"]
+            if _DEBUG:
+                cflags += ["-g3", "-O0", "-DDEBUG=%s" % _DEBUG_LEVEL, "-UNDEBUG"]
+            else:
+                cflags += ["-DNDEBUG", "-O3"]
+
+            # env_cflags = os.environ.get("CFLAGS", "")
+            # env_cppflags = os.environ.get("CPPFLAGS", "")
+            # c_cpp_flags = shlex.split(env_cflags) + shlex.split(env_cppflags)
+            # if not any(opt.startswith("-g") for opt in c_cpp_flags):
+            #     cflags += ["-g0"]
+
             # Linker options (Linux 64bit, gcc, tbb):
             # https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl-link-line-advisor.html#gs.rhcqqp
             # -L${MKLROOT}/lib/intel64 -Wl, --no-as-needed -lmkl_intel_ilp64 -lmkl_tbb_thread

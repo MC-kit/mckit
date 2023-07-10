@@ -1499,14 +1499,14 @@ shapeobj_collect_statistics(ShapeObject * self, PyObject * args)
     size_t nrows = 0, ncols = 0;
     char * table_data = NULL;
 
-    Py_BEGIN_ALLOW_THREADS
+//    Py_BEGIN_ALLOW_THREADS
 
     shape_cache_init(&cache, &self->shape);
     shape_collect_statistics(&cache, &((BoxObject *) box)->box, min_vol);
     table_data = shape_get_stat_table(&cache, &nrows, &ncols);
     shape_cache_dealloc(&cache);
 
-    Py_END_ALLOW_THREADS
+//    Py_END_ALLOW_THREADS
 
     npy_intp dims[] = {nrows, ncols};
     PyObject * table = PyArray_SimpleNewFromData(2, dims, NPY_BYTE, table_data);

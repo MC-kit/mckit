@@ -397,7 +397,7 @@ class Shape(_Shape):
             return [self]
 
         if stat is None:
-            self.collect_statistics(GLOBAL_BOX, MIN_BOX_VOLUME)
+            stat = self.collect_statistics(GLOBAL_BOX, MIN_BOX_VOLUME)
 
         drop_index = np.nonzero(np.all(stat == -val, axis=1))[0]
 
@@ -770,7 +770,7 @@ class Body(Card):
             Simplified version of this cell.
         """
         stat = self._shape.collect_statistics(box, min_volume)
-        variants = self._shape.get_simplest(stat, trim_size)
+        variants = self._shape.get_simplest(trim_size, stat)
         options = filter_dict(self.options, "original")
 
         return Body(variants[0], **options)

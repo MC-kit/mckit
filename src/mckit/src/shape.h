@@ -180,7 +180,7 @@ void shape_collect_statistics(
     double min_vol
 );
 
-/// Gets statistics table
+/// Gets statistics table.
 ///
 /// \param cache Shape cache
 /// \param nrows number of rows
