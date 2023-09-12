@@ -64,7 +64,7 @@ jobs:
 
       - name: Load poetry cache
         id: cached-poetry-dependencies
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v3.3.2
         with:
           path: |
             .cache/pypoetry
@@ -113,7 +113,7 @@ jobs:
 
       - name: Load poetry cache
         id: cached-poetry-dependencies
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v3.3.2
         with:
           path: |
             .cache/pypoetry
@@ -166,7 +166,7 @@ jobs:
 
       - name: Load poetry cache
         id: cached-poetry-dependencies
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v3.3.2
         with:
           path: |
             .cache/pypoetry
@@ -209,7 +209,7 @@ jobs:
 
       - name: Load poetry cache
         id: cached-poetry-dependencies
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v3.3.2
         with:
           path: |
             .cache/pypoetry
