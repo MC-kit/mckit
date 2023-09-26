@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v4.1.0
         with:
           fetch-depth: 2    # need previous revision to define tag
 
