@@ -32,7 +32,7 @@ jobs:
           fetch-depth: 2    # need previous revision to define tag
 
       - name: Set up Python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v4.8.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
