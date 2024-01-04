@@ -1,5 +1,4 @@
-include build_nlopt.py
-include extension*.py
+recursive-include building
 include noxfile.py
 include *.ini
 include .flake8

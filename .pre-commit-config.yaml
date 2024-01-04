@@ -10,191 +10,107 @@
 #
 #     pre-commit autoupdate
 #
-# See:
+# See for more information:
 #     https://pre-commit.com/                   and
-#     https://github.com/pre-commit/pre-commit  for more information
-#     https://pre-commit.com/hooks.html         for more hooks
+#     https://github.com/pre-commit/pre-commit
+# For more hooks:
+#     https://pre-commit.com/hooks.html
+
 default_language_version:
-    python: python3.11
+  python: python3.11
+
 repos:
-# Standard hooks
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v4.4.0"
+
+  # Standard hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v4.5.0"
     hooks:
-    - id: check-added-large-files
-    - id: check-case-conflict
-#    - id: check-docstring-first
-    - id: check-executables-have-shebangs
-    - id: check-json
-    - id: check-merge-conflict
-    - id: check-shebang-scripts-are-executable
-    - id: check-symlinks
-    - id: check-toml
-    - id: check-yaml
-    - id: debug-statements
-    - id: end-of-file-fixer
-      exclude:  data|.ipynb$|^\.
-    - id: name-tests-test
-      args:
-      -  --pytest-test-first
-    - id: no-commit-to-branch
-    - id: mixed-line-ending
-    - id: requirements-txt-fixer
-    - id: trailing-whitespace
-      exclude:  data|.ipynb$
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-yaml
+      - id: debug-statements
+      - id: end-of-file-fixer
+        exclude: data|.ipynb$|^\.
+      - id: name-tests-test
+        args:
+          - --pytest-test-first
+      - id: no-commit-to-branch
+      - id: mixed-line-ending
+      - id: requirements-txt-fixer
+      - id: trailing-whitespace
+        exclude: data|.ipynb$
 
-# Changes tabs to spaces
-- repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: "v1.5.4"
-  hooks:
-  - id: remove-tabs
-# Format doc strings
-- repo: https://github.com/DanielNoord/pydocstringformatter
-  rev: "v0.7.3"
-  hooks:
-    - id: pydocstringformatter
-      exclude: _parser\.py$|_tab\.py|extern
-#- repo: https://github.com/sirosen/texthooks
-#  rev: "0.3.1"
-#  hooks:
-#  - id: fix-ligatures
-#  - id: fix-smartquotes
-
-# Automatically remove noqa that are not used
-#- repo: https://github.com/asottile/yesqa
-#  rev: "v1.4.0"
-#  hooks:
-#  - id: yesqa
-
-# TODO dvp: return rstcheck, fix docs files for that
-#-   repo: https://github.com/rstcheck/rstcheck
-#    rev: v6.1.0
-#    hooks:
-#    -   id: rstcheck
--   repo: local
+  # Changes tabs to spaces
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: "v1.5.4"
     hooks:
-    # Upgrade Python code
-    -   id: pyupgrade
+      - id: remove-tabs
+
+  # Format doc strings
+  - repo: https://github.com/DanielNoord/pydocstringformatter
+    rev: "v0.7.3"
+    hooks:
+      - id: pydocstringformatter
+        exclude: _parser\.py$|_tab\.py|extern
+
+  - repo: local
+    hooks:
+      # Upgrade Python code
+      - id: pyupgrade
         name: pyupgrade
         exclude: \.idea|\.cache|^notebooks|^extern
         entry: pyupgrade
         args:
-        - --py39-plus
+          - --py39-plus
         language: system
-        types: [python]
-    # Nicely sort imports
-    -   id: isort
+        types: [ python ]
+      # Nicely sort imports
+      - id: isort
         name: isort
         exclude: tools|\.idea|\.cache|^notebooks|^extern
         entry: isort
         language: system
-        types: [python]
-    # Black, the code formatter, natively supports pre-commit
-    -   id: black
+        types: [ python ]
+      # Black, the code formatter, natively supports pre-commit
+      - id: black
         name: black
         entry: black
         language: system
-        types: [python]
+        types: [ python ]
         exclude: ^notebooks|^extern
-    # Lint
-    -   id: ruff
+      # Lint
+      - id: ruff
         name: ruff
         entry: ruff --force-exclude --fix --config pyproject.toml
         language: system
-        types: [python]
+        types: [ python ]
         exclude: ^notebooks|^extern
-# Also code format the docs
-#    -   id: blacken-docs
-#        name: blacken-docs
-#        entry: poetry run blacken-docs
-#        language: system
 
-#- repo: https://github.com/sirosen/texthooks
-#  rev: "0.3.1"
-#  hooks:
-#  - id: fix-ligatures
-#  - id: fix-smartquotes
+  # CMake formatting
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: "v0.6.13"
+    hooks:
+      - id: cmake-format
+        additional_dependencies: [ pyyaml ]
+        types: [ file ]
+        files: (\.cmake|CMakeLists.txt)(.in)?$
 
+  # Check for common shell mistakes
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: "v0.9.0.6"
+    hooks:
+      - id: shellcheck
+        stages: [ manual ]
 
-# Checking for common mistakes
-#- repo: https://github.com/pre-commit/pygrep-hooks
-#  rev: "v1.9.0"
-#  hooks:
-#  - id: python-check-blanket-noqa
-#  - id: python-check-blanket-type-ignore
-#  - id: python-no-log-warn
-#  - id: python-use-type-annotations
-#  - id: rst-backticks
-#  - id: rst-directive-colons
-#  - id: rst-inline-touching-normal
-
-# PyLint has native support - not always usable, but works for us
-#- repo: https://github.com/PyCQA/pylint
-#  rev: "v2.13.4"
-#  hooks:
-#  - id: pylint
-#    files: ^pybind11
-
-# CMake formatting
-#- repo: https://github.com/cheshirekow/cmake-format-precommit
-#  rev: "v0.6.13"
-#  hooks:
-#  - id: cmake-format
-#    additional_dependencies: [pyyaml]
-#    types: [file]
-#    files: (\.cmake|CMakeLists.txt)(.in)?$
-
-# Check static types with mypy
-#- repo: https://github.com/pre-commit/mirrors-mypy
-#  rev: "v0.942"
-#  hooks:
-#  - id: mypy
-#    args: [--show-error-codes]
-#    exclude: ^(tests|docs)/
-#    additional_dependencies: [nox, rich]
-
-# Checks the manifest for missing files (native support)
-#- repo: https://github.com/mgedmin/check-manifest
-#  rev: "0.48"
-#  hooks:
-#  - id: check-manifest
-#    # This is a slow hook, so only run this if --hook-stage manual is passed
-#    stages: [manual]
-#    additional_dependencies: [cmake, ninja]
-
-# Check for spelling
-#- repo: https://github.com/codespell-project/codespell
-#  rev: "v2.1.0"
-#  hooks:
-#  - id: codespell
-#    exclude: ".supp$"
-#    args: ["-L", "nd,ot,thist"]
-
-# Check for common shell mistakes
-- repo: https://github.com/shellcheck-py/shellcheck-py
-  rev: "v0.9.0.6"
-  hooks:
-  - id: shellcheck
-    stages: [manual]
-
-# Disallow some common capitalization mistakes
-#- repo: local
-#  hooks:
-#  - id: disallow-caps
-#    name: Disallow improper capitalization
-#    language: pygrep
-#    entry: PyBind|Numpy|Cmake|CCache|PyTest
-#    exclude: ^\.pre-commit-config.yaml$
-
-# Clang format the codebase automatically
-- repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: "v17.0.6"
-  hooks:
-  - id: clang-format
-    types_or: [c++, c, cuda]
-
-# Automatic pre-commit check and updates with precommit.ci
-# See https://results.pre-commit.ci/
-ci:
-    autofix_commit_msg: 🎨 [pre-commit.ci] Auto format from pre-commit.com hooks
-    autoupdate_commit_msg: ⬆ [pre-commit.ci] pre-commit autoupdate
+  # Clang format the codebase automatically
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: "v17.0.6"
+    hooks:
+      - id: clang-format
+        types_or: [ c++, c, cuda ]

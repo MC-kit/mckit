@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mckit"
-version = "0.6.29"
+version = "0.6.30"
 description = "Tools to process MCNP models and results"
 authors = ["rrn <r.rodionov@iterrf.ru>"]
 maintainers = ["dpv2015 <dmitri_portnov@yahoo.com>"]
@@ -53,6 +53,9 @@ requires = [  # Sync with build.py (see update_setup_requires())
     "ninja; platform_system!='Windows'",
     "setuptools >= 67.8.0",
     "numpy >= 1.26.0",
+    "mkl-devel == 2023.2.0",
+    "intel-openmp == 2023.2.0",
+    "tbb == 2021.10.0",
     "scikit-build"
 ]
 build-backend = "poetry.core.masonry.api"
@@ -157,11 +160,10 @@ coverage = { version = ">=6.1.2", extras = ["toml"] }
 coverage = { version = ">=6.1.2", extras = ["toml"] }
 
 [tool.poetry.group.xdoctest.dependencies]
-xdoctest = {extras = ["colors"], version = ">=0.15.10"}
+xdoctest = { extras = ["colors"], version = ">=0.15.10" }
 
 [tool.poetry.group.typeguard.dependencies]
-typeguard = ">=3.0.2"
-# typeguard = ">=3.0.2"  - pygls, which is required by ruff-lsp, doesn't allow newer version
+typeguard = ">=4.1.5"
 
 [tool.poetry.group.mypy.dependencies]
 mypy = ">=1.2.0"
@@ -281,18 +283,16 @@ python_functions = "test_*  profile_*"
 addopts = "-ra -q --tb=short --doctest-modules --strict-markers --ignore setup.py --failed-first --benchmark-autosave"
 doctest_optionflags = "NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ALLOW_UNICODE ALLOW_BYTES"
 testpaths = ["tests"]
-markers = [
-    "slow: too slow tests"
-]
+markers = ["slow: too slow tests"]
 # xfail tests that pass should fail the test suite
 xfail_strict = true
 filterwarnings = [
-    "error",
-    'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred to `pkg_resources.declare_namespace`',
-    "ignore:.*not typechecking multipledispatch.dispatcher.*UserWarning",
-    'ignore:.*io.FileIO \[closed\]',
-    'ignore:.*Deprecated call to `pkg_resources.declare_namespace',
-    'ignore:.*Implicit None on return values:DeprecationWarning'
+  "error",
+  'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred to `pkg_resources.declare_namespace`',
+  "ignore:.*not typechecking multipledispatch.dispatcher.*UserWarning",
+  'ignore:.*io.FileIO \[closed\]',
+  'ignore:.*Deprecated call to `pkg_resources.declare_namespace',
+  'ignore:.*Implicit None on return values:DeprecationWarning',
 ]
 log_format = "%(asctime)s %(levelname)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
@@ -372,25 +372,17 @@ module = [
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = [
-    "tomllib",
-    "tomli",
-]
+module = ["tomllib", "tomli"]
 allow_redefinition = true
 disable_error_code = "no-redef"
 
 [tool.check-manifest]
-ignore = [
-    "tests/*",
-    "tools/*",
-    "*.yaml",
-    "noxfile.py",
-]
+ignore = ["tests/*", "tools/*", "*.yaml", "noxfile.py"]
 
 [tool.ipdb]
 # For debugging in jupyterlab and ipython
 # see https://github.com/gotcha/ipdb
-context=5
+context = 5
 
 [tool.tryceratops]
 include = ["src"]
@@ -399,19 +391,19 @@ experimental = true
 [tool.pydocstringformatter]
 write = true
 style = "pep257"
-exclude = ["tools/**","src/**/*_parser.py","src/**/*_tab.py"]
+exclude = ["tools/**", "src/**/*_parser.py", "src/**/*_tab.py"]
 strip-whitespaces = true
 max-line-length = 100
 summary-quotes-same-line = true
 
 
 [tool.pylint]
-good-names-rgxs=["."]  # a single character variable is okay
-logging-format-style="new"   # use {} in logging messages
-deprecated-modules=["six"]
-extension-pkg-allow-list=["duckdb"]
-disable=[
-    "wrong-import-order"  # this is `isort` responsibility
+good-names-rgxs = ["."] # a single character variable is okay
+logging-format-style = "new" # use {} in logging messages
+deprecated-modules = ["six"]
+extension-pkg-allow-list = ["duckdb"]
+disable = [
+  "wrong-import-order", # this is `isort` responsibility
 ]
 
 
@@ -633,7 +625,7 @@ exclude = [
 max-complexity = 15
 
 [tool.ruff.flake8-annotations]
-mypy-init-return = true  # skip return type for __init__() methods
+mypy-init-return = true # skip return type for __init__() methods
 
 [tool.ruff.flake8-type-checking]
 strict = true
@@ -648,4 +640,4 @@ required-imports = ["from __future__ import annotations"]
 parametrize-names-type = "csv"
 
 [tool.ruff.pydocstyle]
-convention = "google"  # Use Google-style docstrings.
+convention = "google" # Use Google-style docstrings.
