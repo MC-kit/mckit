@@ -74,7 +74,10 @@ def _init():
     if WIN:
         for _dir in SHARED_LIBRARY_DIRECTORIES:
             os.add_dll_directory(str(_dir))
-    _preload_library("mkl_rt", max_version=2)
+    _preload_library("mkl_rt")
+    _preload_library(
+        "nlopt"
+    )  # otherwise: ImportError: libnlopt.so.0: cannot open shared object fileg
 
 
 _init()
