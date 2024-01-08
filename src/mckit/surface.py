@@ -663,8 +663,6 @@ class Plane(Surface, _Plane):
         options = filter_dict(self.options)
         return Plane(self._v, self._k, assume_normalized=True, **options)
 
-    __deepcopy__ = copy
-
     def apply_transformation(self) -> Plane:
         tr = self.transformation
         if tr is None:
@@ -772,8 +770,6 @@ class Sphere(Surface, _Sphere):
 
     def copy(self):
         return Sphere(self._center, self._radius, **deepcopy(self.options))
-
-    __deepcopy__ = copy
 
     def __repr__(self):
         return f"Sphere({self._center}, {self._radius}, {self.options if self.options else ''})"

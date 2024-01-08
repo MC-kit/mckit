@@ -38,9 +38,9 @@ class RectMesh:
         self._ey = EY
         self._ez = EZ
         self._origin = np.array([self._xbins[0], self._ybins[0], self._zbins[0]])
-        self._tr = None  # TODO dvp: and what this _tr is for?
+        self._tr = None
         if transform is not None:
-            self.transform(transform)  # TODO dvp: it's  wrong to apply transormaiton immideately
+            self.transform(transform)
 
     def __eq__(self, other):
         return self is other
@@ -79,7 +79,7 @@ class RectMesh:
         if self._tr is not None:
             self._tr = tr.apply2transform(self._tr)
         else:
-            self._tr = tr  # TODO dvp: this inconsistent with __init__, see TODO there
+            self._tr = tr
 
     def get_voxel(self, i, j, k):
         """Gets voxel.

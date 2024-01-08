@@ -326,6 +326,7 @@ def docs(s: Session) -> None:
 def clean(_: Session) -> None:
     """Clean folders with reproducible content."""
     to_clean = [
+        "_skbuild",
         ".benchmarks",
         ".eggs",
         ".mypy_cache",

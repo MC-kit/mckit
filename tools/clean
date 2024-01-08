@@ -19,8 +19,8 @@ delete_directory_recursively() {
 # TODO dvp: coverage clean
 clean() {
     if [[ "$#" -eq "0" ]]; then
-        delete_directory build dist .egg ./*.egg-info .nox
-        delete_directory 3rd-party/nlopt/build
+        delete_directory build dist .eggs ./*.egg-info .nox
+        delete_directory extern/nlopt/build
         delete_directory_recursively  "__pycache__" ".benchmarks"
         rm -f mckit/geometry*.so
         rm -f setup.py

@@ -1290,15 +1290,18 @@ static PyObject *shapeobj_bounding_box(ShapeObject *self, PyObject *args, PyObje
     if (box == NULL)
         return NULL;
 
-    //    Py_BEGIN_ALLOW_THREADS
+    Py_BEGIN_ALLOW_THREADS
 
-    shape_reset_cache(&self->shape);
+        shape_reset_cache(&self->shape);
     status = shape_bounding_box(&self->shape, &box->box, tol);
 
-    //    Py_END_ALLOW_THREADS
+    // In multithreading mode caller should create deepcopy of self object
+    // TODO dvp: revise architecture to have Shape, Surface and Box object immutable
+    // and add mutable cache and statistics collecting objects required for algorithms
 
-    if (status == SHAPE_SUCCESS)
-        return (PyObject *)box;
+    Py_END_ALLOW_THREADS
+
+        if (status == SHAPE_SUCCESS) return (PyObject *)box;
     else
     {
         Py_DECREF(box);
@@ -1326,14 +1329,17 @@ static PyObject *shapeobj_volume(ShapeObject *self, PyObject *args, PyObject *kw
         return NULL;
     }
 
-    //    Py_BEGIN_ALLOW_THREADS
+    // In multithreading mode caller should create deepcopy of self object
+    // see comment in ...bounding_box()
 
-    shape_reset_cache(&self->shape);
+    Py_BEGIN_ALLOW_THREADS
+
+        shape_reset_cache(&self->shape);
     vol = shape_volume(&self->shape, &((BoxObject *)box)->box, min_vol);
 
-    //    Py_END_ALLOW_THREADS
+    Py_END_ALLOW_THREADS
 
-    return Py_BuildValue("d", vol);
+        return Py_BuildValue("d", vol);
 }
 
 /*
