@@ -1,4 +1,5 @@
 """Code to load source distribution and print corresponding MCNP SDEF."""
+
 from __future__ import annotations
 
 import numpy as np

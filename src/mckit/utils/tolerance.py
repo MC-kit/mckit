@@ -1,4 +1,5 @@
 """Code to estimate "closeness" of various objects."""
+
 from __future__ import annotations
 
 from typing import Callable, Optional, Union

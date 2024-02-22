@@ -126,12 +126,11 @@ int RCC_init(RCC *surf, Cylinder *cyl, Plane *top, Plane *bot);
 int BOX_init(BOX *surf, Plane **planes);
 
 /// Tests senses of points with respect to the surface.
-void surface_test_points(
-    const Surface *surf,  ///< Surface
-    size_t npts,          ///< The number of points to be tested
-    const double *points, ///< Points to be tested
-    char *result          ///< The result - +1 if point has positive
-                          ///< sense and -1 if negative.
+void surface_test_points(const Surface *surf,  ///< Surface
+                         size_t npts,          ///< The number of points to be tested
+                         const double *points, ///< Points to be tested
+                         char *result          ///< The result - +1 if point has positive
+                                               ///< sense and -1 if negative.
 );
 
 /**
@@ -142,9 +141,8 @@ void surface_test_points(
  *    +1 - box lies on the positive side of surface;
  *    -1 - box lies on the negative side of surface.
  */
-int surface_test_box(
-    Surface *surf, ///< surface to test
-    const Box *box ///< box to test
+int surface_test_box(Surface *surf, ///< surface to test
+                     const Box *box ///< box to test
 );
 
 #endif

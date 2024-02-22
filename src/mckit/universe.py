@@ -1,4 +1,5 @@
 """Classes and methods to work with MCNP universe."""
+
 from __future__ import annotations
 
 from typing import Any, Callable, Optional, cast
@@ -371,7 +372,6 @@ class Universe:
         cell: Body | int = None,
         universe: Universe | int = None,
         predicate: Callable[[Body], bool] | None = None,
-        name_rule: str = "new",
     ):
         """Applies fill operations to all or selected cells or universes.
 
@@ -414,7 +414,7 @@ class Universe:
                 del_indices.append(i)
         for i in reversed(del_indices):
             self._cells.pop(i)
-        self.add_cells(extra_cells, name_rule=name_rule)
+        self.add_cells(extra_cells, name_rule="new")
 
     def bounding_box(
         self,
@@ -448,10 +448,12 @@ class Universe:
         """
         boxes = []
         for c in self._cells:
-            if not (skip_graveyard_cells and c.is_graveyard):
-                test = c.shape.test_points(box.corners)
-                if np.any(test != +1):
-                    boxes.append(c.shape.bounding_box(tol=tol, box=box))
+            if skip_graveyard_cells and c.is_graveyard:
+                continue
+            test = c.shape.test_points(box.corners)
+            if np.any(test == +1):
+                continue
+            boxes.append(c.shape.bounding_box(tol=tol, box=box))
         all_corners = np.empty((8 * len(boxes), 3))
         for i, b in enumerate(boxes):
             all_corners[i * 8 : (i + 1) * 8, :] = b.corners
@@ -1037,6 +1039,7 @@ class UniverseAnalyser:
 
     def duplicates(self):
         return (
+            self.universe_duplicates,  # equal universes are ignored - they should differ by fill transformation
             self.cell_duplicates,
             self.surface_duplicates,
             self.composition_duplicates,

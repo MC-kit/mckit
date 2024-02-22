@@ -1,4 +1,5 @@
 """Provide package version and other meta information."""
+
 from __future__ import annotations
 
 try:

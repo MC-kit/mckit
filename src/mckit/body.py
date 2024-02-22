@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import os
 
@@ -31,6 +31,8 @@ if TYPE_CHECKING:
     from typing import ClassVar, Literal, NewType, Union
 
     from collections.abc import Iterable, Iterator
+
+    import numpy.typing as npt
 
     from mckit import Universe
 
@@ -95,22 +97,22 @@ class Shape(_Shape):
         "C": ~hash("S"),
     }
 
-    def __init__(self, opc: str, *args: Shape | Surface):
+    def __init__(self, _opc: str, *_args: Shape | Surface | Body) -> None:
         """Initialize Shape object.
 
         Args:
-            opc:  Operation code. Denotes operation to be applied. Possible values:
+            _opc:  Operation code. Denotes operation to be applied. Possible values:
                 'I' - for intersection;
                 'U' - for union;
                 'C' - for complement;
                 'S' - (same) no operation;
                 'E' - empty set - no space occupied;
                 'R' - whole space.
-            args:  Geometry elements. It can be either Shape or Surface instances. But
+            _args:  Geometry elements. It can be either Shape or Surface instances. But
                 no arguments must be specified for 'E' or 'R' opc. Only one argument
                 must present for 'C' or 'S' opc values.
         """
-        opc, args = _clean_args(opc, *args)
+        opc, args = _clean_args(_opc, *_args)
         _Shape.__init__(self, opc, *args)
         self._calculate_hash(opc, *args)
 
@@ -161,7 +163,7 @@ class Shape(_Shape):
                 words.append(")")
         return words
 
-    def __eq__(self, other):  # noqa: PLR0911
+    def __eq__(self, other) -> bool:  # noqa: PLR0911
         if self is other:
             return True
         if self.opc != other.opc:
@@ -170,11 +172,9 @@ class Shape(_Shape):
             return True
         if len(self.args) != len(other.args):
             return False
-        self_groups = {k: list(v) for k, v in groupby(sorted(self.args, key=hash), key=hash)}
-        other_groups = {k: list(v) for k, v in groupby(sorted(other.args, key=hash), key=hash)}
-        flag: bool = False  # TODO dvp: check is this statement doesn't break tests
+        self_groups = {k: list(v) for k, v in groupby(self.args, key=hash)}
+        other_groups = {k: list(v) for k, v in groupby(other.args, key=hash)}
         for hash_value, entities in self_groups.items():
-            flag = False
             if hash_value not in other_groups.keys():
                 return False
             if len(entities) != len(other_groups[hash_value]):
@@ -184,17 +184,13 @@ class Shape(_Shape):
                     if not (se == oe):
                         break
                 else:
-                    flag = True
-                    break
-            if not flag:
-                return False
+                    return True
+        return False
 
-        return flag
+    def __hash__(self) -> int:
+        return cast(int, self._hash)
 
-    def __hash__(self):
-        return self._hash
-
-    def _calculate_hash(self, opc, *args):
+    def _calculate_hash(self, opc, *args) -> None:
         """Calculates hash value for the object.
 
         Hash is 'xor' for hash values of all arguments together with opc hash.
@@ -225,10 +221,10 @@ class Shape(_Shape):
         if opc == "R":
             return Shape("E")
         opc = self.invert_opc
-        c_args = [a.complement() for a in args]
+        c_args = (a.complement() for a in args)
         return Shape(opc, *c_args)
 
-    def is_complement(self, other) -> bool:
+    def is_complement(self, other: Shape) -> bool:
         """Checks if this shape is complement to the other.
 
         Returns:
@@ -248,10 +244,10 @@ class Shape(_Shape):
                     if a.is_complement(b):
                         break
                 else:
-                    return False
+                    return False  # not found complement to `a` in `other` args
         return True
 
-    def intersection(self, *other: Shape | Body) -> Shape:
+    def intersection(self, *other: Shape | Surface | Body) -> Shape:
         """Gets intersection with other shape.
 
         Args:
@@ -285,12 +281,7 @@ class Shape(_Shape):
         opc = self.opc
         args = []
         for a in self.args:
-            a = a.transform(transformation)  # noqa: PLW2901 - `a` is to be reassigned
-            if isinstance(a, Surface):
-                a = a.apply_transformation()  # noqa: PLW2901 `a` is to be reassigned
-                # TODO dvp: check if call of apply_transformation() should be moved to caller site
-                #           it would be better to change only transformations instead of the surfaces
-            args.append(a)
+            args.append(a.transform(transformation))
         return Shape(opc, *args)
 
     def apply_transformation(self):
@@ -326,7 +317,7 @@ class Shape(_Shape):
         if len(args) == 1:
             return {args[0]}
         if len(args) > 1:
-            result = set()
+            result: set[Surface] = set()
             for a in args:
                 result = result.union(a.get_surfaces())
             return result
@@ -342,6 +333,7 @@ class Shape(_Shape):
             stat = self.get_stat_table()
             drop_index = np.nonzero(np.all(stat == -1, axis=1))[0]
             arg_results = np.delete(stat, drop_index, axis=0)
+            # noinspection PyTypeChecker
             index_groups = self._find_groups(arg_results == +1)
             for ig in index_groups:
                 index = np.nonzero(ig)[0]
@@ -356,7 +348,7 @@ class Shape(_Shape):
         return shape_groups
 
     @staticmethod
-    def _find_groups(result):
+    def _find_groups(result: npt.NDArray):
         groups = [result[i, :] for i in range(result.shape[0])]
         while True:
             index = len(groups) - 1
@@ -389,7 +381,7 @@ class Shape(_Shape):
         elif self.opc == "U":
             val = +1
         else:
-            return {self}
+            return [self]
 
         drop_index = np.nonzero(np.all(stat == -val, axis=1))[0]
         if len(drop_index) == 0:
@@ -406,9 +398,11 @@ class Shape(_Shape):
         cases = self._find_coverages(arg_results, value=val)
         final_cases = {tuple(c) for c in cases}
         if len(final_cases) == 0:
-            _LOG.debug(self)
-            return None
-        unique = reduce(set.union, map(set, final_cases))
+            msg = "No final cases found"
+            raise ValueError(msg)
+            # _LOG.debug(self)
+            # return None  # TODO dvp: what's the logic here?
+        unique = reduce(lambda a, b: a.union(b), (set(x) for x in final_cases))
         args = self.args
         node_variants = {i: args[i].get_simplest(trim_size) for i in unique}
         for indices in final_cases:
@@ -427,7 +421,24 @@ class Shape(_Shape):
         return final_nodes
 
     @staticmethod
-    def _find_coverages(results, value=+1):
+    def _find_coverages(results: np.ndarray, value: int = +1, level: int = 0) -> list[list[[int]]]:
+        """Create tables of ... .
+
+        Given `results`, find counts of value occurrences over its rows.
+        For the row with minimal counts, scan the columns and
+        if value found, than extract `remainder` from `results`,
+        where `value` is not found in the current column.
+        Run the process recursively on `remainder`.
+
+        Args:
+            results: ...
+            value: ...
+            level: for recursion logging
+
+        Returns:
+            table with column numbers, where `value` is found ?
+        """
+        _LOG.debug(f"coverage level: {level}, results size: {results.size}, shape: {results.shape}")
         n = results.shape[1]
         cnt = np.count_nonzero(results == value, axis=1)
         i = np.argmin(cnt)
@@ -435,12 +446,12 @@ class Shape(_Shape):
         for j in range(n):
             if results[i][j] == value:
                 reminder = np.compress(results[:, j] != value, results, axis=0)
-                if reminder.shape[0] == 0:
+                if reminder.shape[0] == 0:  # in remaining rows the value of column `j` is the same
                     sub_cases = [[j]]
                 else:
-                    sub_cases = Shape._find_coverages(reminder, value=value)
+                    sub_cases = Shape._find_coverages(reminder, value=value, level=level + 1)
                     for s in sub_cases:
-                        s.append(j)
+                        s.append(j)  # add `j` column index to subcases
                 cases.extend(sub_cases)
         for c in cases:
             c.sort()
@@ -470,7 +481,7 @@ class Shape(_Shape):
         return self
 
     @staticmethod
-    def from_polish_notation(polish: list[Surface | Shape]) -> Shape:
+    def from_polish_notation(polish: list[Surface | Shape | str]) -> Shape:
         """Creates Shape instance from reversed Polish notation.
 
         Args:
@@ -499,15 +510,24 @@ if TYPE_CHECKING:
     TGeometry = NewType("TGeometry", Union[list[Union[Surface, TOperation]], Shape, "Body"])
 
 
-def _clean_args(opc, *args):
-    """Clean input arguments."""
-    args = [a.shape if isinstance(a, Body) else a for a in args]
+def _clean_args(opc: str, *_args: Shape | Surface | Body) -> tuple[str, list[Shape]]:
+    """Clean input arguments.
+
+    If arg is a Body, extracts its shape.
+    If arg is a Surface, creates a Shape('S',...).
+
+    Try  to reduce levels of operations if only one arg is provided
+    or one of the args is Empty or Universe
+
+    Returns:
+        opc and args simplified and args being converted to Shape
+    """
+    args = [a.shape if isinstance(a, Body) else a for a in _args]
     _verify_opc(opc, *args)
     if opc in {"I", "U"}:  # intersect or union
         args = [Shape("S", a) if isinstance(a, Surface) else a for a in args]
     if len(args) > 1:
         # Extend arguments
-        args = list(args)  # convert tuple to list
         i = 0
         while i < len(args):
             if args[i].opc == opc:
@@ -530,7 +550,7 @@ def _clean_args(opc, *args):
                         return "E", []
                     return "R", []
             i += 1
-        args = list(set(args))
+        # TODO dvp: make args unique: args = list(set(args))
         args.sort(key=hash)
         if len(args) == 0:
             opc = "E" if opc == "U" else "R"
@@ -540,6 +560,7 @@ def _clean_args(opc, *args):
         if opc == "C":
             item = args[0].complement()
             return item.opc, item.args
+
     return opc, args
 
 
@@ -618,6 +639,7 @@ class Body(Card):
         Returns:
             True, if all cell is of zero importance for all the kinds of particles, otherwise - False
         """
+        # noinspection PyTypeChecker
         return all(self.importance(c) == 0.0 for c in "NPE")
 
     def importance(self, particle: Literal["N", "P", "E"] = "N") -> float:
@@ -818,11 +840,12 @@ class Body(Card):
             cells.append(new_cell)
         return cells
 
+    # noinspection PyUnresolvedReferences
     def transform(self, transformation: Transformation) -> Body:
         """Applies transformation to this cell.
 
         Args:
-            transformation:Transformation to be applied.
+            transformation: Transformation to be applied.
 
         Returns:
             The result of this cell transformation.
@@ -831,9 +854,12 @@ class Body(Card):
         options = filter_dict(self.options, "original")
         cell = Body(geometry, **options)
         fill = cell.options.get("FILL", None)
-        if fill:
-            tr_in = fill.get("transform", Transformation())
-            new_tr = transformation.apply2transform(tr_in)
+        if fill is not None:
+            tr_in = fill.get("transform")
+            if tr_in is None:
+                new_tr = transformation
+            else:
+                new_tr = transformation.apply2transform(tr_in)
             fill["transform"] = new_tr
         return cell
 
@@ -842,9 +868,9 @@ class Body(Card):
         geometry = self._shape.apply_transformation()
         options = filter_dict(self.options, "original")
         cell = Body(geometry, **options)
-        fill = cell.options.get("FILL", None)
-        if fill:
-            tr_in = fill.get("transform", None)
+        fill = cell.options.get("FILL")
+        if fill is not None:
+            tr_in = fill.get("transform")
             filling_universe = fill["universe"]
             new_filling_universe = (
                 deepcopy(filling_universe).transform(tr_in).apply_transformation()

@@ -62,12 +62,10 @@ extern "C"
 
         if (argc != 4)
         {
-            fprintf(
-                stderr,
-                "Wrong arguments!"
-                " Usage: %s package_path module function\n",
-                argv[0]
-            );
+            fprintf(stderr,
+                    "Wrong arguments!"
+                    " Usage: %s package_path module function\n",
+                    argv[0]);
             return_value = -1;
             goto except;
         }

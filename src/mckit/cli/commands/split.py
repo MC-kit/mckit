@@ -4,6 +4,7 @@
 материалов, трансформаций, sdef и прочие карты. Файлы соответственно: cells.txt, surfaces.txt,
 materials.txt, transformations.txt, sdef.txt, cards.txt
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterable

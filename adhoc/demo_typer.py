@@ -1,4 +1,5 @@
 """Try typer CLI."""
+
 from __future__ import annotations
 
 from typing import Annotated, Optional

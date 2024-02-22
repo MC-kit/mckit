@@ -5,6 +5,7 @@ To use it install plugin pytest-benchmark (https://pytest-benchmark.readthedocs.
     or
     pip install pytest-benchmark
 """
+
 from __future__ import annotations
 
 import pytest

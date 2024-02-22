@@ -1,4 +1,5 @@
 """Split MCNP code to cards as text segments separating them by kind."""
+
 from __future__ import annotations
 
 from typing import TextIO

@@ -6,10 +6,11 @@ Create tables:
 
 Create comin from MCNP plot by template replacing coordinates with coordinates of the most frequent
 cell fail.
-"""
-from __future__ import annotations
 
-from typing import cast
+Adapted to old python versions available on HPCs.
+"""
+
+from __future__ import annotations
 
 import re
 import sqlite3 as sq
@@ -19,7 +20,10 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-DESCRIPTION_START_RE = re.compile(r"^1\s+lost particle no.\s*(?P<lp_no>\d+)")
+__appname__ = "extract_lost_particles"
+__version__ = "0.1.3"
+
+DESCRIPTION_START_RE = re.compile(r"^1\s+lost particle no.\s*(?P<lp_no>(\d+|\*\*\*))")
 HISTORY_NO_RE = re.compile(r"history no.\s+(?P<hist_no>\d+)$")
 
 
@@ -30,8 +34,8 @@ def setup_db(con: sq.Cursor) -> None:
         """
         drop table if exists lost_particles;
         create table lost_particles (
-            cell_fail integer not null,
-            surface integer not null,
+            cell_fail integer,
+            surface integer,
             cell_in integer not null,
             x real not null,
             y real not null,
@@ -47,37 +51,38 @@ def setup_db(con: sq.Cursor) -> None:
     )
 
 
-def extract_descriptions(p: Path) -> Iterator[list[str]]:
+def extract_descriptions(p: Path) -> Iterator[tuple[int, list[str]]]:
     """Extract lost particles descriptions from MCNP output file.
 
     Args:
         p: path to MCNP output file
 
     Yields:
-        portion of lines corresponding to a lost particle
+        start line of portion, portion of lines corresponding to a lost particle
     """
     wait_description = True
+    start_line = 0
     description = []
     with p.open() as fid:
-        for line in fid:
+        for i, line in enumerate(fid):
             if wait_description:
                 if line.startswith("1   lost particle no."):
+                    start_line = i + 1
                     description.append(line)
                     wait_description = False
             else:
                 description.append(line)
                 if len(description) > 15:
                     wait_description = True
-                    yield description
+                    yield start_line, description
                     description = []
 
 
 @dataclass
 class _Description:
-    cell_fail: int
-    surface: int
+    cell_fail: int | None
+    surface: int | None
     cell_in: int
-    point: bool
     x: float
     y: float
     z: float
@@ -88,78 +93,105 @@ class _Description:
     hist_no: int
 
 
+class ParseError(ValueError):
+    pass
+
+
 def _parse_description(lines: list[str]) -> _Description:
+    """Extract information on lost particle from the text lines."""
     match = DESCRIPTION_START_RE.search(lines[0])
     if match is None:
-        raise ValueError("Cannot find lost particle number")
-    lp_no = int(match["lp_no"])
+        raise ParseError("Cannot find lost particle number")
+    lp_no_str = match["lp_no"]
+    if lp_no_str == "***":
+        lp_no = 9999
+    else:
+        lp_no = int(lp_no_str)
     match = HISTORY_NO_RE.search(lines[0])
     if match is None:
-        raise ValueError("Cannot find lost history number")
+        raise ParseError("Cannot find lost history number")
     hist_no = int(match["hist_no"])
-    surface = int(lines[2].split()[-3])
-    cell_fail = int(lines[3].rsplit(maxsplit=2)[-1])
-    # line[6] may contain one of the following
-    # point (x,y,z) is in cell     1439
-    # the neutron  is in cell     1344.
-    line6 = lines[6].strip()
-    point = line6.startswith("point")
-    cell_in = int(lines[6].rsplit(maxsplit=2)[-1].rstrip("."))
-    x, y, z = map(float, lines[8].split()[-3:])
-    u, v, w = map(float, lines[9].split()[-3:])
-    return _Description(cell_fail, surface, cell_in, point, x, y, z, u, v, w, lp_no, hist_no)
+
+    if "no cell found" in lines[0]:
+        surface = int(lines[2].split()[-3])
+        cell_fail = int(lines[3].rsplit(maxsplit=2)[-1])
+        # line[6] may contain one of the following
+        # point (x,y,z) is in cell     1439
+        # the neutron  is in cell     1344.
+        line6 = lines[6].strip()
+        cell_in = int(line6.rsplit(maxsplit=2)[-1].rstrip("."))
+        x, y, z = map(float, lines[8].split()[-3:])
+        u, v, w = map(float, lines[9].split()[-3:])
+    elif "no intersection found" in lines[0]:
+        surface = None
+        cell_fail = None
+        line2 = lines[2].strip()
+        cell_in = int(line2.split(".")[0].rsplit(maxsplit=2)[-1])
+        x, y, z = map(float, lines[5].split()[-3:])
+        u, v, w = map(float, lines[6].split()[-3:])
+    else:
+        msg = f"Unknown lost particles spec first line: {lines[0]}"
+        raise ParseError(msg)
+
+    return _Description(cell_fail, surface, cell_in, x, y, z, u, v, w, lp_no, hist_no)
 
 
 def _process_file(p: Path, cur: sq.Cursor) -> None:
-    with open("lp-details.txt", "w") as fid:
+    with open("lp-details.txt", "a") as fid:
         out_file_name = str(p)
-        for lines in extract_descriptions(p):
+        for start_line, lines in extract_descriptions(p):
             print("-" * 20, file=fid)
             for line in lines:
                 print(line, file=fid, end="")
-            description = _parse_description(lines)
-            cur.execute(
-                """
-                insert into lost_particles (
-                    cell_fail,
-                    surface,
-                    cell_in,
-                    x,
-                    y,
+            try:
+                description = _parse_description(lines)
+                cur.execute(
+                    """
+                    insert into lost_particles (
+                        cell_fail,
+                        surface,
+                        cell_in,
+                        x,
+                        y,
 
-                    z,
-                    u,
-                    v,
-                    w,
-                    lp_no,
+                        z,
+                        u,
+                        v,
+                        w,
+                        lp_no,
 
-                    hist_no,
-                    out_file
+                        hist_no,
+                        out_file
+                    )
+                    values (?,?,?,?,?, ?,?,?,?,?, ?,?)
+                """,
+                    (
+                        description.cell_fail,
+                        description.surface,
+                        description.cell_in,
+                        description.x,
+                        description.y,
+                        description.z,
+                        description.u,
+                        description.v,
+                        description.w,
+                        description.lp_no,
+                        description.hist_no,
+                        out_file_name,
+                    ),
                 )
-                values (?,?,?,?,?, ?,?,?,?,?, ?,?)
-            """,
-                (
-                    description.cell_fail,
-                    description.surface,
-                    description.cell_in,
-                    description.x,
-                    description.y,
-                    description.z,
-                    description.u,
-                    description.v,
-                    description.w,
-                    description.lp_no,
-                    description.hist_no,
-                    out_file_name,
-                ),
-            )
+            except ParseError as ex:
+                msg = f"Error parsing {p}: {start_line}"
+                raise ParseError(msg) from ex
 
 
 def main() -> None:
     """Workflow implementation."""
     db = "lost-particles.sqlite"
-    _collect_lost_particles(db)
-    _analyze(db)
+    if _collect_lost_particles(db):
+        _analyze(db)
+    else:
+        print("Files not found")
 
 
 def _analyze(db) -> None:
@@ -224,21 +256,24 @@ def _analyze(db) -> None:
             print(new_comin_text, file=fid)
 
 
-def _collect_lost_particles(db: str) -> None:
+def _collect_lost_particles(db: str) -> bool:
     files = _collect_files()
+    if not files:
+        return False
     with sq.connect(db) as con:
         cur = con.cursor()
         setup_db(cur)
         for f in files:
             _process_file(f, cur)
+    return True
 
 
-def _collect_files() -> Iterator[Path]:
+def _collect_files() -> list[Path]:
     args = sys.argv[1:]
     if args:
-        files = cast(Iterator[Path], map(Path, args))
+        files = [Path(a) for a in args]
     else:
-        files = cast(Iterator[Path], Path.cwd().glob("*.o"))
+        files = [a for a in Path.cwd().glob("*.o")]
     return files
 
 

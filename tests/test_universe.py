@@ -1098,10 +1098,9 @@ def test_save_exception(tmp_path, universe, case, rename):
     for uname, ren_dict in rename.items():
         universes_idx[uname].rename(**ren_dict)
     with pytest.raises(NameClashError):
-        u.save(tmp_path)
+        u.save(tmp_path / f"{case}.i")
 
 
-@pytest.mark.xfail(reason="Check this renaming")
 @pytest.mark.parametrize(
     "case, rename",
     [
@@ -1115,7 +1114,7 @@ def test_save_exception2(tmp_path, universe, case, rename):
     for uname, ren_dict in rename.items():
         universes_idx[uname].rename(**ren_dict)
     with pytest.raises(NameClashError):
-        u.save(tmp_path)
+        u.save(tmp_path / f"{case}.i", check_clashes=True)
 
 
 @pytest.mark.parametrize(
@@ -1131,7 +1130,7 @@ def test_save_exception2(tmp_path, universe, case, rename):
 
                 TR1 1 1 1
             """,
-            [1],
+            [],
         ),
         (
             """\
@@ -1143,7 +1142,7 @@ def test_save_exception2(tmp_path, universe, case, rename):
 
             TR1 1 1 1
             """,
-            [1],
+            [],
         ),
         (
             """\
@@ -1157,7 +1156,7 @@ def test_save_exception2(tmp_path, universe, case, rename):
             TR1 1 1 1
             TR2 -1 -1 -1
             """,
-            [1, 2],
+            [],
         ),
         (
             """\
@@ -1174,11 +1173,12 @@ def test_save_exception2(tmp_path, universe, case, rename):
             TR2 -1 -1 -1
             TR3  0 1 0
             """,
-            [1, 2, 3],
+            [3],
         ),
     ],
 )
 def test_collect_transformations(case: str, expected: list[int]) -> None:
+    """Only transformations to filling universes should remain in the model."""
     case = textwrap.dedent(case)
     u = from_text(case).universe
     actual = sorted(map(int, map(Card.name, collect_transformations(u))))

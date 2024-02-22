@@ -1,9 +1,10 @@
 #ifndef __BOX_H
 #define __BOX_H
 
-#include "common.h"
 #include <stdint.h>
 #include <stdlib.h>
+
+#include "common.h"
 
 #define BOX_SUCCESS 0
 #define BOX_FAILURE (-1)
@@ -38,15 +39,14 @@ struct Box
 extern char enable_box_cache;
 
 /// Initializes box structure.
-int box_init(
-    Box *box,             /// Pointer to box structure being initialized
-    const double *center, /// Center of the box
-    const double *ex,     ///
-    const double *ey,     /// Directions of box's edges
-    const double *ez,     ///
-    double xdim,          ///
-    double ydim,          /// Dimensions of the box
-    double zdim           ///
+int box_init(Box *box,             /// Pointer to box structure being initialized
+             const double *center, /// Center of the box
+             const double *ex,     ///
+             const double *ey,     /// Directions of box's edges
+             const double *ez,     ///
+             double xdim,          ///
+             double ydim,          /// Dimensions of the box
+             double zdim           ///
 );
 
 /// Deallocates memory created for box's random generator if necessary.
@@ -56,10 +56,9 @@ void box_dispose(Box *box);
 void box_copy(Box *dst, const Box *src);
 
 /// Generates random points inside the box.
-int box_generate_random_points(
-    Box *box,
-    size_t npts,   /// IN: the number of points to be generated
-    double *points /// OUT: generated points
+int box_generate_random_points(Box *box,
+                               size_t npts,   /// IN: the number of points to be generated
+                               double *points /// OUT: generated points
 );
 
 /**
@@ -73,14 +72,13 @@ int box_generate_random_points(
 void box_test_points(const Box *box, size_t npts, const double *points, int *result);
 
 /// Splits box into two parts.
-int box_split(
-    const Box *box, // Box to be split
-    Box *box1,      // First part box - with smaller coordinates.
-    Box *box2,      // Second part box - with greater coordinates.
-    int dir,        // Direction along which the box must be split. BOX_SPLIT_X,
-    // BOX_SPLIT_Y, BOX_SPLIT_Z, BOX_SPLIT_AUTODIR - split along
-    // dimension with maximal length.
-    double ratio // Ratio of splitting along splitting direction. 0 < ratio < 1.
+int box_split(const Box *box, // Box to be split
+              Box *box1,      // First part box - with smaller coordinates.
+              Box *box2,      // Second part box - with greater coordinates.
+              int dir,        // Direction along which the box must be split. BOX_SPLIT_X,
+              // BOX_SPLIT_Y, BOX_SPLIT_Z, BOX_SPLIT_AUTODIR - split along
+              // dimension with maximal length.
+              double ratio // Ratio of splitting along splitting direction. 0 < ratio < 1.
 );
 
 /**

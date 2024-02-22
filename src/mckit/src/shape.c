@@ -222,11 +222,10 @@ int set_zero_surface_pointers(Shape *shape, int n, Surface **zs, uint64_t subdiv
 // Tests box location with respect to the shape. It tries to find out
 // if the box really intersects the shape with desired accuracy.
 // Returns BOX_INSIDE_SHAPE | BOX_CAN_INTERSECT_SHAPE | BOX_OUTSIDE_SHAPE
-int shape_ultimate_test_box(
-    Shape *shape,   // Pointer to shape
-    const Box *box, // box
-    double min_vol, // minimal volume until which splitting process goes.
-    char collect    // Whether to collect statistics about results.
+int shape_ultimate_test_box(Shape *shape,   // Pointer to shape
+                            const Box *box, // box
+                            double min_vol, // minimal volume until which splitting process goes.
+                            char collect    // Whether to collect statistics about results.
 )
 {
     int zero_surfaces = 0;
@@ -277,12 +276,11 @@ int shape_ultimate_test_box(
 // Tests whether points belong to this shape.
 // Returns status - SHAPE_SUCCESS | SHAPE_NO_MEMORY
 //
-int shape_test_points(
-    const Shape *shape,   // test shape
-    size_t npts,          // the number of points
-    const double *points, // array of points - NDIM * npts
-    char *result          // Result - +1 if point belongs to shape, -1
-                          // otherwise. It must have length npts.
+int shape_test_points(const Shape *shape,   // test shape
+                      size_t npts,          // the number of points
+                      const double *points, // array of points - NDIM * npts
+                      char *result          // Result - +1 if point belongs to shape, -1
+                                            // otherwise. It must have length npts.
 )
 {
     int i;
@@ -448,11 +446,10 @@ void shape_reset_stat(Shape *shape)
 }
 
 // Gets shape's contour.Returns the number of points in the contour.
-size_t shape_contour(
-    const Shape *shape, // Shape
-    const Box *box,     // Box, where contour is needed.
-    double min_vol,     // Size of volume to be considered as point
-    double *buffer      // Buffer, where points are put.
+size_t shape_contour(const Shape *shape, // Shape
+                     const Box *box,     // Box, where contour is needed.
+                     double min_vol,     // Size of volume to be considered as point
+                     double *buffer      // Buffer, where points are put.
 )
 {
     int result = shape_test_box(shape, box, 0, NULL);
@@ -475,10 +472,9 @@ size_t shape_contour(
 }
 
 // Collects statistics about shape.
-void shape_collect_statistics(
-    Shape *shape,   // Shape
-    const Box *box, // Global box, where statistics is collected
-    double min_vol  // minimal volume, when splitting process stops.
+void shape_collect_statistics(Shape *shape,   // Shape
+                              const Box *box, // Global box, where statistics is collected
+                              double min_vol  // minimal volume, when splitting process stops.
 )
 {
     shape_reset_stat(shape);
@@ -486,10 +482,9 @@ void shape_collect_statistics(
 }
 
 // Gets statistics table
-char *shape_get_stat_table(
-    Shape *shape,  // Shape
-    size_t *nrows, // number of rows
-    size_t *ncols  // number of columns
+char *shape_get_stat_table(Shape *shape,  // Shape
+                           size_t *nrows, // number of rows
+                           size_t *ncols  // number of columns
 )
 {
     *nrows = shape->stats->len;

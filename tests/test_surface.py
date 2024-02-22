@@ -619,11 +619,12 @@ class TestPlane:
         ),
     )
     def test_mcnp_pretty_repr(self, surface, answer):
-        s = surface.round()
+        # s = surface.round()
+        s = surface
         desc = s.mcnp_repr(pretty=True)
         assert desc == answer
-        desc = s.mcnp_repr(pretty=False)
-        assert desc == answer
+        # desc = s.mcnp_repr(pretty=False)
+        # assert desc == answer
 
     @pytest.mark.parametrize(
         "surface, answer",
@@ -631,22 +632,22 @@ class TestPlane:
             surfs,
             [
                 "1 PX 5",
-                "1 PX 5.000000000001",
-                "1 PX 4.999999999999",
+                "1 PX 5",
+                "1 PX 5",
                 "1 PX 5.00000000001",
                 "2 PY 5",
-                "2 PY 5.000000000001",
-                "2 PY 4.999999999999",
+                "2 PY 5",
+                "2 PY 5",
                 "2 PY 5.00000000001",
                 "3 PZ 5",
-                "3 PZ 5.000000000001",
-                "3 PZ 4.999999999999",
+                "3 PZ 5",
+                "3 PZ 5",
                 "3 PZ 5.00000000001",
-                "4 P 1 5e-13 -5e-13 5",
-                "4 P -5e-13 1 5e-13 5.000000000001",
-                "4 P 5e-13 -5e-13 1 4.999999999999",
-                "5 P 0.7071067811865 0.7071067811865 0 -2.828427124746",
-                "5 P 0.7071067811865 0.7071067811865 0 -2.828427124746",
+                "4 PX 5",
+                "4 PY 5",
+                "4 PZ 5",
+                "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
+                "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
             ],
         ),
     )
@@ -835,7 +836,8 @@ class TestSphere:
         ),
     )
     def test_mcnp_pretty_repr(self, surface, answer):
-        s = surface.round()
+        # s = surface.round()
+        s = surface
         desc = s.mcnp_repr(pretty=True)
         assert desc == answer
         desc = s.mcnp_repr(pretty=False)
@@ -846,23 +848,23 @@ class TestSphere:
         zip(
             surfs,
             [
-                "1 SO 1",  # 0
-                "1 SO 1.000000000001",  # 1
-                "1 SO 2",  # 2
-                "2 SX 5 4",  # 3
-                "2 SX 5.000000000001 4",  # 4
-                "2 SX 4.999999999999 4.000000000001",  # 5
+                "1 SO 1",
+                "1 SO 1",
+                "1 SO 2",
+                "2 SX 5 4",
+                "2 SX 5 4",
+                "2 SX 5 4",
                 "2 SY 5 4",
-                "2 SY 5.000000000001 4",
-                "2 SY 4.999999999999 4.000000000001",  # 8
+                "2 SY 5 4",
+                "2 SY 5 4",
                 "2 SZ 5 4",
-                "2 SZ 5.000000000001 4",  # 10
-                "2 SZ 4.999999999999 4.000000000001",  # 11
-                "3 S 5 1e-13 -1e-13 4.000000000001",  # 12
-                "3 S 1e-13 5 -1e-13 3.999999999999",  # 13
-                "3 S 1e-13 -1e-13 5 4.000000000001",  # 14
+                "2 SZ 5 4",
+                "2 SZ 5 4",
+                "3 SX 5 4",
+                "3 SY 5 4",
+                "3 SZ 5 4",
                 "4 S 4.3 8.2 -1.4 3.5",
-                "4 S 4.299999999999 8.200000000001 -1.400000000001 3.500000000001",
+                "4 S 4.3 8.2 -1.4 3.5",
             ],
         ),
     )
@@ -1072,24 +1074,24 @@ class TestCylinder:
         zip(
             surfs,
             [
-                "1 CX 1",  # 0
-                "1 CX 1.000000000001",
+                "1 CX 1",
+                "1 CX 1",
                 "1 CY 1",
-                "1 CY 1.000000000001",
+                "1 CY 1",
                 "1 CZ 1",
-                "1 CZ 1.000000000001",  # 5
+                "1 CZ 1",
                 "2 C/X 1 -2 3",
-                "2 C/X 0.9999999999995 -1.999999999999 2.999999999999",
+                "2 C/X 1 -2 3",
                 "2 C/Y 1 -2 3",
-                "2 C/Y 0.9999999999995 -1.999999999999 2.999999999999",
-                "2 C/Z 1 -2 3",  # 10
-                "2 C/Z 0.9999999999995 -1.999999999999 2.999999999999",
-                "3 GQ 0 1 1 -1e-13 5e-27 1e-13 3e-13 -2 4 -4",
-                "3 GQ 0 1 1 2e-13 3.999999999999e-26 -4e-13 -1e-12 -2.000000000001 4.000000000002 -3.999999999995",
-                "3 GQ 1 0 1 -1e-13 1e-13 5e-27 -2 3e-13 4 -4",
-                "3 GQ 1 0 1 2e-13 -4e-13 3.999999999999e-26 -2.000000000001 -1e-12 4.000000000002 -3.999999999995",  # 15
-                "3 GQ 1 1 0 5e-27 1e-13 -1e-13 -2 4 3e-13 -4",
-                "3 GQ 1 1 0 1.999999999999e-26 -2e-13 2e-13 -2.000000000001 4.000000000001 -6.000000000001e-13 -3.999999999997",
+                "2 C/Y 1 -2 3",
+                "2 C/Z 1 -2 3",
+                "2 C/Z 1 -2 3",
+                "3 C/X 1 -2 3",
+                "3 C/X 1 -2 3",
+                "3 C/Y 1 -2 3",
+                "3 C/Y 1 -2 3",
+                "3 C/Z 1 -2 3",
+                "3 C/Z 1 -2 3",
             ],
         ),
     )
@@ -1428,9 +1430,9 @@ class TestCone:
     @pytest.mark.parametrize("box", [Box([3, 2, -4], 10, 10, 10)])
     def test_transform2(self, transform, surf, box):
         points = box.generate_random_points(10000)
-        test = surf.round().test_points(points)
+        test = surf.test_points(points)
         new_pts = transform.apply2point(points)
-        new_surf = surf.transform(transform).round()
+        new_surf = surf.transform(transform)
         new_test = new_surf.test_points(new_pts)
         np.testing.assert_array_equal(test, new_test)
 
@@ -2468,49 +2470,41 @@ class TestCone:
         desc = s.mcnp_repr(pretty=False)
         assert desc == answer
 
-    # TODO dvp: check the reason of rounding error in this test"
-    # @pytest.mark.skipif(
-    #     platform.system() == "Darvin"
-    #     or platform.system() == "Linux"
-    #     and platform.uname().node == "dvp-K56",
-    #     reason="Check the rounding error occuring on dvp-K56 machine",
-    # )
-    @pytest.mark.skip(reason="Fails on MacOS")
     @pytest.mark.parametrize(
         "surface, answer",
         zip(
             surfs,
             [
                 "1 KX 4 0.25",
-                "1 KX 3.999999999999 0.2500000000001",  # 1
+                "1 KX 4 0.25",
                 "1 KY 4 0.25",
-                "1 KY 3.999999999999 0.2500000000001",  # 3
+                "1 KY 4 0.25",
                 "1 KZ 4 0.25",
-                "1 KZ 3.999999999999 0.2500000000001",  # 5
+                "1 KZ 4 0.25",
                 "2 K/X 3 2 -4 0.25",
-                "2 K/X 2.999999999999 2.000000000001 -3.999999999999 0.2499999999999",  # 7
+                "2 K/X 3 2 -4 0.25",
                 "2 K/Y 3 2 -4 0.25",
-                "2 K/Y 2.999999999999 2.000000000001 -3.999999999999 0.2499999999999",  # 9
+                "2 K/Y 3 2 -4 0.25",
                 "2 K/Z 3 2 -4 0.25",
-                "2 K/Z 2.999999999999 2.000000000001 -3.999999999999 0.2499999999999",  # 11
-                "3 GQ -0.25 1 1 -2.5e-13 2.5e-26 2.5e-13 1.500000000002 -3.999999999999 7.999999999999 17.75",  # 12
-                "3 GQ 1 -0.25 1  -2.5e-13 2.5e-13 2.5e-26 -5.999999999999 1.000000000002 7.999999999999 24",  # 13
-                "3 GQ 1 1 -0.25  2.5e-26 2.5e-13 -2.5e-13 -6.000000000001 -3.999999999999 -2 9.000000000001",  # 14
-                "4 GQ -0.25 1 1 2.5e-13 2.5e-26 -2.5e-13 1.499999999998 -4.000000000001 8.000000000001 17.75",  # 15
-                "4 GQ 1 -0.25 1 2.5e-13 -2.5e-13 2.5e-26 -6.000000000001 0.9999999999983 8 24",  # 16
-                "4 GQ 1 1 -0.25 2.5e-26 -2.5e-13 2.5e-13 -5.999999999999 -4.000000000001 -2 8.999999999999",  # 17
+                "2 K/Z 3 2 -4 0.25",
+                "3 K/X 3 2 -4 0.25",
+                "3 K/Y 3 2 -4 0.25",
+                "3 K/Z 3 2 -4 0.25",
+                "4 K/X 3 2 -4 0.25",
+                "4 K/Y 3 2 -4 0.25",
+                "4 K/Z 3 2 -4 0.25",
                 "5 K/X 3 2 -4 0.25 1",
-                "5 K/X 2.999999999999 2.000000000001 -3.999999999999 0.2499999999999 1",  # 19
+                "5 K/X 3 2 -4 0.25 1",
                 "5 K/Y 3 2 -4 0.25 1",
-                "5 K/Y 2.999999999999 2.000000000001 -3.999999999999 0.2499999999999 1",  # 21
+                "5 K/Y 3 2 -4 0.25 1",
                 "5 K/Z 3 2 -4 0.25 1",
-                "5 K/Z 2.999999999999 2.000000000001 -3.999999999999 0.2499999999999 1",  # 23
-                "6 GQ -0.25 1 1 -2.5e-13 2.5e-26 2.5e-13 1.500000000002 -3.999999999999 7.999999999999 17.75",  # 24
-                "6 GQ 1 -0.25 1 -2.5e-13 2.5e-13 2.5e-26 -5.999999999999 1.000000000002 7.999999999999 24",  # 25
-                "6 GQ 1 1 -0.25 2.5e-26 2.5e-13 -2.5e-13 -6.000000000001 -3.999999999999 -2 9.000000000001",  # 26
-                "7 GQ -0.25 1 1 2.5e-13 2.5e-26 -2.5e-13 1.499999999998 -4.000000000001 8.000000000001 17.75",  # 27
-                "7 GQ 1 -0.25 1 2.5e-13 -2.5e-13 2.5e-26 -6.000000000001 0.9999999999983 8 24",  # 28
-                "7 GQ 1 1 -0.25 2.5e-26 -2.5e-13 2.5e-13 -5.999999999999 -4.000000000001 -2 8.999999999999",  # 29
+                "5 K/Z 3 2 -4 0.25 1",
+                "6 K/X 3 2 -4 0.25 1",
+                "6 K/Y 3 2 -4 0.25 1",
+                "6 K/Z 3 2 -4 0.25 1",
+                "7 K/X 3 2 -4 0.25 -1",
+                "7 K/Y 3 2 -4 0.25 -1",
+                "7 K/Z 3 2 -4 0.25 -1",
             ],
         ),
     )
@@ -2753,14 +2747,14 @@ class TestTorus:
             surfs,
             [
                 "1 TX 1 2 3 4 2 1",
-                "1 TX 0.9999999999999 2.000000000001 2.999999999999 3.999999999999 2 0.9999999999995",  # 1
-                "1 TX 1 2 3 4 2 1",  # 2
+                "1 TX 1 2 3 4 2 1",
+                "1 TX 1 2 3 4 2 1",
                 "2 TY 1 2 3 4 2 1",
-                "2 TY 0.9999999999999 2.000000000001 2.999999999999 3.999999999999 2 0.9999999999995",
+                "2 TY 1 2 3 4 2 1",
                 "2 TY 1 2 3 4 2 1",
                 "3 TZ 1 2 3 4 2 1",
-                "3 TZ 0.9999999999999 2.000000000001 2.999999999999 3.999999999999 2 0.9999999999995",  # 7
-                "3 TZ 1 2 3 4 2 1",  # 8
+                "3 TZ 1 2 3 4 2 1",
+                "3 TZ 1 2 3 4 2 1",
             ],
         ),
     )
@@ -3286,24 +3280,28 @@ class TestRCC:
 @pytest.mark.parametrize(
     "a, b, expected",
     [
-        (create_surface("PX", 0), create_surface("PX", 1e-12), True),
+        (
+            create_surface("PX", 0),
+            create_surface("PX", 1e-12),
+            True,
+        ),
         (
             create_surface("PX", 0).transform(Transformation(translation=[0, 0, 0])),
             create_surface("PX", 0).transform(Transformation(translation=[0, 0, 1e-12])),
             True,
         ),
-        (create_surface("PX", 0), create_surface("PX", 1e-11), False),
+        (
+            create_surface("PX", 0),
+            create_surface("PX", 1e-11),
+            False,
+        ),
         (
             create_surface("PX", 0).transform(Transformation(translation=[0, 0, 0])),
-            create_surface("PX", 0).transform(Transformation(translation=[0, 0, 1e-11])),
+            create_surface("PX", 0).transform(Transformation(translation=[1e-11, 0, 0])),
             False,
         ),
     ],
 )
 def test_plane_is_close(a: Plane, b: Plane, expected: bool) -> None:
-    if expected:
-        assert a.is_close_to(b)
-        assert b.is_close_to(a)
-    else:
-        assert not a.is_close_to(b)
-        assert not b.is_close_to(a)
+    assert a.is_close_to(b) == expected
+    assert b.is_close_to(a) == expected

@@ -67,7 +67,7 @@ jobs:
 
       - name: Load poetry cache
         id: cached-poetry-dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             .cache/pypoetry
@@ -102,7 +102,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version:  ${{ env.DEFAULT_PYTHON }}
+          python-version: ${{ env.DEFAULT_PYTHON }}
 
       - name: Use frozen pip version
         run: |
@@ -116,7 +116,7 @@ jobs:
 
       - name: Load poetry cache
         id: cached-poetry-dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             .cache/pypoetry
@@ -141,8 +141,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.9', '3.10', '3.11']
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        python-version: [ '3.9', '3.10', '3.11' ]
 
     steps:
 
@@ -169,7 +169,7 @@ jobs:
 
       - name: Load poetry cache
         id: cached-poetry-dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             .cache/pypoetry
@@ -187,9 +187,9 @@ jobs:
         run: nox  --force-color --session tests --python ${{ matrix.python-version }}
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
+          name: coverage-data-${{ runner.os }}-${{ matrix.python-version }}
           path: ".coverage.*"
 
   coverage:
@@ -212,7 +212,7 @@ jobs:
 
       - name: Load poetry cache
         id: cached-poetry-dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             .cache/pypoetry
@@ -232,9 +232,10 @@ jobs:
           nox --version
 
       - name: Download coverage data
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
-          name: coverage-data
+          pattern: coverage-data-*
+          merge-multiple: true
 
       - name: Combine coverage data and display human readable report
         run: |
@@ -245,4 +246,4 @@ jobs:
           nox --force-color --session=coverage -- xml
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v3.1.4
+        uses: codecov/codecov-action@v4

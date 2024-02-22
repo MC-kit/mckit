@@ -1,4 +1,5 @@
 """Python subclass for geometry.Box."""
+
 from __future__ import annotations
 
 import numpy as np

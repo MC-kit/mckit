@@ -1,11 +1,14 @@
 """Code for transformations."""
+
 from __future__ import annotations
 
 from typing import Any
 
+# noinspection PyPackageRequirements
 import numpy as np
 
-from numpy.typing import NDArray as ArrayLike
+# noinspection PyPackageRequirements
+import numpy.typing as npt
 
 # noinspection PyUnresolvedReferences,PyPackageRequirements
 from mckit.geometry import ORIGIN
@@ -16,13 +19,14 @@ from .utils.tolerance import DEFAULT_TOLERANCE_ESTIMATOR, EstimatorType, MaybeCl
 
 __all__ = ["Transformation", "IDENTITY_ROTATION"]
 
-IDENTITY_ROTATION = np.eye(3)
+IDENTITY_ROTATION: npt.NDArray[float] = np.eye(3)
 
 ANGLE_TOLERANCE = 0.001
 COS_TH = np.sin(ANGLE_TOLERANCE)
 ZERO_COS_TOLERANCE = 2.0e-16
 
 
+# noinspection GrazieInspection
 class Transformation(Card, MaybeClose):
     """Geometry transformation object.
 
@@ -123,8 +127,8 @@ class Transformation(Card, MaybeClose):
         return words
 
     def apply2gq(
-        self, m1: ArrayLike, v1: ArrayLike, k1: float
-    ) -> tuple[ArrayLike, ArrayLike, float]:
+        self, m1: npt.NDArray[float], v1: npt.NDArray[float], k1: float
+    ) -> tuple[np.ndarray[float], np.ndarray[float], float]:
         """Gets parameters of generic quadratic surface in the main CS.
 
         Args:
@@ -155,7 +159,7 @@ class Transformation(Card, MaybeClose):
         k = k1 - np.dot(v, self._t) - np.dot(self._t, np.dot(m, self._t))
         return m, v, k
 
-    def apply2plane(self, v1: ArrayLike, k1: float) -> tuple[ArrayLike, float]:
+    def apply2plane(self, v1: npt.NDArray[float], k1: float) -> tuple[npt.NDArray[float], float]:
         """Gets parameters of plane surface in the main coordinate system.
 
         Args:
@@ -165,16 +169,15 @@ class Transformation(Card, MaybeClose):
                 system.
 
         Returns:
-            v, k
-            - v: A vector of size 3 which defines vector, normal to the plane surface
-                 in the main coordinate system.
-            - k: Free term of plane surface equation in the main coordinate system.
+            - v, A vector of size 3 which defines vector,
+                 normal to the plane surface in the main coordinate system.
+            - k, Free term of plane surface equation in the main coordinate system.
         """
         v = np.dot(self._u, v1)
         k = k1 - np.dot(v, self._t)
         return v, k
 
-    def apply2point(self, p1: ArrayLike) -> ArrayLike:
+    def apply2point(self, p1: npt.NDArray[float]) -> np.ndarray[float]:
         """Gets coordinates of point p1 in the main coordinate system.
 
         Args:
@@ -189,7 +192,7 @@ class Transformation(Card, MaybeClose):
         # of p1 and p.
         return np.dot(p1, np.transpose(self._u)) + self._t
 
-    def apply2vector(self, v1: ArrayLike) -> ArrayLike:
+    def apply2vector(self, v1: npt.NDArray[float]) -> np.ndarray[float]:
         """Gets coordinates of vector v1 in the main coordinate system.
 
         Args:
@@ -241,7 +244,7 @@ class Transformation(Card, MaybeClose):
             return False
         return estimator((self._t, self._u), (other._t, other._u))
 
-    def _setup_rotation_matrix(self, u: ArrayLike) -> ArrayLike:
+    def _setup_rotation_matrix(self, u: npt.NDArray[float]) -> npt.NDArray[float]:
         zero_cosines_idx = np.abs(u) < ZERO_COS_TOLERANCE
         u[zero_cosines_idx] = 0.0
         # TODO: Implement creation from reduced rotation parameter set.

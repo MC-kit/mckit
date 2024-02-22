@@ -1,4 +1,5 @@
 """Example how to mix compositions by volume fractions."""
+
 from __future__ import annotations
 
 from mckit.material import mixture_by_volume

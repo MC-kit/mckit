@@ -1,4 +1,5 @@
 """The interfaces to facilitate adding new functionality to an hierarchy of classes (Visitor pattern)."""
+
 from __future__ import annotations
 
 from typing import Any, Callable, ContextManager, NoReturn

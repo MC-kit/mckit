@@ -2,6 +2,7 @@
 
 Not using pytest.
 """
+
 from __future__ import annotations
 
 from zipfile import ZipFile

@@ -27,11 +27,10 @@ static double _max(double a, double b)
  */
 
 /// Calculates deviation of point x from the plane.
-double plane_func(
-    unsigned int n,  // Space dimension (must be NDIM)
-    const double *x, // Point to be checked
-    double *grad,    // Gradient - calculated if not NULL
-    void *f_data     // Surface data - parameters of the function.
+double plane_func(unsigned int n,  // Space dimension (must be NDIM)
+                  const double *x, // Point to be checked
+                  double *grad,    // Gradient - calculated if not NULL
+                  void *f_data     // Surface data - parameters of the function.
 )
 {
     Plane *data = (Plane *)f_data;
@@ -190,11 +189,10 @@ double torus_func(unsigned int n, const double *x, double *grad, void *f_data)
 }
 
 // Interface to all surface functions. Decides, which function to apply.
-double surface_func(
-    unsigned int n,  // Space dimension (NDIM)
-    const double *x, // Point to be checked
-    double *grad,    // Gradient - calculated if not NULL (array of size NDIM)
-    void *f_data     // Surface data
+double surface_func(unsigned int n,  // Space dimension (NDIM)
+                    const double *x, // Point to be checked
+                    double *grad,    // Gradient - calculated if not NULL (array of size NDIM)
+                    void *f_data     // Surface data
 )
 {
     Surface *surf = (Surface *)f_data;

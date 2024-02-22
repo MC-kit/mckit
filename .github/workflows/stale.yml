@@ -2,18 +2,18 @@ name: Mark stale issues and pull requests
 
 on:
   schedule:
-  - cron: "10 10 * * 0"  # at 10:10 every Sunday
-    # See expression format: https://www.techielass.com/schedule-github-actions-using-cron-expressions
+    - cron: "10 10 * * 0"  # at 10:10 every Sunday
+      # See expression format: https://www.techielass.com/schedule-github-actions-using-cron-expressions
 jobs:
   stale:
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/stale@v9
-      with:
-        repo-token: ${{ secrets.MCKIT_GITHUB_TOKEN }}
-        stale-issue-message: 'Stale issue message'
-        stale-pr-message: 'Stale pull request message'
-        stale-issue-label: 'no-issue-activity'
-        stale-pr-label: 'no-pr-activity'
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.MCKIT_GITHUB_TOKEN }}
+          stale-issue-message: 'Stale issue message'
+          stale-pr-message: 'Stale pull request message'
+          stale-issue-label: 'no-issue-activity'
+          stale-pr-label: 'no-pr-activity'

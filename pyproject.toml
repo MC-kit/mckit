@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mckit"
-version = "0.7.0"
+version = "0.7.1"
 description = "Tools to process MCNP models and results"
 authors = ["rrn <r.rodionov@iterrf.ru>"]
 maintainers = ["dpv2015 <dmitri_portnov@yahoo.com>"]
@@ -47,7 +47,7 @@ classifiers = [
 ]
 
 [build-system]
-requires = [  # Sync with build.py (see update_setup_requires())
+requires = [
     "poetry-core >= 1.5.2",
     "cmake >= 3.26.3",
     "ninja; platform_system!='Windows'",
@@ -277,22 +277,54 @@ exclude = '''
 '''
 
 [tool.pytest.ini_options]
-minversion = "6.0"
-norecursedirs = ".* build dist *.egg-info data htmlcov notebooks tools wrk"
+minversion = "6.2"
+cache_dir = '.cache/pytest'
+norecursedirs = '''
+*.egg-info
+.*
+build
+data
+dist
+docs/_build
+docs/examples
+htmlcov
+notebooks
+tools
+wrk
+'''
 python_functions = "test_*  profile_*"
-addopts = "-ra -q --tb=short --doctest-modules --strict-markers --ignore setup.py --failed-first --benchmark-autosave"
-doctest_optionflags = "NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ALLOW_UNICODE ALLOW_BYTES"
+addopts = '''
+-ra
+-q
+--tb=short
+--doctest-modules
+--strict-markers
+--ignore setup.py
+--failed-first
+--benchmark-disable
+--benchmark-storage=.cache/benchmarks
+--benchmark-autosave
+--benchmark-compare
+--benchmark-group-by=name,fullname
+'''
+doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ALLOW_UNICODE ALLOW_BYTES"
 testpaths = ["tests"]
-markers = ["slow: too slow tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
 # xfail tests that pass should fail the test suite
 xfail_strict = true
 filterwarnings = [
-  "error",
-  'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred to `pkg_resources.declare_namespace`',
-  "ignore:.*not typechecking multipledispatch.dispatcher.*UserWarning",
-  'ignore:.*io.FileIO \[closed\]',
-  'ignore:.*Deprecated call to `pkg_resources.declare_namespace',
-  'ignore:.*Implicit None on return values:DeprecationWarning',
+    "error",
+    'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred to `pkg_resources.declare_namespace`',
+    "ignore:.*not typechecking multipledispatch.dispatcher.*UserWarning",
+    'ignore:.*io.FileIO \[closed\]',
+    'ignore:.*Deprecated call to `pkg_resources.declare_namespace',
+    'ignore:.*Implicit None on return values:DeprecationWarning',
+    # pandas 2.1.4 at python 3.12
+    'ignore:.*datetime.datetime.utcfromtimestamp\(\) is deprecated:DeprecationWarning',
+    # openpyxl 3.1.2 qt python 3.12
+    'ignore:.*datetime.datetime.utcnow\(\):DeprecationWarning'
 ]
 log_format = "%(asctime)s %(levelname)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
@@ -356,6 +388,8 @@ plugins = ["numpy.typing.mypy_plugin"]
 
 [[tool.mypy.overrides]]
 module = [
+    "IPython.core.magic",
+    "IPython.core.magic_arguments",
     "click",
     "click.testing",
     "loguru",
@@ -366,18 +400,27 @@ module = [
     "pandas",
     "pytest",
     "scipy.constants",
+    "scipy.sparse",
     "tomli",
     "tomllib",
 ]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["tomllib", "tomli"]
+module = [
+    "tomllib",
+    "tomli",
+]
 allow_redefinition = true
 disable_error_code = "no-redef"
 
 [tool.check-manifest]
-ignore = ["tests/*", "tools/*", "*.yaml", "noxfile.py"]
+ignore = [
+    "tests/*",
+    "tools/*",
+    "*.yaml",
+    "noxfile.py",
+]
 
 [tool.ipdb]
 # For debugging in jupyterlab and ipython
@@ -398,12 +441,12 @@ summary-quotes-same-line = true
 
 
 [tool.pylint]
-good-names-rgxs = ["."] # a single character variable is okay
-logging-format-style = "new" # use {} in logging messages
+good-names-rgxs = ["."]  # a single character variable is okay
+logging-format-style = "new"   # use {} in logging messages
 deprecated-modules = ["six"]
 extension-pkg-allow-list = ["duckdb"]
 disable = [
-  "wrong-import-order", # this is `isort` responsibility
+    "wrong-import-order"  # this is `isort` responsibility
 ]
 
 
@@ -411,7 +454,7 @@ disable = [
 target-version = "py38"
 #see full list: https://beta.ruff.rs/docs/rules/#pyflakes-f
 #or run 'ruff linter' to see a brief list
-select= [
+lint.select= [
     "A", # flake8-builtins
     # "ANN", # flake8-annotations
     # "ARG", # flake8-unused-arguments
@@ -461,7 +504,7 @@ select= [
 ]
 
 # Ignore rules that currently fail on the codebase
-ignore = [
+lint.ignore = [
     "ANN001", # ANN001 Missing type annotation for function argument: doesn't allow to use functools dispatching
     "ANN002", # ANN002 Missing type annotation for *drop_items: ... as above
     "ANN101", # ANN101 Missing type annotation for self in method
@@ -561,7 +604,7 @@ ignore = [
     # "W503",  # Line break before binary operator: for compatibility with black settings
 ]
 
-unfixable = [
+lint.unfixable = [
     "F401",    # dont't remove unused imports - TODO add __all__ to  __init__.py files or clean them
 ]
 
@@ -572,13 +615,13 @@ line-length = 100
 show-fixes = true
 
 # show source code snippets when reporting violations
-show-source = true
+output-format = "concise"
 
 src = ["src", "tests"]
 
 # Allow unused variables when underscore-prefixed.
 # dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-dummy-variable-rgx = "^_$"
+lint.dummy-variable-rgx = "^_$"
 exclude = [
   "*.egg-info",
   ".cache",
@@ -587,11 +630,11 @@ exclude = [
   "docs/source/conf.py",
   "extern",
   "extern/nlopt/test/t_python.py",
-  "notebooks/dvp/*.py",
+  "notebooks",
   "wrk",
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["E402", "F401"]
 "benchmarks/*" = ["S101"]
 "noxfile.py" = ["ANN", "D202"]
@@ -620,24 +663,24 @@ exclude = [
 ]
 "tools/*" = ["T201", "INP001", "S603", "S607"]
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 # Unlike Flake8, default to a complexity level of 10.
 max-complexity = 15
 
-[tool.ruff.flake8-annotations]
-mypy-init-return = true # skip return type for __init__() methods
+[tool.ruff.lint.flake8-annotations]
+mypy-init-return = true  # skip return type for __init__() methods
 
-[tool.ruff.flake8-type-checking]
+[tool.ruff.lint.flake8-type-checking]
 strict = true
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["src"]
 known-third-party = ["mpl_toolkits", "matplotlib", "numpy", "scipy"]
 required-imports = ["from __future__ import annotations"]
 
 
-[tool.ruff.flake8-pytest-style]
+[tool.ruff.lint.flake8-pytest-style]
 parametrize-names-type = "csv"
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google" # Use Google-style docstrings.

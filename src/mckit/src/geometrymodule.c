@@ -117,17 +117,15 @@ static PyObject *boxobj_get_ex(BoxObject *self, void *closure);
 static PyObject *boxobj_get_ey(BoxObject *self, void *closure);
 static PyObject *boxobj_get_ez(BoxObject *self, void *closure);
 
-static PyGetSetDef boxobj_getsetters[] = {
-    {"corners", (getter)boxobj_getcorners, NULL, "Box's corners", NULL},
-    {"volume", (getter)boxobj_getvolume, NULL, "Box's volume", NULL},
-    {"bounds", (getter)boxobj_getbounds, NULL, "Box's bounds", NULL},
-    {"center", (getter)boxobj_getcenter, NULL, "Box's center", NULL},
-    {"dimensions", (getter)boxobj_getdims, NULL, "Box's dimensions", NULL},
-    {"ex", (getter)boxobj_get_ex, NULL, "Box's EX", NULL},
-    {"ey", (getter)boxobj_get_ey, NULL, "Box's EY", NULL},
-    {"ez", (getter)boxobj_get_ez, NULL, "Box's EZ", NULL},
-    {NULL}
-};
+static PyGetSetDef boxobj_getsetters[] = {{"corners", (getter)boxobj_getcorners, NULL, "Box's corners", NULL},
+                                          {"volume", (getter)boxobj_getvolume, NULL, "Box's volume", NULL},
+                                          {"bounds", (getter)boxobj_getbounds, NULL, "Box's bounds", NULL},
+                                          {"center", (getter)boxobj_getcenter, NULL, "Box's center", NULL},
+                                          {"dimensions", (getter)boxobj_getdims, NULL, "Box's dimensions", NULL},
+                                          {"ex", (getter)boxobj_get_ex, NULL, "Box's EX", NULL},
+                                          {"ey", (getter)boxobj_get_ey, NULL, "Box's EY", NULL},
+                                          {"ez", (getter)boxobj_get_ez, NULL, "Box's EZ", NULL},
+                                          {NULL}};
 
 static PyMethodDef boxobj_methods[] = {
     {"copy", (PyCFunction)boxobj_copy, METH_NOARGS, BOX_COPY_DOC},
@@ -135,8 +133,7 @@ static PyMethodDef boxobj_methods[] = {
     {"test_points", (PyCFunction)boxobj_test_points, METH_O, BOX_TEST_POINTS_DOC},
     {"split", (PyCFunctionWithKeywords)boxobj_split, METH_VARARGS | METH_KEYWORDS, BOX_SPLIT_DOC},
     {"check_intersection", (PyCFunction)boxobj_check_intersection, METH_O, BOX_CHECK_INTERSECTION_DOC},
-    {NULL}
-};
+    {NULL}};
 
 static PyTypeObject BoxType = {
     PyObject_HEAD_INIT(NULL).tp_name = "geometry.Box",
@@ -163,10 +160,8 @@ static int boxobj_init(BoxObject *self, PyObject *args, PyObject *kwds)
 
     char *kwlist[] = {"", "", "", "", "ex", "ey", "ez", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(
-            args, kwds, "O&ddd|O&O&O&", kwlist, convert_to_dbl_vec, &cent, &xdim, &ydim, &zdim, convert_to_dbl_vec, &ex,
-            convert_to_dbl_vec, &ey, convert_to_dbl_vec, &ez
-        ))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O&ddd|O&O&O&", kwlist, convert_to_dbl_vec, &cent, &xdim, &ydim, &zdim,
+                                     convert_to_dbl_vec, &ex, convert_to_dbl_vec, &ey, convert_to_dbl_vec, &ez))
         return -1;
 
     if (ex == NULL)
@@ -186,10 +181,8 @@ static int boxobj_init(BoxObject *self, PyObject *args, PyObject *kwds)
     }
 
     box_dispose(&self->box);
-    box_init(
-        &self->box, (double *)PyArray_DATA(cent), (double *)PyArray_DATA(ex), (double *)PyArray_DATA(ey),
-        (double *)PyArray_DATA(ez), xdim, ydim, zdim
-    );
+    box_init(&self->box, (double *)PyArray_DATA(cent), (double *)PyArray_DATA(ex), (double *)PyArray_DATA(ey),
+             (double *)PyArray_DATA(ez), xdim, ydim, zdim);
 
     Py_DECREF(cent);
     Py_DECREF(ex);
@@ -505,11 +498,9 @@ static PyObject *surfobj_test_box(SurfaceObject *self, PyObject *box)
     return Py_BuildValue("i", result);
 }
 
-static PyMethodDef surfobj_methods[] = {
-    {"test_box", (PyCFunction)surfobj_test_box, METH_O, SURF_TEST_BOX_DOC},
-    {"test_points", (PyCFunction)surfobj_test_points, METH_O, SURF_TEST_POINTS_DOC},
-    {NULL}
-};
+static PyMethodDef surfobj_methods[] = {{"test_box", (PyCFunction)surfobj_test_box, METH_O, SURF_TEST_BOX_DOC},
+                                        {"test_points", (PyCFunction)surfobj_test_points, METH_O, SURF_TEST_POINTS_DOC},
+                                        {NULL}};
 
 static int planeobj_init(PlaneObject *self, PyObject *args, PyObject *kwds)
 {
@@ -613,11 +604,9 @@ static PyObject *planeobj_getoffset(PlaneObject *self, void *closure)
     return Py_BuildValue("d", self->surf.offset);
 }
 
-static PyGetSetDef planeobj_getset[] = {
-    {"_v", (getter)planeobj_getnorm, NULL, "Plane's normal", NULL},
-    {"_k", (getter)planeobj_getoffset, NULL, "Plane's offset", NULL},
-    {NULL}
-};
+static PyGetSetDef planeobj_getset[] = {{"_v", (getter)planeobj_getnorm, NULL, "Plane's normal", NULL},
+                                        {"_k", (getter)planeobj_getoffset, NULL, "Plane's offset", NULL},
+                                        {NULL}};
 
 static PyTypeObject PlaneType = {
     PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
@@ -645,11 +634,9 @@ static PyObject *sphereobj_getradius(SphereObject *self, void *closure)
     return Py_BuildValue("d", self->surf.radius);
 }
 
-static PyGetSetDef sphereobj_getset[] = {
-    {"_center", (getter)sphereobj_getcenter, NULL, "Sphere's center", NULL},
-    {"_radius", (getter)sphereobj_getradius, NULL, "Sphere's radius", NULL},
-    {NULL}
-};
+static PyGetSetDef sphereobj_getset[] = {{"_center", (getter)sphereobj_getcenter, NULL, "Sphere's center", NULL},
+                                         {"_radius", (getter)sphereobj_getradius, NULL, "Sphere's radius", NULL},
+                                         {NULL}};
 
 static PyTypeObject SphereType = {
     PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
@@ -687,12 +674,10 @@ static PyObject *cylinderobj_getradius(CylinderObject *self, void *closure)
     return Py_BuildValue("d", self->surf.radius);
 }
 
-static PyGetSetDef cylinderobj_getset[] = {
-    {"_pt", (getter)cylinderobj_getpt, NULL, "Cylinder's axis point", NULL},
-    {"_axis", (getter)cylinderobj_getaxis, NULL, "Cylinder's axis", NULL},
-    {"_radius", (getter)cylinderobj_getradius, NULL, "Cylinder's radius", NULL},
-    {NULL}
-};
+static PyGetSetDef cylinderobj_getset[] = {{"_pt", (getter)cylinderobj_getpt, NULL, "Cylinder's axis point", NULL},
+                                           {"_axis", (getter)cylinderobj_getaxis, NULL, "Cylinder's axis", NULL},
+                                           {"_radius", (getter)cylinderobj_getradius, NULL, "Cylinder's radius", NULL},
+                                           {NULL}};
 
 static PyTypeObject CylinderType = {
     PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
@@ -887,13 +872,11 @@ static PyObject *coneobj_getsheet(ConeObject *self, void *closure)
     return Py_BuildValue("i", self->surf.sheet);
 }
 
-static PyGetSetDef coneobj_getset[] = {
-    {"_apex", (getter)coneobj_getapex, NULL, "Cone's apex", NULL},
-    {"_axis", (getter)coneobj_getaxis, NULL, "Cone's axis", NULL},
-    {"_t2", (getter)coneobj_getta, NULL, "Cone's angle tangent", NULL},
-    {"_sheet", (getter)coneobj_getsheet, NULL, "Cone's sheet", NULL},
-    {NULL}
-};
+static PyGetSetDef coneobj_getset[] = {{"_apex", (getter)coneobj_getapex, NULL, "Cone's apex", NULL},
+                                       {"_axis", (getter)coneobj_getaxis, NULL, "Cone's axis", NULL},
+                                       {"_t2", (getter)coneobj_getta, NULL, "Cone's angle tangent", NULL},
+                                       {"_sheet", (getter)coneobj_getsheet, NULL, "Cone's sheet", NULL},
+                                       {NULL}};
 
 static PyTypeObject ConeType = {
     PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
@@ -926,20 +909,17 @@ static PyObject *torusobj_getaxis(TorusObject *self, void *closure)
     return axis;
 }
 
-static PyGetSetDef torusobj_getset[] = {
-    {"_center", (getter)torusobj_getcenter, NULL, "Torus's center", NULL},
-    {"_axis", (getter)torusobj_getaxis, NULL, "Torus's axis", NULL},
-    {NULL}
-};
+static PyGetSetDef torusobj_getset[] = {{"_center", (getter)torusobj_getcenter, NULL, "Torus's center", NULL},
+                                        {"_axis", (getter)torusobj_getaxis, NULL, "Torus's axis", NULL},
+                                        {NULL}};
 
 static PyMemberDef torusobj_members[] = {
     {"_R", T_DOUBLE, offsetof(TorusObject, surf) + offsetof(Torus, radius), READONLY, "Torus's major radius."},
-    {"_a", T_DOUBLE, offsetof(TorusObject, surf) + offsetof(Torus, a), READONLY, "Torus's minor radius parallel to axis"
-    },
+    {"_a", T_DOUBLE, offsetof(TorusObject, surf) + offsetof(Torus, a), READONLY,
+     "Torus's minor radius parallel to axis"},
     {"_b", T_DOUBLE, offsetof(TorusObject, surf) + offsetof(Torus, b), READONLY,
      "Torus's minor radius perpendicular to axis"},
-    {NULL}
-};
+    {NULL}};
 
 static PyTypeObject TorusType = {
     PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
@@ -988,8 +968,7 @@ static PyGetSetDef gqobj_getset[] = {
     {"_v", (getter)gqobj_get_v, NULL, "GQuadratic's vector.", NULL},
     {"_k", (getter)gqobj_get_k, NULL, "GQuadratic's free term", NULL},
     {"_factor", (getter)gqobj_get_factor, NULL, "GQuadratic's normalisation factor", NULL},
-    {NULL}
-};
+    {NULL}};
 
 static PyTypeObject GQuadraticType = {
     PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
@@ -1065,8 +1044,7 @@ static PyGetSetDef shapeobj_getset[] = {
     {"opc", (getter)shapeobj_getopc, NULL, "Operation code of shape.", NULL},
     {"invert_opc", (getter)shapeobj_getinvopc, NULL, "Inverted operation code of shape.", NULL},
     {"args", (getter)shapeobj_getargs, NULL, "Arguments of shape.", NULL},
-    {NULL}
-};
+    {NULL}};
 
 static PyMethodDef shapeobj_methods[] = {
     {"test_box", (PyCFunctionWithKeywords)shapeobj_test_box, METH_VARARGS | METH_KEYWORDS,
@@ -1076,10 +1054,9 @@ static PyMethodDef shapeobj_methods[] = {
     {"bounding_box", (PyCFunctionWithKeywords)shapeobj_bounding_box, METH_VARARGS | METH_KEYWORDS, ""},
     {"collect_statistics", (PyCFunction)shapeobj_collect_statistics, METH_VARARGS, ""},
     {"get_stat_table", (PyCFunction)shapeobj_get_stat_table, METH_NOARGS, ""},
-    {"test_points", (PyCFunction)shapeobj_test_points, METH_O, "Tests senses of the points with respect to the surface."
-    },
-    {NULL}
-};
+    {"test_points", (PyCFunction)shapeobj_test_points, METH_O,
+     "Tests senses of the points with respect to the surface."},
+    {NULL}};
 
 static PyTypeObject ShapeType = {
     PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.Shape",
@@ -1425,8 +1402,7 @@ static PyObject *shapeobj_get_stat_table(ShapeObject *self)
 // //
 
 static PyModuleDef geometry_module = {
-    PyModuleDef_HEAD_INIT, "geometry", "Geometry native objects.", -1, NULL, NULL, NULL, NULL, NULL
-};
+    PyModuleDef_HEAD_INIT, "geometry", "Geometry native objects.", -1, NULL, NULL, NULL, NULL, NULL};
 
 PyMODINIT_FUNC PyInit_geometry(void)
 {
@@ -1506,10 +1482,8 @@ PyMODINIT_FUNC PyInit_geometry(void)
     *((double *)PyArray_DATA(ez) + 2) = 1.0;
 
     global_box = (BoxObject *)PyType_GenericNew(&BoxType, NULL, NULL);
-    box_init(
-        &global_box->box, (double *)PyArray_DATA(origin), (double *)PyArray_DATA(ex), (double *)PyArray_DATA(ey),
-        (double *)PyArray_DATA(ez), MAX_DIM, MAX_DIM, MAX_DIM
-    );
+    box_init(&global_box->box, (double *)PyArray_DATA(origin), (double *)PyArray_DATA(ex), (double *)PyArray_DATA(ey),
+             (double *)PyArray_DATA(ez), MAX_DIM, MAX_DIM, MAX_DIM);
 
     PyModule_AddObject(m, ORIGIN, (PyObject *)origin);
     PyModule_AddObject(m, EX, (PyObject *)ex);

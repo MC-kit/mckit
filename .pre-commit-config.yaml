@@ -10,12 +10,10 @@
 #
 #     pre-commit autoupdate
 #
-# See for more information:
+# See:
 #     https://pre-commit.com/                   and
-#     https://github.com/pre-commit/pre-commit
-# For more hooks:
-#     https://pre-commit.com/hooks.html
-
+#     https://github.com/pre-commit/pre-commit  for more information
+#     https://pre-commit.com/hooks.html         for more hooks
 default_language_version:
   python: python3.11
 
@@ -31,6 +29,7 @@ repos:
       - id: check-json
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
+        exclude: notebooks
       - id: check-symlinks
       - id: check-toml
       - id: check-yaml
@@ -40,7 +39,6 @@ repos:
       - id: name-tests-test
         args:
           - --pytest-test-first
-      - id: no-commit-to-branch
       - id: mixed-line-ending
       - id: requirements-txt-fixer
       - id: trailing-whitespace
@@ -70,6 +68,7 @@ repos:
           - --py39-plus
         language: system
         types: [ python ]
+
       # Nicely sort imports
       - id: isort
         name: isort
@@ -77,6 +76,7 @@ repos:
         entry: isort
         language: system
         types: [ python ]
+
       # Black, the code formatter, natively supports pre-commit
       - id: black
         name: black
@@ -84,7 +84,8 @@ repos:
         language: system
         types: [ python ]
         exclude: ^notebooks|^extern
-      # Lint
+
+      # Lint and fix Python code
       - id: ruff
         name: ruff
         entry: ruff --force-exclude --fix --config pyproject.toml

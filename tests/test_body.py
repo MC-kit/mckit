@@ -2135,7 +2135,9 @@ class TestBody:
         assert simple_body.shape == expected_shape
         for k, v in kwarg.items():
             assert simple_body.options[k] == v
-        assert simple_body.material() == kwarg.get("MAT", None)
+        assert simple_body.material() == kwarg.get(
+            "MAT", None
+        ), "Material value should be preserved on simplification"
 
     split_surfaces: Final = {
         1: create_surface("SX", 4, 2, name=1),
@@ -2283,11 +2285,3 @@ class TestBody:
         new_results = new_body.shape.test_points(points2)
         # TODO: Check testing of FILL without 'transform' case
         np.testing.assert_array_equal(results, new_results)
-
-    @pytest.mark.skip()
-    def test_print(self):
-        raise NotImplementedError
-
-    @pytest.mark.skip()
-    def test_fill(self):
-        raise NotImplementedError

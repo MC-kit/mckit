@@ -1,4 +1,5 @@
 """Features, common for all cards."""
+
 from __future__ import annotations
 
 from typing import Any, Optional, cast

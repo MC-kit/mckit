@@ -1,7 +1,6 @@
 #include "box.h"
-#include "mkl.h"
-#include "nlopt.h"
-#include <stdlib.h>
+#include <mkl.h>
+#include <nlopt.h>
 
 // Turn on caching of test_box results.
 char enable_box_cache = 0;
@@ -24,10 +23,8 @@ static inline char high_bit(uint64_t value)
     return result;
 }
 
-int box_init(
-    Box *box, const double *center, const double *ex, const double *ey, const double *ez, double xdim, double ydim,
-    double zdim
-)
+int box_init(Box *box, const double *center, const double *ex, const double *ey, const double *ez, double xdim,
+             double ydim, double zdim)
 {
     if (!box || !center || !ex || !ey || !ez)
     {
@@ -95,8 +92,7 @@ void box_copy(Box *dst, const Box *src)
 
 int box_generate_random_points(Box *box, size_t npts, double *points)
 {
-    // If rng is not allocated yet, try to allocate. It will be used at future
-    // calls.
+    // If rng is not allocated yet, try to allocate. It will be used at future calls.
     if (box->rng == NULL)
         vslNewStream(&box->rng, VSL_BRNG_MT19937, 777);
     if (box->rng == NULL)
@@ -104,8 +100,7 @@ int box_generate_random_points(Box *box, size_t npts, double *points)
     int i, status;
     double d[NDIM];
 
-    // TODO: Try to implement generation of all points during one single call to
-    // rng.
+    // TODO: Try to implement generation of all points during one single call to rng.
     for (i = 0; i < npts; ++i)
     {
         status = vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD, box->rng, NDIM, d, -0.5, 0.5);

@@ -1,6 +1,7 @@
 """
  Read and parse MCNP file text.
 """
+
 from __future__ import annotations
 
 from typing import Callable, TextIO

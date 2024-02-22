@@ -15,8 +15,9 @@ and eventually migrate to pybind11 or nanobind.
 It appeared, that CMake find_library function doesn't recognize the MKL libraries.
 
 The script creates the symbolic links with "correct" names to make both linker and cmake happy about MKL.
-Run this script from Cmake script before searching for MKL.
+Run this script manually or from Cmake script before searching for MKL.
 """
+
 from __future__ import annotations
 
 import sys
@@ -46,7 +47,7 @@ def create_mkl_symlinks() -> None:
     See module documentation :ref:`create_mkl_symlinks`.
     """
     lib_dir = Path(sys.prefix) / "lib"
-    for p in filter(Path.is_file, lib_dir.glob(pattern)):
+    for p in filter(lambda x: x.is_file(), lib_dir.glob(pattern)):
         link = lib_dir / (p.name.split(".")[0] + suffix)
         if link.is_symlink() or link.exists():
             continue

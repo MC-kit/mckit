@@ -5,6 +5,7 @@
 Также сохраняет общую модель (без юниверсов) под именем envelopes.i
 Создает спецификацию для последующей сборки модели в виде TOML файла.
 """
+
 from __future__ import annotations
 
 from datetime import datetime

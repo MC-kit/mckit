@@ -4,6 +4,7 @@
 We don't use bounding boxes here, because the number of cells in the model is much more (about 1000 times)
 than number of GA envelopes. The complexity is not reduced significantly using bounding box.
 """
+
 import typing as tp
 
 from functools import reduce

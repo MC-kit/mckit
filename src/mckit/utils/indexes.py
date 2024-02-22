@@ -1,4 +1,5 @@
 """Classes to index MCNP objects on model file parsing."""
+
 from __future__ import annotations
 
 from typing import Callable, Optional, TypeVar

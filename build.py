@@ -5,6 +5,7 @@ to set up proper options for actual builder.
 
 The module builds and arrange C-dependency ``nlopt`` before own build.
 """
+
 from __future__ import annotations
 
 from typing import Any
