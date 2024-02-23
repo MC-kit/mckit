@@ -1084,7 +1084,7 @@ static int shapeobj_init(ShapeObject *self, PyObject *args, PyObject *kwds)
         PyErr_SetString(PyExc_TypeError, "String object is expected.");
         return -1;
     }
-    char *opcstr = PyUnicode_AS_DATA(pyopc);
+    char *opcstr = PyUnicode_DATA(pyopc);
 
     char opc;
     if (strcmp(opcstr, opcodes[INTERSECTION]) == 0)

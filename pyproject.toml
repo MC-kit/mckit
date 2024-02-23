@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mckit"
-version = "0.7.1"
+version = "0.8.0"
 description = "Tools to process MCNP models and results"
 authors = ["rrn <r.rodionov@iterrf.ru>"]
 maintainers = ["dpv2015 <dmitri_portnov@yahoo.com>"]
@@ -43,7 +43,8 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Physics",
 ]
 
 [build-system]
@@ -344,7 +345,7 @@ omit = ["*_tab.py", "**/__init__.py"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
-fail_under = 85  # TODO dvp: increase limit to 100 with code maturing
+fail_under = 90  # TODO dvp: increase limit to 100 with code maturing
 omit = ["*_tab.py", "**/__init__.py"]
 # Regexes for lines to exclude from consideration
 exclude_lines = [
@@ -571,13 +572,13 @@ lint.ignore = [
     # "FBT002",  # Boolean default value in function definition (TODO!)
     # "FBT003",  # Boolean positional value in function call
 
-    "I001",    # import order is controlled by isort
+    "I001", # import order is controlled by isort
     # "I101",
     # "I201",
     # "I202",
     "INP001",  # File `tools/clear-prev-dist-info.py` is part of an implicit namespace package.
 
-# ignore some questionable pandas-vet warnings
+    # ignore some questionable pandas-vet warnings
     # "PD005", # use operator instead of method
     # "PD008", # We use at() to access single values
     # "PD009", # And we use iat()

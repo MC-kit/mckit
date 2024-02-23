@@ -21,6 +21,10 @@ ignore=
     B905
     # C812 Missing trailing comma: black compatibility
     C812
+    # Missing docstring in public method
+    # D102
+    # Missing docstring in public function
+    # D103
     # D105 Missing docstring in magic method (__hash__, __eq__)
     D105
     # Missing docstring in __init__
