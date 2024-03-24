@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Callable, Optional, Union
+from typing import Any, Callable, Optional, Union, cast
 
 import itertools
 import math
@@ -21,7 +21,7 @@ class MaybeClose(ABC):
     """Interface to be implemented by objects supporting the "closeness" estimation."""
 
     @abstractmethod
-    def is_close_to(self, other: object, estimator: EstimatorType) -> bool:
+    def is_close_to(self, other: Any, estimator: EstimatorType) -> bool:
         """Objects can be estimated as close with some estimator."""
 
 
@@ -41,7 +41,7 @@ def tolerance_estimator(
     Scans generic iterables and compares objects implementing MayBeClose interface.
 
     Returns:
-        EstimatorType: estimator
+        estimator with the given tolerance limits
     """
 
     def _estimate(a: ComparableType, b: ComparableType) -> bool:
@@ -50,7 +50,10 @@ def tolerance_estimator(
         if isinstance(a, ndarray) and isinstance(b, ndarray):
             return np.allclose(a, b, rtol, atol, equal_nan)
         if issubclass(type(a), Iterable) and issubclass(type(b), Iterable):
-            return all(_call(ai, bi) for ai, bi in itertools.zip_longest(a, b))
+            return all(
+                _call(ai, bi)
+                for ai, bi in itertools.zip_longest(cast(Iterable[Any], a), cast(Iterable[Any], b))
+            )
         if isinstance(a, int) and isinstance(b, int):
             return a == b
         if isinstance(a, MaybeClose) and isinstance(b, MaybeClose):

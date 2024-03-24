@@ -451,12 +451,12 @@ class RCC(Surface, _RCC):
         return self
 
     def is_close_to(
-        self, other: Surface, estimator: Callable[[Any, Any], bool] = DEFAULT_TOLERANCE_ESTIMATOR
-    ) -> Surface:
-        pass
+        self, other: object, estimator: Callable[[Any, Any], bool] = DEFAULT_TOLERANCE_ESTIMATOR
+    ) -> bool:
+        raise NotImplementedError
 
     def round(self) -> Surface:
-        pass
+        raise NotImplementedError
 
     def __hash__(self) -> int:
         return self._hash
@@ -529,15 +529,15 @@ class BOX(Surface, _BOX):
         )
 
     def apply_transformation(self) -> Surface:
-        pass
+        raise NotImplementedError
 
     def is_close_to(
-        self, other: Surface, estimator: Callable[[Any, Any], bool] = DEFAULT_TOLERANCE_ESTIMATOR
+        self, other: object, estimator: Callable[[Any, Any], bool] = DEFAULT_TOLERANCE_ESTIMATOR
     ) -> bool:
-        pass
+        raise NotImplementedError
 
     def round(self) -> Surface:
-        pass
+        raise NotImplementedError
 
     def surface(self, number: int):
         args = self.surfaces
@@ -633,7 +633,7 @@ class Plane(Surface, _Plane):
     """
 
     def __init__(
-        self, normal: npt.NDArray[float], offset: float, **options: dict[str, Any]
+        self, normal: npt.NDArray[np.float_], offset: float, **options: dict[str, Any]
     ) -> None:
         tr: Transformation | None = options.pop("transform", None)
         if tr:
@@ -1009,7 +1009,7 @@ class Cylinder(Surface, _Cylinder):
 
     def is_close_to(
         self,
-        other: Cylinder,
+        other: object,
         estimator: Callable[[Any, Any], bool] = DEFAULT_TOLERANCE_ESTIMATOR,
     ) -> bool:
         if self is other:
@@ -1168,7 +1168,7 @@ class Cone(Surface, _Cone):
         _Cone.__init__(self, apex, axis, t2, sheet)
         self._t2_digits = significant_digits(self._t2, constants.FLOAT_TOLERANCE)
 
-    def apply_transformation(self) -> Surface:
+    def apply_transformation(self) -> Cone:
         tr = self.transformation
         if tr is None:
             return self
@@ -1178,7 +1178,7 @@ class Cone(Surface, _Cone):
         options = self.clean_options()
         return Cone(apex, axis, self._t2, sheet, **options)
 
-    def round(self) -> Surface:
+    def round(self) -> Cone:
         res = self.apply_transformation()
         apex = round_array(res._apex)
         axis = round_array(res._axis)
@@ -1366,7 +1366,7 @@ class GQuadratic(Surface, _GQuadratic):
         Surface.__init__(self, **options)
         _GQuadratic.__init__(self, m, v, k, factor)
 
-    def copy(self):
+    def copy(self) -> GQuadratic:
         instance = GQuadratic.__new__(GQuadratic, self._m, self._v, self._k, self._factor)
         instance._m_digits = self._m_digits
         instance._v_digits = self._v_digits
@@ -1375,7 +1375,7 @@ class GQuadratic(Surface, _GQuadratic):
         _GQuadratic.__init__(instance, self._m, self._v, self._k, self._factor)
         return instance
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         result = hash(self._get_k())
         for v in self._get_v():
             result ^= hash(v)
@@ -1403,14 +1403,14 @@ class GQuadratic(Surface, _GQuadratic):
     def _get_k(self) -> float:
         return round_scalar(self._k, self._k_digits)
 
-    def __getstate__(self):
+    def __getstate__(self) -> tuple[Any, ...]:
         return self._m, self._v, self._k, Surface.__getstate__(self)
 
-    def __setstate__(self, state):
+    def __setstate__(self, state) -> None:
         m, v, k, options = state
         GQuadratic.__init__(self, m, v, k, **options)
 
-    def transform(self, tr):
+    def transform(self, tr) -> GQuadratic:
         return GQuadratic(self._m, self._v, self._k, transform=tr, **self.options)
 
     def mcnp_words(self, pretty: bool = False) -> list[str]:
@@ -1429,7 +1429,7 @@ class GQuadratic(Surface, _GQuadratic):
             words.append(pretty_float(v, p))
         return words
 
-    def apply_transformation(self) -> Surface:
+    def apply_transformation(self) -> GQuadratic:
         tr = self.transformation
         if tr is None:
             return self
@@ -1437,20 +1437,20 @@ class GQuadratic(Surface, _GQuadratic):
         options = self.clean_options()
         return GQuadratic(m, v, k, **options)
 
-    def round(self) -> Surface:
-        temp: Surface = self.apply_transformation()
-        m, v = map(round_array, [temp._m, temp._v])  # type: ignore[attr-defined]
+    def round(self) -> GQuadratic:
+        temp = self.apply_transformation()
+        m, v = map(round_array, [temp._m, temp._v])
         k = round_scalar(temp._k)
         # TODO dvp: handle cases when the surface can be represented with specialized quadratic surface: Cone etc.
         return GQuadratic(m, v, k, **self.clean_options())
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         options = str(self.options) if self.options else ""
         return f"GQuadratic({self._m}, {self._v}, {self._k}, {self._factor}, {options})"
 
     def is_close_to(
         self,
-        other: Surface,
+        other: object,
         estimator: Callable[[Any, Any], bool] = DEFAULT_TOLERANCE_ESTIMATOR,
     ) -> bool:
         if self is other:
@@ -1615,7 +1615,7 @@ class Torus(Surface, _Torus):
 
     def is_close_to(
         self,
-        other: Torus,
+        other: object,
         estimator: Callable[[Any, Any], bool] = DEFAULT_TOLERANCE_ESTIMATOR,
     ) -> bool:
         if self is other:
