@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, Literal, Optional, SupportsIndex, cast
 
 import operator
 import sys
@@ -30,6 +30,9 @@ from .surface import Plane, Surface
 from .transformation import Transformation
 from .utils import accept, on_unknown_acceptor
 
+if TYPE_CHECKING:
+    import numpy.typing as npt
+
 __all__ = [
     "Universe",
     "produce_universes",
@@ -41,9 +44,14 @@ __all__ = [
 ]
 
 from .utils.indexes import IndexOfNamed, StatisticsCollector
-from .utils.named import Name
+from .utils.named import Name, default_name_key
+
+ZERO_NAME = Name(0)
 
 _LOG = getLogger(__name__)
+
+
+Replaceable = Surface | Composition
 
 
 class NameClashError(ValueError):
@@ -62,28 +70,30 @@ class NameClashError(ValueError):
             ValueError.__init__(self, msg.getvalue())
 
 
-def cell_selector(cell_names):
+def cell_selector(cell_names: int | Iterable[int]) -> Callable[[Body], list[Body]]:
     """Produces cell selector function for specific cell names.
 
-    Parameters
-    ----------
-    cell_names : int or iterable
-        Names of cells to be selected.
+    Args:
+        cell_names:
+            Names of cells to be selected.
 
     Returns:
-    -------
-    selector : func
         Selector function.
     """
     if isinstance(cell_names, int):
-        cell_names = {cell_names}
+
+        def selector(cell: Body) -> list[Body]:
+            if cell.name() == cell_names:
+                return [cell]
+            return []
+
     else:
         cell_names = set(cell_names)
 
-    def selector(cell):
-        if cell.name() in cell_names:
-            return [cell]
-        return []
+        def selector(cell: Body) -> list[Body]:
+            if cell.name() in cell_names:
+                return [cell]
+            return []
 
     return selector
 
@@ -180,17 +190,17 @@ class Universe:
 
     def __init__(
         self,
-        cells,
-        name: Name = 0,
+        cells: list[Body],
+        name: Name = ZERO_NAME,
         verbose_name: str | None = None,
         comment: str | None = None,
-        name_rule: str = "keep",
+        name_rule: Literal["new", "keep", "clash"] = "keep",
         common_materials: set[Composition] | None = None,
     ):
         self._name = name
         self._comment = comment
         self._verbose_name = verbose_name
-        self._cells = []
+        self._cells: list[Body] = []
         if common_materials is None:
             common_materials = set()
         self._common_materials = common_materials
@@ -210,22 +220,13 @@ class Universe:
     def __setitem__(self, key: int, value: Body):
         raise NotImplementedError("Renaming rules should be applied.")
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: SupportsIndex):
         return self._cells.__getitem__(item)
 
     def __str__(self):
         return f"Universe(name={self.name()})"
 
-    #
-    # dvp: this doesn't work with dictionaries
-    #
-    # def __hash__(self):
-    #     return reduce(xor, map(hash, self.cells), 0)
-    #
-    # def __eq__(self, other):
-    #     return reduce(and_, map(eq, zip(self._cells, other.cells), True))
-
-    def has_equivalent_cells(self, other):
+    def has_equivalent_cells(self, other: Universe) -> bool:
         if len(self) != len(other):
             return False
         for i, c in enumerate(self):
@@ -233,31 +234,33 @@ class Universe:
                 return False
         return True
 
-    def add_cells(self, cells, name_rule="new"):
+    def add_cells(
+        self, cells: list[Body] | Body, name_rule: Literal["new", "keep", "clash"] = "new"
+    ) -> None:
         """Adds new cell to the universe.
 
         Modifies current universe.
 
-        Parameters
-        ----------
-        cells : Body or list[Body]
-            An array of cells to be added to the universe.
-        name_rule : str
-            Rule, what to do with entities' names. 'keep' - keep all names; in
-            case of clashes NameClashError exception is raised. 'clash' - rename
-            entity only in case of name clashes. 'new' - set new sequential name
-            to all inserted entities.
+        Args:
+            cells: An array of cells to be added to the universe.
+            name_rule: Rule, what to do with entities' names:
+                 - 'keep' - keep all names; in case of clashes NameClashError exception is raised.
+                 - 'clash' - rename entity only in case of name clashes.
+                 - 'new' - set new sequential name to all inserted entities.
         """
         if isinstance(cells, Body):
             cells = [cells]
+
         surfs = self.get_surfaces()
         surf_replace = {s: s for s in surfs}
         comps = self._common_materials.union(self.get_compositions())
         comp_replace = {c: c for c in comps}
-        cell_names = {c.name() for c in self}
-        surf_names = {s.name() for s in surfs}
-        comp_names = {c.name() for c in comps}
+        cell_names: set[int] = {default_name_key(c) for c in self}
+        surf_names: set[int] = {default_name_key(s) for s in surfs}
+        comp_names: set[int] = {default_name_key(c) for c in comps}
+
         for cell in cells:
+
             if cell.shape.is_empty():
                 continue
 
@@ -265,6 +268,7 @@ class Universe:
 
             new_cell = Body(new_shape, **cell.options)
             mat = new_cell.material()
+
             if mat:
                 new_comp = Universe._update_replace_dict(
                     mat.composition, comp_replace, comp_names, name_rule, "Material"
@@ -272,10 +276,13 @@ class Universe:
                 new_cell.options["MAT"] = Material(composition=new_comp, density=mat.density)
 
             if name_rule == "keep" and cell.name() in cell_names:
-                raise NameClashError(f"Cell name clash: {cell.name()}")
+                msg = f"Cell name clash: {cell.name()}"
+                raise NameClashError(msg)
+
             if name_rule == "new" or name_rule == "clash" and cell.name() in cell_names:
                 new_name = max(cell_names, default=0) + 1
                 new_cell.rename(new_name)
+
             cell_names.add(new_cell.name())
             new_cell.options["U"] = self
             self._cells.append(new_cell)
@@ -310,13 +317,19 @@ class Universe:
                     c.options["MAT"] = Material(composition=cmd[comp], density=mat.density)
 
     @staticmethod
-    def _get_cell_replaced_shape(cell, surf_replace, surf_names, name_rule):
+    def _get_cell_replaced_shape(
+        cell: Body,
+        surf_replace: dict[Surface, Surface],
+        surf_names: set[int],
+        name_rule: Literal["keep", "new", "clash"],
+    ) -> Shape:
         cell_surfs = cell.shape.get_surfaces()
         replace_dict = {}
         for s in cell_surfs:
             if isinstance(s, Plane):
                 rev_s = Plane(-s._v, -s._k)
                 if rev_s in surf_replace.keys():
+                    # dvp: use reverse of a Plane, if already present
                     rev_s = surf_replace[rev_s]
                     replace_dict[s] = Shape("C", rev_s)
                     continue
@@ -326,22 +339,37 @@ class Universe:
         return cell.shape.replace_surfaces(replace_dict)
 
     @staticmethod
-    def _update_replace_dict(entity, replace, names, rule, err_desc):
-        if entity not in replace.keys():
-            new_entity = entity.copy()
-            if rule == "keep" and new_entity.name() in names:
-                _LOG.debug(entity.mcnp_repr())
-                for c in replace.keys():
-                    _LOG.debug(c.mcnp_repr())
-                raise NameClashError(f"{err_desc} name clash: {entity.name()}")
-            if rule == "new" or rule == "clash" and new_entity.name() in names:
-                new_name = max(names, default=0) + 1
-                new_entity.rename(new_name)
-                names.add(new_name)
-            replace[new_entity] = new_entity
-            names.add(new_entity.name())
-            return new_entity
-        return replace[entity]
+    def _update_replace_dict(
+        entity: Replaceable,
+        replace: dict[Replaceable, Replaceable],
+        names: set[int],
+        rule: Literal["keep", "new", "clash"],
+        err_desc: str,
+    ) -> Replaceable:
+
+        if entity in replace.keys():
+            return replace[entity]
+
+        new_entity = entity.copy()
+
+        if rule == "keep" and new_entity.name() in names:
+            msg = f"{err_desc} name clash: {entity.name()}"
+            _LOG.error(msg)
+            _LOG.error("Failed entity:")
+            _LOG.error(entity.mcnp_repr())
+            _LOG.error("Replacements:")
+            for c in replace.keys():
+                _LOG.error(c.mcnp_repr())
+            raise NameClashError(msg)
+
+        if rule == "new" or rule == "clash" and new_entity.name() in names:
+            new_name = max(names, default=0) + 1
+            new_entity.rename(new_name)
+
+        replace[new_entity] = new_entity
+        names.add(new_entity.name())
+
+        return new_entity
 
     @staticmethod
     def _fill_check(predicate):
@@ -353,18 +381,18 @@ class Universe:
 
         return _predicate
 
-    def alone(self):
+    def alone(self) -> Universe:
         """Gets this universe alone, without inner universes.
 
         Returns:
-        -------
-        u : Universe
             A copy of the universe with FILL cards removed.
         """
         cells = []
+
         for c in self:
             options = {k: v for k, v in c.options.items() if k != "FILL"}
             cells.append(Body(c.shape, **options))
+
         return Universe(cells)
 
     def apply_fill(
@@ -372,23 +400,22 @@ class Universe:
         cell: Body | int = None,
         universe: Universe | int = None,
         predicate: Callable[[Body], bool] | None = None,
-    ):
+    ) -> None:
         """Applies fill operations to all or selected cells or universes.
 
         Modifies current universe.
 
-        Parameters
-        ----------
-        cell : Body or int
-            Cell or name of cell which is filled by filling universe. The cell
-            can only belong to this universe. Cells of inner universes are not
-            taken into account.
-        universe : Universe or int
-            Filler-universe or its name. Cells, that have this universe as a
-            filler will be filled. Only cells of this universe will be checked.
-        predicate : func
-            Function that accepts Body instance and return True, if this cell
-            must be filled.
+        Args:
+            cell:
+                Cell or name of cell which is filled by filling universe. The cell
+                can only belong to this universe. Cells of inner universes are not
+                taken into account.
+            universe:
+                Filler-universe or its name. Cells, that have this universe as a
+                filler will be filled. Only cells of this universe will be checked.
+            predicate:
+                Function that accepts Body instance and return True, if this cell
+                must be filled.
         """
         if not cell and not universe and not predicate:
 
@@ -401,6 +428,9 @@ class Universe:
                 return _c.name() == cell
 
         elif universe:
+
+            if isinstance(universe, Universe):
+                universe = universe.name()
 
             def predicate(_c):
                 return _c.options["FILL"]["universe"].name() == universe
@@ -530,12 +560,10 @@ class Universe:
         return compositions
 
     def get_universes(self) -> set[Universe]:
-        """Gets all inner universes.
+        """Gets set of self and all inner universes.
 
         Returns:
-        -------
-        universes : set
-            A set of universes.
+            A set of all the universes.
         """
         universes = {self}
         for c in self:
@@ -552,8 +580,6 @@ class Universe:
         """Checks, if there is name clashes.
 
         Returns:
-        -------
-        stat : dict
             Description of found clashes. If no clashes - the dictionary is empty.
         """
         universes = self.get_universes()
@@ -758,23 +784,20 @@ class Universe:
 
         self._cells = new_cells
 
-    def test_points(self, points):
+    def test_points(self, points: npt.ArrayLike[float]) -> npt.NDArray[int]:
         """Finds cell to which each point belongs to.
 
-        Parameters
-        ----------
-        points : array_like[float]
-            An array of point coordinates. If there is only one point it has
-            shape (3,); if there are n points, it has shape (n, 3).
+        Args:
+            points:
+                An array of point coordinates. If there is only one point it has
+                shape (3,); if there are n points, it has shape (n, 3).
 
         Returns:
-        -------
-        result : np.ndarray[int]
             An array of cell indices to which a particular point belongs to.
             Its length equals to the number of points.
         """
-        points = np.array(points)
-        result = np.empty(points.size // 3)
+        points = np.asarray(points, dtype=float)
+        result = np.empty(points.size // 3, dtype=int)
         for i, c in enumerate(self._cells):
             test = c.shape.test_points(points)
             result[test == +1] = i
@@ -783,7 +806,8 @@ class Universe:
     def transform(self, tr: Transformation) -> Universe:
         """Applies transformation tr to this universe.
 
-        Returns a new universe.
+        Returns:
+             a new universe with applied transformation.
         """
         new_cells = [c.transform(tr) for c in self]
         return Universe(
@@ -797,7 +821,8 @@ class Universe:
     def apply_transformation(self) -> Universe:
         """Applies transformations specified in cells.
 
-        Returns a new universe.
+        Returns:
+             a new universe.
         """
         new_cells = [c.apply_transformation() for c in self]
         return Universe(

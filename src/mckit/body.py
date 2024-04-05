@@ -327,7 +327,7 @@ class Shape(_Shape):
         """Checks if the shape represents an empty set."""
         return self.opc == "E"
 
-    def split_shape(self):
+    def split_shape(self) -> list[Shape]:
         shape_groups = []
         if self.opc == "U":
             stat = self.get_stat_table()
