@@ -51,7 +51,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -100,7 +100,7 @@ jobs:
           submodules: 'true'
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -152,7 +152,7 @@ jobs:
           fetch-depth: 1
           submodules: 'true'
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
@@ -201,7 +201,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
