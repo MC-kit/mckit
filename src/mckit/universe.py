@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Literal, Optional, SupportsIndex, cast
+from typing import TYPE_CHECKING, Any, Callable, Literal, Optional, SupportsIndex, Union, cast
 
 import operator
 import sys
@@ -51,7 +51,7 @@ ZERO_NAME = Name(0)
 _LOG = getLogger(__name__)
 
 
-Replaceable = Surface | Composition
+Replaceable = Union[Surface, Composition]
 
 
 class NameClashError(ValueError):
