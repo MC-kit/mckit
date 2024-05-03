@@ -204,7 +204,7 @@ def parse_cells(
             assert text_card.kind is Kind.CELL
             try:
                 card: Body = parser(text_card.text)
-                assert card is not None, "Failed to process cell %s" % text_card.text[:70]
+                assert card is not None, "Failed to process cell " + text_card.text[:70]
             except CellNotFoundError:
                 new_cells_to_process.append(i)
                 continue

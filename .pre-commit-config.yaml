@@ -88,7 +88,7 @@ repos:
       # Lint and fix Python code
       - id: ruff
         name: ruff
-        entry: ruff --force-exclude --fix --config pyproject.toml
+        entry: ruff check --force-exclude --fix --config pyproject.toml
         language: system
         types: [ python ]
         exclude: ^notebooks|^extern
