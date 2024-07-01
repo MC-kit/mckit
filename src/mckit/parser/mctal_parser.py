@@ -81,7 +81,7 @@ def parse_tally_header(text):
 
 
 def parse_bins(text):
-    bin_texts = deque(re.split("^[a-z]", text, flags=re.M + re.I))
+    bin_texts = deque(re.split("^[a-z]", text, flags=re.MULTILINE + re.IGNORECASE))
     result = {"dims": [], "bins": [], "vars": []}
     # f: cells, surfaces, detector bins
     dim_size, bin_values = parse_bin(bin_texts.popleft(), True, int)
