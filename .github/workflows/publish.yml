@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         # ubuntu-20.04 is required to build wheels for older OS (clusters...)
-        os: [ubuntu-20.04, ubuntu-latest, macos-11, windows-latest]  # tbb-2021.10.0 only supports deprecated macos
+        os: [ubuntu-20.04, ubuntu-latest, windows-latest]
         python-version: ['3.10', '3.11', '3.12']
     steps:
       - name: Check out the repository

@@ -34,13 +34,10 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Operating System :: POSIX :: Linux",
-    "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
-    "Topic :: Scientific/Engineering :: Physics",
     "Programming Language :: C",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -49,14 +46,14 @@ classifiers = [
 
 [build-system]
 requires = [
-    "poetry-core >= 1.5.2",
+    "poetry-core >= 1.8.3",
     "cmake >= 3.26.3",
     "ninja; platform_system!='Windows'",
     "setuptools >= 67.8.0",
     "numpy >= 1.26.0",
-    "mkl-devel == 2023.2.0",
-    "intel-openmp == 2023.2.0",
-    "tbb == 2021.10.0",
+    "mkl-devel >= 2024.2.0",
+    "intel-openmp >= 2024.2.0",
+    "tbb >= 2021.13.0",
     "scikit-build"
 ]
 build-backend = "poetry.core.masonry.api"
@@ -96,9 +93,9 @@ tqdm = ">=4.55.1"
 # the last mkl version with wheels for Linux, Windows and MacOS, check on updates
 # the most recent version was 2024.0.0 (windows and linux only).
 # Same for intel-openmp and tbb.
-mkl-devel = "2023.2.0"
-intel-openmp = "2023.2.0"
-tbb = "2021.10.0"
+mkl-devel = ">=2024.2.0"
+intel-openmp = ">=2024.2.0"
+tbb = ">=2021.13.0"
 
 # The following works for linux and windows, but not for macos
 # besides we need to have the same versions on build (see [build-system]),
@@ -563,7 +560,7 @@ lint.ignore = [
 
     "ARG001", # Unused function argument: `expected`
 
-    "B905",   # B905 `zip()` without an explicit `strict=` parameter - ignore while support 3.8, 3.9
+    # "B905",   # B905 `zip()` without an explicit `strict=` parameter - ignore while support 3.9
 
     # "C812",   # C812 Missing trailing comma: black compatibility
     "C901",   # too complex - ...
@@ -671,15 +668,15 @@ src = ["src", "tests"]
 # dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 exclude = [
-  "*.egg-info",
-  ".cache",
-  "__pycache__",
-  "adhoc",
-  "docs/source/conf.py",
-  "extern",
-  "extern/nlopt/test/t_python.py",
-  "notebooks",
-  "wrk",
+    "*.egg-info",
+    ".cache",
+    "__pycache__",
+    "adhoc",
+    "docs/source/conf.py",
+    "extern",
+    "extern/nlopt/test/t_python.py",
+    "notebooks",
+    "wrk",
 ]
 
 [tool.ruff.lint.per-file-ignores]
