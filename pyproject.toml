@@ -76,7 +76,7 @@ mckit = "mckit.cli.runner:mckit"
 
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.10,<3.13"
 DateTime = ">=4.3"
 attrs = ">=21.2.0"
 click = ">=8.0.1"
@@ -85,7 +85,7 @@ loguru = ">=0.6.0"
 numpy = ">=1.26.0"
 ply = ">=3.11"
 python-dotenv = ">=0.20.0"
-scipy = ">=1.10.1"
+scipy = ">=1.14.0"
 sly = ">=0.4"
 tomli = {version = ">=2.0.1", python="<3.11"}
 tomli-w = ">=1.0.0"
