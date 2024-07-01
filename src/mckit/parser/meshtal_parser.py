@@ -538,7 +538,9 @@ def read_meshtal(filename: str | Path) -> dict[int, FMesh]:
     Returns:
         tallies Index of mesh tallies contained in the file.
     """
-    with open(filename) as f:
+    if isinstance(filename, str):
+        filename = Path(filename)
+    with filename.open() as f:
         text = f.read() + "\n"
     meshtal_lexer.begin("INITIAL")
     meshtal_data = meshtal_parser.parse(text, lexer=meshtal_lexer)

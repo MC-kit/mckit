@@ -4,26 +4,24 @@ import re
 
 from collections import deque
 from itertools import product
+from pathlib import Path
 
 import numpy as np
 
 
-def read_mctal(filename, encoding="utf-8"):
+def read_mctal(filename: str | Path, encoding="utf-8"):
     """Reads tally file.
 
-    Parameters
-    ----------
-    filename : str
-        Name of mctal file.
-    encoding : str
-        Name of encoding. Default: utf-8.
+    Args:
+        filename: Name of mctal file.
+        encoding: Name of encoding. Default: utf-8.
 
-    Returns
-    -------
-    tallies : dict
+    Returns:
         A dictionary of tally data.
     """
-    with open(filename, encoding=encoding) as f:
+    if isinstance(filename, str):
+        filename = Path(filename)
+    with filename.open(encoding=encoding) as f:
         text = f.read()
     flags = re.MULTILINE + re.IGNORECASE
     header, *tally_texts = re.split("tally", text, flags=flags)

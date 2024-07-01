@@ -44,7 +44,7 @@ def split(output_dir: Path, mcnp_file_name: str | Path, override: bool, separato
     if isinstance(mcnp_file_name, str):
         mcnp_file_name = Path(mcnp_file_name)
     assert output_dir.is_dir()
-    with open(mcnp_file_name, encoding=MCNP_ENCODING) as fid:
+    with mcnp_file_name.open(encoding=MCNP_ENCODING) as fid:
         sections: sp.InputSections = sp.parse_sections(fid)
     print_text(sections.title, output_dir, "title.txt", override)
     print_cards(sections.cell_cards, output_dir, "cells.txt", override)

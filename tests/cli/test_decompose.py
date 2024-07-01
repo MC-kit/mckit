@@ -176,7 +176,7 @@ def test_anonymous_transformation(runner):
         output = Path(prefix) / "cubes_with_fill_transforms.universes"
         result = runner.invoke(mckit, args=["decompose", source], catch_exceptions=False)
         assert result.exit_code == 0, "Should success"
-        with open(output / "fill-descriptor.toml", "rb") as fid:
+        with (output / "fill-descriptor.toml").open("rb") as fid:
             descriptor = tomllib.load(fid)
             spec = descriptor["2"]["transform"]
             assert len(spec) == 3
@@ -190,7 +190,7 @@ def test_named_transformation(runner):
         output = Path(prefix) / "cubes_with_fill_named_transforms.universes"
         result = runner.invoke(mckit, args=["decompose", source], catch_exceptions=False)
         assert result.exit_code == 0, "Should success"
-        with open(output / "fill-descriptor.toml", "rb") as fid:
+        with (output / "fill-descriptor.toml").open("rb") as fid:
             descriptor = tomllib.load(fid)
             spec = descriptor["2"]["transform"]
             assert spec == 1, f"Fill descriptor {spec} is wrong"

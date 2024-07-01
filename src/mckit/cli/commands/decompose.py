@@ -36,7 +36,7 @@ def move_universe_attribute_to_comments(universe):
 
 def decompose(output, fill_descriptor_path, source, override):
     logger.info("Running mckit decompose")
-    logger.debug("Working dir {}", Path(".").absolute())
+    logger.debug("Working dir {}", Path().absolute())
     logger.info("Processing {}", source)
     logger.debug("Loading model from {}", source)
     source = Path(source)
@@ -97,7 +97,7 @@ def decompose(output, fill_descriptor_path, source, override):
     fill_descriptor["named_transformations"] = named_transformations_descriptor
 
     fdp = output / fill_descriptor_path
-    with open(fdp, "wb") as fid:
+    with fdp.open("wb") as fid:
         tw.dump(fill_descriptor, fid)
     logger.debug("Fill descriptor is saved in {}", fdp)
     envelopes_path = output / "envelopes.i"

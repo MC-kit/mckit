@@ -5342,7 +5342,7 @@ file_resolver = path_resolver("tests")
 )
 def test_meshtal_parser(mesh_file, expected):
     mesh_file = file_resolver(mesh_file)
-    with open(mesh_file) as f:
+    with mesh_file.open() as f:
         text = f.read() + "\n"
     meshtal_lexer.begin("INITIAL")
     tallies = meshtal_parser.parse(text, lexer=meshtal_lexer)

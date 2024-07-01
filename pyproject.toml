@@ -519,6 +519,7 @@ lint.select= [
     # "EXE", # flake8-executable
     # "FBT", # flake8-boolean-trap
     "F", # Pyflakes
+    "FURB", # refurb
     "G", # flake8-logging-format
     "ICN", # flake8-import-conventions
     # "I", # isort
@@ -531,7 +532,7 @@ lint.select= [
     "PIE", # flake8-pie
     "PL", # Pylint
     "PT", # flake8-pytest-style
-    # "PTH", # flake8-use-pathlib
+    "PTH", # flake8-use-pathlib
     "PYI", # flake8-pyi
     # "Q", # flake8-quotes
     "RET", # flake8-return

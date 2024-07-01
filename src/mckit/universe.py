@@ -715,7 +715,9 @@ class Universe:
         if materials:
             cards.extend(map(Card.mcnp_repr, materials))
         cards.append("")
-        with open(filename, mode="w", encoding=encoding) as f:
+        if isinstance(filename, str):
+            filename = Path(filename)
+        with filename.open(mode="w", encoding=encoding) as f:
             f.write("\n".join(cards))
 
     def select(self, selector=None, inner=False):

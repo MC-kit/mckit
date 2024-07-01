@@ -22,7 +22,7 @@ def transform(
     override: bool,
 ) -> None:
     logger.info("Running mckit transform")
-    logger.debug("Working dir {}", Path(".").absolute())
+    logger.debug("Working dir {}", Path().absolute())
     logger.info("Transforming model from {s}", s=source)
     if output.exists() and not override:
         raise FileExistsError(f"File {output} already exists. Remove it or use --override option")
