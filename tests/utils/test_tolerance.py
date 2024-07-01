@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 import pytest
 
 from mckit.utils.tolerance import DEFAULT_TOLERANCE_ESTIMATOR

@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Literal, Optional, SupportsIndex, Union, cast
+from typing import TYPE_CHECKING, Any, Literal, SupportsIndex, cast
 
 import operator
 import sys
 
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from contextlib import contextmanager
 from functools import reduce
 from io import StringIO
@@ -19,6 +19,7 @@ import numpy as np
 
 from attr import attrib, attrs
 from click import progressbar
+
 from mckit.constants import MCNP_ENCODING
 from mckit.utils import filter_dict
 
@@ -51,7 +52,7 @@ ZERO_NAME = Name(0)
 _LOG = getLogger(__name__)
 
 
-Replaceable = Union[Surface, Composition]
+Replaceable = Surface | Composition
 
 
 class NameClashError(ValueError):
@@ -903,7 +904,7 @@ def collect_transformations(universe: Universe, recursive=True) -> set[Transform
 
     @contextmanager
     def visit_shape(s: Surface | Body | Shape):
-        if isinstance(s, (Surface, Body, Shape)):
+        if isinstance(s, Surface | Body | Shape):
             yield at_surface, set()
         else:
             on_unknown_acceptor(s)
@@ -955,7 +956,7 @@ def collect_transformations(universe: Universe, recursive=True) -> set[Transform
 
 
 # TODO dvp: make names of cards not optional
-IU = tuple[list[Optional[Name]], Name]
+IU = tuple[list[Name | None], Name]
 """Entities, Universe name."""
 
 E2U = dict[Name, dict[Name, int]]

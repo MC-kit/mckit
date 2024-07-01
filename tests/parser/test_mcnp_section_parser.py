@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from io import StringIO
 
-import mckit.parser.mcnp_section_parser as sp
 import pytest
+
+import mckit.parser.mcnp_section_parser as sp
 
 from mckit.parser.mcnp_section_parser import Card, Kind
 

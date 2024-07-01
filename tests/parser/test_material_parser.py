@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import mckit.parser.material_parser as mp
 import pytest
+
+import mckit.parser.material_parser as mp
 
 from mckit.material import Composition, Element
 

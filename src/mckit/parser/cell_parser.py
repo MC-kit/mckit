@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import mckit.parser.common.utils as pu
 import sly
+
+import mckit.parser.common.utils as pu
 
 from mckit.body import Body, Shape
 from mckit.material import Material

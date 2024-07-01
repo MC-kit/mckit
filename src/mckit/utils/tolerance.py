@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional, Union, cast
+from typing import Any, cast
 
 import itertools
 import math
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 
 import numpy as np
 
@@ -25,7 +25,7 @@ class MaybeClose(ABC):
         """Objects can be estimated as close with some estimator."""
 
 
-ComparableType = Optional[Union[Iterable, ndarray, float, int, MaybeClose]]
+ComparableType = Iterable | ndarray | float | int | MaybeClose | None
 EstimatorType = Callable[[ComparableType, ComparableType], bool]
 
 

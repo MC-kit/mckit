@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import mckit.parser.common.utils as pu  # parse utils
 import sly
+
+import mckit.parser.common.utils as pu  # parse utils
 
 from mckit.parser.common import Lexer as LexerBase
 from mckit.parser.common import TransformationStrictIndex

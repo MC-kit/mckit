@@ -6,8 +6,9 @@ from pathlib import Path
 
 import numpy as np
 
-from mckit.fmesh import FMesh
 from ply import lex, yacc
+
+from mckit.fmesh import FMesh
 
 literals = ["+", "-", ":", "/"]
 

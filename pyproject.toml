@@ -226,19 +226,21 @@ ruff = ">=0.0.259"
 
 [tool.isort]
 atomic = true
+default_section = "THIRDPARTY"
 ensure_newline_before_comments = true
+include_trailing_comma = true
 known_first_party = "mckit"
 known_third_party = "mpl_toolkits,matplotlib,numpy,scipy,loguru,tqdm,dotenv"
 known_typing = "typing,types,typing_extensions,mypy,mypy_extensions"
-sections = "FUTURE,TYPING,STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
-default_section = "FIRSTPARTY"
-use_parentheses = true
-multi_line_output = 3
 line_length = 100
-include_trailing_comma = true
 lines_between_types = 1
+multi_line_output = 3
+profile="black"
+py_version=311
+sections = "FUTURE,TYPING,STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
 skip_gitignore = true
 skip_glob = ["setup*.py", "*-example.py"]
+use_parentheses = true
 
 
 # NOTE: you have to use single-quoted strings in TOML for regular expressions.
@@ -248,11 +250,7 @@ skip_glob = ["setup*.py", "*-example.py"]
 
 [tool.black]
 line-length = 100
-include = '''
-(
-    \.pyi?$
-)
-'''
+include = '\.pyi?$'
 exclude = '''
 (
     \.eggs
@@ -450,9 +448,57 @@ disable = [
     "wrong-import-order"  # this is `isort` responsibility
 ]
 
+[tool.bandit]
+targets = ["src"]
+confidence-level = "MEIDUM"
+severity-level = "MEIDUM"
+exclude_dirs = ["tests", "adhoc", "notebooks", "tools"]
+quiet = true
+skips = ["B101", "B301", "B403"]
+
+[tool.bandit.any_other_function_with_shell_equals_true]
+no_shell = [
+  "os.execl",
+  "os.execle",
+  "os.execlp",
+  "os.execlpe",
+  "os.execv",
+  "os.execve",
+  "os.execvp",
+  "os.execvpe",
+  "os.spawnl",
+  "os.spawnle",
+  "os.spawnlp",
+  "os.spawnlpe",
+  "os.spawnv",
+  "os.spawnve",
+  "os.spawnvp",
+  "os.spawnvpe",
+  "os.startfile"
+]
+shell = [
+  "os.system",
+  "os.popen",
+  "os.popen2",
+  "os.popen3",
+  "os.popen4",
+  "popen2.popen2",
+  "popen2.popen3",
+  "popen2.popen4",
+  "popen2.Popen3",
+  "popen2.Popen4",
+  "commands.getoutput",
+  "commands.getstatusoutput"
+]
+subprocess = [
+  "subprocess.Popen",
+  "subprocess.call",
+  "subprocess.check_call",
+  "subprocess.check_output"
+]
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py310"
 #see full list: https://beta.ruff.rs/docs/rules/#pyflakes-f
 #or run 'ruff linter' to see a brief list
 lint.select= [
@@ -593,7 +639,7 @@ lint.ignore = [
 
     "PT019",   # Fixture `_bin` without value is injected as parameter (false positive?)
 
-    "S101",    # Use of `assert` detected
+    "S101",    # Use of `assert` detected  - TODO - replace assert statements with exception raise
     # "S301",    # `pickle` and modules that wrap... - TODO - use sql instead of pickle
 
     # "SLF001",  # Private member accessed: `_geometry_spec`
@@ -622,7 +668,7 @@ src = ["src", "tests"]
 
 # Allow unused variables when underscore-prefixed.
 # dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-lint.dummy-variable-rgx = "^_$"
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 exclude = [
   "*.egg-info",
   ".cache",

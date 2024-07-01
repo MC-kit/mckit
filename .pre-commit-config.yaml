@@ -65,7 +65,7 @@ repos:
         exclude: \.idea|\.cache|^notebooks|^extern
         entry: pyupgrade
         args:
-          - --py39-plus
+          - --py310-plus
         language: system
         types: [ python ]
 
@@ -81,6 +81,15 @@ repos:
       - id: black
         name: black
         entry: black
+        language: system
+        types: [ python ]
+        exclude: ^notebooks|^extern
+
+      # Security check
+      - id: bandit
+        name: bandit
+        entry: bandit
+        args: ["-c", "pyproject.toml"]
         language: system
         types: [ python ]
         exclude: ^notebooks|^extern

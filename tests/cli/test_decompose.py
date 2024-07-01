@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 
 import numpy as np
-
 import pytest
 
 if sys.version_info >= (3, 11):

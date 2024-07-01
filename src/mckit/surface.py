@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional, cast
+from typing import Any, cast
 
 from abc import abstractmethod
+from collections.abc import Callable
 
 # noinspection PyPackageRequirements
 import numpy as np
@@ -311,7 +312,7 @@ class Surface(Card, MaybeClose):
 
     @property
     def transformation(self) -> Transformation | None:
-        return cast(Optional[Transformation], self.options.get("transform", None))
+        return cast(Transformation | None, self.options.get("transform", None))
 
     @abstractmethod
     def apply_transformation(self) -> Surface:

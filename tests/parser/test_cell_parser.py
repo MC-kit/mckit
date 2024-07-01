@@ -3,8 +3,9 @@
 # SlyParser.debugfile = "sly-debug.out"
 from __future__ import annotations
 
-import mckit.parser.cell_parser as clp
 import pytest
+
+import mckit.parser.cell_parser as clp
 
 from mckit.body import Body
 from mckit.material import Material

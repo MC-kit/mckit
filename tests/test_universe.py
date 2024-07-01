@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-from typing import Union
-
 import tempfile
 import textwrap
 
 from copy import deepcopy
 
 import numpy as np
-
 import pytest
 
 from mckit.body import Body, Card, Shape
@@ -33,9 +30,7 @@ def data_filename_resolver(x):
     return str(data_path_resolver(x))
 
 
-TStatItem = dict[
-    int, Union[list[int], set[Universe]]
-]  # TODO dvp: cool but isn't this too much freedom?
+TStatItem = dict[int, list[int] | set[Universe]]  # TODO dvp: cool but isn't this too much freedom?
 TStat = dict[str, TStatItem]
 
 

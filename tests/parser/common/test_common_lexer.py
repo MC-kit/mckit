@@ -4,9 +4,10 @@ from typing import TYPE_CHECKING
 
 import re
 
-import mckit.parser.common as cmn
 import pytest
 import sly
+
+import mckit.parser.common as cmn
 
 from mckit.parser.common.lexer import Lexer as LexerBase
 from mckit.parser.common.lexer import LexError

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import mckit.parser.transformation_parser as trp
 import pytest
+
+import mckit.parser.transformation_parser as trp
 
 from mckit.transformation import Transformation
 

@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import click
+
 import mckit.version as meta
 
 from mckit.cli.commands import do_check, do_compose, do_decompose, do_split, do_transform

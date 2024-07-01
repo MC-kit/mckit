@@ -12,9 +12,9 @@ from multiprocessing import Pool
 
 import numpy as np
 
-import mckit.material as mm
-
 from click import progressbar
+
+import mckit.material as mm
 
 # noinspection PyUnresolvedReferences,PyPackageRequirements
 from mckit.geometry import Shape as _Shape
@@ -28,7 +28,7 @@ from .transformation import Transformation
 from .utils import filter_dict
 
 if TYPE_CHECKING:
-    from typing import ClassVar, Literal, NewType, Union
+    from typing import ClassVar, Literal, NewType
 
     from collections.abc import Iterable, Iterator
 
@@ -507,7 +507,7 @@ class Shape(_Shape):
 
 if TYPE_CHECKING:
     TOperation = NewType("TOperation", str)
-    TGeometry = NewType("TGeometry", Union[list[Union[Surface, TOperation]], Shape, "Body"])
+    TGeometry = NewType("TGeometry", list[Surface | TOperation] | Shape | "Body")
 
 
 def _clean_args(opc: str, *_args: Shape | Surface | Body) -> tuple[str, list[Shape]]:

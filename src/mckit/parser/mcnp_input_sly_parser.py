@@ -4,13 +4,14 @@
 
 from __future__ import annotations
 
-from typing import Callable, TextIO
+from typing import TextIO
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from itertools import repeat
 from pathlib import Path
 
 from attr import attrib, attrs
+
 from mckit.card import Card
 from mckit.constants import MCNP_ENCODING
 from mckit.parser.cell_parser import Body
