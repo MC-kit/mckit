@@ -58,7 +58,7 @@ def find_my_name() -> str:
 package: Final = find_my_name()
 locations: Final = f"src/{package}", "tests", "./noxfile.py", "docs/source/conf.py"
 
-supported_pythons: Final = "3.9", "3.10", "3.11", "3.12"
+supported_pythons: Final = "3.10", "3.11", "3.12"
 
 
 def _update_hook(hook: Path, virtualenv: str, s: Session) -> None:
