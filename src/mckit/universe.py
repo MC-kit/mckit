@@ -261,7 +261,6 @@ class Universe:
         comp_names: set[int] = {default_name_key(c) for c in comps}
 
         for cell in cells:
-
             if cell.shape.is_empty():
                 continue
 
@@ -347,7 +346,6 @@ class Universe:
         rule: Literal["keep", "new", "clash"],
         err_desc: str,
     ) -> Replaceable:
-
         if entity in replace.keys():
             return replace[entity]
 
@@ -429,7 +427,6 @@ class Universe:
                 return _c.name() == cell
 
         elif universe:
-
             if isinstance(universe, Universe):
                 universe = universe.name()
 

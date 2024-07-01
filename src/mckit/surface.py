@@ -385,7 +385,6 @@ def internalize_ort(v: np.ndarray) -> tuple[np.ndarray, bool]:
 
 # noinspection PyProtectedMember
 class RCC(Surface, _RCC):
-
     def __init__(self, center, direction, radius, **options):
         center = np.array(center)
         direction = np.array(direction)
@@ -1085,7 +1084,7 @@ class Cylinder(Surface, _Cylinder):
                 ]
             )
             v = np.zeros(3)
-            k = -self._radius**2
+            k = -(self._radius**2)
             m, v, k = Transformation(translation=self._pt).apply2gq(m, v, k)
             return GQuadratic(m, v, k, **self.options).mcnp_repr()
         words.append(" ")

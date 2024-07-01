@@ -199,7 +199,8 @@ def test_named_transformation(runner):
             transform = transforms["tr1"]
             transform_params = np.fromiter(map(float, transform), dtype=float)
             assert transform_params.size == 3, "Only translation is specified for tr1"
-            assert_array_equal(
-                transform_params, [0, -1.0, 0]
-            ), f"Invalid transform {transform_params}"
+            (
+                assert_array_equal(transform_params, [0, -1.0, 0]),
+                f"Invalid transform {transform_params}",
+            )
             assert transforms is not None
