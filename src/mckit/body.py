@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, cast
 
 import os
 
+from collections.abc import Generator
 from copy import deepcopy
 from functools import reduce
 from itertools import groupby, permutations, product
@@ -15,6 +16,7 @@ import numpy as np
 from click import progressbar
 
 import mckit.material as mm
+
 
 # noinspection PyUnresolvedReferences,PyPackageRequirements
 from mckit.geometry import Shape as _Shape
@@ -180,7 +182,7 @@ class Shape(_Shape):
             if len(entities) != len(other_groups[hash_value]):
                 return False
             for other_entities in permutations(other_groups[hash_value]):
-                for se, oe in zip(entities, other_entities):
+                for se, oe in zip(entities, other_entities, strict=False):
                     if not (se == oe):
                         break
                 else:
@@ -279,9 +281,7 @@ class Shape(_Shape):
             New shape.
         """
         opc = self.opc
-        args = []
-        for a in self.args:
-            args.append(a.transform(transformation))
+        args = (a.transform(transformation) for a in self.args)
         return Shape(opc, *args)
 
     def apply_transformation(self):
@@ -323,29 +323,30 @@ class Shape(_Shape):
             return result
         return set()
 
-    def is_empty(self):
-        """Checks if the shape represents an empty set."""
+    def is_empty(self) -> bool:
+        """Check, if the shape is empty."""
         return self.opc == "E"
 
     def split_shape(self) -> list[Shape]:
-        shape_groups = []
-        if self.opc == "U":
-            stat = self.get_stat_table()
-            drop_index = np.nonzero(np.all(stat == -1, axis=1))[0]
-            arg_results = np.delete(stat, drop_index, axis=0)
-            # noinspection PyTypeChecker
-            index_groups = self._find_groups(arg_results == +1)
-            for ig in index_groups:
-                index = np.nonzero(ig)[0]
-                args = [self.args[i] for i in index]
-                shape_groups.append(Shape("U", *args))
-        elif self.opc == "I":
-            arg_groups = [arg.split_shape() for arg in self.args]
-            for args in product(*arg_groups):
-                shape_groups.append(Shape("I", *args))
-        else:
-            shape_groups.append(self)
-        return shape_groups
+        def _scan() -> Generator[Shape, None, None]:
+            if self.opc == "U":
+                stat = self.get_stat_table()
+                drop_index = np.nonzero(np.all(stat == -1, axis=1))[0]
+                arg_results = np.delete(stat, drop_index, axis=0)
+                # noinspection PyTypeChecker
+                index_groups = self._find_groups(arg_results == +1)
+                for ig in index_groups:
+                    index = np.nonzero(ig)[0]
+                    args = (self.args[i] for i in index)
+                    yield Shape("U", *args)
+            elif self.opc == "I":
+                arg_groups = (arg.split_shape() for arg in self.args)
+                for args in product(*arg_groups):
+                    yield Shape("I", *args)
+            else:
+                yield self
+
+        return list(_scan())
 
     @staticmethod
     def _find_groups(result: npt.NDArray):

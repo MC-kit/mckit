@@ -44,7 +44,7 @@ def test_index_with_strict_strategy(
 ) -> None:
     dictionary = Index(strict_strategy)
     dictionary.update(inp)
-    for k, s in zip(keys, success):
+    for k, s in zip(keys, success, strict=False):
         if s:
             assert dictionary[k]
         else:

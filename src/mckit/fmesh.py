@@ -133,7 +133,7 @@ class RectMesh:
         if len(point.shape) == 1:
             return self.check_indices(i, j, k)
         indices = []
-        for x, y, z in zip(i, j, k):
+        for x, y, z in zip(i, j, k, strict=False):
             indices.append(self.check_indices(x, y, z))
         return indices
 

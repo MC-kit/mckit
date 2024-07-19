@@ -160,7 +160,7 @@ class Transformation(Card, MaybeClose):
         return m, v, k
 
     def apply2plane(
-        self, v1: npt.NDArray[np.float_], k1: float
+        self, v1: npt.NDArray[np.float64], k1: float
     ) -> tuple[npt.NDArray[float], float]:
         """Gets parameters of plane surface in the main coordinate system.
 

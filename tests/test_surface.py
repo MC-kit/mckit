@@ -8,6 +8,7 @@ import pytest
 from mckit.box import Box
 from mckit.surface import BOX, RCC, Cone, Cylinder, GQuadratic, Plane, Sphere, Torus, create_surface
 from mckit.transformation import Transformation
+
 from tests import pass_through_pickle
 
 
@@ -615,6 +616,7 @@ class TestPlane:
                 "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
                 "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
             ],
+            strict=False,
         ),
     )
     def test_mcnp_pretty_repr(self, surface, answer):
@@ -648,6 +650,7 @@ class TestPlane:
                 "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
                 "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
             ],
+            strict=False,
         ),
     )
     def test_mcnp_repr(self, surface, answer):
@@ -832,6 +835,7 @@ class TestSphere:
                 "4 S 4.3 8.2 -1.4 3.5",
                 "4 S 4.3 8.2 -1.4 3.5",
             ],
+            strict=False,
         ),
     )
     def test_mcnp_pretty_repr(self, surface, answer):
@@ -865,6 +869,7 @@ class TestSphere:
                 "4 S 4.3 8.2 -1.4 3.5",
                 "4 S 4.3 8.2 -1.4 3.5",
             ],
+            strict=False,
         ),
     )
     def test_mcnp_repr(self, surface, answer):
@@ -1062,6 +1067,7 @@ class TestCylinder:
                 "3 C/Z 1 -2 3",
                 "3 C/Z 1 -2 3",
             ],
+            strict=False,
         ),
     )
     def test_mcnp_prety_repr(self, surface, answer):
@@ -1092,6 +1098,7 @@ class TestCylinder:
                 "3 C/Z 1 -2 3",
                 "3 C/Z 1 -2 3",
             ],
+            strict=False,
         ),
     )
     def test_mcnp_repr(self, surface, answer):
@@ -2460,6 +2467,7 @@ class TestCone:
                 "7 K/Y 3 2 -4 0.25 -1",
                 "7 K/Z 3 2 -4 0.25 -1",
             ],
+            strict=False,
         ),
     )
     def test_mcnp_pretty_repr(self, surface, answer):
@@ -2505,6 +2513,7 @@ class TestCone:
                 "7 K/Y 3 2 -4 0.25 -1",
                 "7 K/Z 3 2 -4 0.25 -1",
             ],
+            strict=False,
         ),
     )
     def test_mcnp_repr(self, surface, answer):
@@ -2734,6 +2743,7 @@ class TestTorus:
                 "3 TZ 1 2 3 4 2 1",
                 "3 TZ 1 2 3 4 2 1",
             ],
+            strict=False,
         ),
     )
     def test_mcnp_round_repr(self, surface, answer):
@@ -2755,6 +2765,7 @@ class TestTorus:
                 "3 TZ 1 2 3 4 2 1",
                 "3 TZ 1 2 3 4 2 1",
             ],
+            strict=False,
         ),
     )
     def test_mcnp_repr(self, surface, answer):
@@ -2928,6 +2939,7 @@ class TestGQuadratic:
                 "2 GQ -1 -2 -3 -0.5 -0.8 -0.6 -1 -2 -3 4",
                 "2 GQ 1 2 3 0.5 0.8 0.6 1 2 3 -4",
             ],
+            strict=False,
         ),
     )
     def test_mcnp_pretty_repr(self, surface, answer):
@@ -3081,6 +3093,7 @@ class TestBOX:
                 "1 BOX -2 -2 -3 3 0 0 0 4 0 0 0 6 ",
                 "2 BOX 1 2 3 -3 0 0 0 -4 0 0 0 -6 ",
             ],
+            strict=False,
         ),
     )
     def test_mcnp_repr(self, surface, answer):
@@ -3260,6 +3273,7 @@ class TestRCC:
                 "1 RCC -1 1 -2 2 0 0 3 ",
                 "2 RCC 1 1 -2 -2 0 0 3 ",
             ],
+            strict=False,
         ),
     )
     def test_mcnp_repr(self, surface, answer):

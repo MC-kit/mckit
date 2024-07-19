@@ -73,16 +73,12 @@ def write_separators(output: Path, model: str) -> None:
                 second_line = OUTER_LINE
             text = (
                 "c\n"
-                + "c   "
-                + first_line
-                + "\n"
-                + "c\n"
-                + f"c   {start_end} of {model} {section}\n"
-                + "c\n"
-                + "c   "
-                + second_line
-                + "\n"
-                + "c\n"
+                "c   " + first_line + "\n"
+                "c\n"
+                f"c   {start_end} of {model} {section}\n"
+                "c\n"
+                "c   " + second_line + "\n"
+                "c\n"
             )
             path: Path = output / f"{section}_{start_end}.txt"
             path.write_text(text, encoding=MCNP_ENCODING)

@@ -633,7 +633,7 @@ class Plane(Surface, _Plane):
     """
 
     def __init__(
-        self, normal: npt.NDArray[np.float_], offset: float, **options: dict[str, Any]
+        self, normal: npt.NDArray[np.float64], offset: float, **options: dict[str, Any]
     ) -> None:
         tr: Transformation | None = options.pop("transform", None)
         if tr:
@@ -723,7 +723,7 @@ class Plane(Surface, _Plane):
             words.append("PZ")
         else:
             words.append("P")
-            for v, p in zip(_v, self._v_digits):
+            for v, p in zip(_v, self._v_digits, strict=False):
                 words.append(" ")
                 words.append(pretty_float(v, p))
         words.append(" ")
@@ -835,7 +835,7 @@ class Sphere(Surface, _Sphere):
     def __eq__(self, other):
         if not isinstance(other, Sphere):
             return False
-        for x, y in zip(self._get_center(), other._get_center()):
+        for x, y in zip(self._get_center(), other._get_center(), strict=False):
             if x != y:
                 return False
         return self._get_radius() == other._get_radius()
@@ -915,7 +915,7 @@ class Sphere(Surface, _Sphere):
             words.append(pretty_float(v, p))
         else:
             words.append("S")
-            for v, p in zip(self._center, self._center_digits):
+            for v, p in zip(self._center, self._center_digits, strict=False):
                 words.append(" ")
                 words.append(pretty_float(v, p))
         words.append(" ")
@@ -999,10 +999,10 @@ class Cylinder(Surface, _Cylinder):
             return True
         if not isinstance(other, Cylinder):
             return False
-        for x, y in zip(self._get_pt(), other._get_pt()):
+        for x, y in zip(self._get_pt(), other._get_pt(), strict=False):
             if x != y:
                 return False
-        for x, y in zip(self._get_axis(), other._get_axis()):
+        for x, y in zip(self._get_axis(), other._get_axis(), strict=False):
             if x != y:
                 return False
         return self._get_radius() == other._get_radius()
@@ -1223,10 +1223,10 @@ class Cone(Surface, _Cone):
         if not isinstance(other, Cone):
             return False
 
-        for x, y in zip(self._get_apex(), other._get_apex()):
+        for x, y in zip(self._get_apex(), other._get_apex(), strict=False):
             if x != y:
                 return False
-        for x, y in zip(self._get_axis(), other._get_axis()):
+        for x, y in zip(self._get_axis(), other._get_axis(), strict=False):
             if x != y:
                 return False
         return self._get_t2() == other._get_t2() and self._sheet == other._sheet
@@ -1262,7 +1262,7 @@ class Cone(Surface, _Cone):
                 words.append(pretty_float(v, p))
             else:
                 words.append("K/X")
-                for v, p in zip(self._apex, self._apex_digits):
+                for v, p in zip(self._apex, self._apex_digits, strict=False):
                     words.append(" ")
                     words.append(pretty_float(v, p))
         elif np.all(self._get_axis() == np.array([0.0, 1.0, 0.0])):
@@ -1274,7 +1274,7 @@ class Cone(Surface, _Cone):
                 words.append(pretty_float(v, p))
             else:
                 words.append("K/Y")
-                for v, p in zip(self._apex, self._apex_digits):
+                for v, p in zip(self._apex, self._apex_digits, strict=False):
                     words.append(" ")
                     words.append(pretty_float(v, p))
         elif np.all(self._get_axis() == np.array([0.0, 0.0, 1.0])):
@@ -1286,7 +1286,7 @@ class Cone(Surface, _Cone):
                 words.append(pretty_float(v, p))
             else:
                 words.append("K/Z")
-                for v, p in zip(self._apex, self._apex_digits):
+                for v, p in zip(self._apex, self._apex_digits, strict=False):
                     words.append(" ")
                     words.append(pretty_float(v, p))
         else:
@@ -1386,10 +1386,10 @@ class GQuadratic(Surface, _GQuadratic):
     def __eq__(self, other) -> bool:
         if not isinstance(other, GQuadratic):
             return False
-        for x, y in zip(self._get_v(), other._get_v()):
+        for x, y in zip(self._get_v(), other._get_v(), strict=False):
             if x != y:
                 return False
-        for x, y in zip(self._get_m().ravel(), other._get_m().ravel()):
+        for x, y in zip(self._get_m().ravel(), other._get_m().ravel(), strict=False):
             if x != y:
                 return False
         return self._get_k() == other._get_k()
@@ -1531,10 +1531,10 @@ class Torus(Surface, _Torus):
     def __eq__(self, other):
         if not isinstance(other, Torus):
             return False
-        for x, y in zip(self._get_center(), other._get_center()):
+        for x, y in zip(self._get_center(), other._get_center(), strict=False):
             if x != y:
                 return False
-        for x, y in zip(self._get_axis(), other._get_axis()):
+        for x, y in zip(self._get_axis(), other._get_axis(), strict=False):
             if x != y:
                 return False
         return (
@@ -1581,7 +1581,7 @@ class Torus(Surface, _Torus):
         x, y, z = self._get_center()
         values = [x, y, z, self._get_r(), self._get_a(), self._get_b()]
         digits = [*self._center_digits, self._R_digits, self._a_digits, self._b_digits]
-        for v, p in zip(values, digits):
+        for v, p in zip(values, digits, strict=False):
             words.append(" ")
             words.append(pretty_float(v, p))
         return words

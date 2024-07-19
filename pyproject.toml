@@ -12,13 +12,13 @@ keywords = ["mckit", "MCNP"]
 readme = "README.rst"
 packages = [
     { include = "mckit", from = "src" },
-    { include = "building", format="sdist", from = "."},
-    { include = "tests", format="sdist", from = "."},
-#    { include = "benchmarks", format="sdist", from = "."},
+    { include = "building", format = "sdist", from = "." },
+    { include = "tests", format = "sdist", from = "." },
+    #    { include = "benchmarks", format="sdist", from = "."},
 ]
 include = [
     "src/mckit/data/isotopes.dat",
-    { path = "build.py", format="sdist"},
+    { path = "build.py", format = "sdist" },
     # C extensions must be included in the wheel distribution.
     { path = "src/mckit/**/*.pyd", format = "wheel" },
     { path = "src/mckit/**/*.so", format = "wheel" },
@@ -87,7 +87,7 @@ ply = ">=3.11"
 python-dotenv = ">=0.20.0"
 scipy = ">=1.14.0"
 sly = ">=0.4"
-tomli = {version = ">=2.0.1", python="<3.11"}
+tomli = { version = ">=2.0.1", python = "<3.11" }
 tomli-w = ">=1.0.0"
 tqdm = ">=4.55.1"
 # the last mkl version with wheels for Linux, Windows and MacOS, check on updates
@@ -126,7 +126,7 @@ tbb = ">=2021.13.0"
 # TODO dvp: check
 #      https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-advisor.html
 #
-typer = {extras = ["all"], version = ">=0.9.0"}
+typer = { extras = ["all"], version = ">=0.9.0" }
 
 [tool.poetry.group.dev.dependencies]
 Pygments = ">=2.10.0"
@@ -138,12 +138,6 @@ pre-commit = ">=2.15.0"
 rstcheck = ">=6.1.2"
 pydocstringformatter = ">=0.7.3"
 pyupgrade = ">=3.15.0"
-
-[tool.poetry.group.black.dependencies]
-black = ">=22.8.0"
-
-[tool.poetry.group.isort.dependencies]
-isort = ">=5.9.3"
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=7.1"
@@ -212,65 +206,12 @@ sphinx-autobuild = ">=2021.3.14"
 
 [tool.poetry.group.pylsp.dependencies]
 pylsp-mypy = ">=0.6.6"
-pyls-isort = ">=0.2.2"
-python-lsp-black = ">=1.2.1"
 pyls-memestra = ">=0.0.16"
 pylsp-rope = ">=0.1.11"
 ruff-lsp = ">=0.0.35"
 
 [tool.poetry.group.ruff.dependencies]
 ruff = ">=0.0.259"
-
-[tool.isort]
-atomic = true
-default_section = "THIRDPARTY"
-ensure_newline_before_comments = true
-include_trailing_comma = true
-known_first_party = "mckit"
-known_third_party = "mpl_toolkits,matplotlib,numpy,scipy,loguru,tqdm,dotenv"
-known_typing = "typing,types,typing_extensions,mypy,mypy_extensions"
-line_length = 100
-lines_between_types = 1
-multi_line_output = 3
-profile="black"
-py_version=311
-sections = "FUTURE,TYPING,STDLIB,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
-skip_gitignore = true
-skip_glob = ["setup*.py", "*-example.py"]
-use_parentheses = true
-
-
-# NOTE: you have to use single-quoted strings in TOML for regular expressions.
-# It's the equivalent of r-strings in Python.  Multiline strings are treated as
-# verbose regular expressions by Black.  Use [ ] to denote a significant space
-# character.
-
-[tool.black]
-line-length = 100
-include = '\.pyi?$'
-exclude = '''
-(
-    \.eggs
-  | \.git
-  | \.mypy_cache
-  | \.pytest_cache
-  | \.nox
-  | \.venv
-  | \.idea
-  | _build
-  | build
-  | build_configs
-  | dist
-  | extern
-  | data
-  | htmlcov
-  | \.egg-info
-  | _tab\.py$
-  | notebooks
-  | tutorial
-  | wrk
-)
-'''
 
 [tool.pytest.ini_options]
 minversion = "6.2"
@@ -297,6 +238,7 @@ addopts = '''
 --strict-markers
 --ignore setup.py
 --failed-first
+--xdoctest
 --benchmark-disable
 --benchmark-storage=.cache/benchmarks
 --benchmark-autosave
@@ -304,7 +246,7 @@ addopts = '''
 --benchmark-group-by=name,fullname
 '''
 doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ALLOW_UNICODE ALLOW_BYTES"
-testpaths = ["tests"]
+testpaths = ["tests", "src"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
@@ -365,7 +307,7 @@ sort = "Cover"
 # See https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml-file
 #     https://dev.to/tusharsadhwani/the-comprehensive-guide-to-mypy-561m
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 # strict = true     # TODO dvp: uncomment this to get strict control
 follow_imports = "silent"
 # namespace_packages = true
@@ -389,7 +331,7 @@ module = [
     "click",
     "click.testing",
     "loguru",
-    "mckit.*",  # TODO (dvp, style): make everything typed including extension 'geometry'
+    "mckit.*", # TODO (dvp, style): make everything typed including extension 'geometry'
     "multipledispatch",
     "nox",
     "numpy.testing",
@@ -399,6 +341,7 @@ module = [
     "scipy.sparse",
     "tomli",
     "tomllib",
+    "xdoctest",
 ]
 ignore_missing_imports = true
 
@@ -455,50 +398,74 @@ skips = ["B101", "B301", "B403"]
 
 [tool.bandit.any_other_function_with_shell_equals_true]
 no_shell = [
-  "os.execl",
-  "os.execle",
-  "os.execlp",
-  "os.execlpe",
-  "os.execv",
-  "os.execve",
-  "os.execvp",
-  "os.execvpe",
-  "os.spawnl",
-  "os.spawnle",
-  "os.spawnlp",
-  "os.spawnlpe",
-  "os.spawnv",
-  "os.spawnve",
-  "os.spawnvp",
-  "os.spawnvpe",
-  "os.startfile"
+    "os.execl",
+    "os.execle",
+    "os.execlp",
+    "os.execlpe",
+    "os.execv",
+    "os.execve",
+    "os.execvp",
+    "os.execvpe",
+    "os.spawnl",
+    "os.spawnle",
+    "os.spawnlp",
+    "os.spawnlpe",
+    "os.spawnv",
+    "os.spawnve",
+    "os.spawnvp",
+    "os.spawnvpe",
+    "os.startfile"
 ]
 shell = [
-  "os.system",
-  "os.popen",
-  "os.popen2",
-  "os.popen3",
-  "os.popen4",
-  "popen2.popen2",
-  "popen2.popen3",
-  "popen2.popen4",
-  "popen2.Popen3",
-  "popen2.Popen4",
-  "commands.getoutput",
-  "commands.getstatusoutput"
+    "os.system",
+    "os.popen",
+    "os.popen2",
+    "os.popen3",
+    "os.popen4",
+    "popen2.popen2",
+    "popen2.popen3",
+    "popen2.popen4",
+    "popen2.Popen3",
+    "popen2.Popen4",
+    "commands.getoutput",
+    "commands.getstatusoutput"
 ]
 subprocess = [
-  "subprocess.Popen",
-  "subprocess.call",
-  "subprocess.check_call",
-  "subprocess.check_output"
+    "subprocess.Popen",
+    "subprocess.call",
+    "subprocess.check_call",
+    "subprocess.check_output"
 ]
 
 [tool.ruff]
 target-version = "py310"
+
+line-length = 100
+
+# show an enumeration of all autofixed lint violations
+show-fixes = true
+
+# show source code snippets when reporting violations
+output-format = "concise"
+
+src = ["src", "tests"]
+
+exclude = [
+    "*.egg-info",
+    ".cache",
+    "__pycache__",
+    "adhoc",
+    "docs/source/conf.py",
+    "notebooks",
+    "wrk",
+]
+
+
+[tool.ruff.lint]
+
 #see full list: https://beta.ruff.rs/docs/rules/#pyflakes-f
 #or run 'ruff linter' to see a brief list
-lint.select= [
+select = [
     "A", # flake8-builtins
     # "ANN", # flake8-annotations
     # "ARG", # flake8-unused-arguments
@@ -507,39 +474,45 @@ lint.select= [
     "C4", # flake8-comprehensions
     "C90", # mccabe
     "COM", # flake8-commas
-    "DJ", # flake8-django
     "D", # pydocstyle
+    "DJ", # flake8-django
     # "DTZ", # flake8-datetimez
+    "E", # pycodestyle
     # "EM", # flake8-errmsg
     # "ERA", # eradicate
-    "E", # pycodestyle
     # "EXE", # flake8-executable
-    # "FBT", # flake8-boolean-trap
     "F", # Pyflakes
+    "FA", # flake8-future-annotations
+    # "FBT", # flake8-boolean-trap
     "FURB", # refurb
     "G", # flake8-logging-format
+    "I", # isort
     "ICN", # flake8-import-conventions
-    # "I", # isort
     "INP", # flake8-no-pep420
-    # "ISC", # flake8-implicit-str-concat
+    "INT", # flake8-gettext
+    "ISC", # flake8-implicit-str-concat
+    "LOG", # flake8-log
     "N", # pep8-naming
-    # "NPY", # NumPy-specific rules
+    "NPY", # NumPy-specific rules
     "PD", # pandas-vet
-    # "PGH", # pygrep-hooks
+    "PERF", # Perflint
+    "PGH", # pygrep-hooks
     "PIE", # flake8-pie
     "PL", # Pylint
     "PT", # flake8-pytest-style
     "PTH", # flake8-use-pathlib
     "PYI", # flake8-pyi
-    # "Q", # flake8-quotes
+    "Q", # flake8-quotes
     "RET", # flake8-return
     # "RSE", # flake8-raise
     "RUF", # Ruff-specific rules
     "S", # flake8-bandit
     # "SIM", # flake8-simplify
     # "SLF", # flake8-self
+    "SLOT", # flake8-slot
     "T10", # flake8-debugger
     # "T20", # flake8-print
+    # "TD", # flake8-todos
     # "TCH", # flake8-type-checking
     # "TID", # flake8-tidy-imports
     "TRY", # tryceratops
@@ -548,8 +521,10 @@ lint.select= [
     "YTT", # flake8-2020
 ]
 
+#warning: The isort option `isort.split-on-trailing-comma` is incompatible with the formatter `format.skip-magic-trailing-comma=true` option. To avoid unexpected behavior, we recommend either setting `isort.split-on-trailing-comma=false` or `format.skip-magic-trailing-comma=false`.
+
 # Ignore rules that currently fail on the codebase
-lint.ignore = [
+ignore = [
     "ANN001", # ANN001 Missing type annotation for function argument: doesn't allow to use functools dispatching
     "ANN002", # ANN002 Missing type annotation for *drop_items: ... as above
     "ANN101", # ANN101 Missing type annotation for self in method
@@ -563,25 +538,25 @@ lint.ignore = [
     # "B905",   # B905 `zip()` without an explicit `strict=` parameter - ignore while support 3.9
 
     # "C812",   # C812 Missing trailing comma: black compatibility
-    "C901",   # too complex - ...
+    "C901", # too complex - ...
 
     "COM812", #  [*] Trailing comma missing
 
-    "D100",   # Missing docstring in public module
-    "D101",   # Missing docstring in public class
-    "D102",   # Missing docstring in public method
-    "D103",   # Missing docstring in public function
-    "D105",   # D105 Missing docstring in magic method (__hash__, __eq__)
-    "D104",   # Missing docstring in public package
-    "D106",   # Missing docstring in public nested class
-    "D107",   # Missing docstring in __init__
+    "D100", # Missing docstring in public module
+    "D101", # Missing docstring in public class
+    "D102", # Missing docstring in public method
+    "D103", # Missing docstring in public function
+    "D105", # D105 Missing docstring in magic method (__hash__, __eq__)
+    "D104", # Missing docstring in public package
+    "D106", # Missing docstring in public nested class
+    "D107", # Missing docstring in __init__
     # "D417",   # Missing argument descriptions in the docstring: `config`, `ebins`, - TODO
 
 
     # "E203",  # E203: Whitespace before ‘:'
     # "E401",  # Multiple imports on one line
-    "E402",    # Module level import not at top of file
-    "E501",    # Line too long (<LENGTH> > 100 characters)
+    "E402", # Module level import not at top of file
+    "E501", # Line too long (<LENGTH> > 100 characters)
     # "E701",  # Multiple statements on one line (colon)
     # "E702",  # Multiple statements on one line (semicolon)
     # "E703",  # Statement ends with an unnecessary semicolon
@@ -599,8 +574,8 @@ lint.ignore = [
     # "EM101",   # Exception must not use a string literal, assign to variable first
     # "EM102",   # Exception must not use an f-string literal, assign to variable first
 
-    "N803",    # Argument name `R` should be lowercase
-    "N806",    # Variable `D` in function should be lowercase
+    "N803", # Argument name `R` should be lowercase
+    "N806", # Variable `D` in function should be lowercase
 
     # "F401",  # `<TYPE>` imported but unused
     # "F403",  # `from <MODULE> import *` used; unable to detect undefined names
@@ -616,18 +591,19 @@ lint.ignore = [
     # "FBT002",  # Boolean default value in function definition (TODO!)
     # "FBT003",  # Boolean positional value in function call
 
-    "I001", # import order is controlled by isort
+    # "I001",
     # "I101",
     # "I201",
     # "I202",
-    "INP001",  # File `tools/clear-prev-dist-info.py` is part of an implicit namespace package.
+    "INP001", # File `tools/clear-prev-dist-info.py` is part of an implicit namespace package.
+    "ISC001", # to avoid conflicts with 'ruff format'
 
     # ignore some questionable pandas-vet warnings
     # "PD005", # use operator instead of method
     # "PD008", # We use at() to access single values
     # "PD009", # And we use iat()
 
-    "PLE1205", # logging-too-many-args - with use logure with '{' style of placeholders
+    "PLE1205", # logging-too-many-args - we use loguru with '{' style of placeholders
 
     "PLR0912", # Too many branches (15 > 12)
     "PLR0913", # Too many arguments to function call (6 > 5)
@@ -635,49 +611,20 @@ lint.ignore = [
     "PLR2004", # magic number - don't want declare 0.0 as constant
     "PLR5501", # Consider using `elif` instead of `else` then `if` to remove one indentation level
 
-    "PT019",   # Fixture `_bin` without value is injected as parameter (false positive?)
+    "PT019", # Fixture `_bin` without value is injected as parameter (false positive?)
 
-    "S101",    # Use of `assert` detected  - TODO - replace assert statements with exception raise
+    "S101", # Use of `assert` detected  - TODO - replace assert statements with exception raise
     # "S301",    # `pickle` and modules that wrap... - TODO - use sql instead of pickle
 
     # "SLF001",  # Private member accessed: `_geometry_spec`
 
-    "TCH001",  # Move application import `mckit.utils.named` into a type-checking block
+    "TCH001", # Move application import `mckit.utils.named` into a type-checking block
 
-    "TRY003",  # Avoid specifying long messages outside the exception class
+    "TRY003", # Avoid specifying long messages outside the exception class
 
     # "W503",  # Line break before binary operator: for compatibility with black settings
 ]
 
-lint.unfixable = [
-    "F401",    # dont't remove unused imports - TODO add __all__ to  __init__.py files or clean them
-]
-
-# Same as Black.
-line-length = 100
-
-# show an enumeration of all autofixed lint violations
-show-fixes = true
-
-# show source code snippets when reporting violations
-output-format = "concise"
-
-src = ["src", "tests"]
-
-# Allow unused variables when underscore-prefixed.
-# dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-exclude = [
-    "*.egg-info",
-    ".cache",
-    "__pycache__",
-    "adhoc",
-    "docs/source/conf.py",
-    "extern",
-    "extern/nlopt/test/t_python.py",
-    "notebooks",
-    "wrk",
-]
 
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["E402", "F401"]
@@ -687,15 +634,15 @@ exclude = [
 "src/mckit/cli/*" = [
     "PLE1205", # Too many arguments for `logging` format string - we use loguru in CLI modules
 ]
-"src/mckit/_init_dynamic_libraries.py" = [ "F401", "E402" ]
+"src/mckit/_init_dynamic_libraries.py" = ["F401", "E402"]
 "src/mckit/parser/*" = [
     "A003",
     "D",
     "F811",
     "F821",
     "N802",
-    "N816",  # Variable `t_ANY_ignore` in global scope should not be mixedCase
-    "T201",  # print found
+    "N816", # Variable `t_ANY_ignore` in global scope should not be mixedCase
+    "T201", # print found
 ]
 "tests/parser/*" = [
     "A003",
@@ -703,8 +650,8 @@ exclude = [
     "F811",
     "F821",
     "N802",
-    "N816",  # Variable `t_ANY_ignore` in global scope should not be mixedCase
-    "T201",  # print found
+    "N816", # Variable `t_ANY_ignore` in global scope should not be mixedCase
+    "T201", # print found
 ]
 "tools/*" = ["T201", "INP001", "S603", "S607"]
 
@@ -715,17 +662,37 @@ max-complexity = 15
 [tool.ruff.lint.flake8-annotations]
 mypy-init-return = true  # skip return type for __init__() methods
 
+[tool.ruff.lint.flake8-pytest-style]
+parametrize-names-type = "csv"
+
 [tool.ruff.lint.flake8-type-checking]
 strict = true
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
-known-third-party = ["mpl_toolkits", "matplotlib", "numpy", "scipy"]
+known-third-party = ["mpl_toolkits", "matplotlib", "numpy", "scipy", "loguru", "tqdm", "dotenv"]
+default-section = "third-party"
+lines-between-types = 1
 required-imports = ["from __future__ import annotations"]
+case-sensitive = true
+section-order = [
+    "future",
+    "typing",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+    "testing"
+]
 
 
-[tool.ruff.lint.flake8-pytest-style]
-parametrize-names-type = "csv"
+
+[tool.ruff.lint.isort.sections]
+"typing" = ["typing", "typing_extension"]
+"testing" = ["tests"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google" # Use Google-style docstrings.
+
+[tool.ruff.format]
+docstring-code-format = true

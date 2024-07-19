@@ -3,6 +3,7 @@ select=ANN,B,B9,BLK,C,D,DAR,E,F,I,N,PD,R,TC,TR,S,W
 max-complexity=15
 max-mccabe-complexity=6
 max-cognitive-complexity=10
+max-expression-complexity=10
 max-line-length=100
 ignore=
     # ANN001 Missing type annotation for function argument: doesn't allow to use functools dispatching

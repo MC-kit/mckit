@@ -237,7 +237,8 @@ class Source:
             if isinstance(v, Distribution):
                 cards.append(v.mcnp_repr())
                 for ec in sorted(v.get_inner(), key=lambda x: x.name):
-                    extra_cards.append(ec.mcnp_repr())
+                    extra_cards.append(ec.mcnp_repr())  # noqa: PERF401 - fix is complicated for the two lists
+
         cards.insert(0, print_card(separate(tokens)))
         cards.extend(extra_cards)
         return "\n".join(cards)

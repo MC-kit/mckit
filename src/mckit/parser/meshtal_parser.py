@@ -336,9 +336,7 @@ def p_boundaries(p):
 
 def p_bins(p):
     """bins : direction newline direction newline direction newline energies newline"""
-    bins = {}
-    for name, data in [p[1], p[3], p[5], p[7]]:
-        bins[name] = data
+    bins = {name: data for name, data in (p[1], p[3], p[5], p[7])}  # noqa: C416
     p[0] = bins
 
 

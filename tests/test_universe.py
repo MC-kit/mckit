@@ -87,7 +87,7 @@ _emp = Shape("R")
 def test_init(cells, kwargs):
     u = Universe(cells, **kwargs)
     assert len(u._cells) == len(cells)
-    for c1, c2 in zip(u._cells, cells):
+    for c1, c2 in zip(u._cells, cells, strict=False):
         assert c1.name() == c2.name()
         assert c1.shape == c2.shape
     assert u.name() == kwargs.get("name", 0)
@@ -354,7 +354,7 @@ def test_add_cells(universe, case, cells, name_rule, new_name, new_surfs, new_co
         added_cells = u._cells[-len(new_name) :]
         if isinstance(cells, Body):
             cells = [cells]
-        for added_cell, cell, name in zip(added_cells, cells, new_name):
+        for added_cell, cell, name in zip(added_cells, cells, new_name, strict=False):
             assert added_cell.shape == cell.shape
             assert added_cell is not cell
             assert added_cell.name() == name
@@ -386,7 +386,7 @@ def test_add_cells_neg(universe, case, cells, shapes):
     added_cells = u._cells[-len(cells) :]
     if isinstance(cells, Body):
         cells = [cells]
-    for added_cell, cell, shape in zip(added_cells, cells, shapes):
+    for added_cell, cell, shape in zip(added_cells, cells, shapes, strict=False):
         assert added_cell.shape == shape
         assert added_cell is not cell
         assert added_cell.name() == cell.name()
@@ -576,7 +576,7 @@ def test_get_compositions(universe, case, answer):
 @pytest.mark.parametrize("case, extent", [(1, [20, 10, 10])])
 def test_transform(universe, case, tr, extent):
     u = universe(case)
-    points = np.random.random((50000, 3))
+    points = np.random.default_rng().random((50000, 3))
     points -= np.array([0.5, 0.5, 0.5])
     points *= np.array(extent)
     test_results = [c.shape.test_points(points) for c in u]
@@ -585,7 +585,7 @@ def test_transform(universe, case, tr, extent):
     tr_points = tr.apply2point(points)
     tr_results = [c.shape.test_points(tr_points) for c in tr_u]
     assert len(u._cells) == len(tr_u._cells)
-    for r, r_tr in zip(test_results, tr_results):
+    for r, r_tr in zip(test_results, tr_results, strict=False):
         np.testing.assert_array_equal(r, r_tr)
 
 
@@ -598,7 +598,7 @@ def test_copy(universe, case):
     assert u.verbose_name == uc.verbose_name
     assert u._comment == uc._comment
     assert len(u._cells) == len(uc._cells)
-    for c, cc in zip(u, uc):
+    for c, cc in zip(u, uc, strict=False):
         assert cc is not c
         assert c.name() == cc.name()
         assert c.shape == cc.shape
@@ -648,7 +648,7 @@ def test_select(universe, case, condition, inner, answer):
     u = universe(case)
     selection = u.select(condition, inner=inner)
     assert len(selection) == len(answer)
-    for r, (cls, name) in zip(selection, answer):
+    for r, (cls, name) in zip(selection, answer, strict=False):
         assert isinstance(r, cls)
         assert r.name() == name
 
@@ -984,7 +984,7 @@ def test_alone(universe, case):
     assert current_universe.name() == 0
     assert u.verbose_name == current_universe.verbose_name
     assert len(u._cells) == len(current_universe._cells)
-    for c, cc in zip(u, current_universe):
+    for c, cc in zip(u, current_universe, strict=False):
         assert cc is not c
         assert c.name() == cc.name()
         assert c.shape == cc.shape

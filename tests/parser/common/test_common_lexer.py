@@ -9,8 +9,8 @@ import sly
 
 import mckit.parser.common as cmn
 
-from mckit.parser.common.lexer import Lexer as LexerBase
 from mckit.parser.common.lexer import LexError
+from mckit.parser.common.lexer import Lexer as LexerBase
 
 if TYPE_CHECKING:
     from typing import ClassVar

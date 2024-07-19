@@ -148,7 +148,7 @@ class TestDistribution:
 def test_create_bin_distributions(free_number, bins, expected):
     new_free_number, actual = create_bin_distributions(bins, free_number)
     assert new_free_number == free_number + len(actual)
-    for a, e in zip(actual, expected):
+    for a, e in zip(actual, expected, strict=False):
         assert a.mcnp_repr() == e.mcnp_repr()
 
 

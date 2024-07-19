@@ -5349,7 +5349,7 @@ def test_meshtal_parser(mesh_file, expected):
     assert tallies.keys() == expected.keys()
     for k in ["date", "histories", "title"]:
         assert tallies[k] == expected[k]
-    for t, a in zip(tallies["tallies"], expected["tallies"]):
+    for t, a in zip(tallies["tallies"], expected["tallies"], strict=False):
         for k in ["name", "particle", "geom"]:
             assert t[k] == a[k]
         for k, v in a["bins"].items():

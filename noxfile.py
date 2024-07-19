@@ -55,10 +55,11 @@ def find_my_name() -> str:
     raise ValueError(msg)
 
 
-package: Final = find_my_name()
-locations: Final = f"src/{package}", "tests", "./noxfile.py", "docs/source/conf.py"
+package: Final[str] = find_my_name()
+locations: Final[tuple[str, ...]] = f"src/{package}", "tests", "./noxfile.py", "docs/source/conf.py"
 
-supported_pythons: Final = "3.10", "3.11", "3.12"
+supported_pythons: Final[tuple[str, ...]] = "3.10", "3.11", "3.12"
+default_python: Final[str] = "3.12"
 
 
 def _update_hook(hook: Path, virtualenv: str, s: Session) -> None:
@@ -75,7 +76,7 @@ def _update_hook(hook: Path, virtualenv: str, s: Session) -> None:
                     {s.bin!r},
                     os.environ.get("PATH", ""),
                 ))
-                """,
+                """
             )
             lines.insert(1, header)
             hook.write_text("\n".join(lines))
@@ -100,23 +101,15 @@ def activate_virtualenv_in_precommit_hooks(s: Session) -> None:
         return
 
     for hook in filter(
-        lambda x: not x.name.endswith(".sample") and x.is_file(),
-        hook_dir.iterdir(),
+        lambda x: not x.name.endswith(".sample") and x.is_file(), hook_dir.iterdir()
     ):
         _update_hook(hook, virtualenv, s)
 
 
-@session(name="pre-commit")
+@session(name="pre-commit", python=default_python)
 def precommit(s: Session) -> None:
     """Lint using pre-commit."""
-    s.run(
-        "poetry",
-        "install",
-        "--no-root",
-        "--only",
-        "pre_commit,isort,black,ruff",
-        external=True,
-    )
+    s.run("poetry", "install", "--no-root", "--only", "pre_commit,ruff", external=True)
     args = s.posargs or ["run", "--all-files", "--show-diff-on-failure"]
     s.run("pre-commit", *args)
     if args and args[0] == "install":
@@ -126,13 +119,7 @@ def precommit(s: Session) -> None:
 @session(python=supported_pythons)
 def tests(s: Session) -> None:
     """Run the test suite."""
-    s.run(
-        "poetry",
-        "install",
-        "--only",
-        "main,test,coverage",
-        external=True,
-    )
+    s.run("poetry", "install", "--only", "main,test,xdoctest,coverage", external=True)
     try:
         s.run("coverage", "run", "--parallel", "-m", "pytest", *s.posargs)
     finally:
@@ -147,14 +134,7 @@ def coverage(s: Session) -> None:
     To obtain html report run
         nox -rs coverage -- html
     """
-    s.run(
-        "poetry",
-        "install",
-        "--no-root",
-        "--only",
-        "coverage",
-        external=True,
-    )
+    s.run("poetry", "install", "--no-root", "--only", "coverage", external=True)
 
     if not s.posargs and any(Path().glob(".coverage.*")):
         s.run("coverage", "combine")
@@ -166,73 +146,14 @@ def coverage(s: Session) -> None:
 @session
 def typeguard(s: Session) -> None:
     """Runtime type checking using Typeguard."""
-    s.run(
-        "poetry",
-        "install",
-        "--only",
-        "main,test,typeguard",
-        external=True,
-    )
+    s.run("poetry", "install", "--only", "main,test,typeguard", external=True)
     s.run("pytest", "--typeguard-packages=src", *s.posargs, external=True)
-
-
-@session
-def isort(s: Session) -> None:
-    """Organize imports."""
-    search_patterns = [
-        "*.py",
-        f"src/{package}/*.py",
-        "tests/*.py",
-        "benchmarks/*.py",
-        "profiles/*.py",
-        "adhoc/*.py",
-    ]
-    cwd = Path.cwd()
-    files_to_process: list[str] = [str(x) for p in search_patterns for x in cwd.glob(p)]
-    if files_to_process:
-        s.run(
-            "poetry",
-            "install",
-            "--no-root",
-            "--only",
-            "isort",
-            external=True,
-        )
-        s.run(
-            "isort",
-            "--check",
-            "--diff",
-            *files_to_process,
-            external=True,
-        )
-
-
-@session
-def black(s: Session) -> None:
-    """Run black code formatter."""
-    s.run(
-        "poetry",
-        "install",
-        "--no-root",
-        "--only",
-        "black",
-        external=True,
-    )
-    args = s.posargs or locations
-    s.run("black", *args)
 
 
 @session
 def lint(s: Session) -> None:
     """Lint using flake8."""
-    s.run(
-        "poetry",
-        "install",
-        "--no-root",
-        "--only",
-        "flake8",
-        external=True,
-    )
+    s.run("poetry", "install", "--no-root", "--only", "flake8", external=True)
     args = s.posargs or locations
     s.run("flake8", *args)
 
@@ -240,14 +161,7 @@ def lint(s: Session) -> None:
 @session
 def mypy(s: Session) -> None:
     """Type-check using mypy."""
-    s.run(
-        "poetry",
-        "install",
-        "--no-root",
-        "--only",
-        "main,mypy",
-        external=True,
-    )
+    s.run("poetry", "install", "--no-root", "--only", "main,mypy", external=True)
     args = s.posargs or ["src", "docs/source/conf.py"]
     s.run("mypy", *args)
 
@@ -256,46 +170,35 @@ def mypy(s: Session) -> None:
         s.run("mypy", f"--python-executable={sys.executable}", "noxfile.py")
 
 
-@session(python="3.11")
+@session(python=default_python)
 def xdoctest(s: Session) -> None:
     """Run examples with xdoctest."""
-    s.run(
-        "poetry",
-        "install",
-        "--no-root",
-        "--only",
-        "main,xdoctest",
-        external=True,
-    )
-    args = s.posargs or ["--quiet", "-m", f"src/{package}"]
+    # Cannot use --no-root, because imports in __init__ require the package metadata
+    s.run("poetry", "install", "--only", "main,xdoctest", external=True)
+    args = s.posargs or ["--silent", "--style", "google", "-c", "all", "-m", f"src/{package}"]
     s.run("python", "-m", "xdoctest", *args)
 
 
-@session(python="3.11")
+@session(python=default_python)
 def ruff(s: Session) -> None:
     """Run ruff linter."""
-    s.run(
-        "poetry",
-        "install",
-        "--no-root",
-        "--only",
-        "main,ruff",
-        external=True,
-    )
-    args = s.posargs or ["src", "tests"]
+    s.run("poetry", "install", "--no-root", "--only", "ruff", external=True)
+    args = s.posargs or ["check", "src", "tests"]
     s.run("ruff", *args)
 
 
-@session(name="docs-build", python="3.11")
+@session(python=default_python, name="ruff-format")
+def ruff_format(s: Session) -> None:
+    """Run ruff formatter."""
+    s.run("poetry", "install", "--no-root", "--only", "ruff", external=True)
+    args = s.posargs or ["format", "src", "tests"]
+    s.run("ruff", *args)
+
+
+@session(name="docs-build", python=default_python)
 def docs_build(s: Session) -> None:
     """Build the documentation."""
-    s.run(
-        "poetry",
-        "install",
-        "--only",
-        "main,docs",
-        external=True,
-    )
+    s.run("poetry", "install", "--only", "main,docs", external=True)
     build_dir = Path("docs", "_build")
     if build_dir.exists():
         shutil.rmtree(build_dir)
@@ -304,16 +207,10 @@ def docs_build(s: Session) -> None:
     s.run("sphinx-build", *args)
 
 
-@session(python="3.11")
+@session(python=default_python)
 def docs(s: Session) -> None:
     """Build and serve the documentation with live reloading on file changes."""
-    s.run(
-        "poetry",
-        "install",
-        "--only",
-        "main,docs,docs_auto",
-        external=True,
-    )
+    s.run("poetry", "install", "--only", "main,docs,docs_auto", external=True)
     _clean_docs_build_folder()
 
     args = s.posargs or ["--open-browser", "docs/source", "docs/_build"]

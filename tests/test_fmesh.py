@@ -207,13 +207,14 @@ class TestRectMesh:
         shape = mesh.shape
         for i, j, k in product(range(shape[0]), range(shape[1]), range(shape[2])):
             vox = mesh.get_voxel(i, j, k)
-            corners = []
-            for pr in product(
-                _bin["xbins"][i : i + 2],
-                _bin["ybins"][j : j + 2],
-                _bin["zbins"][k : k + 2],
-            ):
-                corners.append(list(pr))
+            corners = [
+                list(pr)
+                for pr in product(
+                    _bin["xbins"][i : i + 2],
+                    _bin["ybins"][j : j + 2],
+                    _bin["zbins"][k : k + 2],
+                )
+            ]
             if tr is not None:
                 corners = tr.apply2point(corners)
             np.testing.assert_array_almost_equal(vox.corners, corners)
@@ -265,7 +266,7 @@ class TestRectMesh:
         if np.array(pt).shape == (3,):
             check_one(result, pt)
         else:
-            for r, p in zip(result, pt):
+            for r, p in zip(result, pt, strict=False):
                 check_one(r, p)
 
     @pytest.mark.parametrize(

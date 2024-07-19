@@ -1103,6 +1103,7 @@ class UniverseAnalyser:
             zip(
                 ["cell", "surface", "composition", "transformation"],
                 self.duplicates_maps(),
+                strict=False,
             ),
             None,
         )
