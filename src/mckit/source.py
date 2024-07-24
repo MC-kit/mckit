@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from itertools import pairwise
+
 import numpy as np
 
 from numpy.typing import ArrayLike
@@ -206,7 +208,7 @@ def create_bin_distributions(
         free_name, list of distributions
     """
     distributions = []
-    for low, high in zip(bins[:-1], bins[1:]):
+    for low, high in pairwise(bins):
         distributions.append(Distribution(start_name, [low, high], [1]))
         start_name += 1
     return start_name, distributions
@@ -235,7 +237,8 @@ class Source:
             if isinstance(v, Distribution):
                 cards.append(v.mcnp_repr())
                 for ec in sorted(v.get_inner(), key=lambda x: x.name):
-                    extra_cards.append(ec.mcnp_repr())
+                    extra_cards.append(ec.mcnp_repr())  # noqa: PERF401 - fix is complicated for the two lists
+
         cards.insert(0, print_card(separate(tokens)))
         cards.extend(extra_cards)
         return "\n".join(cards)

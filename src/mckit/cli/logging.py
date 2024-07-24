@@ -70,4 +70,4 @@ def init_logger(logfile, quiet, verbose, *, stderr_format: str = MCKIT_CONSOLE_L
             diagnose=False,
         )
     if logfile:
-        logger.add(logfile, rotation="100 MB", level="TRACE")
+        logger.add(logfile, rotation="1d", retention=3, level="TRACE")

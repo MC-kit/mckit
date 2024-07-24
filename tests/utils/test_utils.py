@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 import pytest
 
 from mckit.utils import (
@@ -24,8 +23,8 @@ from mckit.utils import (
         (1.0, 0),
         (0.5, -1),
         (0.0011, -3),  # TODO dvp: check this strange values
-        (0.001, -4),  #
-        (0.01, -3),  #
+        (0.001, -4),  # ...
+        (0.01, -3),  # ...
         (0.1, -2),
         (1e-12, -13),
         (0.0, 0),

@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import click
+
 import mckit.version as meta
 
 from mckit.cli.commands import do_check, do_compose, do_decompose, do_split, do_transform
@@ -91,7 +92,7 @@ def split(output, source, separators):
         output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     logger.info("Running mckit split")
-    logger.debug("Working dir {}", Path(".").absolute())
+    logger.debug("Working dir {}", Path().absolute())
     logger.info('Splitting "{source}" to directory "{output}"', source=source, output=output)
     return do_split(output, source, context["OVERRIDE"], separators)
 

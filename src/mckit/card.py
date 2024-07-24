@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from abc import ABC, abstractmethod
 from functools import reduce
@@ -39,7 +39,7 @@ class Card(ABC):
     @property
     def original(self) -> str | None:
         """Original text from an MCNP model."""
-        return cast(Optional[str], self.options.get("original", None))
+        return cast(str | None, self.options.get("original", None))
 
     @property
     def has_comment_above(self) -> bool:
@@ -49,7 +49,7 @@ class Card(ABC):
     @property
     def comment_above(self) -> str | None:
         """Comment located above this card in an MCNP model."""
-        return cast(Optional[str], self.options.get("comment_above", None))
+        return cast(str | None, self.options.get("comment_above", None))
 
     def name(
         self,

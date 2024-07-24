@@ -1,16 +1,17 @@
 """
- Read and parse MCNP file text.
+Read and parse MCNP file text.
 """
 
 from __future__ import annotations
 
-from typing import Callable, TextIO
+from typing import TextIO
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from itertools import repeat
 from pathlib import Path
 
 from attr import attrib, attrs
+
 from mckit.card import Card
 from mckit.constants import MCNP_ENCODING
 from mckit.parser.cell_parser import Body
@@ -204,7 +205,7 @@ def parse_cells(
             assert text_card.kind is Kind.CELL
             try:
                 card: Body = parser(text_card.text)
-                assert card is not None, "Failed to process cell %s" % text_card.text[:70]
+                assert card is not None, "Failed to process cell " + text_card.text[:70]
             except CellNotFoundError:
                 new_cells_to_process.append(i)
                 continue

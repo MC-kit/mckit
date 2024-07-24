@@ -38,7 +38,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DEFAULT_PYTHON: "3.11"
+  DEFAULT_PYTHON: "3.12"
 
 jobs:
 
@@ -141,8 +141,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ '3.9', '3.10', '3.11', '3.12' ]
+        os: [ ubuntu-latest, windows-latest ]
+        python-version: [ '3.10', '3.11', '3.12' ]
 
     steps:
 
@@ -247,3 +247,5 @@ jobs:
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

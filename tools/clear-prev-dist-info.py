@@ -6,6 +6,7 @@ Should be fixed in poetry 1.2, but it's not available yet.
 Run this if test_package() fails on pytest run
 (mckit of wrong version is found on python site).
 """
+
 from __future__ import annotations
 
 from typing import TypeVar

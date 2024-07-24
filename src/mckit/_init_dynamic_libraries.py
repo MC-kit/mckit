@@ -5,7 +5,6 @@ This requires preloading of the library on all the systems.
 
 # pylint: disable=wrong-import-position,unused-import
 
-
 from __future__ import annotations
 
 import os

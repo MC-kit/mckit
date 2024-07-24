@@ -22,12 +22,11 @@ from time import time_ns
 
 import dotenv
 import numpy as np
+import pandas as pd
+import typer
 
 from loguru import logger
 from tqdm import tqdm
-
-import pandas as pd
-import typer
 
 from mckit.geometry import EX, EY, EZ, Box
 from mckit.parser import ParseResult, from_file

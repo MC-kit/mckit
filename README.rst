@@ -16,6 +16,10 @@
 .. image:: https://img.shields.io/github/license/MC-kit/mckit
    :target: https://github.com/MC-kit/mckit
 
+.. image:: https://img.shields.io/badge/security-bandit-yellow.svg
+    :target: https://github.com/PyCQA/bandit
+    :alt: Security Status
+
 
 MCKIT: MCNP model and results processing utilities
 ==================================================

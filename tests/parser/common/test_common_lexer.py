@@ -4,12 +4,13 @@ from typing import TYPE_CHECKING
 
 import re
 
-import mckit.parser.common as cmn
 import pytest
 import sly
 
-from mckit.parser.common.lexer import Lexer as LexerBase
+import mckit.parser.common as cmn
+
 from mckit.parser.common.lexer import LexError
+from mckit.parser.common.lexer import Lexer as LexerBase
 
 if TYPE_CHECKING:
     from typing import ClassVar

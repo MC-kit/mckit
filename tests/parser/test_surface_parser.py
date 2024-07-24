@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import pytest
+
 import mckit.parser.common.transformation_index as ti
 import mckit.parser.surface_parser as srp
-import pytest
 
 from mckit.surface import create_surface
 from mckit.utils.indexes import IgnoringIndex

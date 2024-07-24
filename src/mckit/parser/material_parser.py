@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import mckit.parser.common.utils as cmn
 import sly
+
+import mckit.parser.common.utils as cmn
 
 from mckit.material import Composition, Element
 from mckit.parser.common.lexer import Lexer as LexerBase

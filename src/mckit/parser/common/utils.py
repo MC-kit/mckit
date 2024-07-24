@@ -8,7 +8,7 @@ C_COMMENT = r"(^|(?<=\n))\s{0,5}[cC]([ ][^\n]*)?\n?"
 RE_C_COMMENT = re.compile(C_COMMENT, re.MULTILINE)
 EOL_COMMENT = r"\$.*[^\n]*"
 RE_EOL_COMMENT = re.compile(EOL_COMMENT, re.MULTILINE)
-LINE = r"(?P<text>\s*[^ $][^$]*)?(?:\s*\$\s*(?P<comment>.*))?"  # text should contain at list one non space character
+LINE = r"(?P<text>\s*[^ $][^$]*)?(?:\s*\$\s*(?P<comment>.*))?"  # text should contain at list one non-space character
 RE_LINE = re.compile(LINE)
 # FLOAT = r"[-+]?\d*\.?\d+(?:e[-+]?\d+)?"
 FLOAT = r"[+-]?((\d+\.?\d*)|(\.\d+))(?:[ed][-+]?\d+)?"
@@ -35,17 +35,17 @@ def drop_c_comments(text: str) -> str:
     return text
 
 
-def drop_eol_comments(text):
+def drop_eol_comments(text: str) -> str:
     if RE_EOL_COMMENT.search(text) is not None:
         return RE_EOL_COMMENT.sub("", text)
     return text
 
 
-def drop_comments(text):
+def drop_comments(text: str) -> str:
     return drop_eol_comments(drop_c_comments(text))
 
 
-def extract_comments(text) -> tuple[str, dict[int, str] | None, list[str] | None]:
+def extract_comments(text) -> tuple[str, dict[int, tuple[str, ...]] | None, list[str] | None]:
     lines = text.split("\n")
     cleaned_text: list[str] = []
     comments: list[tuple[int, list[str]]] = []
@@ -85,17 +85,14 @@ def extract_comments(text) -> tuple[str, dict[int, str] | None, list[str] | None
     else:
         res_comments = None
 
-    if not trailing_comment:
-        trailing_comment = None
-
-    return "\n".join(cleaned_text), res_comments, trailing_comment
+    return "\n".join(cleaned_text), res_comments, trailing_comment if trailing_comment else None
 
 
 class ParseError(ValueError):
     """Parsing exception."""
 
 
-def internalize(word: str, words: Iterable[str]) -> str:
+def internalize(word: str, words: Iterable[str]) -> tuple[str, bool]:
     """Replaces given `word` with the equal word from the list `words` to reuse the object for repeating small words."""
     for w in words:
         if w == word:

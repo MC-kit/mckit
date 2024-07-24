@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from io import StringIO
 
-import mckit.parser.mcnp_section_parser as sp
 import pytest
+
+import mckit.parser.mcnp_section_parser as sp
 
 from mckit.parser.mcnp_section_parser import Card, Kind
 
@@ -130,9 +131,7 @@ c the preceding comment
 1 0 1
 c next comment
   2 $next card (starts with less than 5 spaces)
-"""[
-                1:-1
-            ],
+"""[1:-1],
             [
                 Card("c the preceding comment"),
                 Card("1 0 1", kind=Kind.CELL),
@@ -151,9 +150,7 @@ c the second preceding comment
 2 0 -1 $the next card
 c the trailing comment
 c the second line of the trailing comment
-"""[
-                1:-1
-            ],
+"""[1:-1],
             [
                 Card("c the preceding comment"),
                 Card(
@@ -161,9 +158,7 @@ c the second line of the trailing comment
 1 0 1
 c inner comment
      2 $continuation
-"""[
-                        1:-1
-                    ],
+"""[1:-1],
                     kind=Kind.CELL,
                 ),
                 Card("c the second preceding comment"),
@@ -172,9 +167,7 @@ c inner comment
                     """
 c the trailing comment
 c the second line of the trailing comment
-"""[
-                        1:-1
-                    ]
+"""[1:-1]
                 ),
             ],
             Kind.CELL,
@@ -183,9 +176,7 @@ c the second line of the trailing comment
             """
   cut 5j  $ card starts in column < 5
 ctme 3000
-"""[
-                1:
-            ],
+"""[1:],
             [Card("  cut 5j  $ card starts in column < 5"), Card("ctme 3000")],
             None,
         ),
@@ -194,18 +185,14 @@ ctme 3000
 m100
       1001.31c 0.6666
       8000.21c 0.3334
-"""[
-                1:-1
-            ],
+"""[1:-1],
             [
                 Card(
                     """
 m100
       1001.31c 0.6666
       8000.21c 0.3334
-"""[
-                        1:-1
-                    ],
+"""[1:-1],
                     kind=Kind.MATERIAL,
                 )
             ],
@@ -229,9 +216,7 @@ si1
 ds3
 sb45
 wwp:n
-"""[
-                1:-1
-            ]
+"""[1:-1]
         )
     ],
 )
@@ -261,9 +246,7 @@ def test_input_sections_constructor():
         (
             """
 1 0 1 $bla bla bla
-"""[
-                1:-1
-            ],
+"""[1:-1],
             [Card("1 0 1", kind=Kind.CELL)],
             Kind.CELL,
         ),
@@ -274,16 +257,12 @@ c second line
 1 0 1 $bla bla bla
      2 $continuation
 c trailing comment
-"""[
-                1:-1
-            ],
+"""[1:-1],
             [
                 Card(
                     """
 1 0 1 2
-"""[
-                        1:-1
-                    ],
+"""[1:-1],
                     kind=Kind.CELL,
                 )
             ],
@@ -299,24 +278,18 @@ c trailing comment
 2
      0 -1  $something
 c z-z-zz-z-z-z
-"""[
-                1:-1
-            ],
+"""[1:-1],
             [
                 Card(
                     """
 1 0 1 2
-"""[
-                        1:-1
-                    ],
+"""[1:-1],
                     kind=Kind.CELL,
                 ),
                 Card(
                     """
 2 0 -1
-"""[
-                        1:-1
-                    ],
+"""[1:-1],
                     kind=Kind.CELL,
                 ),
             ],
@@ -340,9 +313,7 @@ test
 1 so 1
 
 sdef
-"""[
-                1:
-            ],
+"""[1:],
             None,
         ),
         (
@@ -358,9 +329,7 @@ c trailing comment
 1 so 1
 
 sdef
-"""[
-                1:
-            ],
+"""[1:],
             None,
         ),
         (
@@ -378,18 +347,14 @@ c z-z-zz-z-z-z
 1 so 1
 
 sdef
-"""[
-                1:
-            ],
+"""[1:],
             None,
         ),
         (
             """
 continue
 ctme 3000
-"""[
-                1:
-            ],
+"""[1:],
             None,
         ),
     ],

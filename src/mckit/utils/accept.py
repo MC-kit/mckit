@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, ContextManager, NoReturn
+from typing import Any, NoReturn
 
+from collections.abc import Callable
+from contextlib import AbstractContextManager
 from functools import reduce
 
-TVisitor = Callable[..., ContextManager]
+TVisitor = Callable[..., AbstractContextManager]
 
 
 def accept(acceptor: Any, visitor: TVisitor, *args, **kwargs) -> Any:

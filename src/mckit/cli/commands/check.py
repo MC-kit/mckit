@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 
 from mckit import Universe

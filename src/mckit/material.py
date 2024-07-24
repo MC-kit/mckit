@@ -119,11 +119,11 @@ class Composition(Card):
                 self._molar_mass = 2 * mass_in_atomic_spec / (sq_root + totals_diff)
 
             norm_factor = self._molar_mass * atoms_in_weight_spec + total_frac_a
-            for el, frac in zip(elem_w, frac_w):
+            for el, frac in zip(elem_w, frac_w, strict=False):
                 if el not in self._composition.keys():
                     self._composition[el] = 0.0
                 self._composition[el] += self._molar_mass / norm_factor * frac / el.molar_mass
-            for el, frac in zip(elem_a, frac_a):
+            for el, frac in zip(elem_a, frac_a, strict=False):
                 if el not in self._composition.keys():
                     self._composition[el] = 0.0
                 self._composition[el] += frac / norm_factor
@@ -361,7 +361,7 @@ def mixture_by_volume(
     )
     total_moles = moles.sum()
     atomic_fractions = moles / total_moles
-    mix = Composition.mixture(*zip(compositions, atomic_fractions))
+    mix = Composition.mixture(*zip(compositions, atomic_fractions, strict=False))
     mix.options["name"] = number
     density = sum(density * volume_fraction for _, density, volume_fraction in fractions_spec)
     return density, mix

@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Final
 
 import numpy as np
-
 import pytest
 
 from mckit.body import Body, Shape
@@ -11,6 +10,7 @@ from mckit.box import Box
 from mckit.material import Material
 from mckit.surface import create_surface
 from mckit.transformation import Transformation
+
 from tests import pass_through_pickle
 
 
@@ -2002,7 +2002,7 @@ class TestShape:
         # definite test results with respect to the body being tested.
         # After body saving and loading they must have absolutely the same
         # results.
-        points = np.random.random((10000, 3))
+        points = np.random.default_rng().random((10000, 3))
         points -= np.array([0.5, 0.5, 0.5])
         points *= np.array([20, 10, 10])
         results = g.test_points(points)
@@ -2263,8 +2263,8 @@ class TestBody:
     def test_transform(self, geometry, tr, case_no: int, fill_tr):
         # The idea is to generate many random points. This points have some
         # definite test results with respect to the body being tested.
-        # After transformation they must have absolutely the same results.
-        points = np.random.random((10000, 3))
+        # After transformation, they must have absolutely the same results.
+        points = np.random.default_rng().random((10000, 3))
         points -= np.array([0.5, 0.5, 0.5])
         points *= np.array([20, 10, 10])
 

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 import pytest
 
 from mckit.parser.meshtal_parser import meshtal_lexer, meshtal_parser
@@ -5343,14 +5342,14 @@ file_resolver = path_resolver("tests")
 )
 def test_meshtal_parser(mesh_file, expected):
     mesh_file = file_resolver(mesh_file)
-    with open(mesh_file) as f:
+    with mesh_file.open() as f:
         text = f.read() + "\n"
     meshtal_lexer.begin("INITIAL")
     tallies = meshtal_parser.parse(text, lexer=meshtal_lexer)
     assert tallies.keys() == expected.keys()
     for k in ["date", "histories", "title"]:
         assert tallies[k] == expected[k]
-    for t, a in zip(tallies["tallies"], expected["tallies"]):
+    for t, a in zip(tallies["tallies"], expected["tallies"], strict=False):
         for k in ["name", "particle", "geom"]:
             assert t[k] == a[k]
         for k, v in a["bins"].items():

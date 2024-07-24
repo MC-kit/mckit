@@ -77,7 +77,7 @@ def significant_array(
 ) -> ndarray:
     """Compute the minimum numbers of significant digits to achieve desired tolerance."""
     result: ndarray = np.empty_like(array, dtype=int)
-    for index in zip(*map(np.ravel, np.indices(array.shape))):
+    for index in zip(*map(np.ravel, np.indices(array.shape)), strict=False):
         result[index] = significant_digits(array[index], reltol, resolution)
     return result
 
@@ -110,7 +110,7 @@ def round_array(array: ndarray, digits_array: ndarray | None = None) -> ndarray:
     if digits_array is None:
         digits_array = significant_array(array, FLOAT_TOLERANCE, FLOAT_TOLERANCE)
     result: ndarray = np.empty_like(array)
-    for index in zip(*map(np.ravel, np.indices(array.shape))):
+    for index in zip(*map(np.ravel, np.indices(array.shape)), strict=False):
         result[index] = round_scalar(array[index], digits_array[index])
     return result
 
@@ -158,7 +158,7 @@ def _(where: tuple, x) -> bool:
 
 @is_in.register
 def _(where: collections.abc.Callable, x) -> bool:
-    return where(x)  # type: ignore
+    return where(x)  # type: ignore[no-any-return]
 
 
 @is_in.register

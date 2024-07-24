@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-import mckit.utils.named as nm
 import pytest
+
+import mckit.utils.named as nm
 
 from mckit.utils.indexes import (
     IndexOfNamed,

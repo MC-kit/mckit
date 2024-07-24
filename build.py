@@ -82,7 +82,6 @@ def copy_files(src_dir: Path, dest_dir: Path, pattern: str) -> None:
             distutils_log.info(f"copied {src} to {dest}")
 
 
-#
 def save_setup_kwargs(setup_kwargs: dict[str, Any]) -> None:
     """Save resulting setup_kwargs for examining."""
     kwargs_path = Path(__file__).parent / "poetry_setup_kwargs.txt"

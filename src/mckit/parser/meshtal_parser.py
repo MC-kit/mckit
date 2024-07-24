@@ -6,8 +6,9 @@ from pathlib import Path
 
 import numpy as np
 
-from mckit.fmesh import FMesh
 from ply import lex, yacc
+
+from mckit.fmesh import FMesh
 
 literals = ["+", "-", ":", "/"]
 
@@ -335,9 +336,7 @@ def p_boundaries(p):
 
 def p_bins(p):
     """bins : direction newline direction newline direction newline energies newline"""
-    bins = {}
-    for name, data in [p[1], p[3], p[5], p[7]]:
-        bins[name] = data
+    bins = {name: data for name, data in (p[1], p[3], p[5], p[7])}  # noqa: C416
     p[0] = bins
 
 
@@ -537,7 +536,9 @@ def read_meshtal(filename: str | Path) -> dict[int, FMesh]:
     Returns:
         tallies Index of mesh tallies contained in the file.
     """
-    with open(filename) as f:
+    if isinstance(filename, str):
+        filename = Path(filename)
+    with filename.open() as f:
         text = f.read() + "\n"
     meshtal_lexer.begin("INITIAL")
     meshtal_data = meshtal_parser.parse(text, lexer=meshtal_lexer)

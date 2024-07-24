@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 
 import numpy as np
-
 import pytest
 
 if sys.version_info >= (3, 11):
@@ -177,7 +176,7 @@ def test_anonymous_transformation(runner):
         output = Path(prefix) / "cubes_with_fill_transforms.universes"
         result = runner.invoke(mckit, args=["decompose", source], catch_exceptions=False)
         assert result.exit_code == 0, "Should success"
-        with open(output / "fill-descriptor.toml", "rb") as fid:
+        with (output / "fill-descriptor.toml").open("rb") as fid:
             descriptor = tomllib.load(fid)
             spec = descriptor["2"]["transform"]
             assert len(spec) == 3
@@ -191,7 +190,7 @@ def test_named_transformation(runner):
         output = Path(prefix) / "cubes_with_fill_named_transforms.universes"
         result = runner.invoke(mckit, args=["decompose", source], catch_exceptions=False)
         assert result.exit_code == 0, "Should success"
-        with open(output / "fill-descriptor.toml", "rb") as fid:
+        with (output / "fill-descriptor.toml").open("rb") as fid:
             descriptor = tomllib.load(fid)
             spec = descriptor["2"]["transform"]
             assert spec == 1, f"Fill descriptor {spec} is wrong"
@@ -200,7 +199,8 @@ def test_named_transformation(runner):
             transform = transforms["tr1"]
             transform_params = np.fromiter(map(float, transform), dtype=float)
             assert transform_params.size == 3, "Only translation is specified for tr1"
-            assert_array_equal(
-                transform_params, [0, -1.0, 0]
-            ), f"Invalid transform {transform_params}"
+            (
+                assert_array_equal(transform_params, [0, -1.0, 0]),
+                f"Invalid transform {transform_params}",
+            )
             assert transforms is not None

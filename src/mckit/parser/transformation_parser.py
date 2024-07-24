@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import mckit.parser.common.utils as cmn
 import sly
+
+import mckit.parser.common.utils as cmn
 
 from mckit.parser.common import Lexer as LexerBase
 from mckit.parser.common.utils import drop_c_comments, extract_comments
@@ -75,7 +76,9 @@ class Parser(sly.Parser):
     @_("float float float float float float float float float INTEGER")
     def rotation(self, p):
         m = p[9]
-        assert m in {-1, 1}, f"Invalid M option value {m}"
+        if m not in {-1, 1}:
+            msg = f"Invalid M option value {m}"
+            raise ValueError(msg)
         return list(p)[:-1], m == -1
 
     @_(

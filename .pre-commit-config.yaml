@@ -15,7 +15,7 @@
 #     https://github.com/pre-commit/pre-commit  for more information
 #     https://pre-commit.com/hooks.html         for more hooks
 default_language_version:
-  python: python3.11
+  python: python3.12
 
 repos:
 
@@ -29,7 +29,7 @@ repos:
       - id: check-json
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
-        exclude: notebooks
+        exclude: notebooks  # jupytext creates python scripts with shebangs but without permissions
       - id: check-symlinks
       - id: check-toml
       - id: check-yaml
@@ -65,33 +65,37 @@ repos:
         exclude: \.idea|\.cache|^notebooks|^extern
         entry: pyupgrade
         args:
-          - --py39-plus
+          - --py310-plus
         language: system
         types: [ python ]
+        stages: [ manual ]
 
-      # Nicely sort imports
-      - id: isort
-        name: isort
-        exclude: tools|\.idea|\.cache|^notebooks|^extern
-        entry: isort
-        language: system
-        types: [ python ]
-
-      # Black, the code formatter, natively supports pre-commit
-      - id: black
-        name: black
-        entry: black
+      # Security check
+      - id: bandit
+        name: bandit
+        entry: bandit
+        args: ["-c", "pyproject.toml"]
         language: system
         types: [ python ]
         exclude: ^notebooks|^extern
+        stages: [ manual ]
 
-      # Lint and fix Python code
+      # Lint and fix Python code (including import sort)
       - id: ruff
         name: ruff
-        entry: ruff --force-exclude --fix --config pyproject.toml
+        entry: ruff check --force-exclude --fix --config pyproject.toml
         language: system
         types: [ python ]
         exclude: ^notebooks|^extern
+
+      # Format Python code
+      - id: ruff
+        name: ruff-format
+        entry: ruff format --force-exclude --config pyproject.toml
+        language: system
+        types: [ python ]
+        exclude: ^notebooks|^extern
+
 
   # CMake formatting
   - repo: https://github.com/cheshirekow/cmake-format-precommit
@@ -102,16 +106,16 @@ repos:
         types: [ file ]
         files: (\.cmake|CMakeLists.txt)(.in)?$
 
-  # Check for common shell mistakes
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: "v0.9.0.6"
-    hooks:
-      - id: shellcheck
-        stages: [ manual ]
-
   # Clang format the codebase automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: "v17.0.6"
     hooks:
       - id: clang-format
         types_or: [ c++, c, cuda ]
+
+  # Check for common shell mistakes
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: "v0.9.0.6"
+    hooks:
+      - id: shellcheck
+        stages: [ manual ]

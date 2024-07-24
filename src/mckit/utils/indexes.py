@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Callable, Optional, TypeVar
+from typing import TypeVar
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from functools import reduce
 
 from mckit.utils.named import Name, default_name_key
 
 Key = TypeVar("Key")
 Item = TypeVar("Item")
-FactoryMethodWithKey = Callable[[Key], Optional[Item]]
+FactoryMethodWithKey = Callable[[Key], Item | None]
 
 
 class Index(dict[Key, Item]):

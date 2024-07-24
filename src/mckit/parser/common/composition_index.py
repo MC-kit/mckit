@@ -14,7 +14,9 @@ class DummyMaterial(Material):
         density: float | None = None,
         concentration: float | None = None,
     ) -> None:
-        assert (density is None) ^ (concentration is None), "Specify only one of the parameters"
+        if (density is None) == (concentration is None):
+            msg = "Specify only one of the parameters"
+            raise ValueError(msg)
         if density is None:
             # noinspection PyTypeChecker
             super().__init__(

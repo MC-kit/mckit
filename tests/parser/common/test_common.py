@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import re
 
-import mckit.parser.common.utils as m
 import pytest
+
+import mckit.parser.common.utils as m
 
 
 @pytest.mark.parametrize(

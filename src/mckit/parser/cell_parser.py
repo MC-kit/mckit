@@ -2,14 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import mckit.parser.common.utils as pu
 import sly
+
+import mckit.parser.common.utils as pu
 
 from mckit.body import Body, Shape
 from mckit.material import Material
-from mckit.parser.common import CellStrictIndex, CompositionStrictIndex
+from mckit.parser.common import (
+    CellStrictIndex,
+    CompositionStrictIndex,
+    SurfaceStrictIndex,
+    TransformationStrictIndex,
+)
 from mckit.parser.common import Lexer as LexerBase
-from mckit.parser.common import SurfaceStrictIndex, TransformationStrictIndex
 from mckit.surface import Surface
 from mckit.transformation import Transformation
 from mckit.utils import filter_dict
@@ -329,7 +334,7 @@ class Parser(sly.Parser):
         if number_of_particles != len(p.float_list):
             while len(p.float_list) < number_of_particles:
                 p.float_list.append(p.float_list[-1])
-        return {"IMP" + k.upper(): v for k, v in zip(p.particle_list, p.float_list)}
+        return {"IMP" + k.upper(): v for k, v in zip(p.particle_list, p.float_list, strict=False)}
 
     @_("float_list float")
     def float_list(self, p):
@@ -390,6 +395,7 @@ def parse(
                 TransformationStrictIndex,
                 CompositionStrictIndex,
             ],
+            strict=False,
         )
     )
     original = text
