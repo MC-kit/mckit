@@ -385,7 +385,7 @@ logging-format-style = "new"   # use {} in logging messages
 deprecated-modules = ["six"]
 extension-pkg-allow-list = ["duckdb"]
 disable = [
-    "wrong-import-order"  # this is `isort` responsibility
+    "wrong-import-order"  # this is `ruff format` responsibility
 ]
 
 [tool.bandit]
@@ -460,9 +460,7 @@ exclude = [
     "wrk",
 ]
 
-
 [tool.ruff.lint]
-
 #see full list: https://beta.ruff.rs/docs/rules/#pyflakes-f
 #or run 'ruff linter' to see a brief list
 select = [
