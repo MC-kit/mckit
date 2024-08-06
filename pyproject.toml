@@ -204,12 +204,6 @@ sphinx-click = ">=4.4.0"
 sphinx-autobuild = ">=2021.3.14"
 
 
-[tool.poetry.group.pylsp.dependencies]
-pylsp-mypy = ">=0.6.6"
-pyls-memestra = ">=0.0.16"
-pylsp-rope = ">=0.1.11"
-ruff-lsp = ">=0.0.35"
-
 [tool.poetry.group.ruff.dependencies]
 ruff = ">=0.0.259"
 
@@ -694,3 +688,8 @@ convention = "google" # Use Google-style docstrings.
 
 [tool.ruff.format]
 docstring-code-format = true
+
+[tool.jupytext]
+# https://jupytext.readthedocs.io/en/latest/config.html
+# Pair ipynb notebooks to py:percent text notebooks
+formats = "ipynb,md,py:percent"
