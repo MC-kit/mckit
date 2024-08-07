@@ -27,6 +27,7 @@ repos:
       - id: check-case-conflict
       - id: check-executables-have-shebangs
       - id: check-json
+        exclude: notebooks
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
         exclude: notebooks  # jupytext creates python scripts with shebangs but without permissions
@@ -37,6 +38,7 @@ repos:
       - id: end-of-file-fixer
         exclude: data|.ipynb$|^\.
       - id: name-tests-test
+        exclude: common.py|help.*py
         args:
           - --pytest-test-first
       - id: mixed-line-ending
@@ -70,28 +72,18 @@ repos:
         types: [ python ]
         stages: [ manual ]
 
-      # Security check
-      - id: bandit
-        name: bandit
-        entry: bandit
-        args: ["-c", "pyproject.toml"]
+      # Format Python code
+      - id: ruff
+        name: ruff-format
+        entry: ruff format --force-exclude --config pyproject.toml
         language: system
         types: [ python ]
         exclude: ^notebooks|^extern
-        stages: [ manual ]
 
       # Lint and fix Python code (including import sort)
       - id: ruff
         name: ruff
         entry: ruff check --force-exclude --fix --config pyproject.toml
-        language: system
-        types: [ python ]
-        exclude: ^notebooks|^extern
-
-      # Format Python code
-      - id: ruff
-        name: ruff-format
-        entry: ruff format --force-exclude --config pyproject.toml
         language: system
         types: [ python ]
         exclude: ^notebooks|^extern
