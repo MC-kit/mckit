@@ -649,7 +649,7 @@ class Universe:
         """
         # TODO dvp: implement transformations renaming
         assert start_tr is None, "Transformation renaming is not implemented yet"
-        if name:
+        if name:  # FIXME @dvp: name may be 0
             self._name = name
             for c in self:
                 c.options = filter_dict(c.options, "original")
