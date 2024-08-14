@@ -631,26 +631,24 @@ class Universe:
     ) -> None:
         """Renames all entities contained in the universe.
 
-        All new names are sequential starting from the specified name. If name
-        is None, than names of entities are leaved untouched.
+        All new names are sequential starting from the specified name.
+        If an argument is None, then names of corresponding entities are leaved untouched.
 
-        Parameters
-        ----------
-        start_cell :
-            Starting name for cells. Default: None.
-        start_surf :
-            Starting name for surfaces. Default: None.
-        start_mat :
-            Starting name for materials. Default: None.
-        start_tr :
-            Starting name for transformations. Default: None.
-        name :
-            Name for the universe. Default: None.
+        Args:
+            start_cell: Starting name for cells. Default: None.
+            start_surf: Starting name for surfaces. Default: None.
+            start_mat:  Starting name for materials. Default: None.
+            start_tr:   Starting name for transformations. Default: None.
+            name:  Name for the universe. Default: None.
         """
         # TODO dvp: implement transformations renaming
         assert start_tr is None, "Transformation renaming is not implemented yet"
-        if name:  # FIXME @dvp: name may be 0
+        if name is not None:  # name may be 0 to convert this to root universe
+            if name < 0:
+                msg = f"Universe name {name} < 0"
+                raise ValueError(msg)
             self._name = name
+            self._verbose_name = None
             for c in self:
                 c.options = filter_dict(c.options, "original")
         if start_cell:
