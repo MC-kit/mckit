@@ -38,7 +38,7 @@ repos:
       - id: end-of-file-fixer
         exclude: data|.ipynb$|^\.
       - id: name-tests-test
-        exclude: common.py|help.*py
+        exclude: common.py|help*.*py
         args:
           - --pytest-test-first
       - id: mixed-line-ending

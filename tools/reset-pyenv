@@ -27,7 +27,7 @@ reset() {
     pyenv local "$env"
     pyenv rehash
     pyenv shell "$env"
-    poetry config virtualenvs.prefer-active-python true
+    poetry config --local virtualenvs.create false
     poetry env info
     poetry lock --no-update
     poetry install
