@@ -33,11 +33,11 @@ classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: C",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -147,6 +147,7 @@ pytest-cov = ">=4.0"
 # pytest-mock = ">=3.9"
 # pytest-randomly = ">=3.12"
 coverage = { version = ">=6.1.2", extras = ["toml"] }
+xdoctest = { extras = ["colors"], version = ">=0.15.10" }
 
 [tool.poetry.group.coverage.dependencies]
 coverage = { version = ">=6.1.2", extras = ["toml"] }
@@ -349,7 +350,6 @@ extension-pkg-allow-list = ["duckdb"]
 disable = [
     "wrong-import-order"  # this is `ruff format` responsibility
 ]
-
 
 [tool.ruff]
 target-version = "py310"

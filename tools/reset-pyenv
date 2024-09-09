@@ -1,6 +1,7 @@
 #!/bin/bash
 
-. $HOME/.bash-functions.rc
+# shellcheck source=/home/dvp/.bash-functions.rc
+. "$HOME"/.bash-functions.rc
 # set -o nounset
 # set -o errexit
 # set -o verbose
@@ -11,13 +12,13 @@
 #
 # Args:
 #    environment: optional, if not provided uses first package name
-#    from underlying `src` directory
+#    from underlying `src` directory (usually this is the only one)
 #
 reset() {
     local env="${1:-}"
-    local pkgs=( $(ls src) )
+    read -r -a pkgs <<< "$(ls -1 src)"
     local pkg=${pkgs[0]}
-    local last_python="3.12.5"
+    local last_python="3.12.6"
     [[ -z "$env" ]] && env="${pkg//_/-}"
     echo "Installing package $pkg to environment $env with python $last_python."
     eval "$(pyenv init -)"
@@ -25,6 +26,7 @@ reset() {
     pyenv virtualenv-delete -f  "$env" && echo "Removed environment $env"
     pyenv virtualenv "$last_python" "$env" && echo "Created environment $env"
     pyenv local "$env"
+    eval "$(pyenv init -)"
     pyenv rehash
     pyenv shell "$env"
     poetry config --local virtualenvs.create false
@@ -33,7 +35,7 @@ reset() {
     poetry install
     python -c "import ${pkg}; print(${pkg}.__version__)" && success "Environment $env is reset"
     pyenv shell --unset
-    pyenv local "$env" "3.11.9" "3.10.14" "3.9.19"
+    pyenv local "$env" "3.11.10" "3.10.15" "3.9.20"
     pyenv rehash
 }
 
