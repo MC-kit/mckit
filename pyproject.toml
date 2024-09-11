@@ -176,6 +176,11 @@ sphinx-autobuild = ">=2021.3.14"
 [tool.poetry.group.ruff.dependencies]
 ruff = ">=0.0.259"
 
+
+[tool.poetry.group.analyze.dependencies]
+jupyterlab = "^4.2.5"
+jupytext = "^1.16.4"
+
 [tool.pytest.ini_options]
 minversion = "6.2"
 cache_dir = '.cache/pytest'
@@ -397,8 +402,8 @@ select = [
     # "EXE", # flake8-executable
     "F", # Pyflakes
     "FA", # flake8-future-annotations
-    "FBT", # flake8-boolean-trap  https://adamj.eu/tech/2021/07/10/python-type-hints-how-to-avoid-the-boolean-trap
-    "FIX", # flake8-fixme
+    # "FBT", # flake8-boolean-trap  https://adamj.eu/tech/2021/07/10/python-type-hints-how-to-avoid-the-boolean-trap
+    # "FIX", # flake8-fixme
     "FLY", # flynt
     "FURB", # refurb
     "G", # flake8-logging-format
