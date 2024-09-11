@@ -380,7 +380,9 @@ exclude = [
 select = [
     "A", # flake8-builtins
     # "ANN", # flake8-annotations
+    "AIR", # Airflow https://airflow.apache.org/docs/apache-airflow/stable/index.html
     # "ARG", # flake8-unused-arguments
+    "ASYNC", # flake8-async
     "B", # flake8-bugbear
     "BLE", # flake8-blind-except
     "C4", # flake8-comprehensions
@@ -395,7 +397,9 @@ select = [
     # "EXE", # flake8-executable
     "F", # Pyflakes
     "FA", # flake8-future-annotations
-    # "FBT", # flake8-boolean-trap
+    "FBT", # flake8-boolean-trap  https://adamj.eu/tech/2021/07/10/python-type-hints-how-to-avoid-the-boolean-trap
+    "FIX", # flake8-fixme
+    "FLY", # flynt
     "FURB", # refurb
     "G", # flake8-logging-format
     "I", # isort
