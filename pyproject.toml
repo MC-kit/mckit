@@ -290,6 +290,13 @@ warn_redundant_casts = true
 warn_unreachable = true
 warn_unused_ignores = true
 files = "src/**/*.py"
+exclude = '''
+  (?x)(
+  parser\.py$  # mypy doesn't parser code
+| _tab\.py$    # ...
+| lexer\.py$   # ...
+  )
+'''
 plugins = ["numpy.typing.mypy_plugin"]
 
 [[tool.mypy.overrides]]
