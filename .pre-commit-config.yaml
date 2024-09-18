@@ -45,10 +45,10 @@ repos:
       - id: mixed-line-ending
       - id: pretty-format-json
         args: [--autofix, --no-ensure-ascii, --no-sort-keys]
-        exclude: data|.ipynb$
+        exclude: data|\.ipynb$
       - id: requirements-txt-fixer
       - id: trailing-whitespace
-        exclude: data|.ipynb$
+        exclude: data|\.ipynb$
 
   # Changes tabs to spaces
   - repo: https://github.com/Lucas-C/pre-commit-hooks

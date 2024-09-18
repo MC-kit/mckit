@@ -26,17 +26,18 @@ reset() {
     pyenv virtualenv-delete -f  "$env" && echo "Removed environment $env"
     pyenv virtualenv "$last_python" "$env" && echo "Created environment $env"
     pyenv local "$env"
-    eval "$(pyenv init -)"
-    pyenv rehash
-    pyenv shell "$env"
+    pyenv activate "$env"
+    python --version
+    python -m pip install --upgrade pip setuptools wheel
     poetry config --local virtualenvs.create false
     poetry env info
     poetry lock --no-update
     poetry install
-    python -c "import ${pkg}; print(${pkg}.__version__)" && success "Environment $env is reset"
-    pyenv shell --unset
+    pyenv deactivate
     pyenv local "$env" "3.11.10" "3.10.15" "3.9.20"
     pyenv rehash
+    pyenv activate "$env"
+    python -c "import ${pkg}; print(${pkg}.__version__)" && success "Environment $env is reset"
 }
 
 reset  "$@"
