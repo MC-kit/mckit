@@ -9,7 +9,10 @@
 
 main() {
     for fn in "$@"; do
-        tr -d '\r' < "$fn" >| "$fn"
+        if grep -q $'\r$' "$fn"; then
+            mv "$fn" "$fn.~cr"
+            tr -d '\r' < "$fn.~cr"  >| "$fn"
+        fi
     done
 }
 
