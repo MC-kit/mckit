@@ -79,7 +79,6 @@ repos:
           - --py310-plus
         language: system
         types: [ python ]
-        stages: [ manual ]
 
       # # Format Python code
       # - id: ruff
@@ -98,7 +97,7 @@ repos:
       #   exclude: ^notebooks|^extern
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.3
+    rev: v0.6.7
     hooks:
       - id: ruff
         exclude: ^notebooks|^extern
