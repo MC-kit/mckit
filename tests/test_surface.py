@@ -2536,7 +2536,7 @@ class TestTorus:
         np.testing.assert_almost_equal(a, surf._a)
         np.testing.assert_almost_equal(b, surf._b)
 
-    @pytest.fixture()
+    @pytest.fixture
     def torus(self, request):
         return [
             Torus([0, 0, 0], [1, 0, 0], 4, 2, 1),

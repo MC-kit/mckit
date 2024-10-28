@@ -15,18 +15,20 @@
 #     https://github.com/pre-commit/pre-commit  for more information
 #     https://pre-commit.com/hooks.html         for more hooks
 default_language_version:
-  python: python3.12
+  python: python3.13
 
 repos:
 
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v4.5.0"
+    rev: "v5.0.0"
     hooks:
       - id: check-added-large-files
+      - id: check-ast
       - id: check-case-conflict
       - id: check-executables-have-shebangs
       - id: check-json
+        exclude: notebooks
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
         exclude: notebooks  # jupytext creates python scripts with shebangs but without permissions
@@ -37,18 +39,27 @@ repos:
       - id: end-of-file-fixer
         exclude: data|.ipynb$|^\.
       - id: name-tests-test
+        exclude: common.py|help*.*py
         args:
           - --pytest-test-first
       - id: mixed-line-ending
+      - id: pretty-format-json
+        args: [--autofix, --no-ensure-ascii, --no-sort-keys]
+        exclude: data|\.ipynb$
       - id: requirements-txt-fixer
       - id: trailing-whitespace
-        exclude: data|.ipynb$
+        exclude: data|\.ipynb$
 
   # Changes tabs to spaces
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: "v1.5.4"
+    rev: "v1.5.5"
     hooks:
       - id: remove-tabs
+
+  - repo: https://github.com/pre-commit/pre-commit
+    rev: v4.0.1
+    hooks:
+      - id: validate_manifest
 
   # Format doc strings
   - repo: https://github.com/DanielNoord/pydocstringformatter
@@ -68,33 +79,30 @@ repos:
           - --py310-plus
         language: system
         types: [ python ]
-        stages: [ manual ]
 
-      # Security check
-      - id: bandit
-        name: bandit
-        entry: bandit
-        args: ["-c", "pyproject.toml"]
-        language: system
-        types: [ python ]
-        exclude: ^notebooks|^extern
-        stages: [ manual ]
+      # # Format Python code
+      # - id: ruff
+      #   name: ruff-format
+      #   entry: ruff format --force-exclude --config pyproject.toml
+      #   language: system
+      #   types: [ python ]
+      #   exclude: ^notebooks|^extern
+      #
+      # # Lint and fix Python code (including import sort)
+      # - id: ruff
+      #   name: ruff
+      #   entry: ruff check --force-exclude --fix --config pyproject.toml
+      #   language: system
+      #   types: [ python ]
+      #   exclude: ^notebooks|^extern
 
-      # Lint and fix Python code (including import sort)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.0
+    hooks:
       - id: ruff
-        name: ruff
-        entry: ruff check --force-exclude --fix --config pyproject.toml
-        language: system
-        types: [ python ]
         exclude: ^notebooks|^extern
-
-      # Format Python code
-      - id: ruff
-        name: ruff-format
-        entry: ruff format --force-exclude --config pyproject.toml
-        language: system
-        types: [ python ]
-        exclude: ^notebooks|^extern
+      - id: ruff-format
+        exclude: ^notebooks|^extern|ipynb$
 
 
   # CMake formatting
@@ -113,9 +121,19 @@ repos:
       - id: clang-format
         types_or: [ c++, c, cuda ]
 
+  - repo: https://github.com/python-poetry/poetry
+    rev: "1.8.0"
+    hooks:
+    - id: poetry-check
+    - id: poetry-lock
+      stages: [ manual ]
+    - id: poetry-install
+      stages: [ manual ]
+
   # Check for common shell mistakes
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: "v0.9.0.6"
+    rev: "v0.10.0.1"
     hooks:
       - id: shellcheck
+        args: [ --external-sources ]
         stages: [ manual ]

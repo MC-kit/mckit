@@ -1919,7 +1919,7 @@ class TestShape:
         result = geometry[case_no].test_box(box[box_no])
         assert result == expected[box_no]
 
-    @pytest.mark.slow()
+    @pytest.mark.slow
     @pytest.mark.parametrize("tol", [0.2, None])
     @pytest.mark.parametrize(
         "case_no, expected",
@@ -1951,7 +1951,7 @@ class TestShape:
             assert bb.center[j] + bbd_halves_of_dimensions >= high
             assert bb.center[j] + bbd_halves_of_dimensions <= high + tol
 
-    @pytest.mark.slow()
+    @pytest.mark.slow
     @pytest.mark.parametrize("box_no", range(len(box_data)))
     @pytest.mark.parametrize(
         "case_no, expected",
@@ -2099,7 +2099,7 @@ class TestBody:
         for k, v in kwargs.items():
             assert body.options[k] == v
 
-    @pytest.mark.slow()
+    @pytest.mark.slow
     @pytest.mark.parametrize("kwarg", kwarg_data)
     @pytest.mark.parametrize(
         "case_no, expected",
@@ -2153,7 +2153,7 @@ class TestBody:
         11: create_surface("CX", 1, name=11),
     }
 
-    @pytest.mark.slow()
+    @pytest.mark.slow
     @pytest.mark.parametrize("kwarg", kwarg_data)
     @pytest.mark.parametrize(
         "case_no, geometry, ans_geometry",

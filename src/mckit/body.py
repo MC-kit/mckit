@@ -328,7 +328,7 @@ class Shape(_Shape):
         return self.opc == "E"
 
     def split_shape(self) -> list[Shape]:
-        def _scan() -> Generator[Shape, None, None]:
+        def _scan() -> Generator[Shape]:
             if self.opc == "U":
                 stat = self.get_stat_table()
                 drop_index = np.nonzero(np.all(stat == -1, axis=1))[0]

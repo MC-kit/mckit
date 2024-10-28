@@ -87,7 +87,7 @@ class Distribution:
 
     @staticmethod
     def check_distr(
-        bins_or_distrs: [ArrayLike | list[Distribution]],
+        bins_or_distrs: ArrayLike | list[Distribution],
         size: int,
         is_discrete: bool,
     ) -> None:

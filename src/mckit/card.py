@@ -72,7 +72,7 @@ class Card(ABC):
     def mcnp_repr(self, pretty: bool = False) -> str:
         """Gets str representation of the card."""
         # TODO dvp: try to use original texts, if available - this will preserve comments
-        return cast(str, print_card(self.mcnp_words(pretty)))
+        return print_card(self.mcnp_words(pretty))
 
     def drop_original(self) -> None:
         """Drop original text, if any.

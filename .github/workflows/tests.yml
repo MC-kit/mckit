@@ -38,7 +38,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DEFAULT_PYTHON: "3.12"
+  DEFAULT_PYTHON: "3.13"
 
 jobs:
 
@@ -142,7 +142,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest ]
-        python-version: [ '3.10', '3.11', '3.12' ]
+        python-version: [ '3.10', '3.11', '3.12', '3.13' ]
 
     steps:
 
@@ -191,6 +191,8 @@ jobs:
         with:
           name: coverage-data-${{ runner.os }}-${{ matrix.python-version }}
           path: ".coverage.*"
+          include-hidden-files: true
+          if-no-files-found: error
 
   coverage:
     runs-on: ubuntu-latest

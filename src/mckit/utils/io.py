@@ -16,7 +16,7 @@ def make_dir(d: Path) -> Path:
     return d
 
 
-def make_dirs(*dirs: Path) -> Generator[Path, None, None]:
+def make_dirs(*dirs: Path) -> Generator[Path]:
     yield from (make_dir(f) for f in dirs)
 
 
@@ -26,5 +26,5 @@ def check_if_path_exists(p: Path) -> Path:
     raise FileNotFoundError(f'Path "{p}" does not exist')
 
 
-def check_if_all_paths_exist(*paths: Path) -> Generator[Path, None, None]:
+def check_if_all_paths_exist(*paths: Path) -> Generator[Path]:
     yield from map(check_if_path_exists, paths)

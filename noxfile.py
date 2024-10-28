@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
 nox.options.sessions = (
     "pre-commit",
+    "ruff-format",
     "ruff",
     "tests",
     "docs-build",
@@ -58,8 +59,8 @@ def find_my_name() -> str:
 package: Final[str] = find_my_name()
 locations: Final[tuple[str, ...]] = f"src/{package}", "tests", "./noxfile.py", "docs/source/conf.py"
 
-supported_pythons: Final[tuple[str, ...]] = "3.10", "3.11", "3.12"
-default_python: Final[str] = "3.12"
+supported_pythons: Final[tuple[str, ...]] = "3.10", "3.11", "3.12", "3.13"
+default_python: Final[str] = "3.13"
 
 
 def _update_hook(hook: Path, virtualenv: str, s: Session) -> None:
@@ -148,14 +149,6 @@ def typeguard(s: Session) -> None:
     """Runtime type checking using Typeguard."""
     s.run("poetry", "install", "--only", "main,test,typeguard", external=True)
     s.run("pytest", "--typeguard-packages=src", *s.posargs, external=True)
-
-
-@session
-def lint(s: Session) -> None:
-    """Lint using flake8."""
-    s.run("poetry", "install", "--no-root", "--only", "flake8", external=True)
-    args = s.posargs or locations
-    s.run("flake8", *args)
 
 
 @session

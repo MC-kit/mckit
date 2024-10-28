@@ -1,5 +1,9 @@
 name: Create Repository Labels
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
@@ -10,10 +14,6 @@ on:
       - .github/labels.yml
       - .github/workflows/labeler.yml
   pull_request:
-    branches:
-      - main
-      - master
-      - devel
     paths:
       - .github/labels.yaml
       - .github/workflows/labeler.yml
@@ -21,19 +21,19 @@ on:
     - cron: "0 0 * * TUE"
 
 jobs:
-  labels:
+  labeler:
     name: Sycnchronize repository labels
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Sync GitHub Issue Labels
+      - name: Run labeler
         uses: crazy-max/ghaction-github-labeler@v5
         with:
           github-token: ${{ secrets.MCKIT_GITHUB_TOKEN }}
           skip-delete: true
-          dry-run: ${{ github.event_name != 'pull_request' }}
+          dry-run: ${{ github.event_name == 'pull_request' }}
           exclude: |
             help*
             *issue

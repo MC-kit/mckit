@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mckit"
-version = "0.8.1"
+version = "0.8.2"
 description = "Tools to process MCNP models and results"
 authors = ["rrn <r.rodionov@iterrf.ru>"]
 maintainers = ["dpv2015 <dmitri_portnov@yahoo.com>"]
@@ -33,14 +33,15 @@ classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: C",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Physics",
 ]
 
@@ -76,7 +77,7 @@ mckit = "mckit.cli.runner:mckit"
 
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.13"
+python = ">=3.10,<3.14"
 DateTime = ">=4.3"
 attrs = ">=21.2.0"
 click = ">=8.0.1"
@@ -147,6 +148,7 @@ pytest-cov = ">=4.0"
 # pytest-mock = ">=3.9"
 # pytest-randomly = ">=3.12"
 coverage = { version = ">=6.1.2", extras = ["toml"] }
+xdoctest = { extras = ["colors"], version = ">=0.15.10" }
 
 [tool.poetry.group.coverage.dependencies]
 coverage = { version = ">=6.1.2", extras = ["toml"] }
@@ -164,37 +166,6 @@ types-setuptools = ">=57.4.2"
 numpy = ">=1.26.2"
 types-tqdm = ">=4.66.0.2"
 
-[tool.poetry.group.flake8.dependencies]
-darglint = ">=1.8.1"
-flake8 = ">=6.0.0"
-flake8-adjustable-complexity = ">=0.0.6"
-flake8-annotations = ">=2.6.2"
-flake8-annotations-coverage = ">=0.0.6"
-flake8-bandit = ">=4.1.1"
-flake8-bugbear = ">=23.3.23"
-flake8-builtins = ">=1.5.3"
-flake8-class-attributes-order = ">=0.1.3"
-flake8-cognitive-complexity = ">=0.1.0"
-flake8-colors = ">=0.1.9"
-flake8-commas = ">=2.1.0"
-flake8-comprehensions = ">=3.10.0"
-flake8-docstrings = ">=1.6.0"
-flake8-eradicate = ">=1.5.0"
-flake8-expression-complexity = ">=0.0.11"
-flake8-functions = ">=0.0.7"
-flake8-import-order = ">=0.18.1"
-flake8-pie = ">=0.16.0"
-flake8-print = ">=5.0.0"
-flake8-rst-docstrings = ">=0.2.7"
-flake8-scream = ">=0.1.0"
-flake8-simplify = ">=0.19.3"
-flake8-use-fstring = ">=1.4"
-flake8-use-pathlib = ">=0.3.0"
-pylint = ">=2.15.10"
-flake8-pylint = ">=0.1.3"
-# TODO dvp: check/use flake8-pyprojecttoml plugin
-# https://gitlab.com/durko/flake8-pyprojecttoml/-/blob/master/pyproject.toml
-
 [tool.poetry.group.docs.dependencies]
 sphinx = ">=6.1.3"
 sphinx-autodoc-typehints = ">=1.19.5"
@@ -203,15 +174,13 @@ sphinx-click = ">=4.4.0"
 [tool.poetry.group.docs_auto.dependencies]
 sphinx-autobuild = ">=2021.3.14"
 
-
-[tool.poetry.group.pylsp.dependencies]
-pylsp-mypy = ">=0.6.6"
-pyls-memestra = ">=0.0.16"
-pylsp-rope = ">=0.1.11"
-ruff-lsp = ">=0.0.35"
-
 [tool.poetry.group.ruff.dependencies]
 ruff = ">=0.0.259"
+
+
+[tool.poetry.group.analyze.dependencies]
+jupyterlab = "^4.2.5"
+jupytext = "^1.16.4"
 
 [tool.pytest.ini_options]
 minversion = "6.2"
@@ -322,6 +291,13 @@ warn_redundant_casts = true
 warn_unreachable = true
 warn_unused_ignores = true
 files = "src/**/*.py"
+exclude = '''
+  (?x)(
+  parser\.py$  # mypy doesn't parser code
+| _tab\.py$    # ...
+| lexer\.py$   # ...
+  )
+'''
 plugins = ["numpy.typing.mypy_plugin"]
 
 [[tool.mypy.overrides]]
@@ -385,56 +361,7 @@ logging-format-style = "new"   # use {} in logging messages
 deprecated-modules = ["six"]
 extension-pkg-allow-list = ["duckdb"]
 disable = [
-    "wrong-import-order"  # this is `isort` responsibility
-]
-
-[tool.bandit]
-targets = ["src"]
-confidence-level = "MEIDUM"
-severity-level = "MEIDUM"
-exclude_dirs = ["tests", "adhoc", "notebooks", "tools"]
-quiet = true
-skips = ["B101", "B301", "B403"]
-
-[tool.bandit.any_other_function_with_shell_equals_true]
-no_shell = [
-    "os.execl",
-    "os.execle",
-    "os.execlp",
-    "os.execlpe",
-    "os.execv",
-    "os.execve",
-    "os.execvp",
-    "os.execvpe",
-    "os.spawnl",
-    "os.spawnle",
-    "os.spawnlp",
-    "os.spawnlpe",
-    "os.spawnv",
-    "os.spawnve",
-    "os.spawnvp",
-    "os.spawnvpe",
-    "os.startfile"
-]
-shell = [
-    "os.system",
-    "os.popen",
-    "os.popen2",
-    "os.popen3",
-    "os.popen4",
-    "popen2.popen2",
-    "popen2.popen3",
-    "popen2.popen4",
-    "popen2.Popen3",
-    "popen2.Popen4",
-    "commands.getoutput",
-    "commands.getstatusoutput"
-]
-subprocess = [
-    "subprocess.Popen",
-    "subprocess.call",
-    "subprocess.check_call",
-    "subprocess.check_output"
+    "wrong-import-order"  # this is `ruff format` responsibility
 ]
 
 [tool.ruff]
@@ -460,15 +387,15 @@ exclude = [
     "wrk",
 ]
 
-
 [tool.ruff.lint]
-
 #see full list: https://beta.ruff.rs/docs/rules/#pyflakes-f
 #or run 'ruff linter' to see a brief list
 select = [
     "A", # flake8-builtins
     # "ANN", # flake8-annotations
+    "AIR", # Airflow https://airflow.apache.org/docs/apache-airflow/stable/index.html
     # "ARG", # flake8-unused-arguments
+    "ASYNC", # flake8-async
     "B", # flake8-bugbear
     "BLE", # flake8-blind-except
     "C4", # flake8-comprehensions
@@ -483,7 +410,9 @@ select = [
     # "EXE", # flake8-executable
     "F", # Pyflakes
     "FA", # flake8-future-annotations
-    # "FBT", # flake8-boolean-trap
+    # "FBT", # flake8-boolean-trap  https://adamj.eu/tech/2021/07/10/python-type-hints-how-to-avoid-the-boolean-trap
+    # "FIX", # flake8-fixme
+    "FLY", # flynt
     "FURB", # refurb
     "G", # flake8-logging-format
     "I", # isort
@@ -696,3 +625,8 @@ convention = "google" # Use Google-style docstrings.
 
 [tool.ruff.format]
 docstring-code-format = true
+
+[tool.jupytext]
+# https://jupytext.readthedocs.io/en/latest/config.html
+# Pair ipynb notebooks to py:percent text notebooks
+formats = "ipynb,md,py:percent"
