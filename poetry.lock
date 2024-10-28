@@ -2099,7 +2099,10 @@ files = [
 [package.dependencies]
 annotated-types = ">=0.6.0"
 pydantic-core = "2.23.4"
-typing-extensions = {version = ">=4.6.1", markers = "python_version < \"3.13\""}
+typing-extensions = [
+    {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
+    {version = ">=4.6.1", markers = "python_version < \"3.13\""},
+]
 
 [package.extras]
 email = ["email-validator (>=2.0.0)"]
@@ -3945,5 +3948,5 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = ">=3.10,<3.13"
-content-hash = "8e8bbde782f442caf4b6a4b221c84dca3af7de191241f84fead4c306604d0d66"
+python-versions = ">=3.10,<3.14"
+content-hash = "7f5a735ff42ed7338c92e0660977ce1c830a0d853b62bc0e901c56ce725a6d64"

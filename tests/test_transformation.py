@@ -303,7 +303,7 @@ tr_tr_cases = [
 ]
 
 
-@pytest.fixture()
+@pytest.fixture
 def trtr():
     return [Transformation(**tdata) for tdata in tr_tr_cases]
 
