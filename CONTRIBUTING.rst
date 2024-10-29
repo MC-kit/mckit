@@ -24,8 +24,8 @@ From source: ::
 
 There are also scripts to setup virtual environment: ::
 
-    - Linux:   reset-pyenv-env.sh
-    - Windows: reset-conda-env.bat
+    - Linux:   tools/reset-pyenv-env
+    - Windows: tools/reset-conda-env.bat
 
 From wheel: ::
 
@@ -34,7 +34,44 @@ From wheel: ::
 
 From PyPI: ::
 
-    pip3 install mckit
+    pip install mckit
+
+Repeatable actions
+------------------
+
+Release
+~~~~~~~
+
+In `devel` branch bump version to patch level at least. Use tools/bump, if possible.
+
+At github project create pull request MC-kit/mckit@devel -> MC-kit/mckit@master. Don't create PRs to rorni/mckit.
+
+Wait until all the tests passed and, if everything is OK, merge the PR.
+This will create github tag, and this in turn starts `publish` action, which
+creates the wheels and publish them on PyPI.
+
+
+Add support of a new Python version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- create new git branch `python3.Y` and switch to it
+- fix Python range in pyproject.toml
+- fix .pre-commit.yaml, use the recent Python, if possible
+- add version to noxfile.py, set as default, if possible
+- add version to .github/workflows/publish.yaml
+- fix and run tools/reset-pyenv-env, set default version with caution, keep the previos one, if
+  dependencies don't allow to use the recent Python
+- Execute: ::
+    poetry update
+    pre-commit -ran a
+    poetry build
+    pytest
+    poetry version patch
+
+- commit the changes
+- switch back to `devel` branch
+- If all of the above passed fine merge the changes from `python3.Y`
+
 
 Tutorial
 --------
