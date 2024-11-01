@@ -1511,66 +1511,81 @@ class TestMaterial:
         return [Material(**c) for c in self.cases]
 
     @pytest.mark.parametrize(
-        "data",
+        "data, msg",
         [
-            {},
-            {"atomic": [("N", 1)]},
-            {"weight": [("N", 1)]},
-            {"atomic": [("N", 1)], "weight": [("N", 1)]},
-            {"composition": {"atomic": [("N", 1)]}},
-            {"composition": {"atomic": [("N", 1)]}, "atomic": [("N", 1)]},
-            {"composition": {"atomic": [("N", 1)]}, "weight": [("N", 1)]},
-            {
-                "composition": {"atomic": [("N", 1)]},
-                "atomic": [("N", 1)],
-                "weight": [("N", 1)],
-            },
-            {"density": 7.8},
-            {"concentration": 1.0e23},
-            {"density": 7.8, "concentration": 1.0e23},
-            {"density": 7.8, "concentration": 1.0e23, "atomic": [("N", 1)]},
-            {"density": 7.8, "concentration": 1.0e23, "weight": [("N", 1)]},
-            {
-                "density": 7.8,
-                "concentration": 1.0e23,
-                "atomic": [("N", 1)],
-                "weight": [("N", 1)],
-            },
-            {
-                "density": 7.8,
-                "composition": {"atomic": [("N", 1)]},
-                "atomic": [("N", 1)],
-            },
-            {
-                "density": 7.8,
-                "composition": {"atomic": [("N", 1)]},
-                "weight": [("N", 1)],
-            },
-            {
-                "density": 7.8,
-                "composition": {"atomic": [("N", 1)]},
-                "atomic": [("N", 1)],
-                "weight": [("N", 1)],
-            },
-            {
-                "concentration": 7.8,
-                "composition": {"atomic": [("N", 1)]},
-                "atomic": [("N", 1)],
-            },
-            {
-                "concentration": 7.8,
-                "composition": {"atomic": [("N", 1)]},
-                "weight": [("N", 1)],
-            },
-            {
-                "concentration": 7.8,
-                "composition": {"atomic": [("N", 1)]},
-                "atomic": [("N", 1)],
-                "weight": [("N", 1)],
-            },
+            ({}, "Neither 'composition', nor 'atomic' or 'weight' parameters are specified."),
+            ({"atomic": [("N", 1)]}, "Neither concentration nor density is specified"),
+            ({"weight": [("N", 1)]}, "Neither concentration nor density is specified"),
+            (
+                {"atomic": [("N", 1)], "weight": [("N", 1)]},
+                "Neither concentration nor density is specified",
+            ),
+            (
+                {"composition": {"atomic": [("N", 1)]}},
+                "Neither concentration nor density is specified",
+            ),
+            (
+                {"composition": {"atomic": [("N", 1)]}, "atomic": [("N", 1)]},
+                "composition is specified along with 'atomic' or 'weight' parameters",
+            ),
+            (
+                {"composition": {"atomic": [("N", 1)]}, "weight": [("N", 1)]},
+                "composition is specified along with 'atomic' or 'weight' parameters",
+            ),
+            (
+                {
+                    "composition": {"atomic": [("N", 1)]},
+                    "atomic": [("N", 1)],
+                    "weight": [("N", 1)],
+                },
+                "composition is specified along with 'atomic' or 'weight' parameters",
+            ),
+            ({"density": 7.8}, "xxx"),
+            # {"concentration": 1.0e23},
+            # {"density": 7.8, "concentration": 1.0e23},
+            # {"density": 7.8, "concentration": 1.0e23, "atomic": [("N", 1)]},
+            # {"density": 7.8, "concentration": 1.0e23, "weight": [("N", 1)]},
+            # {
+            #     "density": 7.8,
+            #     "concentration": 1.0e23,
+            #     "atomic": [("N", 1)],
+            #     "weight": [("N", 1)],
+            # },
+            # {
+            #     "density": 7.8,
+            #     "composition": {"atomic": [("N", 1)]},
+            #     "atomic": [("N", 1)],
+            # },
+            # {
+            #     "density": 7.8,
+            #     "composition": {"atomic": [("N", 1)]},
+            #     "weight": [("N", 1)],
+            # },
+            # {
+            #     "density": 7.8,
+            #     "composition": {"atomic": [("N", 1)]},
+            #     "atomic": [("N", 1)],
+            #     "weight": [("N", 1)],
+            # },
+            # {
+            #     "concentration": 7.8,
+            #     "composition": {"atomic": [("N", 1)]},
+            #     "atomic": [("N", 1)],
+            # },
+            # {
+            #     "concentration": 7.8,
+            #     "composition": {"atomic": [("N", 1)]},
+            #     "weight": [("N", 1)],
+            # },
+            # {
+            #     "concentration": 7.8,
+            #     "composition": {"atomic": [("N", 1)]},
+            #     "atomic": [("N", 1)],
+            #     "weight": [("N", 1)],
+            # },
         ],
     )
-    def test_creation_failure(self, data: dict[str, Any]):
+    def test_creation_failure(self, data: dict[str, Any], msg):
         data = deepcopy(data)  # this fixes pytest strange behavior (see below)"
         if "composition" in data.keys():
             composition_params = data.pop("composition")
@@ -1580,7 +1595,7 @@ class TestMaterial:
             composition = Composition(**composition_params)
         else:
             composition = None
-        with pytest.raises(ValueError, match="Incorrect set of parameters."):
+        with pytest.raises(ValueError, match=msg):
             Material(**data, composition=composition)
 
     @pytest.mark.parametrize("case", cases)

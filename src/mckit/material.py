@@ -9,6 +9,7 @@ from collections.abc import Iterable
 from functools import reduce
 from operator import xor
 
+# noinspection PyPackageRequirements
 import numpy as np
 
 from .card import Card
@@ -361,44 +362,22 @@ class Material:
     If only one of `weight` or `atomic` parameters is specified, then the Material
     there's no need to normalize it.
 
-    Parameters
-    ----------
-    atomic : TFractions
-        Atomic fractions. New composition will be created.
-    weight : TFractions
-        Weight fractions of isotopes. density of concentration must present.
-    composition : Composition
-        Composition instance. If it is specified, then this composition will be
-        used. Neither atomic nor weight must be present.
-    density : float
-        Density of the material (g/cc). It is incompatible with concentration
-        parameter.
-    concentration : float
-        Sets the atomic concentration (1 / cc). It is incompatible with density
-        parameter.
-    options : dict
-        Extra options.
+    Args:
+        atomic: Atomic fractions. New composition will be created.
+        weight: Weight fractions of isotopes. In this case, density or concentration must present.
+        composition: Composition instance. If it is specified, then this composition will be
+            used. Neither atomic nor weight must be present.
+        density: Density of the material (g/cc). It is incompatible with concentration
+            parameter.
+        concentration: Sets the atomic concentration (1 / cc). It is incompatible with density
+            parameter.
+        options:  Extra options.
 
-    Properties
-    ----------
-    density : float
-        Density of the material [g/cc].
-    concentration : float
-        Concentration of the material [atoms/cc].
-    composition : Composition
-        Material's composition.
-    molar_mass : float
-        Material's molar mass [g/mol].
-
-    Methods:
-    -------
-    correct(old_vol, new_vol)
-        Correct material density - returns the corrected version of the
-        material.
-    mixture(*materials, fraction_type)
-        Makes a mixture of specified materials in desired proportions.
-    __getitem__(key)
-        Gets specific option.
+    Properties:
+        density: Density of the material [g/cc].
+        concentration: Concentration of the material [atoms/cc].
+        composition: Material's composition.
+        molar_mass: Material's molar mass [g/mol].
     """
 
     # Relative density tolerance. Relative difference in densities when materials
@@ -414,23 +393,28 @@ class Material:
         **options,
     ):
         # Attributes: _n - atomic density (concentration)
-        if isinstance(composition, Composition) and not atomic and not weight:
+        if isinstance(composition, Composition):
+            if atomic or weight:
+                raise ValueError(
+                    "'composition is specified along with 'atomic' or 'weight' parameters."
+                )
             self._composition = composition
-        elif not composition and (weight or atomic):
+        elif weight or atomic:
             self._composition = Composition(atomic=atomic, weight=weight, **options)
         else:
-            raise ValueError("Incorrect set of parameters.")
+            raise ValueError(
+                "Neither 'composition', nor 'atomic' or 'weight' parameters are specified."
+            )
 
-        if concentration and density or not concentration and not density:
-            raise ValueError("Incorrect set of parameters.")
-        if concentration is not None:
-            self._n = concentration
-            if density is not None:
-                raise ValueError("Both concentration and density are specified")
-        else:
+        if concentration is None:
             if density is None:
                 raise ValueError("Neither concentration nor density is specified")
             self._n = density * AVOGADRO / self._composition.molar_mass
+        else:
+            if density is not None:
+                raise ValueError("Both concentration and density are specified")
+            self._n = concentration
+
         self._options = options
 
     def __eq__(self, other):
@@ -441,7 +425,12 @@ class Material:
     def __hash__(self):
         return hash(self._composition)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
+        """Gets specific option.
+
+        Args:
+            key: an option name
+        """
         return self._options[key]
 
     @property
@@ -477,14 +466,14 @@ class Material:
         Args:
             old_vol: Initial volume of the cell.
             new_vol: New volume of the cell.
-            factor : By this factor density of material will be multiplied. If factor
+            factor: By this factor density of material will be multiplied. If factor
                      is specified, then its value will be used, otherwise - old_vol/new_vol
 
         Returns:
             New material that takes with corrected density.
         """
         if factor is None:
-            if old_vol is None or new_vol is None:
+            if old_vol is None:
                 raise ValueError("'old_vol' is not specified")
             if new_vol is None:
                 raise ValueError("'new_vol' is not specified")
@@ -524,27 +513,29 @@ class Material:
             raise ValueError("At least one material must be specified.")
         if fraction_type == "weight":
 
-            def fun(m, f):
-                return f / m.molar_mass
+            def fun(m, _f):
+                return _f / m.molar_mass
 
-            norm = sum(fun(m, f) / m.concentration for m, f in materials)
+            norm = sum(fun(m, _f) / m.concentration for m, _f in materials)
         elif fraction_type == "volume":
 
-            def fun(m, f):
-                return f * m.concentration
+            def fun(m, _f):
+                return _f * m.concentration
 
             norm = 1
         elif fraction_type == "atomic":
 
-            def fun(m, f):
-                return f
+            def fun(_, _f):
+                return _f
 
-            norm = sum(fun(m, f) / m.concentration for m, f in materials)
+            norm = sum(fun(m, _f) / m.concentration for m, _f in materials)
         else:
             raise ValueError("Unknown fraction type")
-        factor = sum([fun(m, f) for m, f in materials])
-        compositions = [(m.composition, fun(m, f) / factor) for m, f in materials]
+
+        factor = sum([fun(m, _f) for m, _f in materials])
+        compositions = [(m.composition, fun(m, _f) / factor) for m, _f in materials]
         new_comp = Composition.mixture(*compositions)
+
         return Material(composition=new_comp, concentration=factor / norm)
 
 
@@ -694,7 +685,16 @@ class Element:
 
     @staticmethod
     def _split_name(_name: str) -> tuple[str, str]:
-        """Splits element's name into charge and mass number parts."""
+        """Splits element's name into charge and mass number parts.
+
+        Examples:
+            >>> Element._split_name("1001")
+            ('1', '001')
+            >>> Element._split_name("H")
+            ('H', '0')
+            >>> Element._split_name("H002")
+            ('H', '002')
+        """
         if _name.isnumeric():
             return _name[:-3], _name[-3:]
         for i, t in enumerate(_name):  # noqa: B007 - `i` is used below
