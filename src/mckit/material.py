@@ -190,49 +190,46 @@ class Composition(Card):
     def __contains__(self, item: str | Element) -> bool:
         """Checks if the composition contains the item.
 
-        Parameters
-        ----------
-        item :
-            Isotope. It can be either isotope name or Element instance.
+        Args:
+            item: Isotope. It can be either isotope name or Element instance.
 
         Returns:
-        -------
-        result :
             True if the composition contains the isotope, False otherwise.
         """
         if not isinstance(item, Element):
             item = Element(item)
+
         return item in self._composition
 
-    def get_atomic(self, isotope: str | Element) -> float:
+    def get_atomic(self, _isotope: str | Element) -> float:
         """Gets atomic fraction of the isotope.
 
         Raises KeyError if the composition doesn't contain the isotope.
 
         Args:
-            isotope: Isotope. It can be either isotope name or Element instance.
+            _isotope: Isotope. It can be either isotope name or Element instance.
 
         Returns:
             Atomic fraction of the specified isotope.
         """
-        if not isinstance(isotope, Element):
-            isotope = Element(isotope)
-        return self._composition[isotope]
+        if not isinstance(_isotope, Element):
+            _isotope = Element(_isotope)
+        return self._composition[_isotope]
 
-    def get_weight(self, isotope: int | Element) -> float:
+    def get_weight(self, _isotope: int | Element) -> float:
         """Gets weight fraction of the isotope.
 
         Raises KeyError if the composition doesn't contain the isotope.
 
         Args:
-            isotope : Isotope. It can be either isotope name or Element instance.
+            _isotope : Isotope. It can be either isotope name or Element instance.
 
         Returns:
             Weight fraction of the specified isotope.
         """
-        if not isinstance(isotope, Element):
-            isotope = Element(isotope)
-        frac: float = self._composition[isotope] * isotope.molar_mass / self._molar_mass
+        if not isinstance(_isotope, Element):
+            _isotope = Element(_isotope)
+        frac: float = self._composition[_isotope] * _isotope.molar_mass / self._molar_mass
         return frac
 
     @property
@@ -248,33 +245,28 @@ class Composition(Card):
         """
         composition: dict[Element, float] = {}
         already = True
-        for el, conc in self._composition.items():
+        for el, concentration in self._composition.items():
             if el.mass_number == 0:
                 already = False
-            for isotope, frac in el.expand().items():
-                if isotope not in composition.keys():
-                    composition[isotope] = 0
-                composition[isotope] += conc * frac
+            for _isotope, frac in el.expand().items():
+                if _isotope not in composition.keys():
+                    composition[_isotope] = 0
+                composition[_isotope] += concentration * frac
         if already:
             return self
         return Composition(atomic=composition.items(), **self.options)
 
-    def natural(self, tolerance=1.0e-8) -> Composition | None:
+    def natural(self, tolerance: float = 1.0e-8) -> Composition | None:
         """Tries to replace detailed isotope composition by natural elements.
 
         Modifies current object.
 
-        Parameters
-        ----------
-        tolerance : float
-            Relative tolerance to consider isotope fractions as equal.
-            Default: 1.e-8
+        Args:
+            tolerance: Relative tolerance to consider isotope fractions as equal. Default: 1.e-8
 
         Returns:
-        -------
-        comp : Composition
-            self, if composition is reduced successfully to natural. None returned if the
-            composition cannot be reduced to natural.
+            self - if composition is reduced successfully to natural.
+            None - if the composition cannot be reduced to natural.
         """
         already = True
         by_charge: dict[int, dict[int, float]] = {}
@@ -319,14 +311,10 @@ class Composition(Card):
     def mixture(*compositions: tuple[Composition, float]) -> Composition:
         """Makes mixture of the compositions with specific fractions.
 
-        Parameters
-        ----------
-        compositions :
-            List of pairs composition, fraction.
+        Args:
+            compositions: List of pairs composition, fraction.
 
         Returns:
-        -------
-        mix :
             Mixture.
         """
         atomics = []
@@ -340,13 +328,13 @@ class Composition(Card):
 
 def mixture_by_volume(
     *fractions_spec: tuple[Composition, float, float],
-    number=0,
+    _number=0,
 ) -> tuple[float, Composition]:
     """Compute mix of compositions defined with densities and volume fractions.
 
     Args:
         fractions_spec: list of specs (Composition, density, volume_fraction)
-        number: ... to assign as composition 'name'
+        _number: ... to assign as composition 'name'
 
     Returns:
         Composition: the mix by atomic fractions
@@ -362,7 +350,7 @@ def mixture_by_volume(
     total_moles = moles.sum()
     atomic_fractions = moles / total_moles
     mix = Composition.mixture(*zip(compositions, atomic_fractions, strict=False))
-    mix.options["name"] = number
+    mix.options["name"] = _number
     density = sum(density * volume_fraction for _, density, volume_fraction in fractions_spec)
     return density, mix
 
@@ -624,19 +612,19 @@ class Element:
         self._isomer = isomer
         self._comment = comment
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return self._charge * (self._mass_number + 1) * (self._isomer + 1)
 
-    def __eq__(self, other):
-        if (
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Element):
+            return False
+        return (
             self._charge == other.charge
             and self._mass_number == other.mass_number
             and self._isomer == other._isomer
-        ):
-            return True
-        return False
+        )
 
-    def __str__(self):
+    def __str__(self) -> str:
         _name = _CHARGE_TO_NAME[self.charge].capitalize()
         if self._mass_number > 0:
             _name += "-" + str(self._mass_number)
@@ -646,14 +634,14 @@ class Element:
                 _name += str(self._isomer - 1)
         return _name
 
-    def mcnp_repr(self):
+    def mcnp_repr(self) -> str:
         """Gets MCNP representation of the element."""
         _name = str(self.charge * 1000 + self.mass_number)
         if self.lib is not None:
             _name += f".{self.lib}"
         return _name
 
-    def fispact_repr(self):
+    def fispact_repr(self) -> str:
         """Gets FISPACT representation of the element."""
         _name = _CHARGE_TO_NAME[self.charge].capitalize()
         if self._mass_number > 0:
