@@ -34,7 +34,7 @@ reset() {
     poetry lock --no-update
     poetry install
     pyenv deactivate
-    pyenv local "$env" "3.12.7" "3.11.10" "3.10.15" "3.9.20"
+    pyenv local "$env" "3.12.7" "3.11.10" "3.10.15"
     pyenv rehash
     pyenv activate "$env"
     python -c "import ${pkg}; print(${pkg}.__version__)" && success "Environment $env is reset"

@@ -401,6 +401,7 @@ select = [
     "C4", # flake8-comprehensions
     "C90", # mccabe
     "COM", # flake8-commas
+    # "CPY", # flake8-copyright
     "D", # pydocstyle
     "DJ", # flake8-django
     # "DTZ", # flake8-datetimez
@@ -410,6 +411,7 @@ select = [
     # "EXE", # flake8-executable
     "F", # Pyflakes
     "FA", # flake8-future-annotations
+    # "FAST", # FastAPI
     # "FBT", # flake8-boolean-trap  https://adamj.eu/tech/2021/07/10/python-type-hints-how-to-avoid-the-boolean-trap
     # "FIX", # flake8-fixme
     "FLY", # flynt
@@ -558,7 +560,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["E402", "F401"]
 "benchmarks/*" = ["S101"]
-"noxfile.py" = ["ANN", "D202"]
+# "noxfile.py" = ["ANN", "D202"]
 "tests/*" = ["ANN", "D100", "D101", "D102", "D103", "D104", "PLR2004", "S101"]
 "src/mckit/cli/*" = [
     "PLE1205", # Too many arguments for `logging` format string - we use loguru in CLI modules
