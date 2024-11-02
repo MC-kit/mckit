@@ -13,12 +13,12 @@
 # ---
 
 # %% [markdown]
-# # Compute composition of boron and polyethilen
+# # Compute composition of boron and polyethylene
 #
 # dvp 2024.10.31
 #
 #
-# Create mix of wgt5% boron and polyethilen (remaining).
+# Create mix of wgt5% boron and polyethylene (remaining).
 #
 #
 
@@ -26,11 +26,13 @@
 # ## Setup
 
 # %%
+from __future__ import annotations
+
 import sys
 
 from pathlib import Path
 
-from mckit import Composition, Element, Material
+from mckit import Composition, Element
 
 # %%
 print(sys.version)
@@ -42,15 +44,15 @@ print(sys.prefix)
 # %%
 HERE = Path.cwd()
 ROOT = HERE.parent.parent
-dst =  ROOT / "wrk/bpe5.txt"
+dst = ROOT / "wrk/bpe5.txt"
 
 # %%
-dst.parent.mkdir(exist_ok = True)
+dst.parent.mkdir(exist_ok=True)
 
 # %%
 boron_fraction = 0.05
 polyethylene_fraction = 1.0 - boron_fraction
-mix_number = 170023 # free slot in up-mi-24-08-27.xlsx material index for mapstp
+mix_number = 170023  # free slot in up-mi-24-08-27.xlsx material index for mapstp
 
 
 # %%
@@ -68,7 +70,7 @@ boron = Composition(atomic=[(mk_element("B"), 1.0)]).expand()
 boron.mcnp_repr()
 
 # %%
-polyethylene = Composition(atomic = [(mk_element("C"), 1.0), (mk_element("H"), 2.0)]).expand()
+polyethylene = Composition(atomic=[(mk_element("C"), 1.0), (mk_element("H"), 2.0)]).expand()
 
 # %%
 polyethylene.mcnp_repr()
@@ -76,7 +78,7 @@ polyethylene.mcnp_repr()
 # %%
 bpe5 = Composition.mixture(
     (boron, boron_fraction / boron.molar_mass),
-    (polyethylene, polyethylene_fraction / polyethilen.molar_mass),
+    (polyethylene, polyethylene_fraction / polyethylene.molar_mass),
 ).rename(mix_number)
 
 # %%
