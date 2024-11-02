@@ -38,6 +38,8 @@ class TestElement:
         (4009, {}),
     ]
 
+    elements: Final[list[Element]] = [Element(name, **options) for name, options in cases]
+
     hash_equality: Final = [
         [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -68,12 +70,25 @@ class TestElement:
     @pytest.mark.parametrize("arg1", range(len(cases)))
     @pytest.mark.parametrize("arg2", range(len(cases)))
     def test_hash(self, arg1: int, arg2: int):
-        name1, options1 = self.cases[arg1]
-        name2, options2 = self.cases[arg2]
-        elem1 = Element(name1, **options1)
-        elem2 = Element(name2, **options2)
+        elem1 = TestElement.elements[arg1]
+        elem2 = TestElement.elements[arg2]
         test_result = hash(elem1) == hash(elem2)
         assert test_result == bool(self.hash_equality[arg1][arg2])
+
+    @pytest.mark.parametrize(
+        "arg1, arg2, expected",
+        [
+            (0, 1, False),
+            (0, 2, True),
+            (2, 3, True),
+            (3, 4, False),
+        ],
+    )
+    def test_le(self, arg1: int, arg2: int, expected: bool) -> None:
+        elem1 = TestElement.elements[arg1]
+        elem2 = TestElement.elements[arg2]
+        assert (elem1 < elem2) == expected, "Element comparison failed"
+        assert elem1 == elem2 or (elem2 < elem1) != expected, "Inverted Element comparison failed"
 
     @pytest.mark.parametrize(
         "case_no, expected",
@@ -275,8 +290,7 @@ class TestElement:
         ),
     )
     def test_creation(self, case_no, expected):
-        name, options = self.cases[case_no]
-        elem = Element(name, **options)
+        elem = TestElement.elements[case_no]
         assert elem.charge == expected["charge"]
         assert elem.mass_number == expected["mass_number"]
         assert elem.lib == expected["lib"]
@@ -349,8 +363,7 @@ class TestElement:
         ),
     )
     def test_expand(self, case_no, expected):
-        name, options = self.cases[case_no]
-        elem = Element(name, **options)
+        elem = TestElement.elements[case_no]
         expanded_ans = {
             Element(name, **opt): pytest.approx(fraction, rel=1.0e-5)
             for name, opt, fraction in expected
@@ -390,8 +403,7 @@ class TestElement:
         ),
     )
     def test_str(self, case_no, expected):
-        name, options = self.cases[case_no]
-        elem = Element(name, **options)
+        elem = TestElement.elements[case_no]
         assert expected == str(elem)
 
     @pytest.mark.parametrize(
@@ -426,8 +438,7 @@ class TestElement:
         ),
     )
     def test_mcnp_repr(self, case_no, expected):
-        name, options = self.cases[case_no]
-        elem = Element(name, **options)
+        elem = TestElement.elements[case_no]
         assert expected == elem.mcnp_repr()
 
     @pytest.mark.parametrize(
@@ -462,8 +473,7 @@ class TestElement:
         ),
     )
     def test_fispact_repr(self, case_no, expected):
-        name, options = self.cases[case_no]
-        elem = Element(name, **options)
+        elem = TestElement.elements[case_no]
         assert expected == elem.fispact_repr()
 
     equality: Final = [
@@ -496,10 +506,8 @@ class TestElement:
     @pytest.mark.parametrize("arg1", range(len(cases)))
     @pytest.mark.parametrize("arg2", range(len(cases)))
     def test_eq(self, arg1: int, arg2: int):
-        name1, options1 = self.cases[arg1]
-        name2, options2 = self.cases[arg2]
-        elem1 = Element(name1, **options1)
-        elem2 = Element(name2, **options2)
+        elem1 = TestElement.elements[arg1]
+        elem2 = TestElement.elements[arg2]
         test_result = elem1 == elem2
         assert test_result == bool(self.equality[arg1][arg2])
 

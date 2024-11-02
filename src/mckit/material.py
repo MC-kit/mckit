@@ -117,8 +117,6 @@ class Composition(Card):
         else:
             raise ValueError("Incorrect set of parameters.")
 
-        self._hash = reduce(xor, map(hash, self._composition.keys()))
-
     def copy(self) -> Composition:
         """Create full copy of self."""
         return Composition(atomic=cast(TFractions, self._composition.items()), **self.options)
@@ -157,9 +155,7 @@ class Composition(Card):
     #     return Approx(self, rel_tol=rel_tol, abs_tol=abs_tol)
 
     def __hash__(self) -> int:
-        return reduce(
-            xor, map(hash, self._composition.keys())
-        )  # TODO dvp: check why self._hash is not used?
+        return reduce(xor, map(hash, self._composition.keys()))
 
     def mcnp_words(self, pretty: bool = False) -> list[str]:
         words = [f"M{self.name()} "]
@@ -534,18 +530,10 @@ class Element:
     Attributes:
         _charge: Z of the element,
         _mass_number: A of the element
-        _comment: Optional comment to the element.
         _lib:  Data library ID. Usually it is MCNP library, like '31b' for FENDL31b.
         _isomer: Isomer level. Default 0. Usually may appear in FISPACT output.
+        _comment: Optional comment to the element.
         _molar: molar mass of the element
-
-    Methods:
-        expand()
-            Expands natural composition of this element.
-        fispact_repr()
-            Gets FISPACT representation of the element.
-        mcnp_repr()
-            Gets MCNP representation of the element.
     """
 
     def __init__(
@@ -555,12 +543,12 @@ class Element:
 
         Args:
             _name: Name of isotope. It can be ZAID = Z * 1000 + A, where Z - charge,
-            A - the number of protons and neutrons. If A = 0, then natural abundance
-            is used. Also, it can be an atom_name optionally followed by '-' and A.
-            '-' can be omitted. If there is no A, then A is assumed to be 0.
-            comment: Optional comment to the element.
-            lib:  Data library ID. Usually it is MCNP library, like '31b' for FENDL31b.
+                   A - the number of protons and neutrons. If A = 0, then natural abundance
+                   is used. Also, it can be an atom_name optionally followed by '-' and A.
+                   '-' can be omitted. If there is no A, then A is assumed to be 0.
+            lib:  Data library ID. Usually it is MCNP library, like '31c' for FENDL31c.
             isomer: Isomer level. Default 0. Usually may appear in FISPACT output.
+            comment: Optional comment to the element.
         """
         if isinstance(_name, int):
             self._charge = _name // 1000
@@ -606,6 +594,17 @@ class Element:
             and self._isomer == other._isomer
         )
 
+    def __lt__(self, other: Element) -> bool:
+        """Compare Elements by Z, A and isomer level."""
+        return (
+            self._charge < other.charge
+            or self._charge == other.charge
+            and (
+                self._mass_number < other.mass_number
+                or (self._mass_number == other.mass_number and self._isomer < other._isomer)
+            )
+        )
+
     def __str__(self) -> str:
         _name = _CHARGE_TO_NAME[self.charge].capitalize()
         if self._mass_number > 0:
@@ -615,6 +614,32 @@ class Element:
             if self._isomer > 1:
                 _name += str(self._isomer - 1)
         return _name
+
+    def __repr__(self) -> str:
+        """Create str representation for debugging.
+
+        Examples:
+            >>> print(repr(Element("H")))
+            Element("H")
+            >>> print(repr(Element("Ta181", isomer=1)))
+            Element("Ta181", isomer=1)
+            >>> print(repr(Element("H", lib="31c")))
+            Element("H", lib="31c")
+            >>> print(repr(Element("H", lib="31c", comment="Plain hydrogen")))
+            Element("H", lib="31c", comment="Plain hydrogen")
+        """
+        _buf = 'Element("' + _CHARGE_TO_NAME[self.charge].capitalize()
+        if self._mass_number > 0:
+            _buf += str(self._mass_number)
+        _buf += '"'
+        if self._isomer > 0:
+            _buf += f", isomer={self._isomer}"
+        if self._lib:
+            _buf += f', lib="{self._lib}"'
+        if self._comment:
+            _buf += f', comment="{self._comment}"'
+        _buf += ")"
+        return _buf
 
     def mcnp_repr(self) -> str:
         """Gets MCNP representation of the element."""
@@ -636,28 +661,32 @@ class Element:
 
     @property
     def charge(self) -> int:
-        """Gets element's charge number."""
+        """Gets element's charge number (Z)."""
         return self._charge
 
     @property
-    def mass_number(self):
-        """Gets element's mass number."""
+    def mass_number(self) -> int:
+        """Gets element's mass number (A)."""
         return self._mass_number
 
     @property
-    def molar_mass(self):
+    def molar_mass(self) -> float:
         """Gets element's molar mass."""
         return self._molar
 
     @property
-    def lib(self):
+    def lib(self) -> str | None:
         """Gets library name."""
         return self._lib
 
     @property
-    def isomer(self):
+    def isomer(self) -> int:
         """Gets isomer level."""
         return self._isomer
+
+    @property
+    def comment(self) -> str | None:
+        return self._comment
 
     def expand(self) -> dict[Element, float]:
         """Expands natural element into individual isotopes.
@@ -683,10 +712,10 @@ class Element:
             ('1', '001')
             >>> Element._split_name("H")
             ('H', '0')
-            >>> Element._split_name("H002")
-            ('H', '002')
-            >>> Element._split_name("H-002")
-            ('H', '002')
+            >>> Element._split_name("H2")
+            ('H', '2')
+            >>> Element._split_name("H-2")
+            ('H', '2')
         """
         if _name.isnumeric():
             return _name[:-3], _name[-3:]

@@ -383,6 +383,7 @@ exclude = [
     "__pycache__",
     "adhoc",
     "docs/source/conf.py",
+    "extern",
     "notebooks",
     "wrk",
 ]
