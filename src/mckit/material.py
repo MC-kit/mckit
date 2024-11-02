@@ -48,33 +48,12 @@ TFractions = Iterable[TFraction]
 class Composition(Card):
     """Represents composition.
 
-    Composition is not a material. It specifies only isotopes and their
-    fractions. It doesn't concern absolute quantities like density and
-    concentration. Composition immediately corresponds to the MCNP material.
+    Specifies isotopes and their  fractions.
+    As a Card derivative may (optionally) specify number, comment.
 
-    weight and atomic are both lists of tuples: (element, fraction, ...).
-
-    Parameters
-    ----------
-    atomic : list
-        Atomic fractions.
-    weight : list
-        Weight fractions.
-    options : dict
-        Dictionary of composition options.
-
-    Methods:
-    --------
-    molar_mass()
-        Gets molar mass of the composition.
-    get_atomic(isotope)
-        Gets atomic fraction of the isotope.
-    get_weight(isotope)
-        Gets weight fraction of the isotope.
-    expand()
-        Expands natural abundance elements into detailed isotope composition.
-    natural(tolerance)
-        Try to replace detailed isotope composition with natural elements.
+    Note:
+        Composition is not a material.  It doesn't concern absolute quantities like density and
+        concentration. Composition immediately corresponds to an MCNP material specification.
     """
 
     _tolerance = 1.0e-3
@@ -84,6 +63,14 @@ class Composition(Card):
     def __init__(
         self, atomic: TFractions | None = None, weight: TFractions | None = None, **options: Any
     ):
+        """Initialize a Composition.
+
+        Args:
+            atomic: list of tuples representing atomic fractions [(element, fraction)...]
+                    The elements can be specified as `int` zid, `str` name or `Element` object.
+            weight: the list for weight fractions, the content is same as `atomic`
+            options: Dictionary of composition options.
+        """
         Card.__init__(self, **options)
         self._composition: dict[Element, float] = {}
         elem_w = []
@@ -129,9 +116,11 @@ class Composition(Card):
                 self._composition[el] += frac / norm_factor
         else:
             raise ValueError("Incorrect set of parameters.")
+
         self._hash = reduce(xor, map(hash, self._composition.keys()))
 
     def copy(self) -> Composition:
+        """Create full copy of self."""
         return Composition(atomic=cast(TFractions, self._composition.items()), **self.options)
 
     def __eq__(self, other) -> bool:
