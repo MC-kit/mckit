@@ -5,7 +5,7 @@ from typing import Any, Literal, Union, cast
 import importlib.resources as rs
 import math
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from functools import reduce
 from operator import xor
 
@@ -50,8 +50,7 @@ class Composition(Card):
 
     Composition is not a material. It specifies only isotopes and their
     fractions. It doesn't concern absolute quantities like density and
-    concentration. Composition immediately corresponds to the MCNP's
-    material.
+    concentration. Composition immediately corresponds to the MCNP material.
 
     weight and atomic are both lists of tuples: (element, fraction, ...).
 
@@ -168,12 +167,12 @@ class Composition(Card):
     # def approx(self, rel_tol=1e-3, abs_tol=1e-12):
     #     return Approx(self, rel_tol=rel_tol, abs_tol=abs_tol)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return reduce(
             xor, map(hash, self._composition.keys())
         )  # TODO dvp: check why self._hash is not used?
 
-    def mcnp_words(self, pretty=False):
+    def mcnp_words(self, pretty: bool = False) -> list[str]:
         words = [f"M{self.name()} "]
         for elem, frac in self._composition.items():
             words.append(elem.mcnp_repr())
@@ -182,13 +181,13 @@ class Composition(Card):
             words.append("\n")
         return words
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         return self.options[key]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[tuple[Element, float]]:
         return iter(self._composition.items())
 
-    def __contains__(self, item: str | Element) -> bool:
+    def __contains__(self, item: int | str | Element) -> bool:
         """Checks if the composition contains the item.
 
         Args:
@@ -202,7 +201,7 @@ class Composition(Card):
 
         return item in self._composition
 
-    def get_atomic(self, _isotope: str | Element) -> float:
+    def get_atomic(self, _isotope: int | str | Element) -> float:
         """Gets atomic fraction of the isotope.
 
         Raises KeyError if the composition doesn't contain the isotope.
@@ -217,7 +216,7 @@ class Composition(Card):
             _isotope = Element(_isotope)
         return self._composition[_isotope]
 
-    def get_weight(self, _isotope: int | Element) -> float:
+    def get_weight(self, _isotope: int | str | Element) -> float:
         """Gets weight fraction of the isotope.
 
         Raises KeyError if the composition doesn't contain the isotope.
@@ -267,7 +266,8 @@ class Composition(Card):
 
         Returns:
             self - if composition is reduced successfully to natural.
-            None - if the composition cannot be reduced to natural.
+            None - if the composition cannot be reduced to natural, because some nuclides are
+                   presented with unnatural abundance.
         """
         already = True
         by_charge: dict[int, dict[int, float]] = {}
@@ -559,7 +559,9 @@ class Element:
             Gets MCNP representation of the element.
     """
 
-    def __init__(self, _name: str | int, lib=None, isomer=0, comment=None):
+    def __init__(
+        self, _name: str | int, lib: str | None = None, isomer: int = 0, comment: str | None = None
+    ):
         """Initialize an Element.
 
         Args:
@@ -694,13 +696,15 @@ class Element:
             ('H', '0')
             >>> Element._split_name("H002")
             ('H', '002')
+            >>> Element._split_name("H-002")
+            ('H', '002')
         """
         if _name.isnumeric():
             return _name[:-3], _name[-3:]
-        for i, t in enumerate(_name):  # noqa: B007 - `i` is used below
+        for _i, t in enumerate(_name):
             if t.isdigit():
                 break
         else:
             return _name, "0"
-        q = _name[: i - 1] if _name[i - 1] == "-" else _name[:i]
-        return q, _name[i:]
+        q = _name[: _i - 1] if _name[_i - 1] == "-" else _name[:_i]
+        return q, _name[_i:]
