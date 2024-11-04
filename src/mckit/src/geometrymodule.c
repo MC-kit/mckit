@@ -24,7 +24,7 @@
 // =====================================================================================================
 // //
 
-#define parent_pyobject(type, field, pointer) ((PyObject *)((char *)(pointer)-offsetof(type, field)))
+#define parent_pyobject(type, field, pointer) ((PyObject *)((char *)(pointer) - offsetof(type, field)))
 
 static int convert_to_dbl_vec(PyObject *obj, PyObject **addr)
 {
