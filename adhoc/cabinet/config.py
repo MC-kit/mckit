@@ -1,5 +1,6 @@
 #!python
-"""TODO..."""
+"""Pydantic configuration helper for Path fields."""
+
 from __future__ import annotations
 
 from typing import Literal
@@ -10,21 +11,12 @@ from pathlib import Path
 from pydantic import Field
 
 
-def main():
-    """TODO..."""
-    pass
-
-
-if __name__ == "__main__":
-    main()
-
-
 def file_field(path: str, status: Literal["exists", "new"] = "exists") -> Field:
     """Setup data field for a file.
 
     Args:
         path: default value for a field
-        status: how to check the file
+        status: how to check the file, fails if file should exist, but not found
 
     Returns:
         pydantic Field
