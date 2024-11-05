@@ -524,6 +524,7 @@ class Material:
         return Material(composition=new_comp, concentration=factor / norm)
 
 
+# noinspection PyPep8Naming
 class Element:
     """Represents isotope or isotope mixture for natural abundance case.
 
