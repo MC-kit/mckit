@@ -26,17 +26,18 @@ from config import file_field
 # noinspection PyPackageRequirements
 from pydantic import BaseModel, FilePath
 
-# noinspection PyPackageRequirements
-from rich.console import Console
-
 from mckit import Universe, Transformation
 from mckit.box import Box
+from mckit.cli.logging import logger, init_logger
 from mckit.parser import from_file
 
-console = Console()
+__version__ = "0.2.0"
 
 TRT_4_CELL_COUNT: Final[int] = 4407
 """Number of cells in original TRT model with collimator, v4."""
+
+TRT_4_SURF_COUNT: Final[int] = 4430
+"""The last number of surfaces in original TRT model with collimator, v4."""
 
 SB_CELL_CNT: Final[int] = 8
 """Cells with materials from Shielding Box model."""
@@ -107,7 +108,7 @@ def update_sql(cfg: Config) -> None:
         sb_con.execute(
             """
             select
-                cell + 4407 cell, -- to start from 4408
+                (cell + ?) as cell, -- to start from 4408
                 volume,      -- volume computed by SpaceClaim
                 xmin,        -- bounding box boundaries
                 ymin,
@@ -119,7 +120,8 @@ def update_sql(cfg: Config) -> None:
                 path
             from cells
             order by cell
-            """
+            """,
+            (TRT_4_CELL_COUNT + 1,)
         ).fetchall(),
     )
     trt_con.commit()
@@ -127,10 +129,10 @@ def update_sql(cfg: Config) -> None:
     sb_con.close()
 
 
-def load_box(con: sq.Connection, cell: int) -> Box | None:
+def load_box(con: sq.Connection, cell: int, z_shift: float = 0.0) -> Box | None:
     fetched = con.execute(
         """
-        select xmin, ymin, ymax, xmax, ymax, zmax from cells where cell=?
+        select xmin, ymin, zmin, xmax, ymax, zmax from cells where cell=?
         """,
         (cell,),
     ).fetchone()
@@ -139,56 +141,109 @@ def load_box(con: sq.Connection, cell: int) -> Box | None:
         return None
 
     xmin, ymin, zmin, xmax, ymax, zmax = fetched
-    return create_box_from_opposite_vertices([xmin, ymin, zmin], [xmax, ymax, zmax])
+    return create_box_from_opposite_vertices([xmin, ymin, zmin + z_shift], [xmax, ymax, zmax + z_shift])
 
 
-def main() -> None:
-    """Add shielding box to trt-4.0 model."""
-    os.chdir("/home/dvp/dev/mcnp/trt/wrk/models/2024/cabinet/stp/Model materials/edited_egor")
-    cfg = Config()
-    sb_sql = cfg.sb_path.with_suffix(".sqlite")
-    trt_sql = cfg.trt_path.with_suffix(".sqlite")
-    sb_con: sq.Connection = sq.connect(sb_sql)
-    trt_con: sq.Connection = sq.connect(trt_sql)
-    change_log = cfg.trt_path.with_suffix(".changed-cells.txt")
+# def main() -> None:
+"""Add shielding box to trt-4.0 model."""
+os.chdir("/home/dvp/dev/mcnp/trt/wrk/models/2024/cabinet/stp/Model materials/edited_egor")
+init_logger("add-sb.log", False, True)
+logger.info("mckit/adhoc/add_sb, v{}", __version__)
+cfg = Config()
+sb_sql = cfg.sb_path.with_suffix(".sqlite")
+trt_sql = cfg.trt_path.with_suffix(".sqlite")
+sb_con: sq.Connection = sq.connect(sb_sql)
+trt_con: sq.Connection = sq.connect(trt_sql)
+change_log = cfg.trt_path.with_suffix(".changed-cells.txt")
 
-    sb_parse = from_file(cfg.sb_path)
-    sb_model = list(filter(lambda x: 1 <= x.name() <= SB_CELL_CNT, sb_parse.universe))
-    trt_parse = from_file(cfg.trt_path)
-    trt_model = trt_parse.universe
-    new_cells = []
+trt_cells_to_intersect = {2040, 2328, 2253}
 
-    with change_log.open("w") as fid:
-        for _c in trt_model:
-            c = _c
-            trt_box = load_box(trt_con, c.name())
-            changed = False
-            for cc in sb_model:
-                sb_box = load_box(sb_con, cc.name())
-                if sb_box is None:
-                    msg = f"Cannot find data for cell # {cc.name()}"
-                    raise ValueError(msg)
-                if trt_box is None or trt_box.check_intersection(sb_box):
+logger.info("Loading SB model from {}", cfg.sb_path)
+sb_parse = from_file(cfg.sb_path)
+sb_universe = sb_parse.universe
+SB_START_CELL = TRT_4_CELL_COUNT + 1
+SB_START_SURF = TRT_4_SURF_COUNT + 1
+sb_universe.rename(start_cell=SB_START_CELL, start_surf=SB_START_SURF)
+sb_model = list(filter(lambda x: SB_START_CELL <= x.name() < SB_START_CELL + SB_CELL_CNT, sb_universe))
+sb_universe2 = sb_universe.transform(VARIANT2_TR)
+sb_model2 = list(filter(lambda x: SB_START_CELL <= x.name() < SB_START_CELL + SB_CELL_CNT, sb_universe2))
+logger.info("Loading TRT model from {}", cfg.trt_path)
+trt_parse = from_file(cfg.trt_path)
+trt_model = trt_parse.universe
+new_cells = []
+
+for _c in trt_model:
+    c = _c
+    trt_box = load_box(trt_con, c.name())
+    changed = False
+    if c.name() in trt_cells_to_intersect:
+        for cc in sb_model:
+            bb_no = cc.name() - SB_START_CELL + 1
+            sb_box = load_box(sb_con, bb_no)
+            if sb_box is None:
+                msg = f"Cannot find bounding box for SB cell # {bb_no}"
+                logger.error(msg)
+                raise ValueError(msg)
+            if trt_box is None or trt_box.check_intersection(sb_box):
+                intersection = c.intersection(cc.shape).simplify(min_volume=1e-2)
+                if not intersection.shape.is_empty():
                     c = c.intersection(cc.shape.complement())
                     changed = True
-            if changed:
-                c = c.simplify(min_volume=1e-2)
-                if c.shape.is_empty():
-                    console.print("Deleted cell", c.name(), style="red")
-                    print(c.name(), "deleted", file=fid)
-                else:
-                    console.print("Updated cell", c.name(), style="green")
-                    print(c.name(), "changed", file=fid)
-                    new_cells.append(c)
-            else:
-                new_cells.append(c)
-    sb_con.close()
-    trt_con.close()
-    new_cells.extend(sb_model)
-    with_sb = Universe(new_cells)
-    with_sb.save(cfg.trt_path.parent / "trt-4.0-with-sb.i")
+    if changed:
+        c = c.simplify(min_volume=1e-2)
+        if c.shape.is_empty():
+            logger.warning("Deleted cell {}", c.name())
+        else:
+            logger.info("Updated cell {}", c.name())
+            new_cells.append(c)
+    else:
+        new_cells.append(c)
+
+new_cells2 = []
+
+for _c in trt_model:
+    c = _c
+    trt_box = load_box(trt_con, c.name())
+    changed = False
+    if c.name() in trt_cells_to_intersect:
+        for cc in sb_model2:
+            bb_no = cc.name() - SB_START_CELL + 1
+            sb_box = load_box(sb_con, bb_no, VARIANT2_Z_SHIFT)
+            if sb_box is None:
+                msg = f"Cannot find bounding box for SB cell # {bb_no}"
+                logger.error(msg)
+                raise ValueError(msg)
+            if trt_box is None or trt_box.check_intersection(sb_box):
+                intersection = c.intersection(cc.shape).simplify(min_volume=1e-2)
+                if not intersection.shape.is_empty():
+                    c = c.intersection(cc.shape.complement())
+                    changed = True
+    if changed:
+        c = c.simplify(min_volume=1e-2)
+        if c.shape.is_empty():
+            logger.warning("Deleted cell {}", c.name())
+        else:
+            logger.info("Updated cell {}", c.name())
+            new_cells2.append(c)
+    else:
+        new_cells2.append(c)
+
+sb_con.close()
+trt_con.close()
+
+new_cells.extend(sb_model)
+with_sb = Universe(new_cells)
+out = cfg.trt_path.parent / "trt-4.0-with-sb.i"
+with_sb.save(out)
+
+new_cells2.extend(sb_model2)
+with_sb2 = Universe(new_cells2)
+out2 = cfg.trt_path.parent / "trt-4.0-with-sb2.i"
+with_sb2.save(out2)
+
+logger.success("The integrated models are saved in {} and {}(with Z-shift)", out, out2)
 
 
-if __name__ == "__main__":
-    # update_sql(Config())
-    main()
+# if __name__ == "__main__":
+#     # update_sql(Config())
+#     main()
