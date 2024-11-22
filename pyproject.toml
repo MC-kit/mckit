@@ -83,7 +83,7 @@ attrs = ">=21.2.0"
 click = ">=8.0.1"
 colorama = ">=0.4.4"
 loguru = ">=0.6.0"
-numpy = ">=1.26.0"
+numpy = ">=2.0"
 ply = ">=3.11"
 python-dotenv = ">=0.20.0"
 scipy = ">=1.14.0"
@@ -91,42 +91,9 @@ sly = ">=0.4"
 tomli = { version = ">=2.0.1", python = "<3.11" }
 tomli-w = ">=1.0.0"
 tqdm = ">=4.55.1"
-# the last mkl version with wheels for Linux, Windows and MacOS, check on updates
-# the most recent version was 2024.0.0 (windows and linux only).
-# Same for intel-openmp and tbb.
 mkl-devel = ">=2024.2.0"
 intel-openmp = ">=2024.2.0"
 tbb = ">=2021.13.0"
-
-# The following works for linux and windows, but not for macos
-# besides we need to have the same versions on build (see [build-system]),
-# so, we use the most recent version compatbile to all the OS.
-#mkl-devel = [
-#    {version = "2023.0.0", markers = "sys_platform == 'linux'"},
-#    {version = "2023.0.0", markers = "sys_platform == 'darvin'"},
-#    {version = "2022.2.1", markers = "sys_platform == 'win32'"}
-#]
-#intel-openmp = [
-#    {version = "2023.0.0", markers = "sys_platform == 'linux'"},
-#    {version = "2023.0.0", markers = "sys_platform == 'darvin'"},
-#    {version = "2022.2.1", markers = "sys_platform == 'win32'"}
-#]
-#tbb = [
-#    {version = "2021.8.0", markers = "sys_platform == 'linux'"},
-#    {version = "2021.8.0", markers = "sys_platform == 'darvin'"},
-#    {version = "2021.7.1", markers = "sys_platform == 'win32'"}
-#]
-# Check MKL wheels availablility:
-#   https://pypi.org/simple/mkl-devel/
-#   https://pypi.org/simple/intel-openmp/
-#   https://pypi.org/simple/tbb/
-# Also interesting: https://pypistats.org/packages/mkl - no visible MacOS downloads
-# As for 2022.01.12 for MacOS only version 10.15 is supported
-# TODO dvp: automate the check above
-#
-# TODO dvp: check
-#      https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-advisor.html
-#
 typer = { extras = ["all"], version = ">=0.9.0" }
 
 [tool.poetry.group.dev.dependencies]
@@ -459,8 +426,6 @@ select = [
 ignore = [
     "ANN001", # ANN001 Missing type annotation for function argument: doesn't allow to use functools dispatching
     "ANN002", # ANN002 Missing type annotation for *drop_items: ... as above
-    "ANN101", # ANN101 Missing type annotation for self in method
-    "ANN102", # ANN102 Missing type annotation for cls in classmethod
     # "ANN201", # Missing return type annotation for public function `mesh2com`
     "ANN202", # ANN202 Missing return type annotation for protected function: ... dispatching
     "ANN204", # ANN204 Missing return type annotation for special method
@@ -527,8 +492,8 @@ ignore = [
     # "I101",
     # "I201",
     # "I202",
-    "INP001", # File `tools/clear-prev-dist-info.py` is part of an implicit namespace package.
-    "ISC001", # to avoid conflicts with 'ruff format'
+    # "INP001",  # File `tools/clear-prev-dist-info.py` is part of an implicit namespace package.
+    "ISC001", # may cause conflicts when used with the ruff formatter
 
     # ignore some questionable pandas-vet warnings
     # "PD005", # use operator instead of method
@@ -549,8 +514,6 @@ ignore = [
     # "S301",    # `pickle` and modules that wrap... - TODO - use sql instead of pickle
 
     # "SLF001",  # Private member accessed: `_geometry_spec`
-
-    "TCH001", # Move application import `mckit.utils.named` into a type-checking block
 
     "TRY003", # Avoid specifying long messages outside the exception class
 
@@ -586,6 +549,8 @@ ignore = [
     "T201", # print found
 ]
 "tools/*" = ["T201", "INP001", "S603", "S607"]
+".unclassified/*" = ["INP001"]
+"tutorial/*" = ["INP001"]
 
 [tool.ruff.lint.mccabe]
 # Unlike Flake8, default to a complexity level of 10.

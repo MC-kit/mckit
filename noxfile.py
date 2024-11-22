@@ -47,7 +47,7 @@ def find_my_name() -> str:
     Raises:
         ValueError: if the pattern is not found.
     """
-    with Path("pyproject.toml").open() as fid:
+    with Path("pyproject.toml").open(encoding="utf8") as fid:
         for line in fid:
             res = NAME_RGX.match(line)
             if res is not None:
@@ -66,7 +66,7 @@ default_python: Final[str] = "3.13"
 def _update_hook(hook: Path, virtualenv: str, s: Session) -> None:
     text = hook.read_text()
     bin_dir = repr(s.bin)[1:-1]  # strip quotes
-    if Path("A") == Path("a") and bin_dir.lower() in text.lower() or bin_dir in text:
+    if (Path("A") == Path("a") and bin_dir.lower() in text.lower()) or bin_dir in text:
         lines = text.splitlines()
         if lines[0].startswith("#!") and "python" in lines[0].lower():
             header = dedent(

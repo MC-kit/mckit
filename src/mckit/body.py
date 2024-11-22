@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     from mckit import Universe
 
 
-__all__ = ["Shape", "Body", "simplify", "GLOBAL_BOX", "Card", "TGeometry", "TGeometry"]
+__all__ = ["GLOBAL_BOX", "Body", "Card", "Shape", "TGeometry", "TGeometry", "simplify"]
 
 _LOG = getLogger(__name__)
 
@@ -540,9 +540,9 @@ def _clean_args(opc: str, *_args: Shape | Surface | Body) -> tuple[str, list[Sha
         i = 0
         while i < len(args):
             a = args[i]
-            if a.opc == "E" and opc == "I" or a.opc == "R" and opc == "U":
+            if (a.opc == "E" and opc == "I") or (a.opc == "R" and opc == "U"):
                 return a.opc, []
-            if a.opc == "E" and opc == "U" or a.opc == "R" and opc == "I":
+            if (a.opc == "E" and opc == "U") or (a.opc == "R" and opc == "I"):
                 args.pop(i)
                 continue
             for b in args[i + 1 :]:

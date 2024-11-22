@@ -17,7 +17,7 @@ from .card import Card
 from .utils import compute_hash
 from .utils.tolerance import DEFAULT_TOLERANCE_ESTIMATOR, EstimatorType, MaybeClose
 
-__all__ = ["Transformation", "IDENTITY_ROTATION"]
+__all__ = ["IDENTITY_ROTATION", "Transformation"]
 
 IDENTITY_ROTATION: npt.NDArray[float] = np.eye(3)
 

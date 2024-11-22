@@ -14,7 +14,7 @@ import numpy as np
 
 from .card import Card
 
-__all__ = ["AVOGADRO", "Element", "Composition", "Material"]
+__all__ = ["AVOGADRO", "Composition", "Element", "Material"]
 
 AVOGADRO = 6.0221408576e23
 MATERIAL_FRACTION_FORMAT = "{0:.6e}"
@@ -597,9 +597,8 @@ class Element:
 
     def __lt__(self, other: Element) -> bool:
         """Compare Elements by Z, A and isomer level."""
-        return (
-            self._charge < other.charge
-            or self._charge == other.charge
+        return self._charge < other.charge or (
+            self._charge == other.charge
             and (
                 self._mass_number < other.mass_number
                 or (self._mass_number == other.mass_number and self._isomer < other._isomer)

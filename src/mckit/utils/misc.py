@@ -33,7 +33,7 @@ def significant_digits(
     Returns:
         The number of significant digits.
     """
-    if value == 0.0 or resolution and abs(value) < resolution:
+    if value == 0.0 or (resolution and abs(value) < resolution):
         return 0
     dec = get_decades(value)
     low = min(dec, 0)
