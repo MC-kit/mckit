@@ -18,7 +18,7 @@ reset() {
     local env="${1:-}"
     read -r -a pkgs <<< "$(ls -1 src)"
     local pkg=${pkgs[0]}
-    local last_python="3.13.0"
+    local last_python="3.13.1"
     [[ -z "$env" ]] && env="${pkg//_/-}"
     echo "Installing package $pkg to environment $env with python $last_python."
     eval "$(pyenv init -)"
@@ -34,7 +34,7 @@ reset() {
     poetry lock --no-update
     poetry install
     pyenv deactivate
-    pyenv local "$env" "3.12.7" "3.11.10" "3.10.15"
+    pyenv local "$env" "3.12.8" "3.11.11" "3.10.16"
     pyenv rehash
     pyenv activate "$env"
     python -c "import ${pkg}; print(${pkg}.__version__)" && success "Environment $env is reset"

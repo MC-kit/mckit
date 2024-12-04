@@ -214,15 +214,17 @@ def docs(s: Session) -> None:
 def clean(_: Session) -> None:
     """Clean folders with reproducible content."""
     to_clean = [
-        "_skbuild",
         ".benchmarks",
         ".eggs",
         ".mypy_cache",
         ".nox",
         ".pytest_cache",
         ".ruff_cache",
+        "__pycache__",
+        "_skbuild",
         "build",
         "htmlcov",
+        "setup.py",
     ]
     for f in to_clean:
         shutil.rmtree(f, ignore_errors=True)
