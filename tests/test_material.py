@@ -1632,9 +1632,9 @@ class TestMaterial:
         data = deepcopy(data)  # this fixes pytest strange behavior (see below)"
         if "composition" in data.keys():
             composition_params = data.pop("composition")
-            assert not isinstance(
-                composition_params, Composition
-            ), "Check some strange behavior on 'pytest test/*.py': arriving params are already Composition"
+            assert not isinstance(composition_params, Composition), (
+                "Check some strange behavior on 'pytest test/*.py': arriving params are already Composition"
+            )
             composition = Composition(**composition_params)
         else:
             composition = None

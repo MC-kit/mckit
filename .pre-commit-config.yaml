@@ -97,7 +97,7 @@ repos:
       #   exclude: ^notebooks|^extern
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+    rev: v0.9.0
     hooks:
       - id: ruff
         exclude: ^notebooks|^extern
@@ -116,13 +116,13 @@ repos:
 
   # Clang format the codebase automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: "v19.1.5"
+    rev: "v19.1.6"
     hooks:
       - id: clang-format
         types_or: [ c++, c, cuda ]
 
   - repo: https://github.com/python-poetry/poetry
-    rev: "1.8.0"
+    rev: "2.0.0"
     hooks:
     - id: poetry-check
     - id: poetry-lock

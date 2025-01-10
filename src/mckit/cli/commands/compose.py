@@ -77,9 +77,9 @@ def compose(output, fill_descriptor_path, source, override):
                 cell.options["FILL"]["transform"] = transformation2
             # elif isinstance(transformation, tk_items.Integer):
             elif isinstance(transformation, int):
-                assert (
-                    named_transformations is not None
-                ), "There are no named transformations in the fill descriptor file"
+                assert named_transformations is not None, (
+                    "There are no named transformations in the fill descriptor file"
+                )
                 transformation1 = named_transformations[int(transformation)]
                 cell.options["FILL"]["transform"] = transformation1
             else:

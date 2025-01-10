@@ -67,6 +67,6 @@ class Lexer(sly.Lexer):
         column = Lexer.column(token, prev_cr)
         msg = (
             f"Illegal character '{token.value[0]}', at line {self.lineno}, column {self.find_column(token)}\n"
-            f"{self.text[prev_cr + 1: next_cr]}\n" + " " * (column - 1) + "^"
+            f"{self.text[prev_cr + 1 : next_cr]}\n" + " " * (column - 1) + "^"
         )
         raise LexError(msg, token.value, token.index)
