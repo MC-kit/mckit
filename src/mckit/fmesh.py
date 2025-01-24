@@ -16,18 +16,15 @@ class AbstractMesh:
 class RectMesh:
     """Represents rectangular mesh.
 
-    Parameters
-    ----------
-    xbins, ybins, zbins : array_like[float]
-        Bins of mesh in every direction. The last bin value gives dimension of
-        mesh in this direction.
-    transform : Trnasformation
-        Transformation for the mesh. Default: None.
+    Args:
+        xbins:  Bins of mesh in X direction. The last bin value gives dimension of mesh in this direction.
+        ybins:  ... Y
+        zbins:  ... Z
+        transform:  Transformation for the mesh. Default: None.
 
     Methods:
-    -------
-    shape() - gets the shape of mesh.
-    get_voxel(i, j, k) - gets the voxel of RectMesh with indices i, j, k.
+        shape() - gets the shape of mesh.
+        get_voxel(i, j, k) - gets the voxel of RectMesh with indices i, j, k.
     """
 
     def __init__(self, xbins, ybins, zbins, transform: Transformation = None):

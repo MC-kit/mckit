@@ -97,7 +97,13 @@ repos:
       #   exclude: ^notebooks|^extern
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
+<<<<<<< HEAD
     rev: v0.9.1
+||||||| parent of 7cf0be1 (style: fix new ruff warnings)
+    rev: v0.8.4
+=======
+    rev: v0.9.0
+>>>>>>> 7cf0be1 (style: fix new ruff warnings)
     hooks:
       - id: ruff
         exclude: ^notebooks|^extern
@@ -116,13 +122,25 @@ repos:
 
   # Clang format the codebase automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
+<<<<<<< HEAD
     rev: "v19.1.7"
+||||||| parent of 7cf0be1 (style: fix new ruff warnings)
+    rev: "v19.1.5"
+=======
+    rev: "v19.1.6"
+>>>>>>> 7cf0be1 (style: fix new ruff warnings)
     hooks:
       - id: clang-format
         types_or: [ c++, c, cuda ]
 
   - repo: https://github.com/python-poetry/poetry
+<<<<<<< HEAD
     rev: "2.0.1"
+||||||| parent of 7cf0be1 (style: fix new ruff warnings)
+    rev: "1.8.0"
+=======
+    rev: "2.0.0"
+>>>>>>> 7cf0be1 (style: fix new ruff warnings)
     hooks:
     - id: poetry-check
     - id: poetry-lock
