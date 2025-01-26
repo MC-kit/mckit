@@ -9,7 +9,7 @@ from zipfile import ZipFile
 
 from mckit.constants import MCNP_ENCODING
 from mckit.parser.mcnp_input_sly_parser import ParseResult, from_text
-from mckit.utils.resource import path_resolver
+from mckit.utils._resource import path_resolver
 
 data_filename_resolver = path_resolver("benchmarks")
 with ZipFile(data_filename_resolver("data/4M.zip")) as data_archive:

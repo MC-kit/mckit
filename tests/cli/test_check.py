@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from mckit.cli.runner import mckit
-from mckit.utils.resource import path_resolver
+from mckit.utils._resource import path_resolver
 
 data_path_resolver = path_resolver("tests")
 

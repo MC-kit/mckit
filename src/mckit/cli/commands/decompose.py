@@ -14,7 +14,7 @@ from pathlib import Path
 import tomli_w as tw
 
 from mckit import Universe
-from mckit.cli.logging import logger
+from mckit.cli._logging import logger
 from mckit.parser.mcnp_input_sly_parser import ParseResult, from_file
 from mckit.universe import collect_transformations
 

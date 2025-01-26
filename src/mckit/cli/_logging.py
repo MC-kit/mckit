@@ -42,10 +42,6 @@ class InterceptHandler(logging.Handler):
         logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
-log = logging.getLogger()
-log.addHandler(InterceptHandler())
-
-
 MCKIT_CONSOLE_LOG_FORMAT: Final[str] = environ.get(
     "MCKIT_CONSOLE_LOG_FORMAT",
     default="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
@@ -55,6 +51,8 @@ MCKIT_CONSOLE_LOG_FORMAT: Final[str] = environ.get(
 
 
 def init_logger(logfile, quiet, verbose, *, stderr_format: str = MCKIT_CONSOLE_LOG_FORMAT):
+    log = logging.getLogger()
+    log.addHandler(InterceptHandler())
     stderr_level: str = "INFO"
     if quiet:
         stderr_level = "WARNING"

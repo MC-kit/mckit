@@ -29,7 +29,7 @@ from pydantic import BaseModel, FilePath
 
 from mckit import Body, Transformation, Universe
 from mckit.box import Box
-from mckit.cli.logging import init_logger, logger
+from mckit.cli._logging import init_logger, logger
 from mckit.parser import from_file
 
 __version__ = "0.2.1"

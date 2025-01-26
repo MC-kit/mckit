@@ -17,7 +17,7 @@ from numpy.testing import assert_array_equal
 from mckit.cli.commands.decompose import get_default_output_directory
 from mckit.cli.runner import mckit
 from mckit.parser import from_file
-from mckit.utils.resource import path_resolver
+from mckit.utils._resource import path_resolver
 
 data_path_resolver = path_resolver("tests")
 

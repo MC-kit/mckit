@@ -17,7 +17,7 @@ else:
     import tomli as tomllib
 
 from mckit import Transformation
-from mckit.cli.logging import logger
+from mckit.cli._logging import logger
 from mckit.parser.mcnp_input_sly_parser import ParseResult, from_file
 from mckit.utils import filter_dict
 

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from mckit.utils.resource import path_resolver
+from mckit.utils._resource import path_resolver
 
 THIS_FILENAME = Path(__file__).name
 

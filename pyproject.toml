@@ -1,50 +1,3 @@
-[tool.poetry]
-name = "mckit"
-version = "0.8.4a0"
-description = "Tools to process MCNP models and results"
-authors = ["rrn <r.rodionov@iterrf.ru>"]
-maintainers = ["dpv2015 <dmitri_portnov@yahoo.com>"]
-homepage = "https://github.com/MC-kit/mckit"
-repository = "https://github.com/MC-kit/mckit"
-documentation = "https://mckit.readthedocs.io"
-license = "GPL3"
-keywords = ["mckit", "MCNP"]
-readme = "README.rst"
-packages = [
-    { include = "mckit", from = "src" },
-    { include = "building", format = "sdist", from = "." },
-    { include = "tests", format = "sdist", from = "." },
-    #    { include = "benchmarks", format="sdist", from = "."},
-]
-include = [
-    "src/mckit/data/isotopes.dat",
-    { path = "build.py", format = "sdist" },
-    # C extensions must be included in the wheel distribution.
-    { path = "src/mckit/**/*.pyd", format = "wheel" },
-    { path = "src/mckit/**/*.so", format = "wheel" },
-]
-exclude = [
-    ".py[co]$",
-    "setup.py"
-]
-# Select from PyPI classifiers: https://pypi.org/classifiers/
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Environment :: Console",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: POSIX :: Linux",
-    "Operating System :: Microsoft :: Windows",
-    "Programming Language :: C",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Topic :: Scientific/Engineering :: Physics",
-]
-
 [build-system]
 requires = [
     "poetry-core >= 1.8.3",
@@ -57,6 +10,83 @@ requires = [
 ]
 build-backend = "poetry.core.masonry.api"
 
+
+[project]
+name = "mckit"
+dynamic = ["version", "classifiers", "requires-python"]
+description = "Tools to process MCNP models and results"
+license = { text = "GPL3" }
+readme = "README.rst"
+authors = [
+    { name = "rrn" },
+    { name = "dvp2015", email = "dmitri_portnov@yahoo.com" }
+]
+keywords = ["mckit", "MCNP"]
+dependencies = [
+    "attrs (>=21.2.0)",
+    "click (>=8.0.1)",
+    "loguru (>=0.6.0)",
+    "mkl-devel (>=2025.0.1)",
+    "numpy (>=2.1.3)",
+    "ply (>=3.11)",
+    "python-dotenv (>=0.20.0)",
+    "scipy (>=1.14.0)",
+    "sly (>=0.4)",
+    "tomli-w (>=1.0.0)",
+    "tqdm (>=4.55.1)",
+    "typer[all]  (>=0.9.0)",
+    'tomli (>=2.0.1); python_version < "3.11"',
+]
+
+
+
+[project.urls]
+homepage = "https://github.com/MC-kit/mckit"
+repository = "https://github.com/MC-kit/mckit"
+documentation = "https://mckit.readthedocs.io"
+"Repository" = "https://github.com/MC-kit/mckit"
+"Bug Tracker" = "https://github.com/MC-kit/mckit/issues"
+
+
+[project.scripts]
+mckit = "mckit.cli.runner:mckit"
+
+
+[tool.poetry]
+version = "0.8.4a0"
+packages = [
+    { include = "mckit", from = "src" },
+    { include = "building", format = "sdist", from = "." },
+    { include = "tests", format = "sdist", from = "." },
+    #    { include = "benchmarks", format="sdist", from = "."},
+]
+include = [
+    { path = "noxfile.py", format = "sdist" },
+    { path = "tests", format = "sdist" },
+    { path = "docs", format = "sdist" },
+    { path = "build.py", format = "sdist" },
+    # C extensions must be included in the wheel distribution.
+    { path = "src/mckit/**/*.pyd", format = "wheel" },
+    { path = "src/mckit/**/*.so", format = "wheel" },
+]
+exclude = [
+    { path = "docs/build" },
+    { path = "setup.py" },
+]
+# Select from PyPI trove classifiers: https://pypi.org/classifiers/
+# about dynamic classifiers in poetry: https://python-poetry.org/docs/pyproject/#classifiers-1
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: C",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+
+
 [tool.poetry.build]
 script = "build.py"
 generate-setup-file = true
@@ -64,33 +94,11 @@ generate-setup-file = true
 #[tool.skikit-build]
 #cmake.verbose = true
 
-[tool.poetry.scripts]
-mckit = "mckit.cli.runner:mckit"
-
-[tool.poetry.urls]
-"Repository" = "https://github.com/MC-kit/mckit"
-"Bug Tracker" = "https://github.com/MC-kit/mckit/issues"
-# "Documentation" TODO
-
-
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
-DateTime = ">=4.3"
-attrs = ">=21.2.0"
-click = ">=8.0.1"
-colorama = ">=0.4.4"
-loguru = ">=0.6.0"
-numpy = ">=2.1.3"
-ply = ">=3.11"
-python-dotenv = ">=0.20.0"
-scipy = ">=1.14.0"
-sly = ">=0.4"
-tomli = { version = ">=2.0.1", python = "<3.11" }
-tomli-w = ">=1.0.0"
-tqdm = ">=4.55.1"
-mkl-devel = ">=2025.0.1"
-typer = { extras = ["all"], version = ">=0.9.0" }
+
+
 
 [tool.poetry.group.dev.dependencies]
 Pygments = ">=2.10.0"
@@ -342,12 +350,24 @@ src = ["src", "tests"]
 
 exclude = [
     "*.egg-info",
+    ".direnv",
     ".cache",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".mypy_cache",
+    ".nox",
+    ".ruff_cache",
+    ".venv",
     "__pycache__",
+    "_build",
     "adhoc",
+    "build",
+    "dist",
     "docs/source/conf.py",
     "extern",
     "notebooks",
+    "venv",
     "wrk",
 ]
 
@@ -356,8 +376,8 @@ exclude = [
 #or run 'ruff linter' to see a brief list
 select = [
     "A", # flake8-builtins
-    # "ANN", # flake8-annotations
     "AIR", # Airflow https://airflow.apache.org/docs/apache-airflow/stable/index.html
+    # "ANN", # flake8-annotations
     # "ARG", # flake8-unused-arguments
     "ASYNC", # flake8-async
     "B", # flake8-bugbear
@@ -594,3 +614,16 @@ docstring-code-format = true
 # https://jupytext.readthedocs.io/en/latest/config.html
 # Pair ipynb notebooks to py:percent text notebooks
 formats = "ipynb,md,py:percent"
+
+[tool.creosote]
+paths = ["src", "adhoc"]
+deps-file = "pyproject.toml"
+sections = ["project.dependencies"]
+exclude-deps = [
+    "mkl-devel",
+    "python-dotenv",
+    "scipy",
+    "tomli",
+    "tqdm",
+    "typer",
+]

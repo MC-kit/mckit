@@ -5,7 +5,7 @@ from pathlib import Path
 
 import click
 
-from mckit.cli.logging import logger
+from mckit.cli._logging import logger
 from mckit.constants import MCNP_ENCODING
 from mckit.universe import Universe, UniverseAnalyser
 

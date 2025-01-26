@@ -34,7 +34,7 @@ sys.path.append("..")
 import mckit as mk
 
 from mckit.box import Box
-from mckit.cli.logging import logger as LOG
+from mckit.cli._logging import logger as LOG
 
 
 def select_from(cell: mk.Body, to_select: np.ndarray) -> bool:

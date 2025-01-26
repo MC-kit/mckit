@@ -31,7 +31,7 @@ reset() {
     python -m pip install --upgrade pip setuptools wheel
     poetry config --local virtualenvs.create false
     poetry env info
-    poetry lock --no-update
+    poetry lock
     poetry install
     pyenv deactivate
     pyenv local "$env" "3.12.8" "3.11.11" "3.10.16"

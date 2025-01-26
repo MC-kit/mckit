@@ -2,8 +2,15 @@
 
 from __future__ import annotations
 
+from mckit.utils._io import (
+    MCNP_ENCODING,
+    check_if_all_paths_exist,
+    check_if_path_exists,
+    make_dir,
+    make_dirs,
+)
+from mckit.utils._resource import path_resolver
 from mckit.utils.accept import TVisitor, accept, on_unknown_acceptor
-from mckit.utils.io import MCNP_ENCODING
 from mckit.utils.misc import (
     MAX_DIGITS,
     are_equal,
@@ -21,7 +28,6 @@ from mckit.utils.misc import (
     significant_array,
     significant_digits,
 )
-from mckit.utils.resource import path_resolver
 from mckit.utils.tolerance import FLOAT_TOLERANCE
 
 __all__ = [
@@ -29,10 +35,14 @@ __all__ = [
     "MAX_DIGITS",
     "MCNP_ENCODING",
     "are_equal",
+    "check_if_all_paths_exist",
+    "check_if_path_exists",
     "compute_hash",
     "deepcopy",
     "filter_dict",
     "get_decades",
+    "make_dir",
+    "make_dirs",
     "make_hashable",
     "path_resolver",
     "round_array",
