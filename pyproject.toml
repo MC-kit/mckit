@@ -13,15 +13,36 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "mckit"
-dynamic = ["version", "classifiers", "requires-python"]
+dynamic = ["version", "requires-python"]
 description = "Tools to process MCNP models and results"
 license = { text = "GPL3" }
 readme = "README.rst"
 authors = [
-    { name = "rrn" },
+    { name = "rrn" }
+]
+maintainers = [
     { name = "dvp2015", email = "dmitri_portnov@yahoo.com" }
 ]
 keywords = ["mckit", "MCNP"]
+# Select from PyPI trove classifiers: https://pypi.org/classifiers/
+# poetry (2.0.0) doesn't pass dynamic classifieres to build.py, so, we use static
+# about dynamic classifiers in poetry: https://python-poetry.org/docs/pyproject/#classifiers-1
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: Other/Proprietary License",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Physics",
+]
 dependencies = [
     "attrs (>=21.2.0)",
     "click (>=8.0.1)",
@@ -34,8 +55,8 @@ dependencies = [
     "sly (>=0.4)",
     "tomli-w (>=1.0.0)",
     "tqdm (>=4.55.1)",
-    "typer[all]  (>=0.9.0)",
-    'tomli (>=2.0.1); python_version < "3.11"',
+    "typer[all]  >=0.9.0",
+    'tomli >=2.0.1; python_version < "3.11"'
 ]
 
 
@@ -56,15 +77,13 @@ mckit = "mckit.cli.runner:mckit"
 version = "0.8.4a0"
 packages = [
     { include = "mckit", from = "src" },
-    { include = "building", format = "sdist", from = "." },
-    { include = "tests", format = "sdist", from = "." },
-    #    { include = "benchmarks", format="sdist", from = "."},
 ]
 include = [
     { path = "noxfile.py", format = "sdist" },
     { path = "tests", format = "sdist" },
     { path = "docs", format = "sdist" },
     { path = "build.py", format = "sdist" },
+    { path = "building/*.py", format = "sdist" },
     # C extensions must be included in the wheel distribution.
     { path = "src/mckit/**/*.pyd", format = "wheel" },
     { path = "src/mckit/**/*.so", format = "wheel" },
@@ -72,18 +91,6 @@ include = [
 exclude = [
     { path = "docs/build" },
     { path = "setup.py" },
-]
-# Select from PyPI trove classifiers: https://pypi.org/classifiers/
-# about dynamic classifiers in poetry: https://python-poetry.org/docs/pyproject/#classifiers-1
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Environment :: Console",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "Operating System :: POSIX :: Linux",
-    "Operating System :: Microsoft :: Windows",
-    "Programming Language :: C",
-    "Topic :: Scientific/Engineering :: Physics",
 ]
 
 
