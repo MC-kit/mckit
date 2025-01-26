@@ -83,7 +83,7 @@ include = [
     { path = "tests", format = "sdist" },
     { path = "docs", format = "sdist" },
     { path = "build.py", format = "sdist" },
-    { path = "building/*.py", format = "sdist" },
+    { path = "create_mkl_symlinks.py", format = "sdist" },
     # C extensions must be included in the wheel distribution.
     { path = "src/mckit/**/*.pyd", format = "wheel" },
     { path = "src/mckit/**/*.so", format = "wheel" },
