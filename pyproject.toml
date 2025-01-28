@@ -10,7 +10,6 @@ requires = [
 ]
 build-backend = "poetry.core.masonry.api"
 
-
 [project]
 name = "mckit"
 dynamic = ["version", "requires-python"]
@@ -59,8 +58,6 @@ dependencies = [
     'tomli >=2.0.1; python_version < "3.11"'
 ]
 
-
-
 [project.urls]
 homepage = "https://github.com/MC-kit/mckit"
 repository = "https://github.com/MC-kit/mckit"
@@ -104,8 +101,6 @@ generate-setup-file = true
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
-
-
 
 [tool.poetry.group.dev.dependencies]
 Pygments = ">=2.10.0"
@@ -604,8 +599,6 @@ section-order = [
     "local-folder",
     "testing"
 ]
-
-
 
 [tool.ruff.lint.isort.sections]
 "typing" = ["typing", "typing_extension"]

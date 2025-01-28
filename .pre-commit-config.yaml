@@ -31,12 +31,15 @@ repos:
       - id: check-json
         exclude: notebooks
       - id: check-merge-conflict
+        exclude: \.rst$
       - id: check-shebang-scripts-are-executable
         exclude: notebooks  # jupytext creates python scripts with shebangs but without permissions
       - id: check-symlinks
       - id: check-toml
       - id: check-yaml
       - id: debug-statements
+      - id: destroyed-symlinks
+      - id: detect-private-key
       - id: end-of-file-fixer
         exclude: data|.ipynb$|^\.
       - id: name-tests-test
@@ -73,10 +76,6 @@ repos:
     rev: v4.0.0
     hooks:
       - id: creosote
-        args:
-          - '--path=src'
-          - '--deps-file=pyproject.toml'
-          - '--section=project.dependencies'
 
   - repo: local
     hooks:
