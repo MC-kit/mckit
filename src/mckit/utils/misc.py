@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import collections
 import collections.abc
@@ -18,6 +18,12 @@ from numpy import ndarray
 from ..constants import FLOAT_TOLERANCE
 
 MAX_DIGITS = np.finfo(float).precision
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
+    FloatArray = NDArray[np.floating]
+    IntArray = NDArray[np.int_]
 
 
 def significant_digits(
@@ -73,12 +79,13 @@ def get_decades(value: float) -> int:
 
 
 def significant_array(
-    array: ndarray, reltol: float = FLOAT_TOLERANCE, resolution: float | None = None
-) -> ndarray:
+    array: FloatArray, reltol: float = FLOAT_TOLERANCE, resolution: float | None = None
+) -> IntArray:
     """Compute the minimum numbers of significant digits to achieve desired tolerance."""
-    result: ndarray = np.empty_like(array, dtype=int)
+    result = np.empty_like(array, dtype=int)
     for index in zip(*map(np.ravel, np.indices(array.shape)), strict=False):
-        result[index] = significant_digits(array[index], reltol, resolution)
+        value = array[index].item()
+        result[index] = significant_digits(value, reltol, resolution)
     return result
 
 
@@ -97,7 +104,7 @@ def round_scalar(value: float, digits: int | None = None) -> float:
     return round(value, digits)
 
 
-def round_array(array: ndarray, digits_array: ndarray | None = None) -> ndarray:
+def round_array(array: FloatArray, digits_array: IntArray | None = None) -> ndarray:
     """Rounds array to desired precision.
 
     Args:
@@ -111,7 +118,8 @@ def round_array(array: ndarray, digits_array: ndarray | None = None) -> ndarray:
         digits_array = significant_array(array, FLOAT_TOLERANCE, FLOAT_TOLERANCE)
     result: ndarray = np.empty_like(array)
     for index in zip(*map(np.ravel, np.indices(array.shape)), strict=False):
-        result[index] = round_scalar(array[index], digits_array[index])
+        digits: int = digits_array[index].item()
+        result[index] = round_scalar(array[index].item(), digits)
     return result
 
 
