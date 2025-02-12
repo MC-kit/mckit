@@ -27,7 +27,7 @@ class RectMesh:
         get_voxel(i, j, k) - gets the voxel of RectMesh with indices i, j, k.
     """
 
-    def __init__(self, xbins, ybins, zbins, transform: Transformation = None):
+    def __init__(self, xbins, ybins, zbins, transform: Transformation | None = None):
         self._xbins = np.array(xbins)
         self._ybins = np.array(ybins)
         self._zbins = np.array(zbins)
