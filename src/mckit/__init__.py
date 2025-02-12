@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import mckit._init_dynamic_libraries
-
+from mckit._init_dynamic_libraries import MACOS, WIN
 from mckit.body import Body, Shape
 from mckit.fmesh import FMesh
 from mckit.material import AVOGADRO, Composition, Element, Material
@@ -23,6 +22,8 @@ from mckit.version import (
 
 __all__: list[str] = [
     "AVOGADRO",
+    "MACOS",
+    "WIN",
     "Body",
     "Composition",
     "Cone",

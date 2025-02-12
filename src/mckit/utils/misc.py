@@ -175,13 +175,12 @@ def filter_dict(
     for k, v in a.items():
         if drop_items and is_in(drop_items, k):
             pass
+        elif isinstance(v, dict):
+            res[k] = filter_dict(v, *drop_items)
+        elif issubclass(type(v), collections.abc.Collection):
+            res[k] = deepcopy(v)
         else:
-            if isinstance(v, dict):
-                res[k] = filter_dict(v, *drop_items)
-            elif issubclass(type(v), collections.abc.Collection):
-                res[k] = deepcopy(v)
-            else:
-                res[k] = v
+            res[k] = v
     return res
 
 

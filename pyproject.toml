@@ -1,11 +1,12 @@
 [build-system]
 requires = [
-    "poetry-core >= 1.8.3",
+    "poetry-core >= 2.0.0, <3.0.0",
     "cmake >= 3.26.3",
     "ninja; platform_system!='Windows'",
     "setuptools >= 67.8.0",
-    "numpy >= 1.26.0",
+    "numpy >= 2.1.3",
     "mkl-devel >= 2025.0.1",
+    "intel-cmplr-lib-ur == 2025.0.4", # 2025.0.4 is for windows only TODO check for updates
     "scikit-build"
 ]
 build-backend = "poetry.core.masonry.api"
@@ -438,21 +439,15 @@ select = [
     "YTT", # flake8-2020
 ]
 
-#warning: The isort option `isort.split-on-trailing-comma` is incompatible with the formatter `format.skip-magic-trailing-comma=true` option. To avoid unexpected behavior, we recommend either setting `isort.split-on-trailing-comma=false` or `format.skip-magic-trailing-comma=false`.
-
 # Ignore rules that currently fail on the codebase
 ignore = [
     "ANN001", # ANN001 Missing type annotation for function argument: doesn't allow to use functools dispatching
     "ANN002", # ANN002 Missing type annotation for *drop_items: ... as above
-    # "ANN201", # Missing return type annotation for public function `mesh2com`
     "ANN202", # ANN202 Missing return type annotation for protected function: ... dispatching
     "ANN204", # ANN204 Missing return type annotation for special method
 
     "ARG001", # Unused function argument: `expected`
 
-    # "B905",   # B905 `zip()` without an explicit `strict=` parameter - ignore while support 3.9
-
-    # "C812",   # C812 Missing trailing comma: black compatibility
     "C901", # too complex - ...
 
     "COM812", #  [*] Trailing comma missing
@@ -465,58 +460,14 @@ ignore = [
     "D104", # Missing docstring in public package
     "D106", # Missing docstring in public nested class
     "D107", # Missing docstring in __init__
-    # "D417",   # Missing argument descriptions in the docstring: `config`, `ebins`, - TODO
 
-
-    # "E203",  # E203: Whitespace before ‘:'
-    # "E401",  # Multiple imports on one line
     "E402", # Module level import not at top of file
     "E501", # Line too long (<LENGTH> > 100 characters)
-    # "E701",  # Multiple statements on one line (colon)
-    # "E702",  # Multiple statements on one line (semicolon)
-    # "E703",  # Statement ends with an unnecessary semicolon
-    # "E704",  # Multiple statements on one line (def)
-    # "E711",  # Comparison to `None` should be `cond is not None`
-    # "E712",  # Comparison to `<BOOL>` should be `cond is <BOOL>`
-    # "E713",  # Test for membership should be `not in`
-    # "E714",  # Test for object identity should be `is not`
-    # "E721",  # Do not compare types, use `isinstance()`
-    # "E722",  # Do not use bare `except`
-    # "E731",  # Do not assign a `lambda` expression, use a `def`
-    # "E741",  # Ambiguous variable name: `<VARIABLE>`
-    # "E743",  # Ambiguous function name: `<FUNCTION>`
-
-    # "EM101",   # Exception must not use a string literal, assign to variable first
-    # "EM102",   # Exception must not use an f-string literal, assign to variable first
 
     "N803", # Argument name `R` should be lowercase
     "N806", # Variable `D` in function should be lowercase
 
-    # "F401",  # `<TYPE>` imported but unused
-    # "F403",  # `from <MODULE> import *` used; unable to detect undefined names
-    # "F405",  # `<TYPE>` may be undefined, or defined from star imports: `<MODULE>`
-    # "F523",  # `.format` call has unused arguments at position(s): <INDEX>
-    # "F601",  # Dictionary key literal `'<KEY>'` repeated
-    # "F811",  # Redefinition of unused `<VARIABLE>` from line <LINE>
-    # "F821",  # Undefined name `VARIABLE`
-    # "F823",  # Local variable `VARIABLE` referenced before assignment
-    # "F841",  # Local variable `VARIABLE` is assigned to but never used
-
-    # "FBT001",  # Boolean positional arg in function definition (TODO!)
-    # "FBT002",  # Boolean default value in function definition (TODO!)
-    # "FBT003",  # Boolean positional value in function call
-
-    # "I001",
-    # "I101",
-    # "I201",
-    # "I202",
-    # "INP001",  # File `tools/clear-prev-dist-info.py` is part of an implicit namespace package.
     "ISC001", # may cause conflicts when used with the ruff formatter
-
-    # ignore some questionable pandas-vet warnings
-    # "PD005", # use operator instead of method
-    # "PD008", # We use at() to access single values
-    # "PD009", # And we use iat()
 
     "PLE1205", # logging-too-many-args - we use loguru with '{' style of placeholders
 
@@ -524,30 +475,23 @@ ignore = [
     "PLR0913", # Too many arguments to function call (6 > 5)
     "PLR0915", # Too many statements (65 > 50)
     "PLR2004", # magic number - don't want declare 0.0 as constant
-    "PLR5501", # Consider using `elif` instead of `else` then `if` to remove one indentation level
+#    "PLR5501", # Consider using `elif` instead of `else` then `if` to remove one indentation level
 
     "PT019", # Fixture `_bin` without value is injected as parameter (false positive?)
 
     "S101", # Use of `assert` detected  - TODO - replace assert statements with exception raise
-    # "S301",    # `pickle` and modules that wrap... - TODO - use sql instead of pickle
-
-    # "SLF001",  # Private member accessed: `_geometry_spec`
 
     "TRY003", # Avoid specifying long messages outside the exception class
 
-    # "W503",  # Line break before binary operator: for compatibility with black settings
 ]
 
 
 [tool.ruff.lint.per-file-ignores]
-"**/__init__.py" = ["E402", "F401"]
 "benchmarks/*" = ["S101"]
-# "noxfile.py" = ["ANN", "D202"]
 "tests/*" = ["ANN", "D100", "D101", "D102", "D103", "D104", "PLR2004", "S101"]
 "src/mckit/cli/*" = [
     "PLE1205", # Too many arguments for `logging` format string - we use loguru in CLI modules
 ]
-"src/mckit/_init_dynamic_libraries.py" = ["F401", "E402"]
 "src/mckit/parser/*" = [
     "A003",
     "D",
@@ -582,6 +526,11 @@ parametrize-names-type = "csv"
 
 [tool.ruff.lint.flake8-type-checking]
 strict = true
+
+# warning: The isort option `isort.split-on-trailing-comma` is incompatible
+# with the formatter `format.skip-magic-trailing-comma=true` option.
+# To avoid unexpected behavior, we recommend either setting `isort.split-on-trailing-comma=false`
+# or `format.skip-magic-trailing-comma=false`.
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
