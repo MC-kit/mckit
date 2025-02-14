@@ -6,7 +6,7 @@ requires = [
     "setuptools >= 67.8.0",
     "numpy >= 2.1.3",
     "mkl-devel >= 2025.0.1",
-    "intel-cmplr-lib-ur == 2025.0.4", # 2025.0.4 is for windows only TODO check for updates
+    "intel-cmplr-lib-ur == 2025.0.4", # next version 2025.0.5 is for windows only TODO check for updates
     "scikit-build"
 ]
 build-backend = "poetry.core.masonry.api"
@@ -47,6 +47,7 @@ dependencies = [
     "attrs (>=21.2.0)",
     "click (>=8.0.1)",
     "loguru (>=0.6.0)",
+    "intel-cmplr-lib-ur == 2025.0.4", # next version 2025.0.5 is for windows only TODO check for updates
     "mkl-devel (>=2025.0.1)",
     "numpy (>=2.1.3)",
     "ply (>=3.11)",
@@ -72,7 +73,7 @@ mckit = "mckit.cli.runner:mckit"
 
 
 [tool.poetry]
-version = "0.8.4a0"
+version = "0.8.4"
 packages = [
     { include = "mckit", from = "src" },
 ]
@@ -569,6 +570,7 @@ paths = ["src", "adhoc"]
 deps-file = "pyproject.toml"
 sections = ["project.dependencies"]
 exclude-deps = [
+    "intel-cmplr-lib-ur",
     "mkl-devel",
     "python-dotenv",
     "scipy",
