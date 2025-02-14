@@ -249,12 +249,11 @@ def p_tallies(p):
     """
     if len(p) == 2:
         p[0] = [p[1]]
+    elif isinstance(p[1], list):
+        p[1].append(p[2])
+        p[0] = p[1]
     else:
-        if isinstance(p[1], list):
-            p[1].append(p[2])
-            p[0] = p[1]
-        else:
-            p[0] = [p[1]]
+        p[0] = [p[1]]
 
 
 def p_tally(p):

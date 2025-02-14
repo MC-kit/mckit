@@ -105,7 +105,7 @@ add_subdirectory(extern)
 if(NOT WIN32)
   message("Creating symlinks in environment ${PythonEnv_ROOT}")
   execute_process(
-    COMMAND ${Python_EXECUTABLE} building/create_mkl_symlinks.py
+    COMMAND ${Python_EXECUTABLE} create_mkl_symlinks.py
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     OUTPUT_VARIABLE CREATED_MKL_SYMLINKS
     OUTPUT_STRIP_TRAILING_WHITESPACE)

@@ -2135,9 +2135,9 @@ class TestBody:
         assert simple_body.shape == expected_shape
         for k, v in kwarg.items():
             assert simple_body.options[k] == v
-        assert simple_body.material() == kwarg.get(
-            "MAT", None
-        ), "Material value should be preserved on simplification"
+        assert simple_body.material() == kwarg.get("MAT", None), (
+            "Material value should be preserved on simplification"
+        )
 
     split_surfaces: Final = {
         1: create_surface("SX", 4, 2, name=1),

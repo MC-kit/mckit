@@ -119,9 +119,9 @@ def join_comments(text_cards: Iterable[TextCard]):
                 assert comment is None, f"Comment is already set {comment[:70]}"
                 comment = card.text
             else:
-                assert (
-                    not card.is_comment
-                ), f"Pair of comment is found, second one is: {comment[:70]}"
+                assert not card.is_comment, (
+                    f"Pair of comment is found, second one is: {comment[:70]}"
+                )
                 yield card, comment
                 comment = None
 

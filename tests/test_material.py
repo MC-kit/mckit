@@ -4,6 +4,7 @@ from typing import Any, Final
 
 from copy import deepcopy
 
+# noinspection PyPackageRequirements
 import pytest
 
 from mckit.material import Composition, Element, Material
@@ -37,6 +38,8 @@ class TestElement:
         (4009, {}),
     ]
 
+    elements: Final[list[Element]] = [Element(name, **options) for name, options in cases]
+
     hash_equality: Final = [
         [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -67,12 +70,25 @@ class TestElement:
     @pytest.mark.parametrize("arg1", range(len(cases)))
     @pytest.mark.parametrize("arg2", range(len(cases)))
     def test_hash(self, arg1: int, arg2: int):
-        name1, options1 = self.cases[arg1]
-        name2, options2 = self.cases[arg2]
-        elem1 = Element(name1, **options1)
-        elem2 = Element(name2, **options2)
+        elem1 = TestElement.elements[arg1]
+        elem2 = TestElement.elements[arg2]
         test_result = hash(elem1) == hash(elem2)
         assert test_result == bool(self.hash_equality[arg1][arg2])
+
+    @pytest.mark.parametrize(
+        "arg1, arg2, expected",
+        [
+            (0, 1, False),
+            (0, 2, True),
+            (2, 3, True),
+            (3, 4, False),
+        ],
+    )
+    def test_le(self, arg1: int, arg2: int, expected: bool) -> None:
+        elem1 = TestElement.elements[arg1]
+        elem2 = TestElement.elements[arg2]
+        assert (elem1 < elem2) == expected, "Element comparison failed"
+        assert elem1 == elem2 or (elem2 < elem1) != expected, "Inverted Element comparison failed"
 
     @pytest.mark.parametrize(
         "case_no, expected",
@@ -274,8 +290,7 @@ class TestElement:
         ),
     )
     def test_creation(self, case_no, expected):
-        name, options = self.cases[case_no]
-        elem = Element(name, **options)
+        elem = TestElement.elements[case_no]
         assert elem.charge == expected["charge"]
         assert elem.mass_number == expected["mass_number"]
         assert elem.lib == expected["lib"]
@@ -348,8 +363,7 @@ class TestElement:
         ),
     )
     def test_expand(self, case_no, expected):
-        name, options = self.cases[case_no]
-        elem = Element(name, **options)
+        elem = TestElement.elements[case_no]
         expanded_ans = {
             Element(name, **opt): pytest.approx(fraction, rel=1.0e-5)
             for name, opt, fraction in expected
@@ -389,8 +403,7 @@ class TestElement:
         ),
     )
     def test_str(self, case_no, expected):
-        name, options = self.cases[case_no]
-        elem = Element(name, **options)
+        elem = TestElement.elements[case_no]
         assert expected == str(elem)
 
     @pytest.mark.parametrize(
@@ -425,8 +438,7 @@ class TestElement:
         ),
     )
     def test_mcnp_repr(self, case_no, expected):
-        name, options = self.cases[case_no]
-        elem = Element(name, **options)
+        elem = TestElement.elements[case_no]
         assert expected == elem.mcnp_repr()
 
     @pytest.mark.parametrize(
@@ -461,8 +473,7 @@ class TestElement:
         ),
     )
     def test_fispact_repr(self, case_no, expected):
-        name, options = self.cases[case_no]
-        elem = Element(name, **options)
+        elem = TestElement.elements[case_no]
         assert expected == elem.fispact_repr()
 
     equality: Final = [
@@ -495,10 +506,8 @@ class TestElement:
     @pytest.mark.parametrize("arg1", range(len(cases)))
     @pytest.mark.parametrize("arg2", range(len(cases)))
     def test_eq(self, arg1: int, arg2: int):
-        name1, options1 = self.cases[arg1]
-        name2, options2 = self.cases[arg2]
-        elem1 = Element(name1, **options1)
-        elem2 = Element(name2, **options2)
+        elem1 = TestElement.elements[arg1]
+        elem2 = TestElement.elements[arg2]
         test_result = elem1 == elem2
         assert test_result == bool(self.equality[arg1][arg2])
 
@@ -1473,7 +1482,7 @@ class TestComposition:
 
 
 class TestMaterial:
-    cases: Final = [
+    cases: Final[list[dict[str, Any]]] = [
         {
             "weight": [("N", 0.755465), ("O", 0.23148), ("AR", 0.012886)],
             "density": 1.2929e-3,
@@ -1506,81 +1515,130 @@ class TestMaterial:
         {"atomic": [("Ar", 1)], "density": 1.784e-3},
     ]
 
-    @pytest.fixture(scope="class")
-    def materials(self):
-        return [Material(**c) for c in self.cases]
+    materials: Final[list[Material]] = [Material(**c) for c in cases]
 
     @pytest.mark.parametrize(
-        "data",
+        "data, msg",
         [
-            {},
-            {"atomic": [("N", 1)]},
-            {"weight": [("N", 1)]},
-            {"atomic": [("N", 1)], "weight": [("N", 1)]},
-            {"composition": {"atomic": [("N", 1)]}},
-            {"composition": {"atomic": [("N", 1)]}, "atomic": [("N", 1)]},
-            {"composition": {"atomic": [("N", 1)]}, "weight": [("N", 1)]},
-            {
-                "composition": {"atomic": [("N", 1)]},
-                "atomic": [("N", 1)],
-                "weight": [("N", 1)],
-            },
-            {"density": 7.8},
-            {"concentration": 1.0e23},
-            {"density": 7.8, "concentration": 1.0e23},
-            {"density": 7.8, "concentration": 1.0e23, "atomic": [("N", 1)]},
-            {"density": 7.8, "concentration": 1.0e23, "weight": [("N", 1)]},
-            {
-                "density": 7.8,
-                "concentration": 1.0e23,
-                "atomic": [("N", 1)],
-                "weight": [("N", 1)],
-            },
-            {
-                "density": 7.8,
-                "composition": {"atomic": [("N", 1)]},
-                "atomic": [("N", 1)],
-            },
-            {
-                "density": 7.8,
-                "composition": {"atomic": [("N", 1)]},
-                "weight": [("N", 1)],
-            },
-            {
-                "density": 7.8,
-                "composition": {"atomic": [("N", 1)]},
-                "atomic": [("N", 1)],
-                "weight": [("N", 1)],
-            },
-            {
-                "concentration": 7.8,
-                "composition": {"atomic": [("N", 1)]},
-                "atomic": [("N", 1)],
-            },
-            {
-                "concentration": 7.8,
-                "composition": {"atomic": [("N", 1)]},
-                "weight": [("N", 1)],
-            },
-            {
-                "concentration": 7.8,
-                "composition": {"atomic": [("N", 1)]},
-                "atomic": [("N", 1)],
-                "weight": [("N", 1)],
-            },
+            ({}, "Neither 'composition', nor 'atomic' or 'weight' parameters are specified."),
+            ({"atomic": [("N", 1)]}, "Neither concentration nor density is specified"),
+            ({"weight": [("N", 1)]}, "Neither concentration nor density is specified"),
+            (
+                {"atomic": [("N", 1)], "weight": [("N", 1)]},
+                "Neither concentration nor density is specified",
+            ),
+            (
+                {"composition": {"atomic": [("N", 1)]}},
+                "Neither concentration nor density is specified",
+            ),
+            (
+                {"composition": {"atomic": [("N", 1)]}, "atomic": [("N", 1)]},
+                "composition is specified along with 'atomic' or 'weight' parameters",
+            ),
+            (
+                {"composition": {"atomic": [("N", 1)]}, "weight": [("N", 1)]},
+                "composition is specified along with 'atomic' or 'weight' parameters",
+            ),
+            (
+                {
+                    "composition": {"atomic": [("N", 1)]},
+                    "atomic": [("N", 1)],
+                    "weight": [("N", 1)],
+                },
+                "composition is specified along with 'atomic' or 'weight' parameters",
+            ),
+            (
+                {"density": 7.8},
+                "Neither 'composition', nor 'atomic' or 'weight' parameters are specified.",
+            ),
+            (
+                {"concentration": 1.0e23},
+                "Neither 'composition', nor 'atomic' or 'weight' parameters are specified.",
+            ),
+            (
+                {"density": 7.8, "concentration": 1.0e23},
+                "Neither 'composition', nor 'atomic' or 'weight' parameters are specified.",
+            ),
+            (
+                {"density": 7.8, "concentration": 1.0e23, "atomic": [("N", 1)]},
+                "Both concentration and density are specified",
+            ),
+            (
+                {"density": 7.8, "concentration": 1.0e23, "weight": [("N", 1)]},
+                "Both concentration and density are specified",
+            ),
+            (
+                {
+                    "density": 7.8,
+                    "concentration": 1.0e23,
+                    "atomic": [("N", 1)],
+                    "weight": [("N", 1)],
+                },
+                "Both concentration and density are specified",
+            ),
+            (
+                {
+                    "density": 7.8,
+                    "composition": {"atomic": [("N", 1)]},
+                    "atomic": [("N", 1)],
+                },
+                "composition is specified along with 'atomic' or 'weight' parameters",
+            ),
+            (
+                {
+                    "density": 7.8,
+                    "composition": {"atomic": [("N", 1)]},
+                    "weight": [("N", 1)],
+                },
+                "composition is specified along with 'atomic' or 'weight' parameters",
+            ),
+            (
+                {
+                    "density": 7.8,
+                    "composition": {"atomic": [("N", 1)]},
+                    "atomic": [("N", 1)],
+                    "weight": [("N", 1)],
+                },
+                "composition is specified along with 'atomic' or 'weight' parameters",
+            ),
+            (
+                {
+                    "concentration": 7.8,
+                    "composition": {"atomic": [("N", 1)]},
+                    "atomic": [("N", 1)],
+                },
+                "composition is specified along with 'atomic' or 'weight' parameters",
+            ),
+            (
+                {
+                    "concentration": 7.8,
+                    "composition": {"atomic": [("N", 1)]},
+                    "weight": [("N", 1)],
+                },
+                "composition is specified along with 'atomic' or 'weight' parameters",
+            ),
+            (
+                {
+                    "concentration": 7.8,
+                    "composition": {"atomic": [("N", 1)]},
+                    "atomic": [("N", 1)],
+                    "weight": [("N", 1)],
+                },
+                "composition is specified along with 'atomic' or 'weight' parameters",
+            ),
         ],
     )
-    def test_creation_failure(self, data: dict[str, Any]):
+    def test_creation_failure(self, data: dict[str, Any], msg):
         data = deepcopy(data)  # this fixes pytest strange behavior (see below)"
         if "composition" in data.keys():
             composition_params = data.pop("composition")
-            assert not isinstance(
-                composition_params, Composition
-            ), "Check some strange behavior on 'pytest test/*.py': arriving params are already Composition"
+            assert not isinstance(composition_params, Composition), (
+                "Check some strange behavior on 'pytest test/*.py': arriving params are already Composition"
+            )
             composition = Composition(**composition_params)
         else:
             composition = None
-        with pytest.raises(ValueError, match="Incorrect set of parameters."):
+        with pytest.raises(ValueError, match=msg):
             Material(**data, composition=composition)
 
     @pytest.mark.parametrize("case", cases)
@@ -1614,9 +1672,9 @@ class TestMaterial:
 
     @pytest.mark.parametrize("case1", range(len(cases)))
     @pytest.mark.parametrize("case2", range(len(cases)))
-    def test_hash_equal(self, materials, case1: int, case2: int):
-        mat1 = materials[case1]
-        mat2 = materials[case2]
+    def test_hash_equal(self, case1: int, case2: int):
+        mat1 = TestMaterial.materials[case1]
+        mat2 = TestMaterial.materials[case2]
         assert (hash(mat1) == hash(mat2)) == bool(self.hash_eq_matrix[case1][case2])
 
     eq_matrix: Final = [
@@ -1631,9 +1689,9 @@ class TestMaterial:
 
     @pytest.mark.parametrize("case1", range(len(cases)))
     @pytest.mark.parametrize("case2", range(len(cases)))
-    def test_equal(self, materials, case1: int, case2: int):
-        mat1 = materials[case1]
-        mat2 = materials[case2]
+    def test_equal(self, case1: int, case2: int):
+        mat1 = TestMaterial.materials[case1]
+        mat2 = TestMaterial.materials[case2]
         assert (mat1 == mat2) == bool(self.eq_matrix[case1][case2])
 
     @pytest.mark.parametrize("case_no", range(len(cases)))
@@ -1641,8 +1699,8 @@ class TestMaterial:
         "data",
         [{"new_vol": 5, "old_vol": 2.5}, {"new_vol": 4, "old_vol": 6}, {"factor": 2}],
     )
-    def test_correct(self, materials, case_no: int, data):
-        mat = materials[case_no]
+    def test_correct(self, case_no: int, data):
+        mat = TestMaterial.materials[case_no]
         new_mat = mat.correct(**data)
         assert mat.composition == new_mat.composition
         if "factor" in data.keys():

@@ -4,7 +4,7 @@ from io import StringIO
 
 import pytest
 
-from mckit.cli.logging import logger
+from mckit.cli._logging import logger
 from mckit.cli.runner import VERSION, mckit, meta
 
 

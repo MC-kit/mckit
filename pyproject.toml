@@ -1,41 +1,40 @@
-[tool.poetry]
+[build-system]
+requires = [
+    "poetry-core >= 2.0.0, <3.0.0",
+    "cmake >= 3.26.3",
+    "ninja; platform_system!='Windows'",
+    "setuptools >= 67.8.0",
+    "numpy >= 2.1.3",
+    "mkl-devel >= 2025.0.1",
+    "intel-cmplr-lib-ur == 2025.0.4", # next version 2025.0.5 is for windows only TODO check for updates
+    "scikit-build"
+]
+build-backend = "poetry.core.masonry.api"
+
+[project]
 name = "mckit"
-version = "0.8.3"
+dynamic = ["version", "requires-python"]
 description = "Tools to process MCNP models and results"
-authors = ["rrn <r.rodionov@iterrf.ru>"]
-maintainers = ["dpv2015 <dmitri_portnov@yahoo.com>"]
-homepage = "https://github.com/MC-kit/mckit"
-repository = "https://github.com/MC-kit/mckit"
-documentation = "https://mckit.readthedocs.io"
-license = "GPL3"
-keywords = ["mckit", "MCNP"]
+license = { text = "GPL3" }
 readme = "README.rst"
-packages = [
-    { include = "mckit", from = "src" },
-    { include = "building", format = "sdist", from = "." },
-    { include = "tests", format = "sdist", from = "." },
-    #    { include = "benchmarks", format="sdist", from = "."},
+authors = [
+    { name = "rrn" }
 ]
-include = [
-    "src/mckit/data/isotopes.dat",
-    { path = "build.py", format = "sdist" },
-    # C extensions must be included in the wheel distribution.
-    { path = "src/mckit/**/*.pyd", format = "wheel" },
-    { path = "src/mckit/**/*.so", format = "wheel" },
+maintainers = [
+    { name = "dvp2015", email = "dmitri_portnov@yahoo.com" }
 ]
-exclude = [
-    ".py[co]$",
-    "setup.py"
-]
-# Select from PyPI classifiers: https://pypi.org/classifiers/
+keywords = ["mckit", "MCNP"]
+# Select from PyPI trove classifiers: https://pypi.org/classifiers/
+# poetry (2.0.0) doesn't pass dynamic classifieres to build.py, so, we use static
+# about dynamic classifiers in poetry: https://python-poetry.org/docs/pyproject/#classifiers-1
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: POSIX :: Linux",
+    "License :: Other/Proprietary License",
     "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
     "Programming Language :: C",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -44,20 +43,55 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Physics",
 ]
-
-[build-system]
-requires = [
-    "poetry-core >= 1.8.3",
-    "cmake >= 3.26.3",
-    "ninja; platform_system!='Windows'",
-    "setuptools >= 67.8.0",
-    "numpy >= 1.26.0",
-    "mkl-devel >= 2024.2.0",
-    "intel-openmp >= 2024.2.0",
-    "tbb >= 2021.13.0",
-    "scikit-build"
+dependencies = [
+    "attrs (>=21.2.0)",
+    "click (>=8.0.1)",
+    "loguru (>=0.6.0)",
+    "intel-cmplr-lib-ur == 2025.0.4", # next version 2025.0.5 is for windows only TODO check for updates
+    "mkl-devel (>=2025.0.1)",
+    "numpy (>=2.1.3)",
+    "ply (>=3.11)",
+    "python-dotenv (>=0.20.0)",
+    "scipy (>=1.14.0)",
+    "sly (>=0.4)",
+    "tomli-w (>=1.0.0)",
+    "tqdm (>=4.55.1)",
+    "typer[all]  >=0.9.0",
+    'tomli >=2.0.1; python_version < "3.11"'
 ]
-build-backend = "poetry.core.masonry.api"
+
+[project.urls]
+homepage = "https://github.com/MC-kit/mckit"
+repository = "https://github.com/MC-kit/mckit"
+documentation = "https://mckit.readthedocs.io"
+"Repository" = "https://github.com/MC-kit/mckit"
+"Bug Tracker" = "https://github.com/MC-kit/mckit/issues"
+
+
+[project.scripts]
+mckit = "mckit.cli.runner:mckit"
+
+
+[tool.poetry]
+version = "0.8.4"
+packages = [
+    { include = "mckit", from = "src" },
+]
+include = [
+    { path = "noxfile.py", format = "sdist" },
+    { path = "tests", format = "sdist" },
+    { path = "docs", format = "sdist" },
+    { path = "build.py", format = "sdist" },
+    { path = "create_mkl_symlinks.py", format = "sdist" },
+    # C extensions must be included in the wheel distribution.
+    { path = "src/mckit/**/*.pyd", format = "wheel" },
+    { path = "src/mckit/**/*.so", format = "wheel" },
+]
+exclude = [
+    { path = "docs/build" },
+    { path = "setup.py" },
+]
+
 
 [tool.poetry.build]
 script = "build.py"
@@ -66,68 +100,9 @@ generate-setup-file = true
 #[tool.skikit-build]
 #cmake.verbose = true
 
-[tool.poetry.scripts]
-mckit = "mckit.cli.runner:mckit"
-
-[tool.poetry.urls]
-"Repository" = "https://github.com/MC-kit/mckit"
-"Bug Tracker" = "https://github.com/MC-kit/mckit/issues"
-# "Documentation" TODO
-
-
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
-DateTime = ">=4.3"
-attrs = ">=21.2.0"
-click = ">=8.0.1"
-colorama = ">=0.4.4"
-loguru = ">=0.6.0"
-numpy = ">=1.26.0"
-ply = ">=3.11"
-python-dotenv = ">=0.20.0"
-scipy = ">=1.14.0"
-sly = ">=0.4"
-tomli = { version = ">=2.0.1", python = "<3.11" }
-tomli-w = ">=1.0.0"
-tqdm = ">=4.55.1"
-# the last mkl version with wheels for Linux, Windows and MacOS, check on updates
-# the most recent version was 2024.0.0 (windows and linux only).
-# Same for intel-openmp and tbb.
-mkl-devel = ">=2024.2.0"
-intel-openmp = ">=2024.2.0"
-tbb = ">=2021.13.0"
-
-# The following works for linux and windows, but not for macos
-# besides we need to have the same versions on build (see [build-system]),
-# so, we use the most recent version compatbile to all the OS.
-#mkl-devel = [
-#    {version = "2023.0.0", markers = "sys_platform == 'linux'"},
-#    {version = "2023.0.0", markers = "sys_platform == 'darvin'"},
-#    {version = "2022.2.1", markers = "sys_platform == 'win32'"}
-#]
-#intel-openmp = [
-#    {version = "2023.0.0", markers = "sys_platform == 'linux'"},
-#    {version = "2023.0.0", markers = "sys_platform == 'darvin'"},
-#    {version = "2022.2.1", markers = "sys_platform == 'win32'"}
-#]
-#tbb = [
-#    {version = "2021.8.0", markers = "sys_platform == 'linux'"},
-#    {version = "2021.8.0", markers = "sys_platform == 'darvin'"},
-#    {version = "2021.7.1", markers = "sys_platform == 'win32'"}
-#]
-# Check MKL wheels availablility:
-#   https://pypi.org/simple/mkl-devel/
-#   https://pypi.org/simple/intel-openmp/
-#   https://pypi.org/simple/tbb/
-# Also interesting: https://pypistats.org/packages/mkl - no visible MacOS downloads
-# As for 2022.01.12 for MacOS only version 10.15 is supported
-# TODO dvp: automate the check above
-#
-# TODO dvp: check
-#      https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl/link-line-advisor.html
-#
-typer = { extras = ["all"], version = ">=0.9.0" }
 
 [tool.poetry.group.dev.dependencies]
 Pygments = ">=2.10.0"
@@ -179,8 +154,8 @@ ruff = ">=0.0.259"
 
 
 [tool.poetry.group.analyze.dependencies]
-jupyterlab = "^4.2.5"
-jupytext = "^1.16.4"
+jupyterlab = ">=4.2.5"
+jupytext = ">=1.16.4"
 
 [tool.pytest.ini_options]
 minversion = "6.2"
@@ -214,7 +189,7 @@ addopts = '''
 --benchmark-compare
 --benchmark-group-by=name,fullname
 '''
-doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ALLOW_UNICODE ALLOW_BYTES"
+doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ALLOW_UNICODE ALLOW_BYTES NUMBER"
 testpaths = ["tests", "src"]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
@@ -379,11 +354,24 @@ src = ["src", "tests"]
 
 exclude = [
     "*.egg-info",
+    ".direnv",
     ".cache",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".mypy_cache",
+    ".nox",
+    ".ruff_cache",
+    ".venv",
     "__pycache__",
+    "_build",
     "adhoc",
+    "build",
+    "dist",
     "docs/source/conf.py",
+    "extern",
     "notebooks",
+    "venv",
     "wrk",
 ]
 
@@ -392,8 +380,8 @@ exclude = [
 #or run 'ruff linter' to see a brief list
 select = [
     "A", # flake8-builtins
-    # "ANN", # flake8-annotations
     "AIR", # Airflow https://airflow.apache.org/docs/apache-airflow/stable/index.html
+    # "ANN", # flake8-annotations
     # "ARG", # flake8-unused-arguments
     "ASYNC", # flake8-async
     "B", # flake8-bugbear
@@ -401,6 +389,7 @@ select = [
     "C4", # flake8-comprehensions
     "C90", # mccabe
     "COM", # flake8-commas
+    # "CPY", # flake8-copyright
     "D", # pydocstyle
     "DJ", # flake8-django
     # "DTZ", # flake8-datetimez
@@ -410,6 +399,7 @@ select = [
     # "EXE", # flake8-executable
     "F", # Pyflakes
     "FA", # flake8-future-annotations
+    # "FAST", # FastAPI
     # "FBT", # flake8-boolean-trap  https://adamj.eu/tech/2021/07/10/python-type-hints-how-to-avoid-the-boolean-trap
     # "FIX", # flake8-fixme
     "FLY", # flynt
@@ -450,23 +440,15 @@ select = [
     "YTT", # flake8-2020
 ]
 
-#warning: The isort option `isort.split-on-trailing-comma` is incompatible with the formatter `format.skip-magic-trailing-comma=true` option. To avoid unexpected behavior, we recommend either setting `isort.split-on-trailing-comma=false` or `format.skip-magic-trailing-comma=false`.
-
 # Ignore rules that currently fail on the codebase
 ignore = [
     "ANN001", # ANN001 Missing type annotation for function argument: doesn't allow to use functools dispatching
     "ANN002", # ANN002 Missing type annotation for *drop_items: ... as above
-    "ANN101", # ANN101 Missing type annotation for self in method
-    "ANN102", # ANN102 Missing type annotation for cls in classmethod
-    # "ANN201", # Missing return type annotation for public function `mesh2com`
     "ANN202", # ANN202 Missing return type annotation for protected function: ... dispatching
     "ANN204", # ANN204 Missing return type annotation for special method
 
     "ARG001", # Unused function argument: `expected`
 
-    # "B905",   # B905 `zip()` without an explicit `strict=` parameter - ignore while support 3.9
-
-    # "C812",   # C812 Missing trailing comma: black compatibility
     "C901", # too complex - ...
 
     "COM812", #  [*] Trailing comma missing
@@ -479,58 +461,14 @@ ignore = [
     "D104", # Missing docstring in public package
     "D106", # Missing docstring in public nested class
     "D107", # Missing docstring in __init__
-    # "D417",   # Missing argument descriptions in the docstring: `config`, `ebins`, - TODO
 
-
-    # "E203",  # E203: Whitespace before ‘:'
-    # "E401",  # Multiple imports on one line
     "E402", # Module level import not at top of file
     "E501", # Line too long (<LENGTH> > 100 characters)
-    # "E701",  # Multiple statements on one line (colon)
-    # "E702",  # Multiple statements on one line (semicolon)
-    # "E703",  # Statement ends with an unnecessary semicolon
-    # "E704",  # Multiple statements on one line (def)
-    # "E711",  # Comparison to `None` should be `cond is not None`
-    # "E712",  # Comparison to `<BOOL>` should be `cond is <BOOL>`
-    # "E713",  # Test for membership should be `not in`
-    # "E714",  # Test for object identity should be `is not`
-    # "E721",  # Do not compare types, use `isinstance()`
-    # "E722",  # Do not use bare `except`
-    # "E731",  # Do not assign a `lambda` expression, use a `def`
-    # "E741",  # Ambiguous variable name: `<VARIABLE>`
-    # "E743",  # Ambiguous function name: `<FUNCTION>`
-
-    # "EM101",   # Exception must not use a string literal, assign to variable first
-    # "EM102",   # Exception must not use an f-string literal, assign to variable first
 
     "N803", # Argument name `R` should be lowercase
     "N806", # Variable `D` in function should be lowercase
 
-    # "F401",  # `<TYPE>` imported but unused
-    # "F403",  # `from <MODULE> import *` used; unable to detect undefined names
-    # "F405",  # `<TYPE>` may be undefined, or defined from star imports: `<MODULE>`
-    # "F523",  # `.format` call has unused arguments at position(s): <INDEX>
-    # "F601",  # Dictionary key literal `'<KEY>'` repeated
-    # "F811",  # Redefinition of unused `<VARIABLE>` from line <LINE>
-    # "F821",  # Undefined name `VARIABLE`
-    # "F823",  # Local variable `VARIABLE` referenced before assignment
-    # "F841",  # Local variable `VARIABLE` is assigned to but never used
-
-    # "FBT001",  # Boolean positional arg in function definition (TODO!)
-    # "FBT002",  # Boolean default value in function definition (TODO!)
-    # "FBT003",  # Boolean positional value in function call
-
-    # "I001",
-    # "I101",
-    # "I201",
-    # "I202",
-    "INP001", # File `tools/clear-prev-dist-info.py` is part of an implicit namespace package.
-    "ISC001", # to avoid conflicts with 'ruff format'
-
-    # ignore some questionable pandas-vet warnings
-    # "PD005", # use operator instead of method
-    # "PD008", # We use at() to access single values
-    # "PD009", # And we use iat()
+    "ISC001", # may cause conflicts when used with the ruff formatter
 
     "PLE1205", # logging-too-many-args - we use loguru with '{' style of placeholders
 
@@ -538,32 +476,23 @@ ignore = [
     "PLR0913", # Too many arguments to function call (6 > 5)
     "PLR0915", # Too many statements (65 > 50)
     "PLR2004", # magic number - don't want declare 0.0 as constant
-    "PLR5501", # Consider using `elif` instead of `else` then `if` to remove one indentation level
+#    "PLR5501", # Consider using `elif` instead of `else` then `if` to remove one indentation level
 
     "PT019", # Fixture `_bin` without value is injected as parameter (false positive?)
 
     "S101", # Use of `assert` detected  - TODO - replace assert statements with exception raise
-    # "S301",    # `pickle` and modules that wrap... - TODO - use sql instead of pickle
-
-    # "SLF001",  # Private member accessed: `_geometry_spec`
-
-    "TCH001", # Move application import `mckit.utils.named` into a type-checking block
 
     "TRY003", # Avoid specifying long messages outside the exception class
 
-    # "W503",  # Line break before binary operator: for compatibility with black settings
 ]
 
 
 [tool.ruff.lint.per-file-ignores]
-"**/__init__.py" = ["E402", "F401"]
 "benchmarks/*" = ["S101"]
-"noxfile.py" = ["ANN", "D202"]
 "tests/*" = ["ANN", "D100", "D101", "D102", "D103", "D104", "PLR2004", "S101"]
 "src/mckit/cli/*" = [
     "PLE1205", # Too many arguments for `logging` format string - we use loguru in CLI modules
 ]
-"src/mckit/_init_dynamic_libraries.py" = ["F401", "E402"]
 "src/mckit/parser/*" = [
     "A003",
     "D",
@@ -583,6 +512,8 @@ ignore = [
     "T201", # print found
 ]
 "tools/*" = ["T201", "INP001", "S603", "S607"]
+".unclassified/*" = ["INP001"]
+"tutorial/*" = ["INP001"]
 
 [tool.ruff.lint.mccabe]
 # Unlike Flake8, default to a complexity level of 10.
@@ -596,6 +527,11 @@ parametrize-names-type = "csv"
 
 [tool.ruff.lint.flake8-type-checking]
 strict = true
+
+# warning: The isort option `isort.split-on-trailing-comma` is incompatible
+# with the formatter `format.skip-magic-trailing-comma=true` option.
+# To avoid unexpected behavior, we recommend either setting `isort.split-on-trailing-comma=false`
+# or `format.skip-magic-trailing-comma=false`.
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
@@ -614,8 +550,6 @@ section-order = [
     "testing"
 ]
 
-
-
 [tool.ruff.lint.isort.sections]
 "typing" = ["typing", "typing_extension"]
 "testing" = ["tests"]
@@ -630,3 +564,17 @@ docstring-code-format = true
 # https://jupytext.readthedocs.io/en/latest/config.html
 # Pair ipynb notebooks to py:percent text notebooks
 formats = "ipynb,md,py:percent"
+
+[tool.creosote]
+paths = ["src", "adhoc"]
+deps-file = "pyproject.toml"
+sections = ["project.dependencies"]
+exclude-deps = [
+    "intel-cmplr-lib-ur",
+    "mkl-devel",
+    "python-dotenv",
+    "scipy",
+    "tomli",
+    "tqdm",
+    "typer",
+]

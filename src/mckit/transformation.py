@@ -17,7 +17,7 @@ from .card import Card
 from .utils import compute_hash
 from .utils.tolerance import DEFAULT_TOLERANCE_ESTIMATOR, EstimatorType, MaybeClose
 
-__all__ = ["Transformation", "IDENTITY_ROTATION"]
+__all__ = ["IDENTITY_ROTATION", "Transformation"]
 
 IDENTITY_ROTATION: npt.NDArray[float] = np.eye(3)
 
@@ -254,8 +254,8 @@ class Transformation(Card, MaybeClose):
             u = u.reshape((3, 3), order="F")
         if u.shape != (3, 3):
             raise ValueError(
-                f'Transaction{"" if self.is_anonymous else " #" + str(self.name())}: \
-                  wrong number of rotation parameters: {u}.'
+                f"Transaction{'' if self.is_anonymous else ' #' + str(self.name())}: \
+                  wrong number of rotation parameters: {u}."
             )
 
         if np.array_equal(u, IDENTITY_ROTATION):

@@ -17,7 +17,7 @@ from numpy.testing import assert_array_equal
 from mckit.cli.commands.decompose import get_default_output_directory
 from mckit.cli.runner import mckit
 from mckit.parser import from_file
-from mckit.utils.resource import path_resolver
+from mckit.utils._resource import path_resolver
 
 data_path_resolver = path_resolver("tests")
 
@@ -67,9 +67,9 @@ def test_when_there_are_no_universes(runner, source, expected):
             mckit, args=["decompose", "-o", "universes", source], catch_exceptions=False
         )
         assert result.exit_code == 0, "Should success without universes"
-        assert Path(
-            "universes/envelopes.i"
-        ).exists(), "Should store the only envelopes.i file in the default directory 'universes'"
+        assert Path("universes/envelopes.i").exists(), (
+            "Should store the only envelopes.i file in the default directory 'universes'"
+        )
 
 
 @pytest.mark.parametrize(
@@ -108,9 +108,9 @@ def test_when_output_is_specified(runner, source, output, expected):
         assert result.exit_code == 0
         assert output.exists(), f"The {output} directory should exist after the test run"
         for f in expected:
-            assert (
-                output / f
-            ).exists(), f"Should store the file {f} in the default directory 'universes'"
+            assert (output / f).exists(), (
+                f"Should store the file {f} in the default directory 'universes'"
+            )
 
 
 def test_when_output_file_exists_and_override_is_not_specified(runner):
@@ -120,9 +120,9 @@ def test_when_output_file_exists_and_override_is_not_specified(runner):
         output.parent.mkdir(parents=True)
         output.touch(exist_ok=False)
         result = runner.invoke(mckit, args=["decompose", source], catch_exceptions=False)
-        assert (
-            result.exit_code != 0
-        ), "Should fail when output file exists and --override is not specified"
+        assert result.exit_code != 0, (
+            "Should fail when output file exists and --override is not specified"
+        )
 
 
 def test_when_output_file_exists_and_override_is_specified(runner):
@@ -134,9 +134,9 @@ def test_when_output_file_exists_and_override_is_specified(runner):
         result = runner.invoke(
             mckit, args=["--override", "decompose", source], catch_exceptions=False
         )
-        assert (
-            result.exit_code == 0
-        ), "Should success when output file exists and --override is specified"
+        assert result.exit_code == 0, (
+            "Should success when output file exists and --override is specified"
+        )
 
 
 def test_fill_descriptor(runner):

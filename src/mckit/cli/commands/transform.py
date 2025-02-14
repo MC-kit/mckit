@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from mckit.cli.logging import logger
+from mckit.cli._logging import logger
 from mckit.parser.mcnp_input_sly_parser import ParseResult, from_file
 from mckit.parser.mcnp_section_parser import clean_mcnp_cards, split_to_cards
 from mckit.parser.transformation_parser import parse as parse_transformation

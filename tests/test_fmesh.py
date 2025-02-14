@@ -14,7 +14,7 @@ from mckit.geometry import EX, EY, EZ
 from mckit.material import Material
 from mckit.surface import create_surface
 from mckit.transformation import Transformation
-from mckit.utils.resource import path_resolver
+from mckit.utils._resource import path_resolver
 
 transforms = [
     None,

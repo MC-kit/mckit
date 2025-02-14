@@ -7,8 +7,7 @@ import pytest
 from mckit.cli.commands.common import get_default_output_directory
 from mckit.cli.runner import mckit
 from mckit.parser.mcnp_section_parser import is_comment
-from mckit.utils.io import MCNP_ENCODING
-from mckit.utils.resource import path_resolver
+from mckit.utils import MCNP_ENCODING, path_resolver
 
 data_path_resolver = path_resolver("tests")
 

@@ -504,14 +504,14 @@ class TestPlane:
     def test_transform(self, transform, norm, offset):
         ans_surf = Plane(norm, offset, transform=transform)
         surf = Plane(norm, offset).transform(transform)
-        assert (
-            surf == ans_surf
-        ), "Passing transformation through __init__ or method transform should be equivalent"
+        assert surf == ans_surf, (
+            "Passing transformation through __init__ or method transform should be equivalent"
+        )
         ans_surf_tr = ans_surf.apply_transformation()
         surf_tr = surf.apply_transformation()
-        assert (
-            surf_tr == ans_surf_tr
-        ), "Surfaces with applied transformation also should be equivalent (invariant)"
+        assert surf_tr == ans_surf_tr, (
+            "Surfaces with applied transformation also should be equivalent (invariant)"
+        )
 
     @pytest.mark.parametrize(
         "norm, offset, options",
@@ -655,9 +655,9 @@ class TestPlane:
     )
     def test_mcnp_repr(self, surface, answer):
         desc = surface.mcnp_repr()
-        assert (
-            desc == answer
-        ), "Should print values exactly with 13 digits precision, and round integer values"
+        assert desc == answer, (
+            "Should print values exactly with 13 digits precision, and round integer values"
+        )
 
 
 class TestSphere:

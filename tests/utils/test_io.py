@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from mckit.utils.io import check_if_all_paths_exist, check_if_path_exists, make_dirs
+from mckit.utils._io import check_if_all_paths_exist, check_if_path_exists, make_dirs
 
 TEST_VAR = "TEST_GET_ROOT_DIR_VAR"
 

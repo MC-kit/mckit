@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# dvp 24-11-26
+
+# Extract lost particles launching script.
+
+here="$(dirname $0)"
+script="$here/extract_lost_particles.py"
+
+if [[ -f "$script" ]]; then
+  python3 "$script"
+else
+  echo "ERROR: Cannot find $script"
+  exit 1
+fi

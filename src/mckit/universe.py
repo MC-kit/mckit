@@ -35,13 +35,13 @@ if TYPE_CHECKING:
     import numpy.typing as npt
 
 __all__ = [
-    "Universe",
-    "produce_universes",
     "NameClashError",
-    "cell_selector",
-    "surface_selector",
-    "collect_transformations",
+    "Universe",
     "UniverseAnalyser",
+    "cell_selector",
+    "collect_transformations",
+    "produce_universes",
+    "surface_selector",
 ]
 
 from .utils.indexes import IndexOfNamed, StatisticsCollector
@@ -279,7 +279,7 @@ class Universe:
                 msg = f"Cell name clash: {cell.name()}"
                 raise NameClashError(msg)
 
-            if name_rule == "new" or name_rule == "clash" and cell.name() in cell_names:
+            if name_rule == "new" or (name_rule == "clash" and cell.name() in cell_names):
                 new_name = max(cell_names, default=0) + 1
                 new_cell.rename(new_name)
 
@@ -361,7 +361,7 @@ class Universe:
                 _LOG.error(c.mcnp_repr())
             raise NameClashError(msg)
 
-        if rule == "new" or rule == "clash" and new_entity.name() in names:
+        if rule == "new" or (rule == "clash" and new_entity.name() in names):
             new_name = max(names, default=0) + 1
             new_entity.rename(new_name)
 

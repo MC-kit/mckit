@@ -1,17 +1,24 @@
 """Extract lost particles from MCNP output.
 
-Create tables:
-    - cell_fail, surface, cell_in, x, y, z, u, v, w, out_file, lp_no, hist_no
-    - cell_fail, count  -  sorted by count in descending order
+Collects information on lost particles in SQLite database.
+Subsequent runs are collected incrementally.
 
-Create comin from MCNP plot by template replacing coordinates with coordinates of the most frequent
-cell fail.
+Analyzes the database and creates CSV tables:
+    - "lp-coordinates.csv":
+        cell_fail, surface, cell_in, x, y, z, u, v, w, out_file, lp_no, hist_no
+    - "lp-cell-fails-count.csv":
+       cell_fail, count  -  sorted by count in descending order
+
+Besides, creates comin file for MCNP plot.
+May use template comin replacing coordinates with coordinates of the most frequent
+cell fail. If the template is not provided creates default comin file.
 
 Adapted to old python versions available on HPCs.
 """
 
 from __future__ import annotations
 
+import logging
 import re
 import sqlite3 as sq
 import sys
@@ -21,10 +28,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 __appname__ = "extract_lost_particles"
-__version__ = "0.1.3"
+__version__ = "0.2.1"
 
 DESCRIPTION_START_RE = re.compile(r"^1\s+lost particle no.\s*(?P<lp_no>(\d+|\*\*\*))")
 HISTORY_NO_RE = re.compile(r"history no.\s+(?P<hist_no>\d+)$")
+
+
+LOG = logging.getLogger(__name__)
 
 
 # noinspection SqlDialectInspection,SqlNoDataSourceInspection
@@ -103,6 +113,7 @@ def _parse_description(lines: list[str]) -> _Description:
     if match is None:
         raise ParseError("Cannot find lost particle number")
     lp_no_str = match["lp_no"]
+
     if lp_no_str == "***":
         lp_no = 9999
     else:
@@ -136,8 +147,9 @@ def _parse_description(lines: list[str]) -> _Description:
     return _Description(cell_fail, surface, cell_in, x, y, z, u, v, w, lp_no, hist_no)
 
 
+# noinspection PyTypeChecker
 def _process_file(p: Path, cur: sq.Cursor) -> None:
-    with open("lp-details.txt", "a") as fid:
+    with Path("lp-details.txt").open("a") as fid:
         out_file_name = str(p)
         for start_line, lines in extract_descriptions(p):
             print("-" * 20, file=fid)
@@ -185,18 +197,19 @@ def _process_file(p: Path, cur: sq.Cursor) -> None:
                 raise ParseError(msg) from ex
 
 
-def main() -> None:
-    """Workflow implementation."""
-    db = "lost-particles.sqlite"
-    if _collect_lost_particles(db):
-        _analyze(db)
-    else:
-        print("Files not found")
-
-
+# noinspection PyTypeChecker
 def _analyze(db) -> None:
     with sq.connect(db) as con:
         cur = con.cursor()
+        total_lp = cur.execute(
+            """
+            select
+                count(*)
+            from
+                lost_particles
+            """
+        ).fetchone()[0]
+        LOG.info("Total lost particles: %d", total_lp)
         cell_fail_counts = cur.execute(
             """
             select
@@ -207,9 +220,11 @@ def _analyze(db) -> None:
             order by cnt desc
             """
         ).fetchall()
-        with open("lp-cell-fails-count.csv", "w") as fid:
+        with Path("lp-cell-fails-count.csv").open("w") as fid:
             for t in cell_fail_counts:
                 print(*t, sep=",", file=fid)
+        LOG.info("Created file lp-cell-fails-count.csv")
+
         lost_coordinates = cur.execute(
             """
             select
@@ -227,9 +242,10 @@ def _analyze(db) -> None:
                 u, v, w
             """
         ).fetchall()
-        with open("lp-coordinates.csv", "w") as fid:
+        with Path("lp-coordinates.csv").open("w") as fid:
             for t in lost_coordinates:
                 print(*t, sep=",", file=fid)
+        LOG.info("Created file lp-coordinates.csv")
 
         coordinates_to_work = cur.execute(
             """
@@ -246,24 +262,34 @@ def _analyze(db) -> None:
         origin_text = "origin " + coordinates_text + " &"
         comin_path = Path("comin")
         if comin_path.exists():
+            LOG.info("Using existing 'comin' template %s", comin_path)
             comin_text = Path("comin").read_text()
             comin_lines = comin_text.split("\n")
             comin_lines[0] = origin_text
             new_comin_text = "\n".join(comin_lines)
         else:
+            LOG.info("Creating 'comin' file %s", comin_path)
             new_comin_text = origin_text[:-1]
-        with open("comin", "w") as fid:
+        with Path("comin").open("w") as fid:
             print(new_comin_text, file=fid)
+        LOG.info("Created file comin")
 
 
 def _collect_lost_particles(db: str) -> bool:
     files = _collect_files()
     if not files:
         return False
+    LOG.info("%d files to process", len(files))
+    is_old_db = Path(db).exists()
     with sq.connect(db) as con:
         cur = con.cursor()
-        setup_db(cur)
+        if is_old_db:
+            LOG.info("Using existing database %s", db)
+        else:
+            LOG.info("Initializing database %s", db)
+            setup_db(cur)
         for f in files:
+            logging.debug("Processing file %s", f)
             _process_file(f, cur)
     return True
 
@@ -273,8 +299,26 @@ def _collect_files() -> list[Path]:
     if args:
         files = [Path(a) for a in args]
     else:
-        files = [a for a in Path.cwd().glob("*.o")]
+        files = list(Path.cwd().glob("*.o"))
     return files
+
+
+def main() -> None:
+    """Workflow implementation."""
+    logging.basicConfig(
+        level=logging.INFO,
+        filename="extract_lost_particles.log",
+        filemode="a",
+        format="%(asctime)s %(levelname)-9s %(message)s",
+        datefmt="%Y-%d-%m %H:%M:%S",
+    )
+    LOG.info("extract-lost-particles, v%s", __version__)
+
+    db = "lost-particles.sqlite"
+    if _collect_lost_particles(db):
+        _analyze(db)
+    else:
+        logging.warning("Files not found")
 
 
 if __name__ == "__main__":

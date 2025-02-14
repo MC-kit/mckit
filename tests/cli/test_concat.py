@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from mckit.cli.runner import mckit
-from mckit.utils.resource import path_resolver
+from mckit.utils._resource import path_resolver
 
 data_path_resolver = path_resolver("tests.cli")
 
@@ -30,9 +30,9 @@ def test_when_only_part_is_specified(runner):
     with runner.isolated_filesystem():
         result = runner.invoke(mckit, args=["concat", part], catch_exceptions=False)
         assert result.exit_code == 0, "Should success without specified output: " + result.output
-        assert (
-            "x   y" in result.output
-        ), "Should send output to stdout, when the output is not specified"
+        assert "x   y" in result.output, (
+            "Should send output to stdout, when the output is not specified"
+        )
 
 
 def test_when_output_is_specified(runner):
@@ -47,9 +47,9 @@ def test_when_output_is_specified(runner):
         assert result.exit_code == 0, "Should success with specified output: " + result.output
         assert output_file.exists(), f"Should create output file {output_file!r}"
         # noinspection PyCompatibility
-        assert "x   y" in output_file.read_text(
-            encoding="Cp1251"
-        ), f"Should contain content of {part!r}"
+        assert "x   y" in output_file.read_text(encoding="Cp1251"), (
+            f"Should contain content of {part!r}"
+        )
 
 
 # noinspection PyCompatibility
@@ -78,6 +78,6 @@ def test_when_output_file_exists_and_override_is_not_specified(runner):
         result = runner.invoke(
             mckit, args=["concat", "-o", str(output_file), part], catch_exceptions=False
         )
-        assert (
-            result.exit_code != 0
-        ), "Should fail when output file exist and override is not specified"
+        assert result.exit_code != 0, (
+            "Should fail when output file exist and override is not specified"
+        )

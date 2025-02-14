@@ -9,9 +9,9 @@ import click
 
 import mckit.version as meta
 
+from mckit.cli._logging import init_logger, logger
 from mckit.cli.commands import do_check, do_compose, do_decompose, do_split, do_transform
 from mckit.cli.commands.common import get_default_output_directory
-from mckit.cli.logging import init_logger, logger
 from mckit.utils import MCNP_ENCODING
 
 NAME = meta.__title__

@@ -5,11 +5,11 @@ from __future__ import annotations
 import numpy as np
 
 __all__ = [
-    "MIN_BOX_VOLUME",
-    "RESOLUTION",
+    "DROP_OPTIONS",
     "FLOAT_TOLERANCE",
     "MCNP_ENCODING",
-    "DROP_OPTIONS",
+    "MIN_BOX_VOLUME",
+    "RESOLUTION",
 ]
 
 MIN_BOX_VOLUME = 0.001

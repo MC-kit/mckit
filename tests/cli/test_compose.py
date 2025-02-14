@@ -7,7 +7,7 @@ import pytest
 from mckit.cli.runner import mckit
 from mckit.parser import from_file
 from mckit.universe import collect_transformations
-from mckit.utils.resource import path_resolver
+from mckit.utils._resource import path_resolver
 
 data_path_resolver = path_resolver("tests.cli")
 
@@ -58,9 +58,9 @@ def test_when_fill_descriptor_is_not_specified(runner, source, output, expected)
         result = runner.invoke(
             mckit, args=["compose", "--output", output, source], catch_exceptions=False
         )
-        assert (
-            result.exit_code == 0
-        ), "Should success using fill_descriptor in the same directory as source file"
+        assert result.exit_code == 0, (
+            "Should success using fill_descriptor in the same directory as source file"
+        )
         assert Path(output).exists(), f"Should create file {output} file in {test_folder}"
         actual = from_file(output)
         expected = from_file(data_filename_resolver(expected))
@@ -83,9 +83,9 @@ def test_anonymous_transforms(runner, source, output, expected):
         result = runner.invoke(
             mckit, args=["compose", "--output", output, source], catch_exceptions=False
         )
-        assert (
-            result.exit_code == 0
-        ), "Should success using fill_descriptor in the same directory as source file"
+        assert result.exit_code == 0, (
+            "Should success using fill_descriptor in the same directory as source file"
+        )
         assert Path(output).exists(), f"Should create file {output} file in {test_folder}"
         actual = from_file(output)
         expected = from_file(data_filename_resolver(expected))
@@ -110,15 +110,15 @@ def test_compose(runner, universes):
         result = runner.invoke(
             mckit, args=["compose", "--output", output, source], catch_exceptions=False
         )
-        assert (
-            result.exit_code == 0
-        ), "Should success using fill_descriptor in the same directory as source file"
+        assert result.exit_code == 0, (
+            "Should success using fill_descriptor in the same directory as source file"
+        )
         assert Path(output).exists(), f"Should create file {output} file in {test_folder}"
         actual = from_file(output)
         expected = from_file(data_filename_resolver(expected))
         assert actual.universe.has_equivalent_cells(expected.universe), "Cells differ"
         actual_transformations = collect_transformations(actual.universe)
         expected_transformations = collect_transformations(expected.universe)
-        assert (
-            actual_transformations == expected_transformations
-        ), "The transformations should be the same"
+        assert actual_transformations == expected_transformations, (
+            "The transformations should be the same"
+        )

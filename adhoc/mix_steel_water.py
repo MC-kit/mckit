@@ -99,7 +99,7 @@ def main() -> None:
     d, m = mixture_by_volume(
         (water_composition, water_density, water_volume_fraction),
         (steel_composition, steel_density, steel_volume_fraction),
-        number=1001,
+        _number=1001,
     )
     with open("steel-water.txt", "w") as fid:
         print("c ==============================", file=fid)

@@ -21,7 +21,7 @@ from mckit.universe import (
     collect_transformations,
     surface_selector,
 )
-from mckit.utils.resource import path_resolver
+from mckit.utils._resource import path_resolver
 
 data_path_resolver = path_resolver("tests")
 
