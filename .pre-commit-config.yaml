@@ -75,7 +75,7 @@ repos:
         exclude: _parser\.py$|_tab\.py|extern
 
   - repo: https://github.com/fredrikaverpil/creosote
-    rev: v4.0.0
+    rev: v4.0.1
     hooks:
       - id: creosote
 
@@ -108,7 +108,7 @@ repos:
       #   exclude: ^notebooks|^extern
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.6
+    rev: v0.9.10
     hooks:
       - id: ruff
         exclude: ^notebooks|^extern
@@ -127,13 +127,13 @@ repos:
 
   # Clang format the codebase automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: "v19.1.7"
+    rev: "v20.1.0"
     hooks:
       - id: clang-format
         types_or: [ c++, c, cuda ]
 
   - repo: https://github.com/python-poetry/poetry
-    rev: "2.0.1"
+    rev: "2.1.1"
     hooks:
     - id: poetry-check
     - id: poetry-lock
