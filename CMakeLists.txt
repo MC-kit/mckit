@@ -14,7 +14,7 @@ project(
   ${SKBUILD_PROJECT_NAME}
   VERSION ${SKBUILD_PROJECT_VERSION}
   DESCRIPTION "mckit geometry extension"
-  LANGUAGES C # TODO: upgrade to CXX
+  LANGUAGES C CXX # TODO: upgrade to CXX
 )
 
 # https://cliutils.gitlab.io/modern-cmake/chapters/packages/CUDA.html
