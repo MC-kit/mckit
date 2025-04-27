@@ -73,7 +73,7 @@ mckit = "mckit.cli.runner:mckit"
 
 
 [tool.poetry]
-version = "0.8.4"
+version = "0.8.5a0"
 packages = [
     { include = "mckit", from = "src" },
 ]
