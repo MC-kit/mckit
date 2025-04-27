@@ -91,22 +91,6 @@ repos:
         language: system
         types: [ python ]
 
-      # # Format Python code
-      # - id: ruff
-      #   name: ruff-format
-      #   entry: ruff format --force-exclude --config pyproject.toml
-      #   language: system
-      #   types: [ python ]
-      #   exclude: ^notebooks|^extern
-      #
-      # # Lint and fix Python code (including import sort)
-      # - id: ruff
-      #   name: ruff
-      #   entry: ruff check --force-exclude --fix --config pyproject.toml
-      #   language: system
-      #   types: [ python ]
-      #   exclude: ^notebooks|^extern
-
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.10
     hooks:
