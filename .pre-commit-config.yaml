@@ -100,14 +100,17 @@ repos:
         exclude: ^notebooks|^extern|ipynb$
 
 
+  # TODO: разобраться и исправить конфигурацию  
+  # перестало работать после того пришлось включить поддержку С++ в CMakeLists.txt
+  # (потребовалось после обновления CMake)
   # CMake formatting
-  - repo: https://github.com/cheshirekow/cmake-format-precommit
-    rev: "v0.6.13"
-    hooks:
-      - id: cmake-format
-        additional_dependencies: [ pyyaml ]
-        types: [ file ]
-        files: (\.cmake|CMakeLists.txt)(.in)?$
+  # - repo: https://github.com/cheshirekow/cmake-format-precommit
+  #   rev: "v0.6.13"
+  #   hooks:
+  #     - id: cmake-format
+  #       additional_dependencies: [ pyyaml ]
+  #       types: [ file ]
+  #       files: (\.cmake|CMakeLists.txt)(.in)?$
 
   # Clang format the codebase automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
@@ -132,3 +135,4 @@ repos:
       - id: shellcheck
         args: [ --external-sources ]
         stages: [ manual ]
+См. TODO в .clang-format:
