@@ -100,24 +100,20 @@ repos:
         exclude: ^notebooks|^extern|ipynb$
 
 
-  # TODO: разобраться и исправить конфигурацию  
-  # перестало работать после того пришлось включить поддержку С++ в CMakeLists.txt
-  # (потребовалось после обновления CMake)
   # CMake formatting
-  # - repo: https://github.com/cheshirekow/cmake-format-precommit
-  #   rev: "v0.6.13"
-  #   hooks:
-  #     - id: cmake-format
-  #       additional_dependencies: [ pyyaml ]
-  #       types: [ file ]
-  #       files: (\.cmake|CMakeLists.txt)(.in)?$
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: "v0.6.13"
+    hooks:
+      - id: cmake-format
+        additional_dependencies: [ pyyaml ]
+        types: [ file ]
+        files: (\.cmake|CMakeLists.txt)(.in)?$
 
   # Clang format the codebase automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: "v20.1.0"
     hooks:
       - id: clang-format
-        types_or: [ c++, c, cuda ]
 
   - repo: https://github.com/python-poetry/poetry
     rev: "2.1.1"
