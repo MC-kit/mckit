@@ -59,7 +59,7 @@ jobs:
           version-command: poetry version --short
 
         # The above creates a tag, and that inovokes 'publish' action,
-        # which is separated because it's  rather complicated due platform dependency
+        # which is separated because it's  rather complicated due to platform dependency
         # and building of dependencies.
 
       - name: Publish the release notes
