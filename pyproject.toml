@@ -112,15 +112,13 @@ scikit-build = ">=0.17.6"
 
 [tool.poetry.group.pre_commit.dependencies]
 pre-commit = ">=2.15.0"
-rstcheck = ">=6.1.2"
 pydocstringformatter = ">=0.7.3"
-pyupgrade = ">=3.15.2"
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=7.1"
 pytest-benchmark = ">=4.0.0"
 pytest-cov = ">=4.0"
-# pytest-mock = ">=3.9"
+pytest-mock = ">=3.14.0"
 # pytest-randomly = ">=3.12"
 coverage = { version = ">=6.1.2", extras = ["toml"] }
 xdoctest = { extras = ["colors"], version = ">=0.15.10" }

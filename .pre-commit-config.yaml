@@ -79,20 +79,8 @@ repos:
     hooks:
       - id: creosote
 
-  - repo: local
-    hooks:
-      # Upgrade Python code
-      - id: pyupgrade
-        name: pyupgrade
-        exclude: \.idea|\.cache|^notebooks|^extern
-        entry: pyupgrade
-        args:
-          - --py310-plus
-        language: system
-        types: [ python ]
-
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.9
+    rev: v0.11.10
     hooks:
       - id: ruff
         exclude: ^notebooks|^extern
@@ -132,4 +120,3 @@ repos:
       - id: shellcheck
         args: [ --external-sources ]
         stages: [ manual ]
-См. TODO в .clang-format:
