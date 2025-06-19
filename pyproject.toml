@@ -5,8 +5,8 @@ requires = [
     "ninja; platform_system!='Windows'",
     "setuptools >= 67.8.0",
     "numpy >= 2.1.3",
-    "mkl-devel >= 2025.0.1",
-    "intel-cmplr-lib-ur == 2025.0.4", # next version 2025.0.5 is for windows only TODO check for updates
+    "mkl-devel >= 2025.1.0",
+    # "intel-cmplr-lib-ur == 2025.0.4", # next version 2025.0.5 is for windows only TODO check for updates
     "scikit-build"
 ]
 build-backend = "poetry.core.masonry.api"
@@ -50,7 +50,7 @@ dependencies = [
     "click (>=8.0.1)",
     "loguru (>=0.6.0)",
     "intel-cmplr-lib-ur == 2025.0.4", # next version 2025.0.5 is for windows only TODO check for updates
-    "mkl-devel (>=2025.0.1)",
+    "mkl-devel (>=2025.1.0)",
     "numpy (>=2.1.3)",
     "ply (>=3.11)",
     "python-dotenv (>=0.20.0)",
@@ -122,6 +122,7 @@ pytest-mock = ">=3.14.0"
 # pytest-randomly = ">=3.12"
 coverage = { version = ">=6.1.2", extras = ["toml"] }
 xdoctest = { extras = ["colors"], version = ">=0.15.10" }
+pytest-durations = ">=1.5.2"
 
 [tool.poetry.group.coverage.dependencies]
 coverage = { version = ">=6.1.2", extras = ["toml"] }
@@ -136,7 +137,6 @@ typeguard = ">=4.1.5"
 mypy = ">=1.2.0"
 pep8-naming = ">=0.12.1"
 types-setuptools = ">=57.4.2"
-numpy = ">=2.1.3"
 types-tqdm = ">=4.66.0.2"
 
 [tool.poetry.group.docs.dependencies]
@@ -186,6 +186,8 @@ addopts = '''
 --benchmark-autosave
 --benchmark-compare
 --benchmark-group-by=name,fullname
+--pytest-durations-min=1
+--pytest-resultlog="pytest-result.log"
 '''
 doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ALLOW_UNICODE ALLOW_BYTES NUMBER"
 testpaths = ["tests", "src"]
@@ -271,7 +273,6 @@ exclude = '''
 | lexer\.py$   # ...
   )
 '''
-plugins = ["numpy.typing.mypy_plugin"]
 
 [[tool.mypy.overrides]]
 module = [
@@ -374,69 +375,8 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-#see full list: https://beta.ruff.rs/docs/rules/#pyflakes-f
-#or run 'ruff linter' to see a brief list
-select = [
-    "A", # flake8-builtins
-    "AIR", # Airflow https://airflow.apache.org/docs/apache-airflow/stable/index.html
-    # "ANN", # flake8-annotations
-    # "ARG", # flake8-unused-arguments
-    "ASYNC", # flake8-async
-    "B", # flake8-bugbear
-    "BLE", # flake8-blind-except
-    "C4", # flake8-comprehensions
-    "C90", # mccabe
-    "COM", # flake8-commas
-    # "CPY", # flake8-copyright
-    "D", # pydocstyle
-    "DJ", # flake8-django
-    # "DTZ", # flake8-datetimez
-    "E", # pycodestyle
-    # "EM", # flake8-errmsg
-    # "ERA", # eradicate
-    # "EXE", # flake8-executable
-    "F", # Pyflakes
-    "FA", # flake8-future-annotations
-    # "FAST", # FastAPI
-    # "FBT", # flake8-boolean-trap  https://adamj.eu/tech/2021/07/10/python-type-hints-how-to-avoid-the-boolean-trap
-    # "FIX", # flake8-fixme
-    "FLY", # flynt
-    "FURB", # refurb
-    "G", # flake8-logging-format
-    "I", # isort
-    "ICN", # flake8-import-conventions
-    "INP", # flake8-no-pep420
-    "INT", # flake8-gettext
-    "ISC", # flake8-implicit-str-concat
-    "LOG", # flake8-log
-    "N", # pep8-naming
-    "NPY", # NumPy-specific rules
-    "PD", # pandas-vet
-    "PERF", # Perflint
-    "PGH", # pygrep-hooks
-    "PIE", # flake8-pie
-    "PL", # Pylint
-    "PT", # flake8-pytest-style
-    "PTH", # flake8-use-pathlib
-    "PYI", # flake8-pyi
-    "Q", # flake8-quotes
-    "RET", # flake8-return
-    # "RSE", # flake8-raise
-    "RUF", # Ruff-specific rules
-    "S", # flake8-bandit
-    # "SIM", # flake8-simplify
-    # "SLF", # flake8-self
-    "SLOT", # flake8-slot
-    "T10", # flake8-debugger
-    # "T20", # flake8-print
-    # "TD", # flake8-todos
-    # "TCH", # flake8-type-checking
-    # "TID", # flake8-tidy-imports
-    "TRY", # tryceratops
-    "UP", # pyupgrade
-    "W", # pycodestyle 2
-    "YTT", # flake8-2020
-]
+#run 'ruff linter' to see a brief list
+select = ["ALL"]
 
 # Ignore rules that currently fail on the codebase
 ignore = [

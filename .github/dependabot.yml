@@ -2,17 +2,15 @@ version: 2
 
 updates:
 
-  - package-ecosystem: pip
-    directory: "/"
-    schedule:
-      interval: weekly
-      day: monday
-      time: "11:00"
-    labels:
-      - "kind/dependencies"
-      - "bot"
-    open-pull-requests-limit: 10
-    target-branch: devel
+#  - package-ecosystem: pip
+#    directory: "/"
+#    schedule:
+#      interval: monthly
+#    labels:
+#      - "kind/dependencies"
+#      - "bot"
+#    open-pull-requests-limit: 5
+#    target-branch: devel
 
   - package-ecosystem: "github-actions"
     # Workflow files stored in the default location of `.github/workflows`
@@ -26,17 +24,17 @@ updates:
       - "github_actions"
       - "kind/dependencies"
       - "bot"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     target-branch: devel
 
-  - package-ecosystem: "gitsubmodule"
-    directory: "/"
-    schedule:
-      interval: weekly
-      day: wednesday
-      time: "11:00"
-    labels:
-      - "kind/dependencies"
-      - "bot"
-    open-pull-requests-limit: 10
-    target-branch: devel
+ - package-ecosystem: "gitsubmodule"
+   directory: "/"
+   schedule:
+     interval: weekly
+     day: wednesday
+     time: "11:00"
+   labels:
+     - "kind/dependencies"
+     - "bot"
+   open-pull-requests-limit: 5
+   target-branch: devel
