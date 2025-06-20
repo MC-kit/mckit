@@ -125,7 +125,7 @@ optional = true
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=7.1"
-pytest-benchmark = ">=4.0.0"
+pytest-benchmark = ">=5.0.0"
 pytest-cov = ">=4.0"
 pytest-mock = ">=3.14.0"
 # pytest-randomly = ">=3.12"
@@ -335,33 +335,6 @@ ignore = [
     "tools/*",
     "*.yaml",
     "noxfile.py",
-]
-
-[tool.ipdb]
-# For debugging in jupyterlab and ipython
-# see https://github.com/gotcha/ipdb
-context = 5
-
-[tool.tryceratops]
-include = ["src"]
-experimental = true
-
-[tool.pydocstringformatter]
-write = true
-style = "pep257"
-exclude = ["tools/**", "src/**/*_parser.py", "src/**/*_tab.py"]
-strip-whitespaces = true
-max-line-length = 100
-summary-quotes-same-line = true
-
-
-[tool.pylint]
-good-names-rgxs = ["."]  # a single character variable is okay
-logging-format-style = "new"   # use {} in logging messages
-deprecated-modules = ["six"]
-extension-pkg-allow-list = ["duckdb"]
-disable = [
-    "wrong-import-order"  # this is `ruff format` responsibility
 ]
 
 [tool.ruff]
