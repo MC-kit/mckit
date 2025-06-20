@@ -112,10 +112,7 @@ def surface_selector(surface_names):
     selector : func
         Selector function
     """
-    if isinstance(surface_names, int):
-        surface_names = {surface_names}
-    else:
-        surface_names = set(surface_names)
+    surface_names = {surface_names} if isinstance(surface_names, int) else set(surface_names)
 
     def selector(cell):
         surfs = cell.shape.get_surfaces()
@@ -230,10 +227,7 @@ class Universe:
     def has_equivalent_cells(self, other: Universe) -> bool:
         if len(self) != len(other):
             return False
-        for i, c in enumerate(self):
-            if not c.is_equivalent_to(other[i]):
-                return False
-        return True
+        return all(c.is_equivalent_to(other[i]) for i, c in enumerate(self))
 
     def add_cells(
         self, cells: list[Body] | Body, name_rule: Literal["new", "keep", "clash"] = "new"
@@ -328,7 +322,7 @@ class Universe:
         for s in cell_surfs:
             if isinstance(s, Plane):
                 rev_s = Plane(-s._v, -s._k)
-                if rev_s in surf_replace.keys():
+                if rev_s in surf_replace:
                     # dvp: use reverse of a Plane, if already present
                     rev_s = surf_replace[rev_s]
                     replace_dict[s] = Shape("C", rev_s)
@@ -346,7 +340,7 @@ class Universe:
         rule: Literal["keep", "new", "clash"],
         err_desc: str,
     ) -> Replaceable:
-        if entity in replace.keys():
+        if entity in replace:
             return replace[entity]
 
         new_entity = entity.copy()
@@ -357,7 +351,7 @@ class Universe:
             _LOG.error("Failed entity:")
             _LOG.error(entity.mcnp_repr())
             _LOG.error("Replacements:")
-            for c in replace.keys():
+            for c in replace:
                 _LOG.error(c.mcnp_repr())
             raise NameClashError(msg)
 
@@ -526,7 +520,7 @@ class Universe:
         surfs = set()
         for c in self:
             surfs.update(c.shape.get_surfaces())
-            if inner and "FILL" in c.options.keys():
+            if inner and "FILL" in c.options:
                 surfs.update(c.options["FILL"]["universe"].get_surfaces(inner))
         return surfs
 
@@ -997,7 +991,7 @@ def transformations_to_universe_mapper(universe: Universe) -> IU:
 
 def is_shared_between_universes(item: tuple[Name, dict[Name, int]]) -> bool:
     entity, universes_counts = item
-    return 1 < len(universes_counts.keys())
+    return len(universes_counts.keys()) > 1
 
 
 def make_universe_counter_map() -> dict[Name, int]:

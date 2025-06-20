@@ -4,7 +4,7 @@ Collects information on lost particles in SQLite database.
 Subsequent runs are collected incrementally.
 
 Analyzes the database and creates CSV tables:
-    - "lp-coordinates.csv":
+    - "lp-coordinates.csv":
         cell_fail, surface, cell_in, x, y, z, u, v, w, out_file, lp_no, hist_no
     - "lp-cell-fails-count.csv":
        cell_fail, count  -  sorted by count in descending order

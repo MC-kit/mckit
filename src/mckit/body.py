@@ -177,7 +177,7 @@ class Shape(_Shape):
         self_groups = {k: list(v) for k, v in groupby(self.args, key=hash)}
         other_groups = {k: list(v) for k, v in groupby(other.args, key=hash)}
         for hash_value, entities in self_groups.items():
-            if hash_value not in other_groups.keys():
+            if hash_value not in other_groups:
                 return False
             if len(entities) != len(other_groups[hash_value]):
                 return False
@@ -349,7 +349,7 @@ class Shape(_Shape):
         return list(_scan())
 
     @staticmethod
-    def _find_groups(result: npt.NDArray):
+    def _find_groups(result: npt.NDArray) -> list[int]:
         groups = [result[i, :] for i in range(result.shape[0])]
         while True:
             index = len(groups) - 1
@@ -571,9 +571,8 @@ def _verify_opc(opc, *args):
         raise ValueError("No arguments are expected.")
     if (opc in {"S", "C"}) and len(args) != 1:
         raise ValueError("Only one operand is expected.")
-    if opc in {"I", "U"}:
-        if len(args) == 0:
-            raise ValueError("Operands are expected.")
+    if opc in {"I", "U"} and len(args) == 0:
+        raise ValueError("Operands are expected.")
 
 
 # noinspection PyProtectedMember
@@ -656,20 +655,19 @@ class Body(Card):
 
     def is_equivalent_to(self, other):
         result = self._shape == other._shape
-        if result:
-            if "FILL" in self.options:
-                if "FILL" not in other.options:
-                    return False
-                my = self.options["FILL"]["universe"]
-                their = other.options["FILL"]["universe"]
-                return my.has_equivalent_cells(their)
+        if result and "FILL" in self.options:
+            if "FILL" not in other.options:
+                return False
+            my = self.options["FILL"]["universe"]
+            their = other.options["FILL"]["universe"]
+            return my.has_equivalent_cells(their)
         return result
 
     # TODO dvp: the method is used for printing, we'd better introduce virtual method print(self, out: TextIO)?
     # TODO dvp: in that case we could just return original text if available
     def mcnp_words(self, pretty=False) -> list[str]:
         words = [str(self.name()), " "]
-        if "MAT" in self.options.keys():
+        if "MAT" in self.options:
             words.append(str(self.options["MAT"].composition.name()))
             words.append(" ")
             words.append(str(-self.options["MAT"].density))
@@ -694,7 +692,7 @@ class Body(Card):
         text = []
         for opt_group in CELL_OPTION_GROUPS:
             for key in opt_group:
-                if key in self.options.keys():
+                if key in self.options:
                     text.extend(print_option(key, self.options[key]))
                     text.append(" ")
             text.append("\n")
@@ -821,7 +819,7 @@ class Body(Card):
             The list of resulting cells.
         """
         if universe is None:
-            if "FILL" in self.options.keys():
+            if "FILL" in self.options:
                 universe = self.options["FILL"]["universe"]
                 tr = self.options["FILL"].get("transform", None)
                 if tr:
@@ -834,7 +832,7 @@ class Body(Card):
         for c in universe:
             new_cell = c.intersection(self)  # because properties like MAT, etc
             # must be as in filling cell.
-            if "U" in self.options.keys():
+            if "U" in self.options:
                 new_cell.options["U"] = self.options["U"]  # except universe.
             if simplify:
                 new_cell = new_cell.simplify(**kwargs)
@@ -857,10 +855,7 @@ class Body(Card):
         fill = cell.options.get("FILL", None)
         if fill is not None:
             tr_in = fill.get("transform")
-            if tr_in is None:
-                new_tr = transformation
-            else:
-                new_tr = transformation.apply2transform(tr_in)
+            new_tr = transformation if tr_in is None else transformation.apply2transform(tr_in)
             fill["transform"] = new_tr
         return cell
 

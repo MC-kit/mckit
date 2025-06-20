@@ -1,17 +1,25 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+from pathlib import Path
 from zipfile import ZipFile
 
 import pytest
 
 from mckit.constants import MCNP_ENCODING
-from mckit.utils import path_resolver
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+HERE = Path(__file__).parent
+DATA = HERE / "data"
 
 
 @pytest.fixture(scope="session")
-def data():
+def data() -> Callable[[str], Path]:
     """Benchmarks data folder."""
-    return path_resolver("benchmarks")
+    return lambda x: DATA / x
 
 
 @pytest.fixture(scope="session")

@@ -261,15 +261,15 @@ def p_tally(p):
     tally = p[1]
     boundaries = p[3]
     tally["geom"] = "XYZ"
-    if "ORIGIN" in boundaries.keys():
+    if "ORIGIN" in boundaries:
         tally["origin"] = boundaries.pop("ORIGIN")
         tally["geom"] = "CYL"
-    if "AXIS" in boundaries.keys():
+    if "AXIS" in boundaries:
         tally["axis"] = boundaries.pop("AXIS")
     tally["bins"] = {k: np.array(v) for k, v in boundaries.items()}
     data = p[5]
-    od = BIN_CYL_ORDER if "origin" in tally.keys() else BIN_REC_ORDER
-    if "result" in data.keys():
+    od = BIN_CYL_ORDER if "origin" in tally else BIN_REC_ORDER
+    if "result" in data:
         src_perm = [od[let] for let in data["order"]]
         tally["result"] = np.moveaxis(np.array(data["result"]), (0, 1, 2, 3), src_perm)
         tally["error"] = np.moveaxis(np.array(data["error"]), (0, 1, 2, 3), src_perm)
@@ -277,17 +277,17 @@ def p_tally(p):
         header = data["header"]
         data = np.array(data["data"])
         shape = [0, 0, 0, 0]
-        for k in tally["bins"].keys():
+        for k in tally["bins"]:
             v = od[k]
             shape[v] = boundaries[k].size
             if k != "TIME":
                 shape[v] -= 1
-        if "ENERGY" in boundaries.keys():
+        if "ENERGY" in boundaries:
             boundaries["ENERGY"] = 0.5 * (boundaries["ENERGY"][1:] + boundaries["ENERGY"][:-1])
         result = np.empty(shape)
         error = np.empty(shape)
         indices = np.empty((data.shape[0], 4), dtype=int)
-        for k in boundaries.keys():
+        for k in boundaries:
             if k in header:
                 indices[:, od[k]] = np.searchsorted(boundaries[k], data[:, header.index(k)]) - 1
             else:

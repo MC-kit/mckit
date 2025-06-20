@@ -106,13 +106,22 @@ generate-setup-file = true
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
 
+[tool.poetry.group.dev]
+optional = true
+
 [tool.poetry.group.dev.dependencies]
 nox = ">=2022.1.7"
 scikit-build = ">=0.17.6"
 
+[tool.poetry.group.pre_commit]
+optional = true
+
 [tool.poetry.group.pre_commit.dependencies]
 pre-commit = ">=2.15.0"
 pydocstringformatter = ">=0.7.3"
+
+[tool.poetry.group.test]
+optional = true
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=7.1"
@@ -124,11 +133,21 @@ coverage = { version = ">=6.1.2", extras = ["toml"] }
 xdoctest = { extras = ["colors"], version = ">=0.15.10" }
 pytest-durations = ">=1.5.2"
 
+
+[tool.poetry.group.coverage]
+optional = true
+
 [tool.poetry.group.coverage.dependencies]
 coverage = { version = ">=6.1.2", extras = ["toml"] }
 
+[tool.poetry.group.xdoctest]
+optional = true
+
 [tool.poetry.group.xdoctest.dependencies]
 xdoctest = { extras = ["colors"], version = ">=0.15.10" }
+
+[tool.poetry.group.typeguard]
+optional = true
 
 [tool.poetry.group.typeguard.dependencies]
 typeguard = ">=4.1.5"
@@ -139,10 +158,16 @@ pep8-naming = ">=0.12.1"
 types-setuptools = ">=57.4.2"
 types-tqdm = ">=4.66.0.2"
 
+[tool.poetry.group.docs]
+optional = true
+
 [tool.poetry.group.docs.dependencies]
 sphinx = ">=6.1.3"
 sphinx-autodoc-typehints = ">=1.19.5"
 sphinx-click = ">=4.4.0"
+
+[tool.poetry.group.docs_auto]
+optional = true
 
 [tool.poetry.group.docs_auto.dependencies]
 sphinx-autobuild = ">=2021.3.14"
@@ -150,6 +175,8 @@ sphinx-autobuild = ">=2021.3.14"
 [tool.poetry.group.ruff.dependencies]
 ruff = ">=0.0.259"
 
+[tool.poetry.group.analyze]
+optional = true
 
 [tool.poetry.group.analyze.dependencies]
 jupyterlab = ">=4.2.5"
@@ -184,7 +211,6 @@ addopts = '''
 --benchmark-disable
 --benchmark-storage=.cache/benchmarks
 --benchmark-autosave
---benchmark-compare
 --benchmark-group-by=name,fullname
 --pytest-durations-min=1
 --pytest-resultlog="pytest-result.log"
@@ -380,12 +406,15 @@ select = ["ALL"]
 
 # Ignore rules that currently fail on the codebase
 ignore = [
+    "ANN", # annotation
     "ANN001", # ANN001 Missing type annotation for function argument: doesn't allow to use functools dispatching
     "ANN002", # ANN002 Missing type annotation for *drop_items: ... as above
+    "ANN003", #  Missing type annotation for `**options`
+    "ANN201", #  Missing return type annotation for public function `data`
     "ANN202", # ANN202 Missing return type annotation for protected function: ... dispatching
     "ANN204", # ANN204 Missing return type annotation for special method
 
-    "ARG001", # Unused function argument: `expected`
+    "ARG", # Unused function argument: `expected`
 
     "C901", # too complex - ...
 
@@ -399,10 +428,17 @@ ignore = [
     "D104", # Missing docstring in public package
     "D106", # Missing docstring in public nested class
     "D107", # Missing docstring in __init__
+    "DTZ005",  #  `datetime.datetime.now()` called without a `tz` argument
 
     "E402", # Module level import not at top of file
     "E501", # Line too long (<LENGTH> > 100 characters)
 
+    "EM",  # exception message
+    "EM102", #  Exception must not use an f-string literal, assign to variable first
+    "ERA001", #  Found commented-out code
+
+    "FBT", #  Boolean-typed positional argument in function definition
+    "FIX", #  TODO
     "N803", # Argument name `R` should be lowercase
     "N806", # Variable `D` in function should be lowercase
 
@@ -419,13 +455,20 @@ ignore = [
     "PT019", # Fixture `_bin` without value is injected as parameter (false positive?)
 
     "S101", # Use of `assert` detected  - TODO - replace assert statements with exception raise
+    "SLF001", #  Private member accessed: `_cells`
+    "T201", #  `print` found
 
+    "TC", # move import to type-checking block
+    "TC001", #  Move application import `.box.Box` into a type-checking block
+    "TC006", #  [*] Add quotes to type expression in `typing.cast()`
+    "TD", # TODO
     "TRY003", # Avoid specifying long messages outside the exception class
 
 ]
 
 
 [tool.ruff.lint.per-file-ignores]
+"build.py" = ["T203"]
 "benchmarks/*" = ["S101"]
 "tests/*" = ["ANN", "D100", "D101", "D102", "D103", "D104", "PLR2004", "S101"]
 "src/mckit/cli/*" = [

@@ -13,6 +13,8 @@ import numpy as np
 # noinspection PyPackageRequirements
 import numpy.typing as npt
 
+from numpy._typing import NDArray
+
 import mckit
 
 from mckit.box import GLOBAL_BOX
@@ -70,7 +72,7 @@ VectorLike = npt.NDArray
 
 
 # noinspection PyPep8Naming
-def create_surface(kind: str, *_params: float, **options) -> Surface:
+def create_surface(kind: str, *_params: float, **options) -> Surface | None:
     """Creates new surface.
 
     Args:
@@ -114,13 +116,14 @@ def create_surface(kind: str, *_params: float, **options) -> Surface:
             R = 0.5 * (abs(r1) + abs(r2))
             return Cylinder(np.array([0, 0, 0], dtype=float), axis, R, **options)
         if r1 * r2 < 0:
-            raise ValueError("Points must belong to the one sheet.")
+            msg = "Points must belong to the one sheet."
+            raise ValueError(msg)
         h0 = (abs(r1) * h2 - abs(r2) * h1) / (abs(r1) - abs(r2))
         t2 = ((r1 - r2) / (h1 - h2)) ** 2
         s = round((h1 - h0) / abs(h1 - h0))
         return Cone(axis * h0, axis, t2, sheet=s, **options)
     # TODO: Implement creation of surface by 3 points.
-    raise NotImplementedError()
+    raise NotImplementedError
 
 
 def _create_surface_by_spec(axis, kind, options, params) -> Surface | None:  # noqa: PLR0911
@@ -556,7 +559,7 @@ class BOX(Surface, _BOX):
         return args_this == args_other
 
     @staticmethod
-    def _get_plane_intersection(s1, s2, s3):
+    def _get_plane_intersection(s1, s2, s3) -> NDArray[np.float64]:
         matrix = np.zeros((3, 3))
         matrix[0, :] = -s1._v
         matrix[1, :] = -s2._v
@@ -797,10 +800,7 @@ class Sphere(Surface, _Sphere):
         self, center: npt.NDArray[float], radius: float, **options: dict[str, Any]
     ) -> None:
         tr: Transformation | None = options.pop("transform", None)
-        if tr:
-            center = tr.apply2point(center)
-        else:
-            center = np.asarray(center, dtype=float)
+        center = tr.apply2point(center) if tr else np.asarray(center, dtype=float)
         radius = float(radius)
         Surface.__init__(self, **options)
         self._center_digits = significant_array(
@@ -1244,10 +1244,7 @@ class Cone(Surface, _Cone):
         cone = Cone(self._apex, self._axis, self._t2, sheet=0, transform=tr, **self.options)
         if self._sheet != 0:
             plane = Plane(self._axis, -np.dot(self._axis, self._apex), name=1, transform=tr)
-            if self._sheet == +1:
-                op = "C"
-            else:
-                op = "S"
+            op = "C" if self._sheet == +1 else "S"
             return mckit.Shape("U", cone, mckit.Shape(op, plane))
         return cone
 

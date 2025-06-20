@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import tempfile
 import textwrap
 
 from copy import deepcopy
@@ -1061,12 +1060,11 @@ def test_simplify(universe, case, complexities, verbose):
         (3, Box([0, 0, 0], 20, 20, 20)),
     ],
 )
-def test_save(universe, case, box):
+def test_save(universe, case, box, tmp_path):
     u = universe(case)
-    out = tempfile.NamedTemporaryFile(mode="w+b", delete=False)
-    u.save(out.name)
-    out.close()
-    ur = from_file(out.name).universe
+    out = tmp_path / "test-save.mcnp"
+    u.save(out)
+    ur = from_file(out).universe
 
     points = box.generate_random_points(100000)
     universes_orig = {x.name(): x for x in u.get_universes()}

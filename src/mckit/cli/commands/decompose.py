@@ -40,10 +40,7 @@ def decompose(output, fill_descriptor_path, source, override):
     logger.info("Processing {}", source)
     logger.debug("Loading model from {}", source)
     source = Path(source)
-    if output is None:
-        output = get_default_output_directory(source)
-    else:
-        output = Path(output)
+    output = get_default_output_directory(source) if output is None else Path(output)
     output.mkdir(parents=True, exist_ok=True)
     parse_result: ParseResult = from_file(source)
     model: Universe = parse_result.universe

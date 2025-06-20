@@ -217,7 +217,7 @@ class Parser(sly.Parser):
     @_("integer")
     def factor(self, p):
         item: int = p.integer
-        if 0 < item:
+        if item > 0:
             opc = "S"
         else:
             opc = "C"

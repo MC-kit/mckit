@@ -32,7 +32,7 @@ reset() {
     poetry config --local virtualenvs.create false
     poetry env info
     poetry lock
-    poetry install
+    poetry install --with dev,test,coverage,pre_commit
     pyenv deactivate
     pyenv local "$env" 3.10.18 3.11.13 3.12.11 3.13.4 3.13.4t
     pyenv rehash

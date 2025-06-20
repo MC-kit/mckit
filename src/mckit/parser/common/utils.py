@@ -54,7 +54,7 @@ def extract_comments(text) -> tuple[str, dict[int, tuple[str, ...]] | None, list
     def add_trailing_to_previous_item():
         nonlocal comments, trailing_comment
         if trailing_comment:
-            if 0 == len(comments):
+            if len(comments) == 0:
                 comments.append((1, trailing_comment))
             else:
                 comments[-1][1].extend(trailing_comment)
@@ -80,10 +80,7 @@ def extract_comments(text) -> tuple[str, dict[int, tuple[str, ...]] | None, list
 
     assert cleaned_text, "There should be some  text in a card"
 
-    if comments:
-        res_comments = {k: tuple(v) for k, v in comments}
-    else:
-        res_comments = None
+    res_comments = {k: tuple(v) for k, v in comments} if comments else None
 
     return "\n".join(cleaned_text), res_comments, trailing_comment if trailing_comment else None
 
