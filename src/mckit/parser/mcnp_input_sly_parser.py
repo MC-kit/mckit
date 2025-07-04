@@ -1,6 +1,4 @@
-"""
-Read and parse MCNP file text.
-"""
+"""Read and parse MCNP file text."""
 
 from __future__ import annotations
 

@@ -239,7 +239,6 @@ def parse_sections_text(text: str) -> InputSections:
     Returns:
         mcnp_input_sections object, containing text of sections from the file
     """
-
     message = None
     cell_cards = None
     surface_cards = None

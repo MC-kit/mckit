@@ -14,12 +14,13 @@ import shutil
 import sys
 import sysconfig
 
-from distutils import log as distutils_log
 from pathlib import Path
 from pprint import pprint
 
 import skbuild
 import skbuild.constants
+
+from distutils import log as distutils_log
 
 __all__ = ["build"]
 
