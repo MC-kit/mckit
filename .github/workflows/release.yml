@@ -6,14 +6,8 @@ env:
 on:
   workflow_dispatch:
 
-  push:
-    branches:
-      - main
-      - master
-
-defaults:
-  run:
-    shell: bash
+  release:
+    types: ["published"]
 
 concurrency:
   group: ci-release-${{ github.ref }}-1
@@ -22,50 +16,26 @@ concurrency:
 
 jobs:
   release:
-    name: Release
+    name: Build and publish release
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out the repository
+      - name: ✅ Check out the repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2    # need previous revision to define tag
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: 📦 Install uv
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: |
+            **/uv.lock
+            **/pyproject.toml
 
-      - name: Fix pip version
+      - name: 📦 Build package
         run: |
-          pip install --constraint=.github/constraints.txt pip
-          pip --version
+          uv build
 
-      - name: Install Poetry
-        run: |
-          pip install --constraint=.github/constraints.txt poetry
-          poetry --version
-
-      - name: Check if there is a parent commit
-        id: check-parent-commit
-        run: |
-          echo "::set-output name=sha::$(git rev-parse --verify --quiet HEAD^)"
-
-      - name: Detect and tag new version
-        id: check-version
-        if: steps.check-parent-commit.outputs.sha
-        uses: salsify/action-detect-and-tag-new-version@v2.0.3
-        with:
-          version-command: poetry version --short
-
-        # The above creates a tag, and that inovokes 'publish' action,
-        # which is separated because it's  rather complicated due to platform dependency
-        # and building of dependencies.
-
-      - name: Publish the release notes
-        uses: release-drafter/release-drafter@v6
-        with:
-          publish: ${{ steps.check-version.outputs.tag != '' }}
-          tag: ${{ steps.check-version.outputs.tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.MCKIT_GITHUB_TOKEN }}
+      - name: 📤 Publish package on PyPI
+        if: ${{ !github.event.act }} # skip during local actions testing
+        run: uv publish --username=__token__ --password=${{ secrets.PYPI_TOKEN }}

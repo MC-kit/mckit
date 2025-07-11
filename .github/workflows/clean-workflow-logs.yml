@@ -1,30 +1,53 @@
-name: Clean Workflow Logs
-
+name: Delete old workflow runs
 on:
   workflow_dispatch:
-    inputs:
-      #      days_old:
-      #        description: "The amount of days old to delete"
-      #        default: "7"
-      #        required: false
-      dry:
-        description: "Dry run"
-        default: "false"
-        required: false
+
+  schedule:
+    - cron: '0 0 1 * *'
+# Run monthly, at 00:00 on the 1st day of month.
+
 jobs:
-  clean-logs:
+  del_runs:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
     steps:
-      #      - uses: igorjs/gh-actions-clean-workflow@v1
-      #        with:
-      #          token: ${{ secrets.GITHUB_TOKEN }}
-      #          owner: ${{ github.repository_owner }}
-      #          repo: ${{ github.event.repository.name }}
-      #          days_old: ${{ github.event.inputs.days_old }}
-      - name: Clean workflow runs
-        uses: dmvict/clean-workflow-runs@v1
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
         with:
-          token: ${{ secrets.MCKIT_GITHUB_TOKEN }}
-          save_period: 30
-          save_min_runs_number: 10
-          dry: ${{ github.event.inputs.dry }}
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 30
+          keep_minimum_runs: 6
+
+# name: Clean Workflow Logs
+#
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       #      days_old:
+#       #        description: "The amount of days old to delete"
+#       #        default: "7"
+#       #        required: false
+#       dry:
+#         description: "Dry run"
+#         default: "false"
+#         required: false
+# jobs:
+#   clean-logs:
+#     runs-on: ubuntu-latest
+#     steps:
+#       #      - uses: igorjs/gh-actions-clean-workflow@v1
+#       #        with:
+#       #          token: ${{ secrets.GITHUB_TOKEN }}
+#       #          owner: ${{ github.repository_owner }}
+#       #          repo: ${{ github.event.repository.name }}
+#       #          days_old: ${{ github.event.inputs.days_old }}
+#       - name: Clean workflow runs
+#         uses: dmvict/clean-workflow-runs@v1
+#         with:
+#           token: ${{ secrets.MCKIT_GITHUB_TOKEN }}
+#           save_period: 30
+#           save_min_runs_number: 10
+#           dry: ${{ github.event.inputs.dry }}

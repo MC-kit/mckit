@@ -1,29 +1,23 @@
 [build-system]
-requires = [
-    "poetry-core >= 2.1.2, <3.0.0",
-    "cmake >= 3.26.3",
-    "ninja; platform_system!='Windows'",
-    "setuptools >= 67.8.0",
-    "numpy >= 2.1.3",
-    "mkl-devel >= 2025.1.0",
-    # "intel-cmplr-lib-ur == 2025.0.4", # next version 2025.0.5 is for windows only TODO check for updates
-    "scikit-build"
-]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.7.19,<0.8.0"]
+build-backend = "uv_build"
+# requires = ["setuptools>=78.1.0", "wheel>=0.45.1", "scikit-build", "numpy >= 2.3.1", "mkl-devel >= 2025.1.0"]
+# build-backend = "setuptools.build_meta"
 
 [project]
 name = "mckit"
-dynamic = ["version", "requires-python"]
+version = "0.8.5a0"
+requires-python = ">=3.11,<3.14" # connectorx==0.4.3 prevents <4
 description = "Tools to process MCNP models and results"
-license = { text = "GPL3" }
-readme = "README.rst"
 authors = [
     { name = "rrn" }
 ]
+readme = "README.rst"
+keywords = ["mckit", "MCNP"]
+license = { text = "GPL3" }
 maintainers = [
     { name = "dvp2015", email = "dmitri_portnov@yahoo.com" }
 ]
-keywords = ["mckit", "MCNP"]
 # Select from PyPI trove classifiers: https://pypi.org/classifiers/
 # poetry (2.0.0) doesn't pass dynamic classifieres to build.py, so, we use static
 # about dynamic classifiers in poetry: https://python-poetry.org/docs/pyproject/#classifiers-1
@@ -38,11 +32,6 @@ classifiers = [
     "Programming Language :: C",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
@@ -51,14 +40,14 @@ dependencies = [
     "loguru (>=0.6.0)",
     "intel-cmplr-lib-ur == 2025.0.4", # next version 2025.0.5 is for windows only TODO check for updates
     "mkl-devel (>=2025.1.0)",
-    "numpy (>=2.1.3)",
+    "numpy (>=2.3.1)",
     "ply (>=3.11)",
     "python-dotenv (>=0.20.0)",
     "scipy (>=1.14.0)",
     "sly (>=0.4)",
     "tomli-w (>=1.0.0)",
     "tqdm (>=4.55.1)",
-    "typer[all]  >=0.9.0",
+    "typer[all]  >=0.9.0",   # TODO @dvp: switch to cyclopts, same for click
     'tomli >=2.0.1; python_version < "3.11"'
 ]
 
@@ -66,124 +55,51 @@ dependencies = [
 homepage = "https://github.com/MC-kit/mckit"
 repository = "https://github.com/MC-kit/mckit"
 documentation = "https://mckit.readthedocs.io"
-"Repository" = "https://github.com/MC-kit/mckit"
 "Bug Tracker" = "https://github.com/MC-kit/mckit/issues"
-
 
 [project.scripts]
 mckit = "mckit.cli.runner:mckit"
 
 
-[tool.poetry]
-version = "0.8.5a0"
-packages = [
-    { include = "mckit", from = "src" },
+[dependency-groups]
+dev = [
+    "tomli>=2.0.1 ; python_version < '3.11'",
+    { include-group = "pre_commit" },
+    { include-group = "test" },
+    { include-group = "coverage" },
+    { include-group = "xdoctest" },
+    { include-group = "typeguard" },
+    { include-group = "mypy" },
+    { include-group = "docs" },
+    { include-group = "docs_auto" },
+    { include-group = "ruff" },
+    { include-group = "analyze" },
 ]
-include = [
-    { path = "noxfile.py", format = "sdist" },
-    { path = "tests", format = "sdist" },
-    { path = "docs", format = "sdist" },
-    { path = "build.py", format = "sdist" },
-    { path = "create_mkl_symlinks.py", format = "sdist" },
-    # C extensions must be included in the wheel distribution.
-    { path = "src/mckit/**/*.pyd", format = "wheel" },
-    { path = "src/mckit/**/*.so", format = "wheel" },
+pre_commit = ["pre-commit>=2.15.0", "pydocstringformatter>=0.7.3"]
+test = [
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "pytest-mock>=3.14.0",
+    "pytest-durations>=1.5.2",
+    "pytest-emoji>=0.2.0",
+    { include-group = "coverage" },
+    { include-group = "xdoctest" },
 ]
-exclude = [
-    { path = "docs/build" },
-    { path = "setup.py" },
+coverage = ["coverage[toml]>=7.9.2"]
+xdoctest = ["xdoctest[colors]>=1.2.0"]
+typeguard = ["typeguard>=4.1.5"]
+mypy = [
+    "mypy>=1.2.0",
+    "pep8-naming>=0.12.1",
+    "types-setuptools>=80.9.0.20250529",
 ]
-
-
-[tool.poetry.build]
-script = "build.py"
-generate-setup-file = true
-
-#[tool.skikit-build]
-#cmake.verbose = true
-
-
-[tool.poetry.dependencies]
-python = ">=3.10,<3.14"
-
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-nox = ">=2022.1.7"
-scikit-build = ">=0.17.6"
-
-[tool.poetry.group.pre_commit]
-optional = true
-
-[tool.poetry.group.pre_commit.dependencies]
-pre-commit = ">=2.15.0"
-pydocstringformatter = ">=0.7.3"
-
-[tool.poetry.group.test]
-optional = true
-
-[tool.poetry.group.test.dependencies]
-pytest = ">=7.1"
-pytest-benchmark = ">=5.0.0"
-pytest-cov = ">=4.0"
-pytest-mock = ">=3.14.0"
-# pytest-randomly = ">=3.12"
-coverage = { version = ">=6.1.2", extras = ["toml"] }
-xdoctest = { extras = ["colors"], version = ">=0.15.10" }
-pytest-durations = ">=1.5.2"
-
-
-[tool.poetry.group.coverage]
-optional = true
-
-[tool.poetry.group.coverage.dependencies]
-coverage = { version = ">=6.1.2", extras = ["toml"] }
-
-[tool.poetry.group.xdoctest]
-optional = true
-
-[tool.poetry.group.xdoctest.dependencies]
-xdoctest = { extras = ["colors"], version = ">=0.15.10" }
-
-[tool.poetry.group.typeguard]
-optional = true
-
-[tool.poetry.group.typeguard.dependencies]
-typeguard = ">=4.1.5"
-
-[tool.poetry.group.mypy.dependencies]
-mypy = ">=1.2.0"
-pep8-naming = ">=0.12.1"
-types-setuptools = ">=57.4.2"
-types-tqdm = ">=4.66.0.2"
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-sphinx = ">=6.1.3"
-sphinx-autodoc-typehints = ">=1.19.5"
-sphinx-click = ">=4.4.0"
-
-[tool.poetry.group.docs_auto]
-optional = true
-
-[tool.poetry.group.docs_auto.dependencies]
-sphinx-autobuild = ">=2021.3.14"
-
-[tool.poetry.group.ruff.dependencies]
-ruff = ">=0.0.259"
-
-[tool.poetry.group.analyze]
-optional = true
-
-[tool.poetry.group.analyze.dependencies]
-jupyterlab = ">=4.2.5"
-jupytext = ">=1.16.4"
+docs = ["sphinx>=8.2.3", "sphinx-autodoc-typehints>=3.2.0"]
+docs_auto = ["sphinx-autobuild>=2024.10.3"]
+ruff = ["ruff>=0.0.259"]
+analyze = ["jupyterlab>=4.2.5", "jupytext>=1.16.4"]
 
 [tool.pytest.ini_options]
-minversion = "6.2"
+minversion = "8.4"
 cache_dir = '.cache/pytest'
 norecursedirs = '''
 *.egg-info
@@ -217,22 +133,20 @@ addopts = '''
 '''
 doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ALLOW_UNICODE ALLOW_BYTES NUMBER"
 testpaths = ["tests", "src"]
-markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-]
+markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
 # xfail tests that pass should fail the test suite
 xfail_strict = true
 filterwarnings = [
     "error",
-    'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred to `pkg_resources.declare_namespace`',
+    # 'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred to `pkg_resources.declare_namespace`',
     "ignore:.*not typechecking multipledispatch.dispatcher.*UserWarning",
     'ignore:.*io.FileIO \[closed\]',
-    'ignore:.*Deprecated call to `pkg_resources.declare_namespace',
+    # 'ignore:.*Deprecated call to `pkg_resources.declare_namespace',
     'ignore:.*Implicit None on return values:DeprecationWarning',
-    # pandas 2.1.4 at python 3.12
-    'ignore:.*datetime.datetime.utcfromtimestamp\(\) is deprecated:DeprecationWarning',
-    # openpyxl 3.1.2 qt python 3.12
-    'ignore:.*datetime.datetime.utcnow\(\):DeprecationWarning'
+    # # pandas 2.1.4 at python 3.12
+    # 'ignore:.*datetime.datetime.utcfromtimestamp\(\) is deprecated:DeprecationWarning',
+    # # openpyxl 3.1.2 qt python 3.12
+    # 'ignore:.*datetime.datetime.utcnow\(\):DeprecationWarning',
 ]
 log_format = "%(asctime)s %(levelname)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
@@ -247,7 +161,7 @@ source = ["src", ".nox/*/site-packages"]
 [tool.coverage.run]
 branch = true
 source = ["src"]
-omit = ["*_tab.py", "**/__init__.py"]
+omit = ["*_tab.py", "**/__init__.py", "tools/*.py"]
 
 [tool.coverage.report]
 show_missing = true
@@ -306,12 +220,17 @@ module = [
     "IPython.core.magic_arguments",
     "click",
     "click.testing",
+    "dask.*",
+    "duckdb",
     "loguru",
-    "mckit.*", # TODO (dvp, style): make everything typed including extension 'geometry'
+    "mckit.*", # TODO (dvp, style): make everything typed including extension 'geometry',
+    "msgspec",
     "multipledispatch",
     "nox",
+    "numpy",
     "numpy.testing",
     "pandas",
+    "polars",
     "pytest",
     "scipy.constants",
     "scipy.sparse",
@@ -322,10 +241,7 @@ module = [
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = [
-    "tomllib",
-    "tomli",
-]
+module = ["tomllib"]
 allow_redefinition = true
 disable_error_code = "no-redef"
 
@@ -334,190 +250,12 @@ ignore = [
     "tests/*",
     "tools/*",
     "*.yaml",
-    "noxfile.py",
 ]
-
-[tool.ruff]
-target-version = "py310"
-
-line-length = 100
-
-# show an enumeration of all autofixed lint violations
-show-fixes = true
-
-# show source code snippets when reporting violations
-output-format = "concise"
-
-src = ["src", "tests"]
-
-exclude = [
-    "*.egg-info",
-    ".direnv",
-    ".cache",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".mypy_cache",
-    ".nox",
-    ".ruff_cache",
-    ".venv",
-    "__pycache__",
-    "_build",
-    "adhoc",
-    "build",
-    "dist",
-    "docs/source/conf.py",
-    "extern",
-    "notebooks",
-    "venv",
-    "wrk",
-]
-
-[tool.ruff.lint]
-#run 'ruff linter' to see a brief list
-select = ["ALL"]
-
-# Ignore rules that currently fail on the codebase
-ignore = [
-    "ANN", # annotation
-    "ANN001", # ANN001 Missing type annotation for function argument: doesn't allow to use functools dispatching
-    "ANN002", # ANN002 Missing type annotation for *drop_items: ... as above
-    "ANN003", #  Missing type annotation for `**options`
-    "ANN201", #  Missing return type annotation for public function `data`
-    "ANN202", # ANN202 Missing return type annotation for protected function: ... dispatching
-    "ANN204", # ANN204 Missing return type annotation for special method
-
-    "ARG", # Unused function argument: `expected`
-
-    "C901", # too complex - ...
-
-    "COM812", #  [*] Trailing comma missing
-
-    "D100", # Missing docstring in public module
-    "D101", # Missing docstring in public class
-    "D102", # Missing docstring in public method
-    "D103", # Missing docstring in public function
-    "D105", # D105 Missing docstring in magic method (__hash__, __eq__)
-    "D104", # Missing docstring in public package
-    "D106", # Missing docstring in public nested class
-    "D107", # Missing docstring in __init__
-    "DTZ005",  #  `datetime.datetime.now()` called without a `tz` argument
-
-    "E402", # Module level import not at top of file
-    "E501", # Line too long (<LENGTH> > 100 characters)
-
-    "EM",  # exception message
-    "EM102", #  Exception must not use an f-string literal, assign to variable first
-    "ERA001", #  Found commented-out code
-
-    "FBT", #  Boolean-typed positional argument in function definition
-    "FIX", #  TODO
-    "N803", # Argument name `R` should be lowercase
-    "N806", # Variable `D` in function should be lowercase
-
-    "ISC001", # may cause conflicts when used with the ruff formatter
-
-    "PLE1205", # logging-too-many-args - we use loguru with '{' style of placeholders
-
-    "PLR0912", # Too many branches (15 > 12)
-    "PLR0913", # Too many arguments to function call (6 > 5)
-    "PLR0915", # Too many statements (65 > 50)
-    "PLR2004", # magic number - don't want to declare 0.0 as constant
-#    "PLR5501", # Consider using `elif` instead of `else` then `if` to remove one indentation level
-
-    "PT019", # Fixture `_bin` without value is injected as parameter (false positive?)
-
-    "S101", # Use of `assert` detected  - TODO - replace assert statements with exception raise
-    "SLF001", #  Private member accessed: `_cells`
-    "T201", #  `print` found
-
-    "TC", # move import to type-checking block
-    "TC001", #  Move application import `.box.Box` into a type-checking block
-    "TC006", #  [*] Add quotes to type expression in `typing.cast()`
-    "TD", # TODO
-    "TRY003", # Avoid specifying long messages outside the exception class
-
-]
-
-
-[tool.ruff.lint.per-file-ignores]
-"build.py" = ["T203"]
-"benchmarks/*" = ["S101"]
-"tests/*" = ["ANN", "D100", "D101", "D102", "D103", "D104", "PLR2004", "S101"]
-"src/mckit/cli/*" = [
-    "PLE1205", # Too many arguments for `logging` format string - we use loguru in CLI modules
-]
-"src/mckit/parser/*" = [
-    "A003",
-    "D",
-    "F811",
-    "F821",
-    "N802",
-    "N816", # Variable `t_ANY_ignore` in global scope should not be mixedCase
-    "T201", # print found
-]
-"tests/parser/*" = [
-    "A003",
-    "D",
-    "F811",
-    "F821",
-    "N802",
-    "N816", # Variable `t_ANY_ignore` in global scope should not be mixedCase
-    "T201", # print found
-]
-"tools/*" = ["T201", "INP001", "S603", "S607"]
-".unclassified/*" = ["INP001"]
-"tutorial/*" = ["INP001"]
-
-[tool.ruff.lint.mccabe]
-# Unlike Flake8, default to a complexity level of 10.
-max-complexity = 15
-
-[tool.ruff.lint.flake8-annotations]
-mypy-init-return = true  # skip return type for __init__() methods
-
-[tool.ruff.lint.flake8-pytest-style]
-parametrize-names-type = "csv"
-
-[tool.ruff.lint.flake8-type-checking]
-strict = true
-
-# warning: The isort option `isort.split-on-trailing-comma` is incompatible
-# with the formatter `format.skip-magic-trailing-comma=true` option.
-# To avoid unexpected behavior, we recommend either setting `isort.split-on-trailing-comma=false`
-# or `format.skip-magic-trailing-comma=false`.
-
-[tool.ruff.lint.isort]
-known-first-party = ["src"]
-known-third-party = ["mpl_toolkits", "matplotlib", "numpy", "scipy", "loguru", "tqdm", "dotenv"]
-default-section = "third-party"
-lines-between-types = 1
-required-imports = ["from __future__ import annotations"]
-case-sensitive = true
-section-order = [
-    "future",
-    "typing",
-    "standard-library",
-    "third-party",
-    "first-party",
-    "local-folder",
-    "testing"
-]
-
-[tool.ruff.lint.isort.sections]
-"typing" = ["typing", "typing_extension"]
-"testing" = ["tests"]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google" # Use Google-style docstrings.
-
-[tool.ruff.format]
-docstring-code-format = true
 
 [tool.jupytext]
 # https://jupytext.readthedocs.io/en/latest/config.html
 # Pair ipynb notebooks to py:percent text notebooks
-formats = "ipynb,md,py:percent"
+formats = "ipynb,py:percent"
 
 [tool.creosote]
 paths = ["src", "adhoc"]
