@@ -16,7 +16,7 @@ default:
 # create venv, if not exists
 [group: 'dev']
 venv:
-  [ -d .venv ] || uv venv --python {{default_python}}
+  [ -d .venv ] || uv venv --python {{default_python}} --seed
 
 # build package
 [group: 'dev']
@@ -43,6 +43,9 @@ clean:
       "docs/_build"
       "htmlcov"
       "setup.py"
+      "src/mckit/*.so"
+      "src/mckit/*.dll"
+      "src/mckit/*.dylib"
   )
   rm -fr ${to_clean[@]}
 
@@ -145,3 +148,9 @@ docs-build: rstcheck
 # browse and edit documentation with auto build
 docs:
   @uv run --no-dev --group docs --group docs-auto sphinx-autobuild --open-browser docs/source docs/_build
+
+
+# modules required to debug setup.py
+[group: 'debug-setup']
+@scbld:
+  pip install cmake scikit-build mkl-devel numpy ninja

@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.19...3.27)
+cmake_minimum_required(VERSION 3.19)
 
 include(CMakePrintHelpers)
 
 if(NOT DEFINED SKBUILD_PROJECT_NAME)
   set(SKBUILD_PROJECT_NAME mckit)
-  set(SKBUILD_PROJECT_VERSION 0.6.28)
+  set(SKBUILD_PROJECT_VERSION 0.8.5)
 endif()
 
 cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION)
@@ -16,6 +16,10 @@ project(
   DESCRIPTION "mckit geometry extension"
   LANGUAGES C CXX # TODO: upgrade to CXX
 )
+
+if(SKBUILD)
+  message(STATUS "The project is built using scikit-build")
+endif()
 
 # https://cliutils.gitlab.io/modern-cmake/chapters/packages/CUDA.html
 # include(CheckLanguage) check_language(CUDA) if(CMAKE_CUDA_COMPILER)

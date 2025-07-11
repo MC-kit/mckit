@@ -1,23 +1,25 @@
 [build-system]
-requires = ["uv_build>=0.7.19,<0.8.0"]
-build-backend = "uv_build"
-# requires = ["setuptools>=78.1.0", "wheel>=0.45.1", "scikit-build", "numpy >= 2.3.1", "mkl-devel >= 2025.1.0"]
-# build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools>=78.1.0",
+    "wheel>=0.45.1",
+    "scikit-build",
+    "cmake>=3.18",
+    "ninja; platform_system!='Windows'",
+    "numpy",
+    "mkl-devel >= 2025.2.0",
+]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "mckit"
 version = "0.8.5a0"
-requires-python = ">=3.11,<3.14" # connectorx==0.4.3 prevents <4
+requires-python = ">=3.11,<3.14"                                         # connectorx==0.4.3 prevents <4
 description = "Tools to process MCNP models and results"
-authors = [
-    { name = "rrn" }
-]
+authors = [{ name = "rrn" }]
 readme = "README.rst"
+license = "MIT"
 keywords = ["mckit", "MCNP"]
-license = { text = "GPL3" }
-maintainers = [
-    { name = "dvp2015", email = "dmitri_portnov@yahoo.com" }
-]
+maintainers = [{ name = "dvp2015", email = "dmitri_portnov@yahoo.com" }]
 # Select from PyPI trove classifiers: https://pypi.org/classifiers/
 # poetry (2.0.0) doesn't pass dynamic classifieres to build.py, so, we use static
 # about dynamic classifiers in poetry: https://python-poetry.org/docs/pyproject/#classifiers-1
@@ -26,7 +28,6 @@ classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: Other/Proprietary License",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: C",
@@ -38,24 +39,23 @@ dependencies = [
     "attrs (>=21.2.0)",
     "click (>=8.0.1)",
     "loguru (>=0.6.0)",
-    "intel-cmplr-lib-ur == 2025.0.4", # next version 2025.0.5 is for windows only TODO check for updates
+    "intel-cmplr-lib-ur == 2025.0.4",         # next version 2025.0.5 is for windows only TODO check for updates
     "mkl-devel (>=2025.1.0)",
     "numpy (>=2.3.1)",
     "ply (>=3.11)",
-    "python-dotenv (>=0.20.0)",
-    "scipy (>=1.14.0)",
+    "python-dotenv (>=1.1.1)",
+    "scipy (>=1.16.0)",
     "sly (>=0.4)",
     "tomli-w (>=1.0.0)",
     "tqdm (>=4.55.1)",
-    "typer[all]  >=0.9.0",   # TODO @dvp: switch to cyclopts, same for click
-    'tomli >=2.0.1; python_version < "3.11"'
+    "typer >=0.9.0",                          # TODO @dvp: switch to cyclopts, same for click
 ]
 
 [project.urls]
-homepage = "https://github.com/MC-kit/mckit"
-repository = "https://github.com/MC-kit/mckit"
-documentation = "https://mckit.readthedocs.io"
-"Bug Tracker" = "https://github.com/MC-kit/mckit/issues"
+Homepage = "https://github.com/MC-kit/mckit"
+Repository = "https://github.com/MC-kit/mckit"
+Documentation = "https://mckit.readthedocs.io"
+Issues = "https://github.com/MC-kit/mckit/issues"
 
 [project.scripts]
 mckit = "mckit.cli.runner:mckit"
@@ -63,6 +63,7 @@ mckit = "mckit.cli.runner:mckit"
 
 [dependency-groups]
 dev = [
+    "pip",
     "tomli>=2.0.1 ; python_version < '3.11'",
     { include-group = "pre_commit" },
     { include-group = "test" },
@@ -82,6 +83,7 @@ test = [
     "pytest-mock>=3.14.0",
     "pytest-durations>=1.5.2",
     "pytest-emoji>=0.2.0",
+    "pytest-benchmark>=5.1.0",
     { include-group = "coverage" },
     { include-group = "xdoctest" },
 ]
@@ -166,7 +168,7 @@ omit = ["*_tab.py", "**/__init__.py", "tools/*.py"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
-fail_under = 90  # TODO dvp: increase limit to 100 with code maturing
+fail_under = 90                       # TODO dvp: increase limit to 100 with code maturing
 omit = ["*_tab.py", "**/__init__.py"]
 # Regexes for lines to exclude from consideration
 exclude_lines = [
@@ -223,7 +225,7 @@ module = [
     "dask.*",
     "duckdb",
     "loguru",
-    "mckit.*", # TODO (dvp, style): make everything typed including extension 'geometry',
+    "mckit.*",                      # TODO (dvp, style): make everything typed including extension 'geometry',
     "msgspec",
     "multipledispatch",
     "nox",
@@ -246,11 +248,7 @@ allow_redefinition = true
 disable_error_code = "no-redef"
 
 [tool.check-manifest]
-ignore = [
-    "tests/*",
-    "tools/*",
-    "*.yaml",
-]
+ignore = ["tests/*", "tools/*", "*.yaml"]
 
 [tool.jupytext]
 # https://jupytext.readthedocs.io/en/latest/config.html
