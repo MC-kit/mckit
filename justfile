@@ -42,7 +42,6 @@ clean:
       "dist"
       "docs/_build"
       "htmlcov"
-      "setup.py"
       "src/mckit/*.so"
       "src/mckit/*.dll"
       "src/mckit/*.dylib"

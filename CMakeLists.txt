@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.19)
 
 include(CMakePrintHelpers)
 
-if(NOT DEFINED SKBUILD_PROJECT_NAME)
-  set(SKBUILD_PROJECT_NAME mckit)
-  set(SKBUILD_PROJECT_VERSION 0.8.5)
-endif()
+# if(NOT DEFINED SKBUILD_PROJECT_NAME)
+#   set(SKBUILD_PROJECT_NAME mckit)
+#   set(SKBUILD_PROJECT_VERSION 0.8.5)
+# endif()
 
 cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION)
 
@@ -83,7 +83,8 @@ endif()
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
 
 cmake_print_variables(Python_EXECUTABLE Python_LIBRARIES Python_LIBRARY_DIRS
-                      Python_NumPy_INCLUDE_DIRS Python_STDLIB Python_SITELIB)
+                      Python_NumPy_INCLUDE_DIRS Python_STDLIB Python_SITELIB
+                      C_Extensions)
 
 # TODO dvp: check if CLI variable provided by sci-build are sufficient instead
 # of own search
@@ -143,8 +144,8 @@ else()
   target_link_libraries(geometry PUBLIC pthread m dl)
 endif()
 
-install(TARGETS nlopt LIBRARY DESTINATION src/mckit)
-install(TARGETS geometry LIBRARY DESTINATION src/mckit)
+install(TARGETS nlopt DESTINATION ${COPY_TO})
+install(TARGETS geometry DESTINATION ${COPY_TO})
 
 include(FeatureSummary)
 

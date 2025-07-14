@@ -1,14 +1,12 @@
 [build-system]
 requires = [
-    "setuptools>=78.1.0",
-    "wheel>=0.45.1",
-    "scikit-build",
-    "cmake>=3.18",
-    "ninja; platform_system!='Windows'",
+    "scikit-build-core>=0.10",
+    # "cmake>=3.18",
+    # "ninja; platform_system!='Windows'",
     "numpy",
     "mkl-devel >= 2025.2.0",
 ]
-build-backend = "setuptools.build_meta"
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "mckit"
@@ -39,7 +37,7 @@ dependencies = [
     "attrs (>=21.2.0)",
     "click (>=8.0.1)",
     "loguru (>=0.6.0)",
-    "intel-cmplr-lib-ur == 2025.0.4",         # next version 2025.0.5 is for windows only TODO check for updates
+    "intel-cmplr-lib-ur == 2025.0.4", # next version 2025.0.5 is for windows only TODO check for updates
     "mkl-devel (>=2025.1.0)",
     "numpy (>=2.3.1)",
     "ply (>=3.11)",
@@ -48,7 +46,7 @@ dependencies = [
     "sly (>=0.4)",
     "tomli-w (>=1.0.0)",
     "tqdm (>=4.55.1)",
-    "typer >=0.9.0",                          # TODO @dvp: switch to cyclopts, same for click
+    "typer >=0.9.0",                  # TODO @dvp: switch to cyclopts, same for click
 ]
 
 [project.urls]
@@ -59,6 +57,16 @@ Issues = "https://github.com/MC-kit/mckit/issues"
 
 [project.scripts]
 mckit = "mckit.cli.runner:mckit"
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+build-dir = "build/{wheel_tag}"
+build.verbose = true
+logging.level = "INFO"
+# wheel.install-dir = "src/mckit"
+
+[tool.scikit-build.cmake.define]
+COPY_TO = "src/mckit"
 
 
 [dependency-groups]
