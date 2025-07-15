@@ -971,7 +971,7 @@ wheels = [
 
 [[package]]
 name = "mckit"
-version = "0.8.5a0"
+version = "0.8.6"
 source = { editable = "." }
 dependencies = [
     { name = "attrs" },
