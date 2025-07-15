@@ -2,28 +2,25 @@ cmake_minimum_required(VERSION 3.19)
 
 include(CMakePrintHelpers)
 
-# if(NOT DEFINED SKBUILD_PROJECT_NAME)
-#   set(SKBUILD_PROJECT_NAME mckit)
-#   set(SKBUILD_PROJECT_VERSION 0.8.5)
-# endif()
+# to make CMake happy, if not running under skbuild
+if(NOT DEFINED SKBUILD_PROJECT_NAME)
+  set(SKBUILD_PROJECT_NAME mckit)
+  set(SKBUILD_PROJECT_VERSION 0.8.5) # TODO: add this version update to just
+                                     # bump action
+endif()
 
-cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION)
+cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION,
+                      SKBUIL_STATE)
 
-# TODO: setup SKBUILD variables in build.py - retrieve from poetry
 project(
   ${SKBUILD_PROJECT_NAME}
   VERSION ${SKBUILD_PROJECT_VERSION}
   DESCRIPTION "mckit geometry extension"
-  LANGUAGES C CXX # TODO: upgrade to CXX
-)
+  LANGUAGES C CXX)
 
 if(SKBUILD)
   message(STATUS "The project is built using scikit-build")
 endif()
-
-# https://cliutils.gitlab.io/modern-cmake/chapters/packages/CUDA.html
-# include(CheckLanguage) check_language(CUDA) if(CMAKE_CUDA_COMPILER)
-# enable_language(CUDA) endif()
 
 # Only do these if this is the main project, and not if it is included through
 # add_subdirectory
@@ -44,12 +41,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
                                                  "MinSizeRel" "RelWithDebInfo")
   endif()
 
-  if(CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
-    message(
-      FATAL_ERROR
-        "Building in-source is not supported! Create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt"
-    )
-  endif()
+  # if(CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR) message( FATAL_ERROR
+  # "Building in-source is not supported! Create a build dir and remove
+  # ${CMAKE_SOURCE_DIR}/CMakeCache.txt" ) endif()
 
   find_package(Git QUIET)
 
@@ -81,10 +75,6 @@ if(WIN32)
 endif()
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
-
-cmake_print_variables(Python_EXECUTABLE Python_LIBRARIES Python_LIBRARY_DIRS
-                      Python_NumPy_INCLUDE_DIRS Python_STDLIB Python_SITELIB
-                      C_Extensions)
 
 # TODO dvp: check if CLI variable provided by sci-build are sufficient instead
 # of own search
@@ -146,6 +136,17 @@ endif()
 
 install(TARGETS nlopt DESTINATION ${SKBUILD_PROJECT_NAME})
 install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
+
+if(DEFINED ENV{MCKIT_SRC})
+  # copy libraries to the source tree for editable installation
+  install(TARGETS nlopt DESTINATION $ENV{MCKIT_SRC}/src/mckit)
+  install(TARGETS geometry DESTINATION $ENV{MCKIT_SRC}/src/mckit)
+else()
+  message(
+    WARNING
+      "Environment variable MCKIT_SRC is not defined. Libs are not copied to the source tree."
+  )
+endif()
 
 include(FeatureSummary)
 

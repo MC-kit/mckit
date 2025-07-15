@@ -21,13 +21,14 @@ venv:
 # build package
 [group: 'dev']
 build: venv
+  git submodule update --init --recursive --depth 1
   uv build
 
 # clean reproducible files
 [group: 'dev']
 clean:
   #!/bin/bash
-  to_clean=(
+  dirs_to_clean=(
       ".benchmarks"
       ".cache"
       ".eggs"
@@ -37,16 +38,24 @@ clean:
       ".ruff_cache"
       ".venv"
       "__pycache__"
-      "_skbuild"
+      "_build"
       "build"
+      "cmake-build-debug"
       "dist"
-      "docs/_build"
       "htmlcov"
-      "src/mckit/*.so"
-      "src/mckit/*.dll"
-      "src/mckit/*.dylib"
   )
-  rm -fr ${to_clean[@]}
+  for d in "${dirs_to_clean[@]}"; do
+      find . -type d -name "$d" -exec rm -rf {} +
+  done
+  files_to_clean=(
+      "*.so"
+      "*.so.*"
+      "*.dll"
+      "*.dylib"
+  )
+  for f in "${files_to_clean[@]}"; do
+      find src/mckit -type f -name "$f" -exec rm -rf {} +
+  done
 
 
 # install package
@@ -111,7 +120,7 @@ xdoctest *args:
 coverage:
   @uv run --no-dev --group coverage coverage run --parallel -m pytest
   @uv run --no-dev --group coverage coverage combine
-  @uv run --no-dev --group coverage coverage report
+  @uv run --no-dev --group coverage coverage report --show-missing --skip-covered
 
 # coverage to html
 [group: 'test']

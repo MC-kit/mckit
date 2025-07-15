@@ -4,12 +4,7 @@ on:
   release:
     types:
       - published
-    branches:
-      - main
-      - master
-  push:
-    tags:
-      - 'v*'
+
   workflow_dispatch:  # TODO: debug only
 
 jobs:

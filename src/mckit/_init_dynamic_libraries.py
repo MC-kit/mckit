@@ -68,7 +68,7 @@ def _preload_library(lib_name: str, max_version: int = 2) -> None:
                 cdll.LoadLibrary(str(p))
                 _LOG.info("Found library: {}", p.absolute())
                 return
-    raise OSError(f"Cannot preload library {lib_name}")
+    raise OSError(f"Cannot preload library {lib_name!r}")
 
 
 def _init():

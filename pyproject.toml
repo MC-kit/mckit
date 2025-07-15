@@ -61,13 +61,12 @@ mckit = "mckit.cli.runner:mckit"
 [tool.scikit-build]
 minimum-version = "build-system.requires"
 build-dir = "build/{wheel_tag}"
-build.verbose = true
+build.verbose = false
 logging.level = "INFO"
-cmake.minimum-version="3.18"
-# wheel.install-dir = "src/mckit"
+editable.mode = "inplace"
 
-[tool.scikit-build.cmake.define]
-COPY_TO = "src/mckit"
+[tool.uv.build-backend]
+source-exclude = ".unclassified"
 
 
 [dependency-groups]
