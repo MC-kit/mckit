@@ -117,11 +117,18 @@ set(geometry_sources
     ${geometry_dir}box.c ${geometry_dir}geometrymodule.c
     ${geometry_dir}rbtree.c ${geometry_dir}shape.c ${geometry_dir}surface.c)
 
+
 python_add_library(geometry MODULE ${geometry_sources} WITH_SOABI)
+# get_target_property(NLOPT_INCLUDE_DIRS nlopt INCLUDE_DIRECTORIES )
+add_dependencies(geometry nlopt)
 target_include_directories(
   geometry PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src ${MKL_INCLUDE_DIR}
-                  ${Python_NumPy_INCLUDE_DIRS})
-target_link_libraries(geometry PUBLIC nlopt ${MKL_LIBRARIES})
+                  ${Python_NumPy_INCLUDE_DIRS}
+                  # ${NLOPT_INCLUDE_DIRS}
+                  ${CMAKE_CURRENT_SOURCE_DIR}/extern/nlopt/src/api
+                )
+target_link_libraries(geometry PUBLIC ${MKL_LIBRARIES})
+target_link_libraries(geometry PRIVATE nlopt)
 if(WIN32)
   target_link_libraries(geometry PUBLIC Python::Module)
 else()
@@ -136,7 +143,7 @@ if(NOT DEFINED ENV{MCKIT_SRC})
 endif()
 
 # copy libraries to the source tree for editable installation
-install(TARGETS nlopt DESTINATION $ENV{MCKIT_SRC}/src/mckit)
+# install(TARGETS nlopt DESTINATION $ENV{MCKIT_SRC}/src/mckit)
 install(TARGETS geometry DESTINATION $ENV{MCKIT_SRC}/src/mckit)
 
 include(FeatureSummary)
