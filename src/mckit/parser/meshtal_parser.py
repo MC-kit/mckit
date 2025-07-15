@@ -512,7 +512,10 @@ def p_error(p):
         print("Syntax error at EOF")
 
 
-meshtal_parser = yacc.yacc(tabmodule="meshtal_tab", debug=True)
+try:
+    meshtal_parser = yacc.yacc(tabmodule="meshtal_tab", debug=False)
+except OSError as ex:
+    raise OSError("Cannot create PLY output") from ex
 
 
 _BIN_NAMES = {

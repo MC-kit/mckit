@@ -34,8 +34,8 @@ on:
       - "!adhoc/**"
       - "!tools/**"
 
-permissions:
-  contents: read  # Minimal required permissions
+# permissions:
+#   contents: read  # Minimal required permissions
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/master' || github.sha }}
@@ -157,7 +157,7 @@ jobs:
         run: uv sync --all-extras --no-dev --group test
 
       - name: ✅ Run tests
-        run: uv run coverage run --parallel -m pytest -vv --emoji
+        run: uv run coverage run --parallel -m pytest -v --emoji
 
       - name: 🔃 Upload coverage data
         uses: actions/upload-artifact@v4
