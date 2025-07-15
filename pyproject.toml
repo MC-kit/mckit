@@ -11,7 +11,7 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "mckit"
 version = "0.8.5a0"
-requires-python = ">=3.11,<3.14"                                         # connectorx==0.4.3 prevents <4
+requires-python = ">=3.11 "                                              # connectorx==0.4.3 prevents <4
 description = "Tools to process MCNP models and results"
 authors = [{ name = "rrn" }]
 readme = "README.rst"
@@ -65,8 +65,8 @@ build.verbose = false
 logging.level = "INFO"
 
 
-[tool.uv.build-backend]
-source-exclude = ".unclassified"
+[tool.cibuildwheel]
+build-frontend = "build[uv]"
 
 
 [dependency-groups]

@@ -241,7 +241,7 @@ int box_check_intersection(const Box *box1, const Box *box2)
     nlopt_set_lower_bounds(opt, box1->lb);
     nlopt_set_upper_bounds(opt, box1->ub);
 
-    nlopt_set_min_objective(opt, min_func, box2);
+    nlopt_set_min_objective(opt, min_func, (void *)box2);
 
     nlopt_add_inequality_mconstraint(opt, 6, box_ieqcons, (void *)box1, NULL);
     nlopt_set_stopval(opt, 0);

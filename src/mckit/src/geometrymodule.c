@@ -43,7 +43,7 @@ static int convert_to_dbl_vec(PyObject *obj, PyObject **addr)
 
 static int convert_to_dbl_vec_array(PyObject *obj, PyObject **addr)
 {
-    PyObject *arr = PyArray_FROM_OTF(obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *arr = (PyArrayObject *)(PyArray_FROM_OTF(obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
     if (arr == NULL)
         return 0;
 
@@ -61,7 +61,7 @@ static int convert_to_dbl_vec_array(PyObject *obj, PyObject **addr)
         PyErr_SetString(PyExc_ValueError, "Shape (n, 3) is expected");
         goto error;
     }
-    *addr = arr;
+    *addr = (PyObject *)arr;
     return 1;
 error:
     Py_DECREF(arr);
@@ -131,12 +131,12 @@ static PyMethodDef boxobj_methods[] = {
     {"copy", (PyCFunction)boxobj_copy, METH_NOARGS, BOX_COPY_DOC},
     {"generate_random_points", (PyCFunction)boxobj_generate_random_points, METH_O, BOX_GRP_DOC},
     {"test_points", (PyCFunction)boxobj_test_points, METH_O, BOX_TEST_POINTS_DOC},
-    {"split", (PyCFunctionWithKeywords)boxobj_split, METH_VARARGS | METH_KEYWORDS, BOX_SPLIT_DOC},
+    {"split", (void *)boxobj_split, METH_VARARGS | METH_KEYWORDS, BOX_SPLIT_DOC},
     {"check_intersection", (PyCFunction)boxobj_check_intersection, METH_O, BOX_CHECK_INTERSECTION_DOC},
     {NULL}};
 
 static PyTypeObject BoxType = {
-    PyObject_HEAD_INIT(NULL).tp_name = "geometry.Box",
+    PyObject_HEAD_INIT(0).tp_name = "geometry.Box",
     .tp_basicsize = sizeof(BoxObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = BOX_DOC,
@@ -181,8 +181,9 @@ static int boxobj_init(BoxObject *self, PyObject *args, PyObject *kwds)
     }
 
     box_dispose(&self->box);
-    box_init(&self->box, (double *)PyArray_DATA(cent), (double *)PyArray_DATA(ex), (double *)PyArray_DATA(ey),
-             (double *)PyArray_DATA(ez), xdim, ydim, zdim);
+    box_init(&self->box, (double *)PyArray_DATA((const PyArrayObject *)cent),
+             (double *)PyArray_DATA((const PyArrayObject *)ex), (double *)PyArray_DATA((const PyArrayObject *)ey),
+             (double *)PyArray_DATA((const PyArrayObject *)ez), xdim, ydim, zdim);
 
     Py_DECREF(cent);
     Py_DECREF(ex);
@@ -215,7 +216,7 @@ static PyObject *boxobj_generate_random_points(BoxObject *self, PyObject *npts)
     if (points == NULL)
         return NULL;
 
-    int status = box_generate_random_points(&self->box, n, (double *)PyArray_DATA(points));
+    int status = box_generate_random_points(&self->box, n, (double *)PyArray_DATA((const PyArrayObject *)points));
     if (status == BOX_FAILURE)
     {
         PyErr_SetString(PyExc_MemoryError, "Could not generate points.");
@@ -241,7 +242,8 @@ static PyObject *boxobj_test_points(BoxObject *self, PyObject *points)
         return NULL;
     }
 
-    box_test_points(&self->box, npts, (double *)PyArray_DATA(pts), (int *)PyArray_DATA(result));
+    box_test_points(&self->box, npts, (double *)PyArray_DATA((const PyArrayObject *)pts),
+                    (int *)PyArray_DATA((const PyArrayObject *)result));
     Py_DECREF(pts);
     return result;
 }
@@ -308,7 +310,7 @@ static PyObject *boxobj_getcorners(BoxObject *self, void *closure)
     npy_intp dims[] = {NCOR, NDIM};
     PyObject *corners = PyArray_EMPTY(2, dims, NPY_DOUBLE, 0);
     int i;
-    double *data = (double *)PyArray_DATA(corners);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)corners);
     for (i = 0; i < NCOR * NDIM; ++i)
     {
         data[i] = self->box.corners[i];
@@ -326,7 +328,7 @@ static PyObject *boxobj_getbounds(BoxObject *self, void *closure)
     npy_intp dims[] = {NDIM, 2};
     PyObject *bounds = PyArray_EMPTY(2, dims, NPY_DOUBLE, 0);
     int i;
-    double *data = (double *)PyArray_DATA(bounds);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)bounds);
     for (i = 0; i < NDIM; ++i)
     {
         data[2 * i] = self->box.lb[i];
@@ -340,7 +342,7 @@ static PyObject *boxobj_getcenter(BoxObject *self, void *closure)
     npy_intp dims[] = {NDIM};
     PyObject *center = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     int i;
-    double *data = (double *)PyArray_DATA(center);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)center);
     for (i = 0; i < NDIM; ++i)
         data[i] = self->box.center[i];
     return center;
@@ -351,7 +353,7 @@ static PyObject *boxobj_get_ex(BoxObject *self, void *closure)
     npy_intp dims[] = {NDIM};
     PyObject *ex = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     int i;
-    double *data = (double *)PyArray_DATA(ex);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)ex);
     for (i = 0; i < NDIM; ++i)
     {
         data[i] = self->box.ex[i];
@@ -364,7 +366,7 @@ static PyObject *boxobj_get_ey(BoxObject *self, void *closure)
     npy_intp dims[] = {NDIM};
     PyObject *ey = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     int i;
-    double *data = (double *)PyArray_DATA(ey);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)ey);
     for (i = 0; i < NDIM; ++i)
     {
         data[i] = self->box.ey[i];
@@ -377,7 +379,7 @@ static PyObject *boxobj_get_ez(BoxObject *self, void *closure)
     npy_intp dims[] = {NDIM};
     PyObject *ez = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     int i;
-    double *data = (double *)PyArray_DATA(ez);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)ez);
     for (i = 0; i < NDIM; ++i)
     {
         data[i] = self->box.ez[i];
@@ -390,7 +392,7 @@ static PyObject *boxobj_getdims(BoxObject *self, void *closure)
     npy_intp dims[] = {NDIM};
     PyObject *dimensions = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
     int i;
-    double *data = (double *)PyArray_DATA(dimensions);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)dimensions);
     for (i = 0; i < NDIM; ++i)
         data[i] = self->box.dims[i];
     return dimensions;
@@ -479,7 +481,8 @@ static PyObject *surfobj_test_points(SurfaceObject *self, PyObject *points)
         return NULL;
     }
 
-    surface_test_points(&self->surf, npts, (double *)PyArray_DATA(pts), (char *)PyArray_DATA(result));
+    surface_test_points(&self->surf, npts, (double *)PyArray_DATA((const PyArrayObject *)pts),
+                        (char *)PyArray_DATA((const PyArrayObject *)result));
     Py_DECREF(pts);
     return result;
 }
@@ -509,7 +512,7 @@ static int planeobj_init(PlaneObject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTuple(args, "O&d", convert_to_dbl_vec, &norm, &offset))
         return -1;
 
-    plane_init(&self->surf, (double *)PyArray_DATA(norm), offset);
+    plane_init(&self->surf, (double *)PyArray_DATA((const PyArrayObject *)norm), offset);
     Py_DECREF(norm);
     return 0;
 }
@@ -521,7 +524,7 @@ static int sphereobj_init(SphereObject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTuple(args, "O&d", convert_to_dbl_vec, &center, &radius))
         return -1;
 
-    sphere_init(&self->surf, (double *)PyArray_DATA(center), radius);
+    sphere_init(&self->surf, (double *)PyArray_DATA((const PyArrayObject *)center), radius);
     Py_DECREF(center);
     return 0;
 }
@@ -533,7 +536,8 @@ static int cylinderobj_init(CylinderObject *self, PyObject *args, PyObject *kwds
     if (!PyArg_ParseTuple(args, "O&O&d", convert_to_dbl_vec, &point, convert_to_dbl_vec, &axis, &radius))
         return -1;
 
-    cylinder_init(&self->surf, (double *)PyArray_DATA(point), (double *)PyArray_DATA(axis), radius);
+    cylinder_init(&self->surf, (double *)PyArray_DATA((const PyArrayObject *)point),
+                  (double *)PyArray_DATA((const PyArrayObject *)axis), radius);
     Py_DECREF(point);
     Py_DECREF(axis);
     return 0;
@@ -547,7 +551,8 @@ static int coneobj_init(ConeObject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTuple(args, "O&O&di", convert_to_dbl_vec, &apex, convert_to_dbl_vec, &axis, &ta, &sheet))
         return -1;
 
-    cone_init(&self->surf, (double *)PyArray_DATA(apex), (double *)PyArray_DATA(axis), ta, sheet);
+    cone_init(&self->surf, (double *)PyArray_DATA((const PyArrayObject *)apex),
+              (double *)PyArray_DATA((const PyArrayObject *)axis), ta, sheet);
     Py_DECREF(apex);
     Py_DECREF(axis);
     return 0;
@@ -560,7 +565,8 @@ static int torusobj_init(TorusObject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTuple(args, "O&O&ddd", convert_to_dbl_vec, &center, convert_to_dbl_vec, &axis, &r, &a, &b))
         return -1;
 
-    int status = torus_init(&self->surf, (double *)PyArray_DATA(center), (double *)PyArray_DATA(axis), r, a, b);
+    int status = torus_init(&self->surf, (double *)PyArray_DATA((const PyArrayObject *)center),
+                            (double *)PyArray_DATA((const PyArrayObject *)axis), r, a, b);
     Py_DECREF(center);
     Py_DECREF(axis);
     return 0;
@@ -573,7 +579,8 @@ static int gqobj_init(GQuadraticObject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTuple(args, "O&O&dd", convert_to_dbl_vec_array, &m, convert_to_dbl_vec, &v, &k, &f))
         return -1;
 
-    gq_init(&self->surf, (double *)PyArray_DATA(m), (double *)PyArray_DATA(v), k, f);
+    gq_init(&self->surf, (double *)PyArray_DATA((const PyArrayObject *)m),
+            (double *)PyArray_DATA((const PyArrayObject *)v), k, f);
 
     Py_DECREF(m);
     Py_DECREF(v);
@@ -593,7 +600,7 @@ static PyObject *planeobj_getnorm(PlaneObject *self, void *closure)
 {
     npy_intp dims[] = {NDIM};
     PyObject *norm = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
-    double *data = (double *)PyArray_DATA(norm);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)norm);
     for (int i = 0; i < NDIM; ++i)
         data[i] = self->surf.norm[i];
     return norm;
@@ -623,7 +630,7 @@ static PyObject *sphereobj_getcenter(SphereObject *self, void *closure)
 {
     npy_intp dims[] = {NDIM};
     PyObject *center = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
-    double *data = (double *)PyArray_DATA(center);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)center);
     for (int i = 0; i < NDIM; ++i)
         data[i] = self->surf.center[i];
     return center;
@@ -653,7 +660,7 @@ static PyObject *cylinderobj_getpt(CylinderObject *self, void *closure)
 {
     npy_intp dims[] = {NDIM};
     PyObject *pt = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
-    double *data = (double *)PyArray_DATA(pt);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)pt);
     for (int i = 0; i < NDIM; ++i)
         data[i] = self->surf.point[i];
     return pt;
@@ -663,7 +670,7 @@ static PyObject *cylinderobj_getaxis(CylinderObject *self, void *closure)
 {
     npy_intp dims[] = {NDIM};
     PyObject *axis = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
-    double *data = (double *)PyArray_DATA(axis);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)axis);
     for (int i = 0; i < NDIM; ++i)
         data[i] = self->surf.axis[i];
     return axis;
@@ -846,7 +853,7 @@ static PyObject *coneobj_getapex(ConeObject *self, void *closure)
 {
     npy_intp dims[] = {NDIM};
     PyObject *apex = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
-    double *data = (double *)PyArray_DATA(apex);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)apex);
     for (int i = 0; i < NDIM; ++i)
         data[i] = self->surf.apex[i];
     return apex;
@@ -856,7 +863,7 @@ static PyObject *coneobj_getaxis(ConeObject *self, void *closure)
 {
     npy_intp dims[] = {NDIM};
     PyObject *axis = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
-    double *data = (double *)PyArray_DATA(axis);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)axis);
     for (int i = 0; i < NDIM; ++i)
         data[i] = self->surf.axis[i];
     return axis;
@@ -893,7 +900,7 @@ static PyObject *torusobj_getcenter(TorusObject *self, void *closure)
 {
     npy_intp dims[] = {NDIM};
     PyObject *center = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
-    double *data = (double *)PyArray_DATA(center);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)center);
     for (int i = 0; i < NDIM; ++i)
         data[i] = self->surf.center[i];
     return center;
@@ -903,7 +910,7 @@ static PyObject *torusobj_getaxis(TorusObject *self, void *closure)
 {
     npy_intp dims[] = {NDIM};
     PyObject *axis = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
-    double *data = (double *)PyArray_DATA(axis);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)axis);
     for (int i = 0; i < NDIM; ++i)
         data[i] = self->surf.axis[i];
     return axis;
@@ -937,7 +944,7 @@ static PyObject *gqobj_get_m(GQuadraticObject *self, void *closure)
 {
     npy_intp dims[] = {NDIM, NDIM};
     PyObject *m = PyArray_EMPTY(2, dims, NPY_DOUBLE, 0);
-    double *data = (double *)PyArray_DATA(m);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)m);
     for (int i = 0; i < NDIM * NDIM; ++i)
         data[i] = self->surf.m[i];
     return m;
@@ -947,7 +954,7 @@ static PyObject *gqobj_get_v(GQuadraticObject *self, void *closure)
 {
     npy_intp dims[] = {NDIM};
     PyObject *v = PyArray_EMPTY(1, dims, NPY_DOUBLE, 0);
-    double *data = (double *)PyArray_DATA(v);
+    double *data = (double *)PyArray_DATA((const PyArrayObject *)v);
     for (int i = 0; i < NDIM; ++i)
         data[i] = self->surf.v[i];
     return v;
@@ -1047,11 +1054,11 @@ static PyGetSetDef shapeobj_getset[] = {
     {NULL}};
 
 static PyMethodDef shapeobj_methods[] = {
-    {"test_box", (PyCFunctionWithKeywords)shapeobj_test_box, METH_VARARGS | METH_KEYWORDS,
+    {"test_box", (void *)shapeobj_test_box, METH_VARARGS | METH_KEYWORDS,
      "Tests where the box is located with respect to the surface."},
-    {"ultimate_test_box", (PyCFunctionWithKeywords)shapeobj_ultimate_test_box, METH_VARARGS | METH_KEYWORDS, ""},
-    {"volume", (PyCFunctionWithKeywords)shapeobj_volume, METH_VARARGS | METH_KEYWORDS, ""},
-    {"bounding_box", (PyCFunctionWithKeywords)shapeobj_bounding_box, METH_VARARGS | METH_KEYWORDS, ""},
+    {"ultimate_test_box", (void *)shapeobj_ultimate_test_box, METH_VARARGS | METH_KEYWORDS, ""},
+    {"volume", (void *)shapeobj_volume, METH_VARARGS | METH_KEYWORDS, ""},
+    {"bounding_box", (void *)shapeobj_bounding_box, METH_VARARGS | METH_KEYWORDS, ""},
     {"collect_statistics", (PyCFunction)shapeobj_collect_statistics, METH_VARARGS, ""},
     {"get_stat_table", (PyCFunction)shapeobj_get_stat_table, METH_NOARGS, ""},
     {"test_points", (PyCFunction)shapeobj_test_points, METH_O,
@@ -1238,7 +1245,8 @@ static PyObject *shapeobj_test_points(ShapeObject *self, PyObject *points)
         return NULL;
     }
 
-    shape_test_points(&self->shape, npts, (double *)PyArray_DATA(pts), (char *)PyArray_DATA(result));
+    shape_test_points(&self->shape, npts, (double *)PyArray_DATA((const PyArrayObject *)pts),
+                      (char *)PyArray_DATA((const PyArrayObject *)result));
     Py_DECREF(pts);
     return result;
 }
@@ -1477,13 +1485,14 @@ PyMODINIT_FUNC PyInit_geometry(void)
     ey = PyArray_ZEROS(1, dims, NPY_DOUBLE, 0);
     ez = PyArray_ZEROS(1, dims, NPY_DOUBLE, 0);
 
-    *((double *)PyArray_DATA(ex) + 0) = 1.0;
-    *((double *)PyArray_DATA(ey) + 1) = 1.0;
-    *((double *)PyArray_DATA(ez) + 2) = 1.0;
+    *((double *)PyArray_DATA((const PyArrayObject *)ex) + 0) = 1.0;
+    *((double *)PyArray_DATA((const PyArrayObject *)ey) + 1) = 1.0;
+    *((double *)PyArray_DATA((const PyArrayObject *)ez) + 2) = 1.0;
 
     global_box = (BoxObject *)PyType_GenericNew(&BoxType, NULL, NULL);
-    box_init(&global_box->box, (double *)PyArray_DATA(origin), (double *)PyArray_DATA(ex), (double *)PyArray_DATA(ey),
-             (double *)PyArray_DATA(ez), MAX_DIM, MAX_DIM, MAX_DIM);
+    box_init(&global_box->box, (double *)PyArray_DATA((const PyArrayObject *)origin),
+             (double *)PyArray_DATA((const PyArrayObject *)ex), (double *)PyArray_DATA((const PyArrayObject *)ey),
+             (double *)PyArray_DATA((const PyArrayObject *)ez), MAX_DIM, MAX_DIM, MAX_DIM);
 
     PyModule_AddObject(m, ORIGIN, (PyObject *)origin);
     PyModule_AddObject(m, EX, (PyObject *)ex);

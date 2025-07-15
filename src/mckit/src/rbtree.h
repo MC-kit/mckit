@@ -19,11 +19,13 @@ enum Color
     RED = 1
 };
 
+typedef int (*rbtree_comparator)(const void *, const void *);
+
 struct RBTree
 {
     RBNode *root;
     size_t len;
-    int (*compare)(const void *, const void *);
+    rbtree_comparator compare;
 };
 
 struct RBNode
@@ -38,7 +40,7 @@ struct RBNode
 /* Creates new red-black tree.
  * compare - pointer to comparison function.
  */
-RBTree *rbtree_create(int (*compare)(const void *, const void *));
+RBTree *rbtree_create(rbtree_comparator compare);
 
 /* Frees memory allocated by RBTree object.
  */
