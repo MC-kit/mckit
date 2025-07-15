@@ -11,7 +11,6 @@ endif()
 
 cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION,
                       SKBUIL_STATE)
-
 project(
   ${SKBUILD_PROJECT_NAME}
   VERSION ${SKBUILD_PROJECT_VERSION}
@@ -21,10 +20,6 @@ project(
 if(SKBUILD)
   message(STATUS "The project is built using scikit-build")
 endif()
-
-# https://cliutils.gitlab.io/modern-cmake/chapters/packages/CUDA.html
-# include(CheckLanguage) check_language(CUDA) if(CMAKE_CUDA_COMPILER)
-# enable_language(CUDA) endif()
 
 # Only do these if this is the main project, and not if it is included through
 # add_subdirectory
@@ -84,7 +79,6 @@ endif()
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
 
 if(NOT DEFINED PythonEnv_ROOT)
-
   execute_process(
     COMMAND ${Python_EXECUTABLE} -c "import sys; print(sys.prefix)"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -137,16 +131,13 @@ endif()
 install(TARGETS nlopt DESTINATION ${SKBUILD_PROJECT_NAME})
 install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
 
-if(DEFINED ENV{MCKIT_SRC})
-  # copy libraries to the source tree for editable installation
-  install(TARGETS nlopt DESTINATION $ENV{MCKIT_SRC}/src/mckit)
-  install(TARGETS geometry DESTINATION $ENV{MCKIT_SRC}/src/mckit)
-else()
-  message(
-    WARNING
-      "Environment variable MCKIT_SRC is not defined. Libs are not copied to the source tree."
-  )
+if(NOT DEFINED ENV{MCKIT_SRC})
+  set(ENV{MCKIT_SRC} ${CMAKE_SOURCE_DIR})
 endif()
+
+# copy libraries to the source tree for editable installation
+install(TARGETS nlopt DESTINATION $ENV{MCKIT_SRC}/src/mckit)
+install(TARGETS geometry DESTINATION $ENV{MCKIT_SRC}/src/mckit)
 
 include(FeatureSummary)
 
