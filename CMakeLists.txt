@@ -12,7 +12,6 @@ endif()
 cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION,
                       SKBUIL_STATE)
 
-# TODO: setup SKBUILD variables in build.py - retrieve from poetry
 project(
   ${SKBUILD_PROJECT_NAME}
   VERSION ${SKBUILD_PROJECT_VERSION}
@@ -96,7 +95,6 @@ if(NOT DEFINED PythonEnv_ROOT)
     message(FATAL_ERROR "Cannot find python environment")
   endif()
 endif()
-cmake_print_variables(PythonEnv_ROOT)
 
 list(APPEND CMAKE_PREFIX_PATH ${PythonEnv_ROOT})
 
@@ -116,9 +114,6 @@ if(WIN32)
 else()
   set(MKL_DIR ${PythonEnv_ROOT})
 endif()
-
-cmake_print_variables(MKL_DIR)
-cmake_print_variables(CMAKE_MODULE_PATH CMAKE_PREFIX_PATH)
 
 find_package(MKL REQUIRED)
 
