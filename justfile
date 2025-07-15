@@ -73,8 +73,7 @@ reinstall: clean install
 check: pre-commit test
 
 [group: 'dev']
-@bump *args:
-  #!/bin/bash
+@bump *args="patch":
   uv version --bump {{args}}
   git commit -m "bump: version $(uv version)" pyproject.toml uv.lock 
 
