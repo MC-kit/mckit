@@ -103,8 +103,12 @@ mypy = [
     "pep8-naming>=0.12.1",
     "types-setuptools>=80.9.0.20250529",
 ]
-docs = ["sphinx>=8.2.3", "sphinx-autodoc-typehints>=3.2.0"]
-docs_auto = ["sphinx-autobuild>=2024.10.3"]
+docs = [
+    "sphinx>=8.2.3",
+    "sphinx-autodoc-typehints>=3.2.0",
+    "sphinx-click>=6.0.0",
+]
+docs_auto = ["sphinx-autobuild>=2024.10.3", { include-group = "docs" }]
 ruff = ["ruff>=0.0.259"]
 analyze = ["jupyterlab>=4.2.5", "jupytext>=1.16.4"]
 

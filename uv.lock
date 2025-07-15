@@ -1016,6 +1016,7 @@ dev = [
     { name = "sphinx" },
     { name = "sphinx-autobuild" },
     { name = "sphinx-autodoc-typehints" },
+    { name = "sphinx-click" },
     { name = "typeguard" },
     { name = "types-setuptools" },
     { name = "xdoctest", extra = ["colors"] },
@@ -1023,9 +1024,13 @@ dev = [
 docs = [
     { name = "sphinx" },
     { name = "sphinx-autodoc-typehints" },
+    { name = "sphinx-click" },
 ]
 docs-auto = [
+    { name = "sphinx" },
     { name = "sphinx-autobuild" },
+    { name = "sphinx-autodoc-typehints" },
+    { name = "sphinx-click" },
 ]
 mypy = [
     { name = "mypy" },
@@ -1098,6 +1103,7 @@ dev = [
     { name = "sphinx", specifier = ">=8.2.3" },
     { name = "sphinx-autobuild", specifier = ">=2024.10.3" },
     { name = "sphinx-autodoc-typehints", specifier = ">=3.2.0" },
+    { name = "sphinx-click", specifier = ">=6.0.0" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2.0.1" },
     { name = "typeguard", specifier = ">=4.1.5" },
     { name = "types-setuptools", specifier = ">=80.9.0.20250529" },
@@ -1106,8 +1112,14 @@ dev = [
 docs = [
     { name = "sphinx", specifier = ">=8.2.3" },
     { name = "sphinx-autodoc-typehints", specifier = ">=3.2.0" },
+    { name = "sphinx-click", specifier = ">=6.0.0" },
 ]
-docs-auto = [{ name = "sphinx-autobuild", specifier = ">=2024.10.3" }]
+docs-auto = [
+    { name = "sphinx", specifier = ">=8.2.3" },
+    { name = "sphinx-autobuild", specifier = ">=2024.10.3" },
+    { name = "sphinx-autodoc-typehints", specifier = ">=3.2.0" },
+    { name = "sphinx-click", specifier = ">=6.0.0" },
+]
 mypy = [
     { name = "mypy", specifier = ">=1.2.0" },
     { name = "pep8-naming", specifier = ">=0.12.1" },
@@ -2199,6 +2211,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/93/68/a388a9b8f066cd865d9daa65af589d097efbfab9a8c302d2cb2daa43b52e/sphinx_autodoc_typehints-3.2.0.tar.gz", hash = "sha256:107ac98bc8b4837202c88c0736d59d6da44076e65a0d7d7d543a78631f662a9b", size = 36724, upload-time = "2025-04-25T16:53:25.872Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f7/c7/8aab362e86cbf887e58be749a78d20ad743e1eb2c73c2b13d4761f39a104/sphinx_autodoc_typehints-3.2.0-py3-none-any.whl", hash = "sha256:884b39be23b1d884dcc825d4680c9c6357a476936e3b381a67ae80091984eb49", size = 20563, upload-time = "2025-04-25T16:53:24.492Z" },
+]
+
+[[package]]
+name = "sphinx-click"
+version = "6.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "docutils" },
+    { name = "sphinx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/db/0a/5b1e8d0579dbb4ca8114e456ca4a68020bfe8e15c7001f3856be4929ab83/sphinx_click-6.0.0.tar.gz", hash = "sha256:f5d664321dc0c6622ff019f1e1c84e58ce0cecfddeb510e004cf60c2a3ab465b", size = 29574, upload-time = "2024-05-15T14:49:17.044Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/d7/8621c4726ad3f788a1db4c0c409044b16edc563f5c9542807b3724037555/sphinx_click-6.0.0-py3-none-any.whl", hash = "sha256:1e0a3c83bcb7c55497751b19d07ebe56b5d7b85eb76dd399cf9061b497adc317", size = 9922, upload-time = "2024-05-15T14:49:15.768Z" },
 ]
 
 [[package]]
