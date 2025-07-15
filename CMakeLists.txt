@@ -12,6 +12,7 @@ endif()
 cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION,
                       SKBUIL_STATE)
 
+# TODO: setup SKBUILD variables in build.py - retrieve from poetry
 project(
   ${SKBUILD_PROJECT_NAME}
   VERSION ${SKBUILD_PROJECT_VERSION}
@@ -21,6 +22,10 @@ project(
 if(SKBUILD)
   message(STATUS "The project is built using scikit-build")
 endif()
+
+# https://cliutils.gitlab.io/modern-cmake/chapters/packages/CUDA.html
+# include(CheckLanguage) check_language(CUDA) if(CMAKE_CUDA_COMPILER)
+# enable_language(CUDA) endif()
 
 # Only do these if this is the main project, and not if it is included through
 # add_subdirectory
@@ -41,9 +46,12 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
                                                  "MinSizeRel" "RelWithDebInfo")
   endif()
 
-  # if(CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR) message( FATAL_ERROR
-  # "Building in-source is not supported! Create a build dir and remove
-  # ${CMAKE_SOURCE_DIR}/CMakeCache.txt" ) endif()
+  if(CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
+    message(
+      FATAL_ERROR
+        "Building in-source is not supported! Create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt"
+    )
+  endif()
 
   find_package(Git QUIET)
 
@@ -75,9 +83,6 @@ if(WIN32)
 endif()
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
-
-# TODO dvp: check if CLI variable provided by sci-build are sufficient instead
-# of own search
 
 if(NOT DEFINED PythonEnv_ROOT)
 
