@@ -131,11 +131,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        python-version: [ '3.13' ]  # debug
-        # python-version: [ '3.11', '3.12', '3.13' ]
-        # include: 
-        #   - os: windows-latest
-        #     python-version: '3.13'  # Windows runner is too slow
+        python-version: [ '3.11', '3.12', '3.13' ]
+        include: 
+          - os: windows-latest
+            python-version: '3.13'  # Windows runner is too slow
 
     steps:
 
@@ -158,7 +157,7 @@ jobs:
         run: uv sync --all-extras --no-dev --group test
 
       - name: ✅ Run tests
-        run: uv run coverage run --parallel -m pytest -v --emoji
+        run: uv run coverage run --parallel -m pytest
 
       - name: 🔃 Upload coverage data
         uses: actions/upload-artifact@v4
