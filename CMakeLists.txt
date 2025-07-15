@@ -144,8 +144,8 @@ else()
   target_link_libraries(geometry PUBLIC pthread m dl)
 endif()
 
-install(TARGETS nlopt DESTINATION ${COPY_TO})
-install(TARGETS geometry DESTINATION ${COPY_TO})
+install(TARGETS nlopt DESTINATION ${SKBUILD_PROJECT_NAME})
+install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
 
 include(FeatureSummary)
 
