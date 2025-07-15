@@ -23,22 +23,21 @@ _NAME_TO_CHARGE: dict[str, int] = {}
 _NATURAL_ABUNDANCE: dict[int, dict[int, float]] = {}
 _ISOTOPE_MASS: dict[int, dict[int, float]] = {}
 
-with rs.as_file(rs.files(__package__).joinpath("data/isotopes.dat")) as p:
-    with p.open() as f:
-        for line in f:
-            str_number, name, *data = line.split()
-            number = int(str_number)
-            name = name.upper()
-            _CHARGE_TO_NAME[number] = name
-            _NAME_TO_CHARGE[name] = number
-            _NATURAL_ABUNDANCE[number] = {}
-            _ISOTOPE_MASS[number] = {}
-            for i in range(len(data) // 3):
-                isotope = int(data[i * 3])
-                _ISOTOPE_MASS[number][isotope] = float(data[i * 3 + 1])
-                abundance = data[i * 3 + 2]
-                if abundance != "*":
-                    _NATURAL_ABUNDANCE[number][isotope] = float(abundance) / 100.0
+with rs.as_file(rs.files(__package__).joinpath("data/isotopes.dat")) as p, p.open() as f:
+    for line in f:
+        str_number, name, *data = line.split()
+        number = int(str_number)
+        name = name.upper()
+        _CHARGE_TO_NAME[number] = name
+        _NAME_TO_CHARGE[name] = number
+        _NATURAL_ABUNDANCE[number] = {}
+        _ISOTOPE_MASS[number] = {}
+        for i in range(len(data) // 3):
+            isotope = int(data[i * 3])
+            _ISOTOPE_MASS[number][isotope] = float(data[i * 3 + 1])
+            abundance = data[i * 3 + 2]
+            if abundance != "*":
+                _NATURAL_ABUNDANCE[number][isotope] = float(abundance) / 100.0
 
 
 TFraction = tuple[Union["Element", int, str], float]
@@ -107,11 +106,11 @@ class Composition(Card):
 
             norm_factor = self._molar_mass * atoms_in_weight_spec + total_frac_a
             for el, frac in zip(elem_w, frac_w, strict=False):
-                if el not in self._composition.keys():
+                if el not in self._composition:
                     self._composition[el] = 0.0
                 self._composition[el] += self._molar_mass / norm_factor * frac / el.molar_mass
             for el, frac in zip(elem_a, frac_a, strict=False):
-                if el not in self._composition.keys():
+                if el not in self._composition:
                     self._composition[el] = 0.0
                 self._composition[el] += frac / norm_factor
         else:
@@ -234,7 +233,7 @@ class Composition(Card):
             if el.mass_number == 0:
                 already = False
             for _isotope, frac in el.expand().items():
-                if _isotope not in composition.keys():
+                if _isotope not in composition:
                     composition[_isotope] = 0
                 composition[_isotope] += concentration * frac
         if already:
@@ -258,12 +257,12 @@ class Composition(Card):
         by_charge: dict[int, dict[int, float]] = {}
         for elem, fraction in self._composition.items():
             q = elem.charge
-            if q not in by_charge.keys():
+            if q not in by_charge:
                 by_charge[q] = {}
             a = elem.mass_number
             if a > 0:
                 already = False
-            if a not in by_charge[q].keys():
+            if a not in by_charge[q]:
                 by_charge[q][a] = 0
             by_charge[q][a] += fraction
 
@@ -566,7 +565,7 @@ class Element:
         Z = self._charge
         A = self._mass_number
         if A > 0:
-            if A in _ISOTOPE_MASS[Z].keys():
+            if A in _ISOTOPE_MASS[Z]:
                 self._molar = _ISOTOPE_MASS[Z][A]
             else:  # If no data about molar mass present, then mass number
                 self._molar = A  # itself is the best approximation.
@@ -695,7 +694,7 @@ class Element:
             A dictionary of elements that are comprised by the isotopes of this one and their fractions.
         """
         result = {}
-        if self._mass_number > 0 and self._mass_number in _NATURAL_ABUNDANCE[self._charge].keys():
+        if self._mass_number > 0 and self._mass_number in _NATURAL_ABUNDANCE[self._charge]:
             result[self] = 1.0
         elif self._mass_number == 0:
             for at_num, frac in _NATURAL_ABUNDANCE[self._charge].items():

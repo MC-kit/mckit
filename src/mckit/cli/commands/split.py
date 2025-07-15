@@ -13,8 +13,8 @@ from pathlib import Path
 import mckit.parser.mcnp_section_parser as sp
 
 from mckit.cli._logging import logger
+from mckit.constants import MCNP_ENCODING
 
-from ...constants import MCNP_ENCODING
 from .common import check_if_path_exists
 
 OUTER_LINE = "=" * 40
@@ -63,8 +63,8 @@ def split(output_dir: Path, mcnp_file_name: str | Path, override: bool, separato
 
 
 def write_separators(output: Path, model: str) -> None:
-    for section in "cells surfaces materials transformations tallies".split():
-        for start_end in "start end".split():
+    for section in ["cells", "surfaces", "materials", "transformations", "tallies"]:
+        for start_end in ["start", "end"]:
             if start_end == "start":
                 first_line = OUTER_LINE
                 second_line = INNER_LINE

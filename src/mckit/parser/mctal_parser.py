@@ -129,8 +129,5 @@ def parse_bin(text, read_values=True, val_type=float):
     # if extra:
     #     tokens.popleft()
     tokens = deque(values_list.split())
-    if read_values:
-        bin_values = [val_type(t) for t in tokens]
-    else:
-        bin_values = list(range(dim_size))
+    bin_values = [val_type(t) for t in tokens] if read_values else list(range(dim_size))
     return dim_size, bin_values

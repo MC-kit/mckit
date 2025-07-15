@@ -15,7 +15,7 @@ import numpy as np
 
 from numpy import ndarray
 
-from ..constants import FLOAT_TOLERANCE
+from mckit.constants import FLOAT_TOLERANCE
 
 MAX_DIGITS = np.finfo(float).precision
 
@@ -68,10 +68,7 @@ def get_decades(value: float) -> int:
     Returns:
         Number of decades.
     """
-    if value != 0:
-        decimal_power = np.log10(abs(float(value)))
-    else:
-        decimal_power = 0
+    decimal_power = np.log10(abs(float(value))) if value != 0 else 0
     decades = np.trunc(decimal_power)
     if decimal_power < 0:
         decades -= 1
@@ -224,7 +221,7 @@ def compute_hash(*items) -> int:
     Note:
         Take care on the objects values are stable, while the hashes are in use.
     """
-    if 1 < len(items):
+    if len(items) > 1:
         return compute_hash(tuple(map(compute_hash, items)))
     return hash(make_hashable(items[0]))
 

@@ -52,7 +52,7 @@ int shape_init(Shape *shape, char opc, size_t alen, const void *args)
 {
     shape->opc = opc;
     shape->alen = alen;
-    shape->stats = rbtree_create(stat_compare);
+    shape->stats = rbtree_create((rbtree_comparator)stat_compare);
     shape->last_box = 0;
     shape->last_box_result = 0;
     if (is_final(opc))
@@ -328,7 +328,7 @@ int shape_test_points(const Shape *shape,   // test shape
 
     @return SHAPE_SUCCESS (always)
  */
-int shape_bounding_box(const Shape *shape, Box *box, double tol)
+int shape_bounding_box(Shape *shape, Box *box, double tol)
 {
     double lower, upper, ratio;
     int dim, tl;
@@ -374,7 +374,7 @@ int shape_bounding_box(const Shape *shape, Box *box, double tol)
  min_vol the process of box splitting finishes.
  @return computed volume
  */
-double shape_volume(const Shape *shape, const Box *box, double min_vol)
+double shape_volume(Shape *shape, const Box *box, double min_vol)
 {
     int result = shape_test_box(shape, box, 0, NULL);
 
@@ -446,10 +446,10 @@ void shape_reset_stat(Shape *shape)
 }
 
 // Gets shape's contour.Returns the number of points in the contour.
-size_t shape_contour(const Shape *shape, // Shape
-                     const Box *box,     // Box, where contour is needed.
-                     double min_vol,     // Size of volume to be considered as point
-                     double *buffer      // Buffer, where points are put.
+size_t shape_contour(Shape *shape,   // Shape
+                     const Box *box, // Box, where contour is needed.
+                     double min_vol, // Size of volume to be considered as point
+                     double *buffer  // Buffer, where points are put.
 )
 {
     int result = shape_test_box(shape, box, 0, NULL);

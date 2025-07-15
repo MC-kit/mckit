@@ -61,10 +61,7 @@ def compose(output, fill_descriptor_path, source, override):
                 transformation1 = np.fromiter(map(float, iter(transformation)), dtype=np.double)
                 try:
                     translation = transformation1[:3]
-                    if len(transformation1) > 3:
-                        rotation = transformation1[3:]
-                    else:
-                        rotation = None
+                    rotation = transformation1[3:] if len(transformation1) > 3 else None
                     transformation2 = mk.Transformation(
                         translation=translation,
                         rotation=rotation,
@@ -137,10 +134,8 @@ def load_named_transformations(fill_descriptor) -> dict[int, Transformation] | N
             name = int(k[2:])
             transform_params = np.fromiter(map(float, v), dtype=float)
             translation = transform_params[:3]
-            if transform_params.size == 9:
-                rotation = transform_params[3:]
-            else:
-                rotation = None
+
+            rotation = transform_params[3:] if transform_params.size == 9 else None
             transform = Transformation(
                 translation=translation, rotation=rotation, indegrees=True, name=name
             )

@@ -39,9 +39,6 @@ class RectMesh:
         if transform is not None:
             self.transform(transform)
 
-    def __eq__(self, other):
-        return self is other
-
     def bounding_box(self):
         """Gets the bounding box of the cell.
 
@@ -117,10 +114,7 @@ class RectMesh:
         i, j, k : int
             Indices along each dimension of voxel, where the point is located.
         """
-        if self._tr and not local:
-            point = self._tr.reverse().apply2point(point)
-        else:
-            point = np.array(point)
+        point = self._tr.reverse().apply2point(point) if self._tr and not local else np.array(point)
         x_proj = np.dot(point, EX)
         y_proj = np.dot(point, EY)
         z_proj = np.dot(point, EZ)
@@ -187,6 +181,7 @@ class RectMesh:
             Centers of bins along free axes.
         """
         none = 0
+        axis = 0
         for i, a in enumerate([X, Y, Z]):
             if a is not None:
                 none += 1
@@ -206,14 +201,8 @@ class RectMesh:
         if index is None:
             raise ValueError("Specified point lies outside of the mesh.")
 
-        if axis > 0:
-            x = mids(self._xbins)
-        else:
-            x = mids(self._ybins)
-        if axis < 2:
-            y = mids(self._zbins)
-        else:
-            y = mids(self._ybins)
+        x = mids(self._xbins) if axis > 0 else mids(self._ybins)
+        y = mids(self._zbins) if axis < 2 else mids(self._ybins)
 
         return axis, index, x, y
 
@@ -550,7 +539,7 @@ class FMesh:
             data = np.sum(data, axis=0)
             err = np.nan_to_num(abs_tot_err / data)
         else:
-            if E <= self._ebins[0] or E > self._ebins[-1]:
+            if self._ebins[0] >= E or self._ebins[-1] < E:
                 raise ValueError("Specified energy lies outside of energy bins.")
             i = np.searchsorted(self._ebins, E) - 1
             data = data.take(i, axis=0)

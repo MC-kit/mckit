@@ -1630,7 +1630,7 @@ class TestMaterial:
     )
     def test_creation_failure(self, data: dict[str, Any], msg):
         data = deepcopy(data)  # this fixes pytest strange behavior (see below)"
-        if "composition" in data.keys():
+        if "composition" in data:
             composition_params = data.pop("composition")
             assert not isinstance(composition_params, Composition), (
                 "Check some strange behavior on 'pytest test/*.py': arriving params are already Composition"
@@ -1651,11 +1651,11 @@ class TestMaterial:
         mat2 = Material(composition=comp, **data)
         assert mat1.composition == comp
         assert mat2.composition == comp
-        if "density" in data.keys():
+        if "density" in data:
             d = pytest.approx(data["density"], rel=1.0e-5)
             assert mat1.density == d
             assert mat2.density == d
-        elif "concentration" in data.keys():
+        elif "concentration" in data:
             d = pytest.approx(data["concentration"], rel=1.0e-5)
             assert mat1.concentration == d
             assert mat2.concentration == d
@@ -1699,11 +1699,11 @@ class TestMaterial:
         "data",
         [{"new_vol": 5, "old_vol": 2.5}, {"new_vol": 4, "old_vol": 6}, {"factor": 2}],
     )
-    def test_correct(self, case_no: int, data):
+    def test_correct(self, case_no: int, data: dict[str, float]) -> None:
         mat = TestMaterial.materials[case_no]
         new_mat = mat.correct(**data)
         assert mat.composition == new_mat.composition
-        if "factor" in data.keys():
+        if "factor" in data:
             ans_den = pytest.approx(mat.density * data["factor"], rel=1.0e-10)
             assert new_mat.density == ans_den
         else:

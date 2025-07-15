@@ -40,10 +40,7 @@ def surfaces():
 def create_node(kind, args, surfs):
     new_args = []
     for g in args:
-        if isinstance(g, tuple):
-            _g = create_node(g[0], g[1], surfs)
-        else:
-            _g = surfs[g]
+        _g = create_node(g[0], g[1], surfs) if isinstance(g, tuple) else surfs[g]
         new_args.append(_g)
     return Shape(kind, *new_args)
 

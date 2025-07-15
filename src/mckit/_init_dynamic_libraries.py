@@ -5,14 +5,18 @@ This requires preloading of the library on all the systems.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import os
 import sys
 import sysconfig
 
-from collections.abc import Generator
 from ctypes import cdll
 from logging import getLogger
 from pathlib import Path
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 _LOG = getLogger(__name__)
 
@@ -64,7 +68,7 @@ def _preload_library(lib_name: str, max_version: int = 2) -> None:
                 cdll.LoadLibrary(str(p))
                 _LOG.info("Found library: {}", p.absolute())
                 return
-    raise OSError(f"Cannot preload library {lib_name}")
+    raise OSError(f"Cannot preload library {lib_name!r}")
 
 
 def _init():

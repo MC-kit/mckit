@@ -198,10 +198,7 @@ def split_to_cards(text: str, kind: Kind | None = None) -> Iterator[Card]:
             yield Card(comment, kind=Kind.COMMENT)
         if card:
             card = card.rstrip()
-            if kind is None:
-                _kind = Kind.from_card_text(card)
-            else:
-                _kind = kind
+            _kind = Kind.from_card_text(card) if kind is None else kind
             yield Card(card, kind=_kind)
 
 
@@ -242,7 +239,6 @@ def parse_sections_text(text: str) -> InputSections:
     Returns:
         mcnp_input_sections object, containing text of sections from the file
     """
-
     message = None
     cell_cards = None
     surface_cards = None

@@ -94,24 +94,24 @@ int shape_test_points(const Shape *shape,   ///< test shape
 );
 
 /// Gets bounding box, that bounds the shape.
-int shape_bounding_box(const Shape *shape, ///< Shape to de bound
-                       Box *box,           ///< INOUT: Start box. It is modified to obtain bounding box.
-                       double tol          ///< Absolute tolerance. When change of box dimensions become
-                                           ///< smaller than tol the process of box reduction finishes.
+int shape_bounding_box(Shape *shape, ///< Shape to de bound
+                       Box *box,     ///< INOUT: Start box. It is modified to obtain bounding box.
+                       double tol    ///< Absolute tolerance. When change of box dimensions become
+                                     ///< smaller than tol the process of box reduction finishes.
 );
 
 /// Gets volume of the shape
-double shape_volume(const Shape *shape, ///< Shape
-                    const Box *box,     ///< Box from which the process of volume finding starts
-                    double min_vol      ///< Minimum volume - when volume of the box become smaller
-                                        ///< than min_vol the process of box splitting finishes.
+double shape_volume(Shape *shape,   ///< Shape
+                    const Box *box, ///< Box from which the process of volume finding starts
+                    double min_vol  ///< Minimum volume - when volume of the box become smaller
+                                    ///< than min_vol the process of box splitting finishes.
 );
 
 /// Gets shape's contour
-size_t shape_contour(const Shape *shape, ///< Shape
-                     const Box *box,     ///< Box, where contour is needed.
-                     double min_vol,     ///< Size of volume to be considered as point
-                     double *buffer      ///< Buffer, where points are put.
+size_t shape_contour(Shape *shape,   ///< Shape
+                     const Box *box, ///< Box, where contour is needed.
+                     double min_vol, ///< Size of volume to be considered as point
+                     double *buffer  ///< Buffer, where points are put.
 );
 
 /// Resets collected statistics or initializes statistics storage

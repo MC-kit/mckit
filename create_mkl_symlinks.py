@@ -31,7 +31,8 @@ WIN = sys.platform.startswith("win32") and "mingw" not in sysconfig.get_platform
 MACOS = sys.platform.startswith("darwin")
 
 if WIN:
-    raise OSError("No need to create symlinks to MKL libraries on Windows")
+    msg = "No need to create symlinks to MKL libraries on Windows"
+    raise OSError(msg)
 
 if MACOS:
     pattern = "libmkl_*.dylib"
@@ -56,7 +57,7 @@ def create_mkl_symlinks() -> None:
 
 
 if __name__ == "__main__":
-    if 1 < len(sys.argv):
+    if len(sys.argv) > 1:
         if sys.argv[1] == "-h" or sys.argv[1] == "--help":
             print(__doc__)
         if sys.argv[1] == "-v" or sys.argv[1] == "--version":

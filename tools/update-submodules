@@ -1,6 +1,0 @@
-#!/bin/bash
-
-git submodule update --depth 1
-
-
-# vim: set ts=4 sw=4 tw=100 ss=0 ft=sh et ai :

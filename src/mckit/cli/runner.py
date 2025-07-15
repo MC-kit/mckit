@@ -86,10 +86,7 @@ def compose(output, fill_descriptor, source):
 @click.argument("source", metavar="<source>", type=click.Path(exists=True), nargs=1, required=True)
 def split(output, source, separators):
     """Splits MCNP model to text portions (opposite to concat)."""
-    if output is None:
-        output = get_default_output_directory(source, ".split")
-    else:
-        output = Path(output)
+    output = get_default_output_directory(source, ".split") if output is None else Path(output)
     output.mkdir(parents=True, exist_ok=True)
     logger.info("Running mckit split")
     logger.debug("Working dir {}", Path().absolute())

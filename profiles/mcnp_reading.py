@@ -5,11 +5,16 @@ Not using pytest.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from zipfile import ZipFile
 
 from mckit.constants import MCNP_ENCODING
-from mckit.parser.mcnp_input_sly_parser import ParseResult, from_text
+from mckit.parser.mcnp_input_sly_parser import from_text
 from mckit.utils._resource import path_resolver
+
+if TYPE_CHECKING:
+    from mckit.parser.mcnp_input_sly_parser import ParseResult
 
 data_filename_resolver = path_resolver("benchmarks")
 with ZipFile(data_filename_resolver("data/4M.zip")) as data_archive:

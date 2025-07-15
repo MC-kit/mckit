@@ -1,25 +1,25 @@
-cmake_minimum_required(VERSION 3.19...3.27)
+cmake_minimum_required(VERSION 3.19)
 
 include(CMakePrintHelpers)
 
+# to make CMake happy, if not running under skbuild
 if(NOT DEFINED SKBUILD_PROJECT_NAME)
   set(SKBUILD_PROJECT_NAME mckit)
-  set(SKBUILD_PROJECT_VERSION 0.6.28)
+  set(SKBUILD_PROJECT_VERSION 0.8.5) # TODO: add this version update to just
+                                     # bump action
 endif()
 
-cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION)
-
-# TODO: setup SKBUILD variables in build.py - retrieve from poetry
+cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION,
+                      SKBUIL_STATE)
 project(
   ${SKBUILD_PROJECT_NAME}
   VERSION ${SKBUILD_PROJECT_VERSION}
   DESCRIPTION "mckit geometry extension"
-  LANGUAGES C # TODO: upgrade to CXX
-)
+  LANGUAGES C CXX)
 
-# https://cliutils.gitlab.io/modern-cmake/chapters/packages/CUDA.html
-# include(CheckLanguage) check_language(CUDA) if(CMAKE_CUDA_COMPILER)
-# enable_language(CUDA) endif()
+if(SKBUILD)
+  message(STATUS "The project is built using scikit-build")
+endif()
 
 # Only do these if this is the main project, and not if it is included through
 # add_subdirectory
@@ -78,14 +78,7 @@ endif()
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
 
-cmake_print_variables(Python_EXECUTABLE Python_LIBRARIES Python_LIBRARY_DIRS
-                      Python_NumPy_INCLUDE_DIRS Python_STDLIB Python_SITELIB)
-
-# TODO dvp: check if CLI variable provided by sci-build are sufficient instead
-# of own search
-
 if(NOT DEFINED PythonEnv_ROOT)
-
   execute_process(
     COMMAND ${Python_EXECUTABLE} -c "import sys; print(sys.prefix)"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -96,7 +89,6 @@ if(NOT DEFINED PythonEnv_ROOT)
     message(FATAL_ERROR "Cannot find python environment")
   endif()
 endif()
-cmake_print_variables(PythonEnv_ROOT)
 
 list(APPEND CMAKE_PREFIX_PATH ${PythonEnv_ROOT})
 
@@ -117,9 +109,6 @@ else()
   set(MKL_DIR ${PythonEnv_ROOT})
 endif()
 
-cmake_print_variables(MKL_DIR)
-cmake_print_variables(CMAKE_MODULE_PATH CMAKE_PREFIX_PATH)
-
 find_package(MKL REQUIRED)
 
 set(geometry_dir ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src/)
@@ -139,8 +128,16 @@ else()
   target_link_libraries(geometry PUBLIC pthread m dl)
 endif()
 
-install(TARGETS nlopt LIBRARY DESTINATION src/mckit)
-install(TARGETS geometry LIBRARY DESTINATION src/mckit)
+install(TARGETS nlopt DESTINATION ${SKBUILD_PROJECT_NAME})
+install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
+
+if(NOT DEFINED ENV{MCKIT_SRC})
+  set(ENV{MCKIT_SRC} ${CMAKE_SOURCE_DIR})
+endif()
+
+# copy libraries to the source tree for editable installation
+install(TARGETS nlopt DESTINATION $ENV{MCKIT_SRC}/src/mckit)
+install(TARGETS geometry DESTINATION $ENV{MCKIT_SRC}/src/mckit)
 
 include(FeatureSummary)
 

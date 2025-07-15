@@ -1,29 +1,23 @@
 [build-system]
 requires = [
-    "poetry-core >= 2.0.0, <3.0.0",
-    "cmake >= 3.26.3",
-    "ninja; platform_system!='Windows'",
-    "setuptools >= 67.8.0",
-    "numpy >= 2.1.3",
-    "mkl-devel >= 2025.0.1",
-    "intel-cmplr-lib-ur == 2025.0.4", # next version 2025.0.5 is for windows only TODO check for updates
-    "scikit-build"
+    "scikit-build-core>=0.10",
+    # "cmake>=3.18",
+    # "ninja; platform_system!='Windows'",
+    "numpy",
+    "mkl-devel >= 2025.2.0",
 ]
-build-backend = "poetry.core.masonry.api"
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "mckit"
-dynamic = ["version", "requires-python"]
+version = "0.8.6"
+requires-python = ">=3.11 "                                              # connectorx==0.4.3 prevents <4
 description = "Tools to process MCNP models and results"
-license = { text = "GPL3" }
+authors = [{ name = "rrn" }]
 readme = "README.rst"
-authors = [
-    { name = "rrn" }
-]
-maintainers = [
-    { name = "dvp2015", email = "dmitri_portnov@yahoo.com" }
-]
+license = "MIT"
 keywords = ["mckit", "MCNP"]
+maintainers = [{ name = "dvp2015", email = "dmitri_portnov@yahoo.com" }]
 # Select from PyPI trove classifiers: https://pypi.org/classifiers/
 # poetry (2.0.0) doesn't pass dynamic classifieres to build.py, so, we use static
 # about dynamic classifiers in poetry: https://python-poetry.org/docs/pyproject/#classifiers-1
@@ -32,15 +26,11 @@ classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: Other/Proprietary License",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: C",
+    "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
@@ -48,117 +38,82 @@ dependencies = [
     "click (>=8.0.1)",
     "loguru (>=0.6.0)",
     "intel-cmplr-lib-ur == 2025.0.4", # next version 2025.0.5 is for windows only TODO check for updates
-    "mkl-devel (>=2025.0.1)",
-    "numpy (>=2.1.3)",
+    "mkl-devel (>=2025.1.0)",
+    "numpy (>=2.3.1)",
     "ply (>=3.11)",
-    "python-dotenv (>=0.20.0)",
-    "scipy (>=1.14.0)",
+    "python-dotenv (>=1.1.1)",
+    "scipy (>=1.16.0)",
     "sly (>=0.4)",
     "tomli-w (>=1.0.0)",
     "tqdm (>=4.55.1)",
-    "typer[all]  >=0.9.0",
-    'tomli >=2.0.1; python_version < "3.11"'
+    "typer >=0.9.0",                  # TODO @dvp: switch to cyclopts, same for click
 ]
 
 [project.urls]
-homepage = "https://github.com/MC-kit/mckit"
-repository = "https://github.com/MC-kit/mckit"
-documentation = "https://mckit.readthedocs.io"
-"Repository" = "https://github.com/MC-kit/mckit"
-"Bug Tracker" = "https://github.com/MC-kit/mckit/issues"
-
+Homepage = "https://github.com/MC-kit/mckit"
+Repository = "https://github.com/MC-kit/mckit"
+Documentation = "https://mckit.readthedocs.io"
+Issues = "https://github.com/MC-kit/mckit/issues"
 
 [project.scripts]
 mckit = "mckit.cli.runner:mckit"
 
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+build-dir = "build/{wheel_tag}"
+build.verbose = false
+logging.level = "INFO"
 
-[tool.poetry]
-version = "0.8.4"
-packages = [
-    { include = "mckit", from = "src" },
+
+[tool.cibuildwheel]
+build-frontend = "build[uv]"
+
+
+[dependency-groups]
+dev = [
+    "pip",
+    "tomli>=2.0.1 ; python_version < '3.11'",
+    { include-group = "pre_commit" },
+    { include-group = "test" },
+    { include-group = "coverage" },
+    { include-group = "xdoctest" },
+    { include-group = "typeguard" },
+    { include-group = "mypy" },
+    { include-group = "docs" },
+    { include-group = "docs_auto" },
+    { include-group = "ruff" },
+    { include-group = "analyze" },
 ]
-include = [
-    { path = "noxfile.py", format = "sdist" },
-    { path = "tests", format = "sdist" },
-    { path = "docs", format = "sdist" },
-    { path = "build.py", format = "sdist" },
-    { path = "create_mkl_symlinks.py", format = "sdist" },
-    # C extensions must be included in the wheel distribution.
-    { path = "src/mckit/**/*.pyd", format = "wheel" },
-    { path = "src/mckit/**/*.so", format = "wheel" },
+pre_commit = ["pre-commit>=2.15.0", "pydocstringformatter>=0.7.3"]
+test = [
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "pytest-mock>=3.14.0",
+    "pytest-durations>=1.5.2",
+    "pytest-emoji>=0.2.0",
+    "pytest-benchmark>=5.1.0",
+    { include-group = "coverage" },
+    { include-group = "xdoctest" },
 ]
-exclude = [
-    { path = "docs/build" },
-    { path = "setup.py" },
+coverage = ["coverage[toml]>=7.9.2"]
+xdoctest = ["xdoctest[colors]>=1.2.0"]
+typeguard = ["typeguard>=4.1.5"]
+mypy = [
+    "mypy>=1.2.0",
+    "pep8-naming>=0.12.1",
+    "types-setuptools>=80.9.0.20250529",
 ]
-
-
-[tool.poetry.build]
-script = "build.py"
-generate-setup-file = true
-
-#[tool.skikit-build]
-#cmake.verbose = true
-
-
-[tool.poetry.dependencies]
-python = ">=3.10,<3.14"
-
-[tool.poetry.group.dev.dependencies]
-Pygments = ">=2.10.0"
-nox = ">=2022.1.7"
-scikit-build = ">=0.17.6"
-
-[tool.poetry.group.pre_commit.dependencies]
-pre-commit = ">=2.15.0"
-rstcheck = ">=6.1.2"
-pydocstringformatter = ">=0.7.3"
-pyupgrade = ">=3.15.0"
-
-[tool.poetry.group.test.dependencies]
-pytest = ">=7.1"
-pytest-benchmark = ">=4.0.0"
-# pytest-cache = ">=1.0"
-pytest-cov = ">=4.0"
-# pytest-mock = ">=3.9"
-# pytest-randomly = ">=3.12"
-coverage = { version = ">=6.1.2", extras = ["toml"] }
-xdoctest = { extras = ["colors"], version = ">=0.15.10" }
-
-[tool.poetry.group.coverage.dependencies]
-coverage = { version = ">=6.1.2", extras = ["toml"] }
-
-[tool.poetry.group.xdoctest.dependencies]
-xdoctest = { extras = ["colors"], version = ">=0.15.10" }
-
-[tool.poetry.group.typeguard.dependencies]
-typeguard = ">=4.1.5"
-
-[tool.poetry.group.mypy.dependencies]
-mypy = ">=1.2.0"
-pep8-naming = ">=0.12.1"
-types-setuptools = ">=57.4.2"
-numpy = ">=1.26.2"
-types-tqdm = ">=4.66.0.2"
-
-[tool.poetry.group.docs.dependencies]
-sphinx = ">=6.1.3"
-sphinx-autodoc-typehints = ">=1.19.5"
-sphinx-click = ">=4.4.0"
-
-[tool.poetry.group.docs_auto.dependencies]
-sphinx-autobuild = ">=2021.3.14"
-
-[tool.poetry.group.ruff.dependencies]
-ruff = ">=0.0.259"
-
-
-[tool.poetry.group.analyze.dependencies]
-jupyterlab = ">=4.2.5"
-jupytext = ">=1.16.4"
+docs = [
+    "sphinx>=8.2.3",
+    "sphinx-autodoc-typehints>=3.2.0",
+    "sphinx-click>=6.0.0",
+]
+docs_auto = ["sphinx-autobuild>=2024.10.3", { include-group = "docs" }]
+ruff = ["ruff>=0.0.259"]
+analyze = ["jupyterlab>=4.2.5", "jupytext>=1.16.4"]
 
 [tool.pytest.ini_options]
-minversion = "6.2"
+minversion = "8.4"
 cache_dir = '.cache/pytest'
 norecursedirs = '''
 *.egg-info
@@ -186,27 +141,26 @@ addopts = '''
 --benchmark-disable
 --benchmark-storage=.cache/benchmarks
 --benchmark-autosave
---benchmark-compare
 --benchmark-group-by=name,fullname
+--pytest-durations-min=1
+--pytest-resultlog="pytest-result.log"
 '''
 doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ALLOW_UNICODE ALLOW_BYTES NUMBER"
 testpaths = ["tests", "src"]
-markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-]
+markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
 # xfail tests that pass should fail the test suite
 xfail_strict = true
 filterwarnings = [
     "error",
-    'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred to `pkg_resources.declare_namespace`',
+    # 'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred to `pkg_resources.declare_namespace`',
     "ignore:.*not typechecking multipledispatch.dispatcher.*UserWarning",
     'ignore:.*io.FileIO \[closed\]',
-    'ignore:.*Deprecated call to `pkg_resources.declare_namespace',
+    # 'ignore:.*Deprecated call to `pkg_resources.declare_namespace',
     'ignore:.*Implicit None on return values:DeprecationWarning',
-    # pandas 2.1.4 at python 3.12
-    'ignore:.*datetime.datetime.utcfromtimestamp\(\) is deprecated:DeprecationWarning',
-    # openpyxl 3.1.2 qt python 3.12
-    'ignore:.*datetime.datetime.utcnow\(\):DeprecationWarning'
+    # # pandas 2.1.4 at python 3.12
+    # 'ignore:.*datetime.datetime.utcfromtimestamp\(\) is deprecated:DeprecationWarning',
+    # # openpyxl 3.1.2 qt python 3.12
+    # 'ignore:.*datetime.datetime.utcnow\(\):DeprecationWarning',
 ]
 log_format = "%(asctime)s %(levelname)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
@@ -221,12 +175,12 @@ source = ["src", ".nox/*/site-packages"]
 [tool.coverage.run]
 branch = true
 source = ["src"]
-omit = ["*_tab.py", "**/__init__.py"]
+omit = ["*_tab.py", "**/__init__.py", "tools/*.py"]
 
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
-fail_under = 90  # TODO dvp: increase limit to 100 with code maturing
+fail_under = 90                       # TODO dvp: increase limit to 100 with code maturing
 omit = ["*_tab.py", "**/__init__.py"]
 # Regexes for lines to exclude from consideration
 exclude_lines = [
@@ -273,7 +227,6 @@ exclude = '''
 | lexer\.py$   # ...
   )
 '''
-plugins = ["numpy.typing.mypy_plugin"]
 
 [[tool.mypy.overrides]]
 module = [
@@ -281,12 +234,17 @@ module = [
     "IPython.core.magic_arguments",
     "click",
     "click.testing",
+    "dask.*",
+    "duckdb",
     "loguru",
-    "mckit.*", # TODO (dvp, style): make everything typed including extension 'geometry'
+    "mckit.*",                      # TODO (dvp, style): make everything typed including extension 'geometry',
+    "msgspec",
     "multipledispatch",
     "nox",
+    "numpy",
     "numpy.testing",
     "pandas",
+    "polars",
     "pytest",
     "scipy.constants",
     "scipy.sparse",
@@ -297,273 +255,17 @@ module = [
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = [
-    "tomllib",
-    "tomli",
-]
+module = ["tomllib"]
 allow_redefinition = true
 disable_error_code = "no-redef"
 
 [tool.check-manifest]
-ignore = [
-    "tests/*",
-    "tools/*",
-    "*.yaml",
-    "noxfile.py",
-]
-
-[tool.ipdb]
-# For debugging in jupyterlab and ipython
-# see https://github.com/gotcha/ipdb
-context = 5
-
-[tool.tryceratops]
-include = ["src"]
-experimental = true
-
-[tool.pydocstringformatter]
-write = true
-style = "pep257"
-exclude = ["tools/**", "src/**/*_parser.py", "src/**/*_tab.py"]
-strip-whitespaces = true
-max-line-length = 100
-summary-quotes-same-line = true
-
-
-[tool.pylint]
-good-names-rgxs = ["."]  # a single character variable is okay
-logging-format-style = "new"   # use {} in logging messages
-deprecated-modules = ["six"]
-extension-pkg-allow-list = ["duckdb"]
-disable = [
-    "wrong-import-order"  # this is `ruff format` responsibility
-]
-
-[tool.ruff]
-target-version = "py310"
-
-line-length = 100
-
-# show an enumeration of all autofixed lint violations
-show-fixes = true
-
-# show source code snippets when reporting violations
-output-format = "concise"
-
-src = ["src", "tests"]
-
-exclude = [
-    "*.egg-info",
-    ".direnv",
-    ".cache",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".mypy_cache",
-    ".nox",
-    ".ruff_cache",
-    ".venv",
-    "__pycache__",
-    "_build",
-    "adhoc",
-    "build",
-    "dist",
-    "docs/source/conf.py",
-    "extern",
-    "notebooks",
-    "venv",
-    "wrk",
-]
-
-[tool.ruff.lint]
-#see full list: https://beta.ruff.rs/docs/rules/#pyflakes-f
-#or run 'ruff linter' to see a brief list
-select = [
-    "A", # flake8-builtins
-    "AIR", # Airflow https://airflow.apache.org/docs/apache-airflow/stable/index.html
-    # "ANN", # flake8-annotations
-    # "ARG", # flake8-unused-arguments
-    "ASYNC", # flake8-async
-    "B", # flake8-bugbear
-    "BLE", # flake8-blind-except
-    "C4", # flake8-comprehensions
-    "C90", # mccabe
-    "COM", # flake8-commas
-    # "CPY", # flake8-copyright
-    "D", # pydocstyle
-    "DJ", # flake8-django
-    # "DTZ", # flake8-datetimez
-    "E", # pycodestyle
-    # "EM", # flake8-errmsg
-    # "ERA", # eradicate
-    # "EXE", # flake8-executable
-    "F", # Pyflakes
-    "FA", # flake8-future-annotations
-    # "FAST", # FastAPI
-    # "FBT", # flake8-boolean-trap  https://adamj.eu/tech/2021/07/10/python-type-hints-how-to-avoid-the-boolean-trap
-    # "FIX", # flake8-fixme
-    "FLY", # flynt
-    "FURB", # refurb
-    "G", # flake8-logging-format
-    "I", # isort
-    "ICN", # flake8-import-conventions
-    "INP", # flake8-no-pep420
-    "INT", # flake8-gettext
-    "ISC", # flake8-implicit-str-concat
-    "LOG", # flake8-log
-    "N", # pep8-naming
-    "NPY", # NumPy-specific rules
-    "PD", # pandas-vet
-    "PERF", # Perflint
-    "PGH", # pygrep-hooks
-    "PIE", # flake8-pie
-    "PL", # Pylint
-    "PT", # flake8-pytest-style
-    "PTH", # flake8-use-pathlib
-    "PYI", # flake8-pyi
-    "Q", # flake8-quotes
-    "RET", # flake8-return
-    # "RSE", # flake8-raise
-    "RUF", # Ruff-specific rules
-    "S", # flake8-bandit
-    # "SIM", # flake8-simplify
-    # "SLF", # flake8-self
-    "SLOT", # flake8-slot
-    "T10", # flake8-debugger
-    # "T20", # flake8-print
-    # "TD", # flake8-todos
-    # "TCH", # flake8-type-checking
-    # "TID", # flake8-tidy-imports
-    "TRY", # tryceratops
-    "UP", # pyupgrade
-    "W", # pycodestyle 2
-    "YTT", # flake8-2020
-]
-
-# Ignore rules that currently fail on the codebase
-ignore = [
-    "ANN001", # ANN001 Missing type annotation for function argument: doesn't allow to use functools dispatching
-    "ANN002", # ANN002 Missing type annotation for *drop_items: ... as above
-    "ANN202", # ANN202 Missing return type annotation for protected function: ... dispatching
-    "ANN204", # ANN204 Missing return type annotation for special method
-
-    "ARG001", # Unused function argument: `expected`
-
-    "C901", # too complex - ...
-
-    "COM812", #  [*] Trailing comma missing
-
-    "D100", # Missing docstring in public module
-    "D101", # Missing docstring in public class
-    "D102", # Missing docstring in public method
-    "D103", # Missing docstring in public function
-    "D105", # D105 Missing docstring in magic method (__hash__, __eq__)
-    "D104", # Missing docstring in public package
-    "D106", # Missing docstring in public nested class
-    "D107", # Missing docstring in __init__
-
-    "E402", # Module level import not at top of file
-    "E501", # Line too long (<LENGTH> > 100 characters)
-
-    "N803", # Argument name `R` should be lowercase
-    "N806", # Variable `D` in function should be lowercase
-
-    "ISC001", # may cause conflicts when used with the ruff formatter
-
-    "PLE1205", # logging-too-many-args - we use loguru with '{' style of placeholders
-
-    "PLR0912", # Too many branches (15 > 12)
-    "PLR0913", # Too many arguments to function call (6 > 5)
-    "PLR0915", # Too many statements (65 > 50)
-    "PLR2004", # magic number - don't want declare 0.0 as constant
-#    "PLR5501", # Consider using `elif` instead of `else` then `if` to remove one indentation level
-
-    "PT019", # Fixture `_bin` without value is injected as parameter (false positive?)
-
-    "S101", # Use of `assert` detected  - TODO - replace assert statements with exception raise
-
-    "TRY003", # Avoid specifying long messages outside the exception class
-
-]
-
-
-[tool.ruff.lint.per-file-ignores]
-"benchmarks/*" = ["S101"]
-"tests/*" = ["ANN", "D100", "D101", "D102", "D103", "D104", "PLR2004", "S101"]
-"src/mckit/cli/*" = [
-    "PLE1205", # Too many arguments for `logging` format string - we use loguru in CLI modules
-]
-"src/mckit/parser/*" = [
-    "A003",
-    "D",
-    "F811",
-    "F821",
-    "N802",
-    "N816", # Variable `t_ANY_ignore` in global scope should not be mixedCase
-    "T201", # print found
-]
-"tests/parser/*" = [
-    "A003",
-    "D",
-    "F811",
-    "F821",
-    "N802",
-    "N816", # Variable `t_ANY_ignore` in global scope should not be mixedCase
-    "T201", # print found
-]
-"tools/*" = ["T201", "INP001", "S603", "S607"]
-".unclassified/*" = ["INP001"]
-"tutorial/*" = ["INP001"]
-
-[tool.ruff.lint.mccabe]
-# Unlike Flake8, default to a complexity level of 10.
-max-complexity = 15
-
-[tool.ruff.lint.flake8-annotations]
-mypy-init-return = true  # skip return type for __init__() methods
-
-[tool.ruff.lint.flake8-pytest-style]
-parametrize-names-type = "csv"
-
-[tool.ruff.lint.flake8-type-checking]
-strict = true
-
-# warning: The isort option `isort.split-on-trailing-comma` is incompatible
-# with the formatter `format.skip-magic-trailing-comma=true` option.
-# To avoid unexpected behavior, we recommend either setting `isort.split-on-trailing-comma=false`
-# or `format.skip-magic-trailing-comma=false`.
-
-[tool.ruff.lint.isort]
-known-first-party = ["src"]
-known-third-party = ["mpl_toolkits", "matplotlib", "numpy", "scipy", "loguru", "tqdm", "dotenv"]
-default-section = "third-party"
-lines-between-types = 1
-required-imports = ["from __future__ import annotations"]
-case-sensitive = true
-section-order = [
-    "future",
-    "typing",
-    "standard-library",
-    "third-party",
-    "first-party",
-    "local-folder",
-    "testing"
-]
-
-[tool.ruff.lint.isort.sections]
-"typing" = ["typing", "typing_extension"]
-"testing" = ["tests"]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google" # Use Google-style docstrings.
-
-[tool.ruff.format]
-docstring-code-format = true
+ignore = ["tests/*", "tools/*", "*.yaml"]
 
 [tool.jupytext]
 # https://jupytext.readthedocs.io/en/latest/config.html
 # Pair ipynb notebooks to py:percent text notebooks
-formats = "ipynb,md,py:percent"
+formats = "ipynb,py:percent"
 
 [tool.creosote]
 paths = ["src", "adhoc"]
