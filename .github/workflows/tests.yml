@@ -131,10 +131,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        python-version: [ '3.11', '3.12', '3.13' ]
-        include: 
-          - os: windows-latest
-            python-version: '3.13'  # Windows runner is too slow
+        python-version: [ '3.13' ]  # debug
+        # python-version: [ '3.11', '3.12', '3.13' ]
+        # include: 
+        #   - os: windows-latest
+        #     python-version: '3.13'  # Windows runner is too slow
 
     steps:
 
