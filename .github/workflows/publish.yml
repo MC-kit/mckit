@@ -7,6 +7,14 @@ on:
 
   workflow_dispatch:  # TODO: debug only
 
+
+permissions:
+  contents: read  # Minimal required permissions
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/master' || github.sha }}
+  cancel-in-progress: true
+
 jobs:
   publish:
     runs-on: ${{ matrix.os }}
@@ -14,47 +22,29 @@ jobs:
       matrix:
         # ubuntu-20.04 is required to build wheels for older OS (clusters...)
         os: [ubuntu-20.04, ubuntu-latest, windows-latest]
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.11', '3.12', '3.13']
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
           submodules: 'true'
-
-      - name: Set up Python
-        uses: actions/setup-python@v5.1.0
+          
+      - name: 📦 Install uv
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: x64
+          enable-cache: true
+          cache-dependency-glob: |
+            **/uv.lock
+            **/pyproject.toml
 
-      - name: Use frozen pip version
+      - name: 📦 Build package
+        env:
+          MCKIT_SRC: ${{github.workspace}}
         run: |
-          pip install --constraint=.github/constraints.txt pip wheel
-          pip --version
+          uv build --wheel
 
-      - name: Install poetry
-        run: |
-          # Cannot install as recomended on https://python-poetry.org/docs/#installation
-          # pipx uses 'system' python, which version may be not in our supported range
-          # install script depends on OS and may fail on Windows
-          # Let's use pip
-          pip install --constraint=.github/constraints.txt poetry
-          poetry --version
-          poetry config --local virtualenvs.create false
-          poetry version
-
-      - name: Install this package
-        run: |
-          poetry install
-
-      - name: Build wheel
-        run: |
-          poetry build -f wheel
-
-      - name: Build sdist
-        run:  poetry build -f sdist
-        if:   matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
-
-      - name: Publish package for ${{ matrix.os }}, python ${{ matrix.python-version }}
-        run:  poetry publish  -u __token__ -p ${{ secrets.PYPI_TOKEN }}
+      - name: 📤 Publish package on PyPI
+        if: ${{ !github.event.act }} # skip during local actions testing
+        run: uv publish --username=__token__ --password=${{ secrets.PYPI_TOKEN }}
