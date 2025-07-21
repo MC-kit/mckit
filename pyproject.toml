@@ -36,9 +36,9 @@ dependencies = [
     "attrs (>=21.2.0)",
     "click (>=8.0.1)",
     "loguru (>=0.6.0)",
-    # "intel-cmplr-lib-ur == 2025.2.0", # next version 2025.0.5 is for windows only TODO check for updates
-    # "mkl-devel (>=2025.1.0)",
-    # "numpy (>=2.3.1)",
+    # "intel-cmplr-lib-ur == 2025.2.0",
+    "mkl-devel (>=2025.1.0)",
+    "numpy (>=2.3.1)",
     "ply (>=3.11)",
     "python-dotenv (>=1.1.1)",
     # "scipy (>=1.16.0)",
@@ -104,6 +104,7 @@ docs = [
 ]
 ruff = ["ruff>=0.0.259"]
 analyze = ["jupyterlab>=4.2.5", "jupytext>=1.16.4"]
+building = ["build", "twine", "repairwheel"]
 
 [tool.pytest.ini_options]
 minversion = "8.4"
@@ -252,9 +253,6 @@ module = ["tomllib"]
 allow_redefinition = true
 disable_error_code = "no-redef"
 
-[tool.check-manifest]
-ignore = ["tests/*", "tools/*", "*.yaml"]
-
 [tool.jupytext]
 # https://jupytext.readthedocs.io/en/latest/config.html
 # Pair ipynb notebooks to py:percent text notebooks
@@ -292,8 +290,11 @@ pre-commit = { features = ["pre_commit"], solve-group = "default" }
 ruff = { features = ["ruff"], solve-group = "default" }
 test = { features = ["test"], solve-group = "default" }
 typeguard = { features = ["typeguard"], solve-group = "default" }
+building = { features = ["building"], solve-group = "default" }
 
-[tool.pixi.tasks]
+[tool.pixi.feature.building.tasks]
+pypi_build = "python -m build ."
+repairwheel = "python -m repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
 
 [tool.pixi.dependencies]
 nlopt = ">=2.10.0,<3"
@@ -303,3 +304,8 @@ scipy = ">=1.16.0,<2"
 
 [tool.pixi.feature.test.tasks]
 test = "pytest"
+
+# [tool.pixi.feature.building.dependencies]
+# build = "*"
+# twine = "*"
+# repair-wheel = "*"

@@ -9,8 +9,7 @@ if(NOT DEFINED SKBUILD_PROJECT_NAME)
                                      # bump action
 endif()
 
-cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION,
-                      SKBUIL_STATE)
+cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION SKBUIL_STATE)
 project(
   ${SKBUILD_PROJECT_NAME}
   VERSION ${SKBUILD_PROJECT_VERSION}
@@ -47,26 +46,26 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     )
   endif()
 
-  find_package(Git QUIET)
-
-  if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
-    execute_process(
-      COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      RESULT_VARIABLE GIT_SUBMOD_RESULT)
-    if(NOT GIT_SUBMOD_RESULT EQUAL "0")
-      message(
-        FATAL_ERROR
-          "git submodule update --init --recursive failed with ${GIT_SUBMOD_RESULT}, please checkout submodules"
-      )
-    endif()
-  endif()
-  if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/nlopt/CMakeLists.txt")
-    message(
-      FATAL_ERROR
-        "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again."
-    )
-  endif()
+#   find_package(Git QUIET)
+#
+#   if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+#     execute_process(
+#       COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+#       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#       RESULT_VARIABLE GIT_SUBMOD_RESULT)
+#     if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+#       message(
+#         FATAL_ERROR
+#           "git submodule update --init --recursive failed with ${GIT_SUBMOD_RESULT}, please checkout submodules"
+#       )
+#     endif()
+#   endif()
+#   if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/nlopt/CMakeLists.txt")
+#     message(
+#       FATAL_ERROR
+#         "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again."
+#     )
+#   endif()
 endif()
 
 # list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -78,19 +77,25 @@ endif()
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
 
-if(NOT DEFINED PythonEnv_ROOT)
-  execute_process(
-    COMMAND ${Python_EXECUTABLE} -c "import sys; print(sys.prefix)"
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    RESULT_VARIABLE Python_ROOT_FOUND
-    OUTPUT_VARIABLE PythonEnv_ROOT
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-  if(NOT Python_ROOT_FOUND STREQUAL "0")
-    message(FATAL_ERROR "Cannot find python environment")
-  endif()
+# if(NOT DEFINED PythonEnv_ROOT)
+#   execute_process(
+#     COMMAND ${Python_EXECUTABLE} -c "import sys; print(sys.prefix)"
+#     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#     RESULT_VARIABLE Python_ROOT_FOUND
+#     OUTPUT_VARIABLE PythonEnv_ROOT
+#     OUTPUT_STRIP_TRAILING_WHITESPACE)
+#   if(NOT Python_ROOT_FOUND STREQUAL "0")
+#     message(FATAL_ERROR "Cannot find python environment")
+#   endif()
+# endif()
+
+if(NOT DEFINED ENV{MCKIT_SRC})
+  set(ENV{MCKIT_SRC} ${CMAKE_SOURCE_DIR})
 endif()
 
-list(APPEND CMAKE_PREFIX_PATH ${PythonEnv_ROOT})
+list(APPEND CMAKE_PREFIX_PATH $ENV{MCKIT_SRC}/.pixi/envs/default/lib/cmake)
+
+cmake_print_variables(CMAKE_MODULE_PATH, CMAKE_PREFIX_PATH)
 
 # add_subdirectory(extern)
 
@@ -131,10 +136,6 @@ endif()
 
 # install(TARGETS nlopt DESTINATION ${SKBUILD_PROJECT_NAME})
 install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
-
-if(NOT DEFINED ENV{MCKIT_SRC})
-  set(ENV{MCKIT_SRC} ${CMAKE_SOURCE_DIR})
-endif()
 
 # copy libraries to the source tree for editable installation
 # install(TARGETS nlopt DESTINATION $ENV{MCKIT_SRC}/src/mckit)
