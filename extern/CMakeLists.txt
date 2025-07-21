@@ -1,0 +1,6 @@
+set(NLOPT_PYTHON OFF)
+set(NLOPT_GUILE OFF)
+set(NLOPT_MATLAB OFF)
+set(NLOPT_OCTAVE OFF)
+set(NLOPT_SWIG OFF)
+add_subdirectory(nlopt)

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+delete_directory() {
+    for d in "$@"; do
+        if [[ -e $d ]]; then
+            rm -fr "$d"
+        fi
+    done
+}
+
+delete_directory_recursively() {
+    for d in "$@"; do
+        find . -type d -name "$d" -exec rm -rf {} +
+    done
+}
+
+# TODO dvp: consider this
+# pyenv virtualenv-delete -f  mckit && pyenv virtualenv 3.10.7 mckit && rm -f mckit/*.so && rm -fr build && rm -fr dist
+# TODO dvp: coverage clean
+clean() {
+    if [[ "$#" -eq "0" ]]; then
+        delete_directory build dist .eggs ./*.egg-info .nox
+        delete_directory extern/nlopt/build
+        delete_directory_recursively  "__pycache__" ".benchmarks"
+        rm -f mckit/geometry*.so
+        rm -f setup.py
+    else
+        delete_directory "$@"
+    fi
+}
+
+is_sourced() {
+    [[ ${FUNCNAME[*]: -1} == "source" ]]
+}
+
+is_sourced || clean "$@"

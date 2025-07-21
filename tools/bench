@@ -1,0 +1,7 @@
+#!/bin/bash
+if [[ 0 == "$#" ]]; then
+  what=( benchmarks )
+else
+  what=( "$@" )
+fi
+pytest -v --benchmark-autosave  "${what[@]}"

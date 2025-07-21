@@ -1,0 +1,39 @@
+#!/bin/bash
+
+
+usage() {
+cat << 'EOF'
+    gdh - git diff helper
+
+    Usage:
+
+    gdh
+        show diff HEAD^1 HEAD
+
+    gdh <number>
+        show diff HEAD^<number> HEAD
+
+    gdh <number1> <number2>
+        show diff HEAD^<number1> HEAD^<number2>
+
+    gdh -h/--help
+        show usage
+EOF
+}
+
+
+main() {
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        usage
+    else
+        if [[ -z "$1" ]]; then
+            git diff HEAD^1 HEAD
+        elif [[ -z "$2" ]]; then
+            git diff "HEAD^$1" HEAD
+        else
+            git diff "HEAD^$1" "HEAD^$2"
+        fi
+    fi
+}
+
+main "$@"

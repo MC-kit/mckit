@@ -1,0 +1,102 @@
+# To use:
+#
+#     pre-commit run -a
+#
+# Or:
+#
+#     pre-commit install  # (runs every time you commit in git)
+#
+# To update this file:
+#
+#     pre-commit autoupdate
+#
+# See:
+#     https://pre-commit.com/                   and
+#     https://github.com/pre-commit/pre-commit  for more information
+#     https://pre-commit.com/hooks.html         for more hooks
+default_language_version:
+  python: python3.13
+
+repos:
+
+  # Standard hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v5.0.0"
+    hooks:
+      - id: check-added-large-files
+        exclude: uv.lock
+      - id: check-ast
+        exclude: notebooks
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-json
+        exclude: notebooks
+      - id: check-merge-conflict
+        exclude: \.rst$
+      - id: check-shebang-scripts-are-executable
+        exclude: notebooks  # jupytext creates python scripts with shebangs but without permissions
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-yaml
+      - id: debug-statements
+        exclude: notebooks
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: end-of-file-fixer
+        exclude: data|.ipynb$|^\.
+      - id: name-tests-test
+        exclude: common.py|help*.*py
+        args:
+          - --pytest-test-first
+      - id: mixed-line-ending
+      - id: pretty-format-json
+        args: [--autofix, --no-ensure-ascii, --no-sort-keys]
+        exclude: data|\.ipynb$
+      - id: requirements-txt-fixer
+
+
+  - repo: https://github.com/fredrikaverpil/creosote
+    rev: v4.0.3
+    hooks:
+      - id: creosote
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.7.19
+    hooks:
+      - id: uv-lock 
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.2
+    hooks:
+      # linter
+      - id: ruff-check
+        exclude: ^notebooks|^extern
+      # formatter 
+      - id: ruff-format
+        exclude: ^notebooks|^extern|ipynb$
+
+
+  # Check for common shell mistakes
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: "v0.10.0.1"
+    hooks:
+      - id: shellcheck
+        args: [ --external-sources ]
+        stages: [ manual ]
+
+
+  # CMake formatting
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: "v0.6.13"
+    hooks:
+      - id: cmake-format
+        additional_dependencies: [ pyyaml ]
+        types: [ file ]
+        files: (\.cmake|CMakeLists.txt)(.in)?$
+
+  # Clang format the codebase automatically
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: "v20.1.4"
+    hooks:
+      - id: clang-format
+        types_or: [c++, c, cuda]

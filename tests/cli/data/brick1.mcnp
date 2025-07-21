@@ -1,0 +1,10 @@
+original brick
+1     0   ( -5 6 4 2 -3 -1)
+          IMP:N=1.0  IMP:P=1.0  IMP:E=0.0 TMP=2.53005e-008
+
+1        PX   20
+2        PX   -20
+3        PY   10
+4        PY   -10
+5        PZ   5
+6        PZ   -5

@@ -1,0 +1,49 @@
+TODO dvp
+
+Git finds the most recent tag and adds suffixes corresponding to current branch.
+If the current branch correspondes to the tag (as it should be for master),
+then no suffixes are added.
+
+Make this match the poetry pattern
+VERSION_PATTERN = re.compile(
+        r"""
+        ^
+        v?
+        (?:
+         (?:(?P<epoch>[0-9]+)!)?                           # epoch
+         (?P<release>[0-9]+(?:\.[0-9]+)*)                  # release segment
+         (?P<pre>                                          # pre-release
+          [-_.]?
+          (?P<pre_l>(a|b|c|rc|alpha|beta|pre|preview))
+          [-_.]?
+          (?P<pre_n>[0-9]+)?
+         )?
+         (?P<post>                                         # post release
+          (?:-(?P<post_n1>[0-9]+))
+          |
+          (?:
+           [-_.]?
+           (?P<post_l>post|rev|r)
+           [-_.]?
+           (?P<post_n2>[0-9]+)?
+          )
+         )?
+         (?P<dev>                                          # dev release
+          [-_.]?
+          (?P<dev_l>dev)
+          [-_.]?
+          (?P<dev_n>[0-9]+)?
+         )?
+         )
+         (?:\+(?P<local>[a-z0-9]+(?:[-_.][a-z0-9]+)*))?       # local version
+         $
+         """,
+         re.IGNORECASE | re.VERBOSE,
+         )
+or apply poetry-dynamic-versioning plugin
+
+function sync_toml_version_with_git() {
+    local _mgv
+    _mgv="$(git describe --always --long HEAD)"
+    poetry version "${_mgv#v\.}"
+}

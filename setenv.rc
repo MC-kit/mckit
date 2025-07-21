@@ -1,0 +1,57 @@
+#
+# Setup variables and pathes for mckit build environment
+#
+# This may be used to create .env file to be loaded into python environment
+# with dotenv module.
+#
+
+export MCKIT_ROOT="$(pwd)"
+. $MCKIT_ROOT/tools/common.rc
+export PATH="$(make_path $MCKIT_ROOT/tools $PATH)"
+
+mckit_load_environment() {
+    if [[ -n "$MCKIT_BUILD_CFG" ]]; then
+        echo "MCKIT build config is already loaded: $MCKIT_BUILD_CFG"
+        echo "Use 'reset' argument to reload it."
+        return 1
+    fi
+    if [[ -r ./.local.env ]]; then
+        local env="./.local.env"
+    else
+        local env="tools/$(hostname).rc"
+    fi
+    if [[ -r  "$env" ]]; then
+        echo "Sourcing environment from $env"
+        source "$env"
+        export MCKIT_BUILD_CFG="$env"
+    else
+        echo "Using common environment: there's no host specific configuration file $env"
+        export MCKIT_BUILD_CFG="common"
+    fi
+}
+
+
+mckit_checkenv() {
+  [ -n "$MCKIT_BUILD_CFG" ]
+}
+
+
+mckit_printenv() {
+    filter_printenv
+}
+
+
+mckit_update_dot_env() {
+    if [[ "$1" == "reset" ]]; then
+        shift
+        unset MCKIT_BUILD_CFG
+    fi
+    mckit_load_environment    && \
+    mckit_checkenv   && \
+    mckit_printenv >| .env
+}
+
+
+[ -n "$BATS_PREFIX" ] ||  mckit_update_dot_env "$@"
+
+# vim: set ts=4 sw=0 tw=88 ss=0 ft=sh et ai :

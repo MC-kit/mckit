@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import os
+
+from pathlib import Path
+
+doesnt_exist_label = " <- doesn't exist"
+system_path = os.environ["PATH"].split(os.pathsep)
+
+for p in system_path:
+    print(f"{p:80}{'' if Path(p).exists() else doesnt_exist_label}")

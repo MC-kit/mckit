@@ -1,0 +1,207 @@
+#
+# Shared utility functions to faciliate environment configuring.
+#
+# vim: set ts=4 sw=0 tw=79 ss=0 ft=sh et ai
+
+function python_prefix(){
+    python -c 'import sys; print(sys.prefix)'
+}
+
+export PYTHON_ROOT=$(python_prefix)
+export PYTHON="${PYTHON_ROOT}/bin/python"
+export PYTHON_EXECUTALBE="${PYTHON}"
+export PYTHON_INCLUDE_DIR=$(python -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())")
+export PYTHON_LIBRARY=$(python -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
+
+join_strings() {
+    if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+cat << 'END'
+Usage:
+
+   join_strings [options...] item1 item2 ...
+
+Options:
+    -h, --help              - print this help text
+    -u, --unique            - drop non unique items
+    -s, --separator <CHAR>  - use <CHAR> as item separator, default ':'
+
+Forms list of items with given separator from the given arguments optionally removing duplicates.
+Handles items with spaces.
+
+Example:
+v=$(join_strings -s "," -u 1 2 3,4,1 3 "a b" c)
+echo $v
+
+Output:
+1,2,3,4,a b,c
+END
+        return 0
+    fi
+    local separator=":"
+    local unique=""
+    while true; do
+        local arg="$1"
+        if [[ "-s" == "$arg" ]] || [[ "--separator" == "$arg" ]]; then
+            shift
+            separator="$1"
+            shift
+        elif [[ "-u" == "$arg" ]] || [[ "--unique" == "$arg" ]]; then
+            shift
+            unique="yes"
+        else
+            break
+        fi
+    done
+    res=""
+    # echo "Unique: $unique, separator: \"$separator\""
+    for arg in $@; do
+        IFS=$separator array=(${arg})
+        for inner_arg in ${array[@]}; do
+            # Note: the right hand side of operator =~ is to be unquoted
+            if [[ -z "$unique" ]] || [[ ! "$res" =~ (^|$separator)$inner_arg($separtor|$) ]]; then
+                if [[ -n "$res" ]]; then
+                    res="${res}${separator}"
+                fi
+                res="${res}${inner_arg}"
+            fi
+        done
+    done
+    echo "${res}"
+}
+
+make_path() {
+    if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+cat << 'END'
+    Usage:
+
+        make_path path1 path2 ...
+
+        Forms PATH like text output from the given arguments removing duplicates.
+        Handles items with spaces.
+
+    Example:
+        v=$(make_path 1 2 3:4:1 3 "a b")
+        echo $v
+
+    Output:
+        1:2:3:4:a b
+END
+        return 0
+    fi
+    join_strings -u $@
+}
+
+add_to_path() {
+    export PATH="$(make_path $PATH $@)"
+}
+
+prepend_path() {
+    export PATH="$(make_path $@ $PATH)"
+}
+
+
+#
+# Joins words separated with space.
+#
+make_flags() {
+    join_strings " " $*
+}
+
+get_dir() {
+    curdir="$(pwd)"
+    local src="$1"
+    while [ -h "$src" ]; do # resolve $src until the file is no longer a symlink
+        DIR="$( cd -P "$( dirname "$src" )" >/dev/null 2>&1 && pwd )"
+        src="$(readlink "$src")"
+        # if $src was a relative symlink, we need to resolve it relative
+        # to the path where the symlink file was located
+        [[ $src != /* ]] && src="$DIR/$src"
+    done
+    cd -P "$( dirname "$src" )" >/dev/null 2>&1 && pwd
+    cd "$curdir" > /dev/null 2>&1
+}
+
+mydir () {
+    get_dir "${BASH_SOURCE[0]}"
+}
+
+is_main() {
+    [[ "${FUNCNAME[-1]}" == "main" ]]
+}
+
+
+function get_absolute_path_name() {
+    echo $(readlink -m "$1")
+}
+
+function check_dirs() {
+    for d in $*
+    do
+        if [[ ! -d $d ]]; then
+            echo "ERROR: directory $d doesn't exist!"
+            return 1
+        fi
+    done
+    return 0
+}
+
+
+filter_printenv() {
+    local what=$*
+    if [[ -z "$what" ]]; then
+        what="$(join_strings '|^' \
+            pyenv \
+            poetry \
+            mkl \
+            mckit \
+        )"
+    fi
+    local exclude="$(join_strings '|^' \
+        python \
+        old_path \
+        pwd \
+        oldpwd \
+        original_path \
+    )"
+    # echo "include: $what"
+    # echo "exclude: $exclude"
+    (
+        echo "INCLUDE_PATH=$INCLUDE_PATH"
+        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+        printenv | grep -i -E "$what" | grep -i -v -E "$exclude"
+    ) | sort -u
+}
+
+
+#
+# Creates a given directory (if needed) and changes to it.
+#
+function mdcd() {
+    mkdir -p "$1"  && cd "$1"
+}
+
+
+function show_python_versions_available() {
+    pyenv update > /dev/null && pyenv install --list | egrep -E "^\s*3\.(6|7|8|9|10)\."
+}
+
+#
+# On Windows poetry ignores pyenv-win and conda environments
+# To fix this we have to change it's config to use an existing environment,
+# i.e. the one which is currently activated by conda or pyenv-win.
+#
+function fix_poetry_config() {
+    local python_prefix
+    python_prefix="$(python -c 'import sys; print(sys.prefix)')"
+    poetry config virtualenvs.path  "${python_prefix}" --local
+    poetry config virtualenvs.create  false --local
+}
+
+function poetry_prefix(){
+    echo "$(poetry env info --path)"
+}
+
+
+function poetry_python() {
+    echo "$(poetry run which python)"
+}

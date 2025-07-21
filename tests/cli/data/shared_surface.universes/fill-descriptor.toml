@@ -1,0 +1,16 @@
+# This is a decomposition of "shared_surface.mcnp" model
+title = "testing integration scripts on simple cubic cells"
+created = 2020-11-12T23:24:13.651306
+
+
+[2]
+universe = 1
+file = "u1.i"
+
+
+[3]
+universe = 2
+file = "u2.i"
+
+
+[named_transformations]

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+usage() {
+cat << 'EOM'
+
+Helper to bump and commit the project version
+
+Usage:
+    bump <version>
+    or
+    bump --help"
+
+See also poetry help:
+
+EOM
+    poetry version --help
+}
+
+main() {
+    local version="${1:-patch}"
+    if [[ "$version" == "--help" ]]; then
+        usage
+    else
+        poetry version "$version" && git commit -m "bump: version $(poetry version)" pyproject.toml
+    fi
+}
+
+main "$@"
+
+# vim: set ts=4 sw=4 tw=92 ss=0 ft=sh et ai :

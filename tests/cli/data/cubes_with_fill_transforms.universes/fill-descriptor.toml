@@ -1,0 +1,13 @@
+# This is a decomposition of "cubes_with_fill_transforms.mcnp" model
+created = 2019-09-30T13:58:14.187267
+
+
+[2]
+universe = 1
+transform = ['0', '-1', '0', '0', '90', '90', '90', '0', '90', '90', '90', '0']
+file = "u1.i"
+
+
+[3]
+universe = 2
+file = "u2.i"

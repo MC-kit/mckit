@@ -1,0 +1,10 @@
+name: mckit
+
+channels:
+  - default
+  - conda-forge
+
+dependencies:
+  - mkl 
+  - numpy
+  - nlopt

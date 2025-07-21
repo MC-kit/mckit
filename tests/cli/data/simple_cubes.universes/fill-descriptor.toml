@@ -1,0 +1,12 @@
+# This is a decomposition of "simple_cubes.mcnp" model
+created = 2019-09-30T17:40:30.231301
+
+
+[2]
+universe = 1
+file = "u1.i"
+
+
+[3]
+universe = 2
+file = "u2.i"

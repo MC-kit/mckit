@@ -1,0 +1,16 @@
+# This is a decomposition of "two_cubes_with_the_same_filler.mcnp" model
+title = "testing integration scripts on simple cubic cells"
+created = 2020-11-12T20:31:11.866399
+
+
+[2]
+universe = 1
+file = "u1.i"
+
+
+[3]
+universe = 1
+file = "u1.i"
+
+
+[named_transformations]

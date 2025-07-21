@@ -1,0 +1,26 @@
+Title card
+c comment 1
+c comment 2
+1 1 -1.0 1 2 +3 imp:n=1 $ card comment
+c comment 3
+2 0      1 -2
+c comment 4
+c comment 5
+      3 imp:p=0
+3 &   $ comment card
+     0 1 2 3 &
+4 5
+4 2 -5 1
+     vol=1
+    5 0 -1 2 &
+c comment here
+
+c and comment here
+c yet one
+1 px -1.
+2 c/y 2.e-2 -.3 .4e+3 $ comment at end
+
+mode n
+vol 1 2
+m1 1001.50c
+c omment

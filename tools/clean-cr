@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#
+# Clean Windows <carriage-return> chars.
+#
+# See why <CR> are bad:
+#   https://github-wiki-see.page/m/koalaman/shellcheck/wiki/SC1017
+#
+
+main() {
+    for fn in "$@"; do
+        if grep -q $'\r$' "$fn"; then
+            mv "$fn" "$fn.~cr"
+            tr -d '\r' < "$fn.~cr"  >| "$fn"
+        fi
+    done
+}
+
+main "$@"

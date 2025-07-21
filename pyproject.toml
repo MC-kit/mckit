@@ -1,0 +1,305 @@
+[build-system]
+requires = [
+    "scikit-build-core>=0.10",
+    # "cmake>=3.18",
+    # "ninja; platform_system!='Windows'",
+    "numpy",
+    # "mkl-devel >= 2025.2.0",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "mckit"
+version = "0.8.6"
+requires-python = ">=3.11 "                                              # connectorx==0.4.3 prevents <4
+description = "Tools to process MCNP models and results"
+authors = [{ name = "rrn" }]
+readme = "README.rst"
+license = "MIT"
+keywords = ["mckit", "MCNP"]
+maintainers = [{ name = "dvp2015", email = "dmitri_portnov@yahoo.com" }]
+# Select from PyPI trove classifiers: https://pypi.org/classifiers/
+# poetry (2.0.0) doesn't pass dynamic classifieres to build.py, so, we use static
+# about dynamic classifiers in poetry: https://python-poetry.org/docs/pyproject/#classifiers-1
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "attrs (>=21.2.0)",
+    "click (>=8.0.1)",
+    "loguru (>=0.6.0)",
+    # "intel-cmplr-lib-ur == 2025.2.0", # next version 2025.0.5 is for windows only TODO check for updates
+    # "mkl-devel (>=2025.1.0)",
+    # "numpy (>=2.3.1)",
+    "ply (>=3.11)",
+    "python-dotenv (>=1.1.1)",
+    # "scipy (>=1.16.0)",
+    "sly (>=0.4)",
+    "tomli-w (>=1.0.0)",
+    "tqdm (>=4.55.1)",
+    "typer >=0.9.0",     # TODO @dvp: switch to cyclopts, same for click
+]
+
+[project.urls]
+Homepage = "https://github.com/MC-kit/mckit"
+Repository = "https://github.com/MC-kit/mckit"
+Documentation = "https://mckit.readthedocs.io"
+Issues = "https://github.com/MC-kit/mckit/issues"
+
+[project.scripts]
+mckit = "mckit.cli.runner:mckit"
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+build-dir = "build/{wheel_tag}"
+build.verbose = false
+logging.level = "INFO"
+
+
+# [tool.cibuildwheel]
+# build-frontend = "build[uv]"
+
+
+[dependency-groups]
+dev = [
+    # "pip",
+    { include-group = "pre_commit" },
+    { include-group = "test" },
+    { include-group = "typeguard" },
+    { include-group = "mypy" },
+    { include-group = "docs" },
+    { include-group = "ruff" },
+    { include-group = "analyze" },
+]
+pre_commit = ["pre-commit>=2.15.0", "pydocstringformatter>=0.7.3"]
+test = [
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "pytest-mock>=3.14.0",
+    "pytest-durations>=1.5.2",
+    "pytest-emoji>=0.2.0",
+    "pytest-benchmark>=5.1.0",
+    "coverage[toml]>=7.9.2",
+    "xdoctest[colors]>=1.2.0",
+]
+typeguard = ["typeguard>=4.1.5"]
+mypy = [
+    "mypy>=1.2.0",
+    "pep8-naming>=0.12.1",
+    "types-setuptools>=80.9.0.20250529",
+]
+docs = [
+    "sphinx>=8.2.3",
+    "sphinx-autodoc-typehints>=3.2.0",
+    "sphinx-click>=6.0.0",
+    "sphinx-autobuild>=2024.10.3",
+]
+ruff = ["ruff>=0.0.259"]
+analyze = ["jupyterlab>=4.2.5", "jupytext>=1.16.4"]
+
+[tool.pytest.ini_options]
+minversion = "8.4"
+cache_dir = '.cache/pytest'
+norecursedirs = '''
+*.egg-info
+.*
+build
+data
+dist
+docs/_build
+docs/examples
+htmlcov
+notebooks
+tools
+wrk
+'''
+python_functions = "test_*  profile_*"
+addopts = '''
+-ra
+-q
+--tb=short
+--doctest-modules
+--strict-markers
+--ignore setup.py
+--failed-first
+--xdoctest
+--benchmark-disable
+--benchmark-storage=.cache/benchmarks
+--benchmark-autosave
+--benchmark-group-by=name,fullname
+--pytest-durations-min=1
+--pytest-resultlog="pytest-result.log"
+'''
+doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ALLOW_UNICODE ALLOW_BYTES NUMBER"
+testpaths = ["tests", "src"]
+markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
+# xfail tests that pass should fail the test suite
+xfail_strict = true
+filterwarnings = [
+    "error",
+    # 'ignore:Implementing implicit namespace packages \(as specified in PEP 420\) is preferred to `pkg_resources.declare_namespace`',
+    "ignore:.*not typechecking multipledispatch.dispatcher.*UserWarning",
+    'ignore:.*io.FileIO \[closed\]',
+    # 'ignore:.*Deprecated call to `pkg_resources.declare_namespace',
+    'ignore:.*Implicit None on return values:DeprecationWarning',
+    # # pandas 2.1.4 at python 3.12
+    # 'ignore:.*datetime.datetime.utcfromtimestamp\(\) is deprecated:DeprecationWarning',
+    # # openpyxl 3.1.2 qt python 3.12
+    # 'ignore:.*datetime.datetime.utcnow\(\):DeprecationWarning',
+]
+log_format = "%(asctime)s %(levelname)s %(message)s"
+log_date_format = "%Y-%m-%d %H:%M:%S"
+
+[tool.xdoctest]
+quiet = true
+options = ""
+
+[tool.coverage.paths]
+source = ["src", ".nox/*/site-packages"]
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+omit = ["*_tab.py", "**/__init__.py", "tools/*.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 90                       # TODO dvp: increase limit to 100 with code maturing
+omit = ["*_tab.py", "**/__init__.py"]
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self.debug",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+ignore_errors = true
+sort = "Cover"
+
+
+# MyPy config
+# See https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml-file
+#     https://dev.to/tusharsadhwani/the-comprehensive-guide-to-mypy-561m
+[tool.mypy]
+python_version = "3.12"
+# strict = true     # TODO dvp: uncomment this to get strict control
+follow_imports = "silent"
+# namespace_packages = true
+warn_return_any = true
+warn_unused_configs = true
+show_error_codes = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+disable_error_code = ["annotation-unchecked"]
+show_error_context = true
+error_summary = true
+warn_redundant_casts = true
+warn_unreachable = true
+warn_unused_ignores = true
+files = "src/**/*.py"
+exclude = '''
+  (?x)(
+  parser\.py$  # mypy doesn't parser code
+| _tab\.py$    # ...
+| lexer\.py$   # ...
+  )
+'''
+
+[[tool.mypy.overrides]]
+module = [
+    "IPython.core.magic",
+    "IPython.core.magic_arguments",
+    "click",
+    "click.testing",
+    "dask.*",
+    "duckdb",
+    "loguru",
+    "mckit.*",                      # TODO (dvp, style): make everything typed including extension 'geometry',
+    "msgspec",
+    "multipledispatch",
+    "nox",
+    "numpy",
+    "numpy.testing",
+    "pandas",
+    "polars",
+    "pytest",
+    "scipy.constants",
+    "scipy.sparse",
+    "tomli",
+    "tomllib",
+    "xdoctest",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tomllib"]
+allow_redefinition = true
+disable_error_code = "no-redef"
+
+[tool.check-manifest]
+ignore = ["tests/*", "tools/*", "*.yaml"]
+
+[tool.jupytext]
+# https://jupytext.readthedocs.io/en/latest/config.html
+# Pair ipynb notebooks to py:percent text notebooks
+formats = "ipynb,py:percent"
+
+[tool.creosote]
+paths = ["src", "adhoc"]
+deps-file = "pyproject.toml"
+sections = ["project.dependencies"]
+exclude-deps = [
+    "intel-cmplr-lib-ur",
+    "mkl-devel",
+    "python-dotenv",
+    "scipy",
+    "tomli",
+    "tqdm",
+    "typer",
+]
+
+[tool.pixi.workspace]
+channels = ["https://prefix.dev/conda-forge"]
+# platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+platforms = ["linux-64", "win-64"]
+
+[tool.pixi.pypi-dependencies]
+mckit = { path = ".", editable = true }
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+analyze = { features = ["analyze"], solve-group = "default" }
+dev = { features = ["dev"], solve-group = "default" }
+docs = { features = ["docs"], solve-group = "default" }
+mypy = { features = ["mypy"], solve-group = "default" }
+pre-commit = { features = ["pre_commit"], solve-group = "default" }
+ruff = { features = ["ruff"], solve-group = "default" }
+test = { features = ["test"], solve-group = "default" }
+typeguard = { features = ["typeguard"], solve-group = "default" }
+
+[tool.pixi.tasks]
+
+[tool.pixi.dependencies]
+nlopt = ">=2.10.0,<3"
+mkl-devel = ">=2024.2.2,<2025"
+numpy = ">=2.3.1,<3"
+scipy = ">=1.16.0,<2"
+
+[tool.pixi.feature.test.tasks]
+test = "pytest"

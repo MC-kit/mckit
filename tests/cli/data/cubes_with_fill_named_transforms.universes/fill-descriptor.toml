@@ -1,0 +1,18 @@
+# This is a decomposition of "cubes_with_fill_named_transforms.mcnp" model
+title = "testing CLI commands on cubic cells with named transformation, see cell 2 and tr1."
+created = 2020-10-30T17:08:36.670668
+
+
+[2]
+universe = 1
+transform = 1
+file = "u1.i"
+
+
+[3]
+universe = 2
+file = "u2.i"
+
+
+[named_transformations]
+tr1 = ['0', '-1', '0']
