@@ -273,9 +273,38 @@ exclude-deps = [
 ]
 
 [tool.pixi.workspace]
+preview = ["pixi-build"]
 channels = ["https://prefix.dev/conda-forge"]
 # platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 platforms = ["linux-64", "win-64"]
+
+# There can be multiple packages in a workspace
+# In `package` you specify properties specific to the package
+[tool.pixi.package]
+name = "mckit"
+version = "0.8.5"
+
+# Here the build system of the package is specified
+# We are using `pixi-build-python` in order to build a Python package
+[tool.pixi.package.build]
+backend = { name = "pixi-build-python", version = "0.1.*" }
+channels = [
+  "https://prefix.dev/pixi-build-backends",
+  "https://prefix.dev/conda-forge",
+]
+
+[tool.pixi.package.host-dependencies]
+# hatchling = "*"
+scikit-build-core = "*"
+numpy = "*"
+mkl-devel = "*"
+nlopt = "*"  
+
+[tool.pixi.package.run-dependencies]
+numpy = "*"
+mkl-devel = "*"
+nlopt = "*"  
+
 
 [tool.pixi.pypi-dependencies]
 mckit = { path = ".", editable = true }
