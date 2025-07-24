@@ -46,30 +46,21 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     )
   endif()
 
-#   find_package(Git QUIET)
-#
-#   if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
-#     execute_process(
-#       COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-#       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#       RESULT_VARIABLE GIT_SUBMOD_RESULT)
-#     if(NOT GIT_SUBMOD_RESULT EQUAL "0")
-#       message(
-#         FATAL_ERROR
-#           "git submodule update --init --recursive failed with ${GIT_SUBMOD_RESULT}, please checkout submodules"
-#       )
-#     endif()
-#   endif()
-#   if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/nlopt/CMakeLists.txt")
-#     message(
-#       FATAL_ERROR
-#         "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again."
-#     )
-#   endif()
+  # find_package(Git QUIET)
+  #
+  # if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git") execute_process(
+  # COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+  # WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} RESULT_VARIABLE
+  # GIT_SUBMOD_RESULT) if(NOT GIT_SUBMOD_RESULT EQUAL "0") message( FATAL_ERROR
+  # "git submodule update --init --recursive failed with ${GIT_SUBMOD_RESULT},
+  # please checkout submodules" ) endif() endif() if(NOT EXISTS
+  # "${PROJECT_SOURCE_DIR}/extern/nlopt/CMakeLists.txt") message( FATAL_ERROR
+  # "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed.
+  # Please update submodules and try again." ) endif()
 endif()
 
-# list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-# list(APPEND CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR}/cmake)
+# list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake) list(APPEND
+# CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 if(WIN32)
   set(Python_FIND_VIRTUALENV FIRST)
@@ -77,16 +68,11 @@ endif()
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
 
-# if(NOT DEFINED PythonEnv_ROOT)
-#   execute_process(
-#     COMMAND ${Python_EXECUTABLE} -c "import sys; print(sys.prefix)"
-#     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#     RESULT_VARIABLE Python_ROOT_FOUND
-#     OUTPUT_VARIABLE PythonEnv_ROOT
-#     OUTPUT_STRIP_TRAILING_WHITESPACE)
-#   if(NOT Python_ROOT_FOUND STREQUAL "0")
-#     message(FATAL_ERROR "Cannot find python environment")
-#   endif()
+# if(NOT DEFINED PythonEnv_ROOT) execute_process( COMMAND ${Python_EXECUTABLE}
+# -c "import sys; print(sys.prefix)" WORKING_DIRECTORY
+# ${CMAKE_CURRENT_SOURCE_DIR} RESULT_VARIABLE Python_ROOT_FOUND OUTPUT_VARIABLE
+# PythonEnv_ROOT OUTPUT_STRIP_TRAILING_WHITESPACE) if(NOT Python_ROOT_FOUND
+# STREQUAL "0") message(FATAL_ERROR "Cannot find python environment") endif()
 # endif()
 
 if(NOT DEFINED ENV{MCKIT_SRC})
@@ -99,20 +85,13 @@ cmake_print_variables(CMAKE_MODULE_PATH, CMAKE_PREFIX_PATH)
 
 # add_subdirectory(extern)
 
-# if(NOT WIN32)
-#   message("Creating symlinks in environment ${PythonEnv_ROOT}")
-#   execute_process(
-#     COMMAND ${Python_EXECUTABLE} create_mkl_symlinks.py
-#     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#     OUTPUT_VARIABLE CREATED_MKL_SYMLINKS
-#     OUTPUT_STRIP_TRAILING_WHITESPACE)
-# endif()
+# if(NOT WIN32) message("Creating symlinks in environment ${PythonEnv_ROOT}")
+# execute_process( COMMAND ${Python_EXECUTABLE} create_mkl_symlinks.py
+# WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE
+# CREATED_MKL_SYMLINKS OUTPUT_STRIP_TRAILING_WHITESPACE) endif()
 
-# if(WIN32)
-#   set(MKL_DIR ${PythonEnv_ROOT}/Library)
-# else()
-#   set(MKL_DIR ${PythonEnv_ROOT})
-# endif()
+# if(WIN32) set(MKL_DIR ${PythonEnv_ROOT}/Library) else() set(MKL_DIR
+# ${PythonEnv_ROOT}) endif()
 
 find_package(MKL REQUIRED)
 find_package(NLopt REQUIRED)
@@ -137,8 +116,8 @@ endif()
 # install(TARGETS nlopt DESTINATION ${SKBUILD_PROJECT_NAME})
 install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
 
-# copy libraries to the source tree for editable installation
-# install(TARGETS nlopt DESTINATION $ENV{MCKIT_SRC}/src/mckit)
+# copy libraries to the source tree for editable installation install(TARGETS
+# nlopt DESTINATION $ENV{MCKIT_SRC}/src/mckit)
 install(TARGETS geometry DESTINATION $ENV{MCKIT_SRC}/src/mckit)
 
 include(FeatureSummary)
