@@ -52,6 +52,16 @@ int box_init(Box *box, const double *center, const double *ex, const double *ey,
     // Finding coordinates of box's corners
     for (i = 0; i < NCOR; ++i)
     {
+        // @dvp: analysis of the algorithm
+        // daxpy( N, alpha, x, strideX, y, strideY )
+        // y += a*x
+        // Let's define
+        // w - half widths vector
+        // A = [[ex], [ey], [ez]] - matrix with columns ex, ey, ez (rotation)
+        // .  - dot multiplication
+        // .* - element wise multiplication
+        // then
+        // corner[i] =  A . (perm[i] .* w) + center
         cblas_dcopy(NDIM, box->center, 1, box->corners + i * NDIM, 1);
         cblas_daxpy(NDIM, 0.5 * perm[i][0] * box->dims[0], box->ex, 1, box->corners + i * NDIM, 1);
         cblas_daxpy(NDIM, 0.5 * perm[i][1] * box->dims[1], box->ey, 1, box->corners + i * NDIM, 1);

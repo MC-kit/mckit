@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 
-original_bins_str = """
+BINS_TEXT = """
 1.00001e-07  4.13994e-07  5.31579e-07  6.82560e-07
           8.76425e-07  1.12535e-06  1.44498e-06  1.85539e-06  2.38237e-06
           3.05902e-06  3.92786e-06  5.04348e-06  6.47595e-06  8.31529e-06
@@ -46,8 +46,8 @@ original_bins_str = """
           1.96403e+01
 """
 
-original_bins = np.fromiter(map(float, original_bins_str.split()), dtype=np.float32)
+bins = np.fromiter(map(float, BINS_TEXT.split()), dtype=np.float32)
 
-in_evs = (f"{x:.5e}" for x in original_bins * 1e6)
+in_evs = (f"{x:.5e}" for x in bins * 1e6)
 
 print(*in_evs)

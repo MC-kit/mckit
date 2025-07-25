@@ -62,6 +62,7 @@ minimum-version = "build-system.requires"
 build-dir = "build/{wheel_tag}"
 build.verbose = false
 logging.level = "INFO"
+cmake.build-type = "Debug"
 
 
 [tool.cibuildwheel]
@@ -69,13 +70,21 @@ build-frontend = "build[uv]"
 
 
 [dependency-groups]
-dev = [
+dev = [{ include-group = "style" }, { include-group = "test" }]
+style = [
     { include-group = "pre_commit" },
-    { include-group = "test" },
-    { include-group = "mypy" },
     { include-group = "ruff" },
+    { include-group = "mypy" },
+    { include-group = "lint" },
 ]
 pre_commit = ["pre-commit>=2.15.0", "pydocstringformatter>=0.7.3"]
+ruff = ["ruff>=0.0.259"]
+mypy = [
+    "mypy>=1.2.0",
+    "pep8-naming>=0.12.1",
+    "types-setuptools>=80.9.0.20250529",
+]
+lint = ["pylint", "pylint-per-file-ignores"]
 test = [
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
@@ -85,19 +94,14 @@ test = [
     "coverage[toml]>=7.9.2",
     "xdoctest>=1.2.0",
 ]
+# environments not in dev
 typeguard = ["typeguard>=4.1.5"]
-mypy = [
-    "mypy>=1.2.0",
-    "pep8-naming>=0.12.1",
-    "types-setuptools>=80.9.0.20250529",
-]
 docs = [
     "sphinx>=8.2.3",
     "sphinx-autodoc-typehints>=3.2.0",
     "sphinx-click>=6.0.0",
     "sphinx-autobuild>=2024.10.3",
 ]
-ruff = ["ruff>=0.0.259"]
 analyze = ["jupyterlab>=4.2.5", "jupytext>=1.16.4"]
 pypi = ["scikit-build-core", "numpy", "mkl-devel", "repairwheel"]
 

@@ -90,6 +90,17 @@ check: pre-commit test
   ruff check --fix src tests
   ruff format src tests
 
+[group: 'dev']
+@gp *args:
+  LD_LIBRARY_PATH="" git push {{args}}
+
+# development install for debugging
+[group: 'dev']
+@dev-install:
+  uv build
+  uvx --with scikit-build-core --with numpy --with mkl-devel pip install --no-build-isolation -e .  
+
+
 # test up to the first fail
 [group: 'test']
 test-ff *args:

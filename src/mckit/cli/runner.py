@@ -1,3 +1,5 @@
+"""MCKit CLI interface."""
+
 from __future__ import annotations
 
 import sys
@@ -22,6 +24,8 @@ NO_LEVEL_BELOW = 30
 
 context = {}
 
+# pylint: disable=missing-function-docstring
+
 
 @click.group(help=meta.__summary__)
 @click.option("--override/--no-override", default=False)
@@ -33,7 +37,6 @@ def mckit(verbose: bool, quiet: bool, logfile: str, override: bool) -> None:
     # """MCKIT command line utility."""
     init_logger(logfile, quiet, verbose)
     #
-    # TODO dvp: add customized logger configuring from a configuration toml-file.
     # ensure that ctx.obj exists and is a dict (in case `cli()` is called
     # by means other than the `if` block below
     # obj = ctx.ensure_object(dict)
@@ -149,8 +152,6 @@ def concat(output, parts_encoding, output_encoding, parts):
     override = context["OVERRIDE"]
     with resolve_output(output, exist_ok=override, encoding=output_encoding) as out_fid:
         for f in map(Path, parts):
-            # TODO dvp: Add filtering of a part's text here. Implement as external scripts call.
-            #           Should be configurable
             print(f.read_text(encoding=parts_encoding), file=out_fid, end="")
 
 
@@ -190,7 +191,7 @@ def check(sources: list[click.Path]) -> None:
 )
 @click.argument("source", metavar="<source>", type=click.Path(exists=True), nargs=1, required=True)
 def transform(
-    output: click.STRING,
+    output: str,
     transformation: int,
     transformations: click.Path,
     source: click.Path,
@@ -207,4 +208,4 @@ def transform(
 
 
 if __name__ == "__main__":
-    mckit(obj={})
+    mckit(obj={})  # pylint: disable=no-value-for-parameter

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import os
 
@@ -17,17 +17,14 @@ from click import progressbar
 
 import mckit.material as mm
 
-
-# noinspection PyUnresolvedReferences,PyPackageRequirements
+from mckit.box import GLOBAL_BOX, Box
+from mckit.card import Card
+from mckit.constants import MIN_BOX_VOLUME
 from mckit.geometry import Shape as _Shape
-
-from .box import GLOBAL_BOX, Box
-from .card import Card
-from .constants import MIN_BOX_VOLUME
-from .printer import CELL_OPTION_GROUPS, print_option
-from .surface import Surface
-from .transformation import Transformation
-from .utils import filter_dict
+from mckit.printer import CELL_OPTION_GROUPS, print_option
+from mckit.surface import Surface
+from mckit.transformation import Transformation
+from mckit.utils import filter_dict
 
 if TYPE_CHECKING:
     from typing import ClassVar, Literal, NewType
@@ -422,7 +419,7 @@ class Shape(_Shape):
         return final_nodes
 
     @staticmethod
-    def _find_coverages(results: np.ndarray, value: int = +1, level: int = 0) -> list[list[[int]]]:
+    def _find_coverages(results: np.ndarray, value: int = +1, level: int = 0) -> list[list[int]]:
         """Create tables of ... .
 
         Given `results`, find counts of value occurrences over its rows.
@@ -789,10 +786,10 @@ class Body(Card):
     # noinspection PyShadowingNames
     def fill(
         self,
-        universe: Universe = None,
+        universe: Universe | None = None,
         recurrent: bool = False,
         simplify: bool = False,
-        **kwargs: dict[str, any],
+        **kwargs: dict[str, Any],
     ) -> list[Body]:
         """Fills this cell by filling universe.
 
@@ -820,7 +817,7 @@ class Body(Card):
         """
         if universe is None:
             if "FILL" in self.options:
-                universe = self.options["FILL"]["universe"]
+                universe = cast(Universe, self.options["FILL"]["universe"])
                 tr = self.options["FILL"].get("transform", None)
                 if tr:
                     universe = universe.transform(tr)
