@@ -2612,7 +2612,7 @@ packages:
 - pypi: ./
   name: mckit
   version: 0.8.6
-  sha256: 6ed24dd7a5d21849d27a2026eede06c9eca6c4a23362afbfcb5d978b7ca626f5
+  sha256: 3474a188314e3deab2ad2db9cae111889ee70b28b6740bbdf94b60d43ae1317c
   requires_dist:
   - attrs>=21.2.0
   - click>=8.0.1

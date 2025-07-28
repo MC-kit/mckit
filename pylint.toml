@@ -72,9 +72,7 @@ jobs = 0
 
 # List of plugins (as comma separated values of python module names) to load,
 # usually to register additional checkers.
-load-plugins = [
-    "pylint_per_file_ignores",
-]
+load-plugins = ["pylint_per_file_ignores"]
 
 # Pickle collected data for later comparisons.
 #persistent = true
@@ -379,10 +377,10 @@ known-third-party = ["enchant", "pytest"]
 
 [tool.pylint.'messages control']
 disable = [
-    "logging-too-many-args",  # for loguru logging
+    "logging-too-many-args", # for loguru logging
 ]
 per-file-ignores = [
-    "tests/:missing-class-docstring,missing-function-docstring,redefined-outer-name",
+    "tests/:missing-class-docstring,missing-function-docstring,redefined-outer-name,protectd-access",
 ]
 
 # Enable the message, report, category or checker with the given id(s). You can

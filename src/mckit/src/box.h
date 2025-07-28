@@ -23,17 +23,17 @@ typedef struct Box Box;
 
 struct Box
 {
-    double center[NDIM];         // center of the box
-    double ex[NDIM];             //
-    double ey[NDIM];             // basis vectors. Shows directions of box's edges
-    double ez[NDIM];             //
-    double dims[NDIM];           // Dimensions of the box.
-    double lb[NDIM];             // lower bounds
-    double ub[NDIM];             // upper bounds
-    double corners[NCOR * NDIM]; // corners
-    double volume;               // volume
-    uint64_t subdiv;             // Box location. The most outer (parent) box
-    VSLStreamStatePtr rng;       // Random generator. Allocated when it is needed.
+    double center[NDIM];         /// center of the box
+    double ex[NDIM];             ///
+    double ey[NDIM];             /// basis vectors. Shows directions of box's edges
+    double ez[NDIM];             ///
+    double dims[NDIM];           /// Dimensions of the box.
+    double lb[NDIM];             /// lower bounds
+    double ub[NDIM];             /// upper bounds
+    double corners[NCOR * NDIM]; /// corners
+    double volume;               /// volume
+    uint64_t subdiv;             /// Box location. The most outer (parent) box
+    VSLStreamStatePtr rng;       /// Random generator. Allocated when it is needed.
 };
 
 extern char enable_box_cache;

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
 import collections
 import collections.abc
@@ -17,7 +17,7 @@ from numpy import ndarray
 
 from mckit.constants import FLOAT_TOLERANCE
 
-MAX_DIGITS = np.finfo(float).precision
+MAX_DIGITS: Final[int] = np.finfo(float).precision
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray

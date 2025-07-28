@@ -817,7 +817,7 @@ class Body(Card):
         """
         if universe is None:
             if "FILL" in self.options:
-                universe = cast(Universe, self.options["FILL"]["universe"])
+                universe = cast("Universe", self.options["FILL"]["universe"])
                 tr = self.options["FILL"].get("transform", None)
                 if tr:
                     universe = universe.transform(tr)
