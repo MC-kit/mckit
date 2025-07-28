@@ -62,7 +62,6 @@ minimum-version = "build-system.requires"
 build-dir = "build/{wheel_tag}"
 build.verbose = false
 logging.level = "INFO"
-cmake.build-type = "Debug"
 
 
 [tool.cibuildwheel]

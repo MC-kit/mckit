@@ -97,7 +97,7 @@ check: pre-commit test
 # development install for debugging
 [group: 'dev']
 @dev-install:
-  uv build
+  uv build --config-settings=cmake.build-type="Debug"
   uvx --with scikit-build-core --with numpy --with mkl-devel pip install --no-build-isolation -e .  
 
 
