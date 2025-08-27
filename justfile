@@ -97,7 +97,7 @@ check: pre-commit test
 # development install for debugging
 [group: 'dev']
 @dev-install:
-  # uv build --config-settings=cmake.build-type="Debug"
+  uv build --config-settings=cmake.build-type="Debug"
   uvx --with scikit-build-core --with numpy --with mkl-devel pip install --no-build-isolation -e .  --config-settings=cmake.build-type="Debug"
 
 
@@ -170,7 +170,7 @@ docs:
   @uv run --no-dev --group docs --group docs-auto sphinx-autobuild --open-browser docs/source docs/_build
 
 
-# modules required to debug setup.py
-[group: 'debug-setup']
-@scbld:
-  pip install cmake scikit-build mkl-devel numpy ninja
+# # modules required to debug setup.py
+# [group: 'debug-setup']
+# @scbld:
+#   pip install cmake scikit-build mkl-devel numpy ninja

@@ -331,3 +331,6 @@ test = "pytest"
 [tool.pixi.feature.pypi.tasks]
 pypi_build = "uv build --no-build-isolation"
 repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
+
+[tool.pixi.feature.dev.target.linux-64.dependencies]
+gdb = ">=16.3,<17"
