@@ -13,6 +13,11 @@ export JUST_LOG := log
 default:
   @just --list
 
+#git push bypassing pixi-provided openssl libraries
+[group: 'dev']
+@gp:
+  LD_LIBRARY_PATH="" git push
+
 # create venv, if not exists
 [group: 'dev']
 @venv:
