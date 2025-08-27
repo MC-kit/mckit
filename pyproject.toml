@@ -1,14 +1,11 @@
 [build-system]
-requires = [
-    "scikit-build-core>=0.10",
-    "numpy",
-]
+requires = ["scikit-build-core>=0.10", "numpy"]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "mckit"
 version = "0.8.6"
-requires-python = ">=3.12"                                              # connectorx==0.4.3 prevents <4
+requires-python = ">=3.12"                                               # connectorx==0.4.3 prevents <4
 description = "Tools to process MCNP models and results"
 authors = [{ name = "rrn" }]
 readme = "README.rst"
@@ -86,6 +83,7 @@ test = [
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
     "pytest-mock>=3.14.0",
+    "pytest-durations>=1.5.2",
     "pytest-emoji>=0.2.0",
     "pytest-benchmark>=5.1.0",
     "coverage[toml]>=7.9.2",
@@ -94,6 +92,7 @@ test = [
 # environments not in dev
 typeguard = ["typeguard>=4.1.5"]
 docs = [
+    "rstcheck>=6.2.5",
     "sphinx>=8.2.3",
     "sphinx-autodoc-typehints>=3.2.0",
     "sphinx-click>=6.0.0",
@@ -128,6 +127,8 @@ addopts = '''
 --ignore setup.py
 --failed-first
 --xdoctest
+--pytest-durations-min=1
+--pytest-resultlog="pytest-result.log"
 --benchmark-disable
 --benchmark-storage=.cache/benchmarks
 --benchmark-autosave
@@ -193,7 +194,7 @@ sort = "Cover"
 # See https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml-file
 #     https://dev.to/tusharsadhwani/the-comprehensive-guide-to-mypy-561m
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 # strict = true     # TODO dvp: uncomment this to get strict control
 follow_imports = "silent"
 # namespace_packages = true
@@ -268,7 +269,7 @@ exclude-deps = [
 
 [tool.pixi.workspace]
 preview = ["pixi-build"]
-channels = ["https://prefix.dev/conda-forge"]
+channels = ["conda-forge"]
 # platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 platforms = ["linux-64", "win-64"]
 
@@ -280,8 +281,9 @@ version = "0.8.6"
 
 # Here the build system of the package is specified
 # We are using `pixi-build-python` in order to build a Python package
-[tool.pixi.package.build]
-backend = { name = "pixi-build-python", version = "0.1.*" }
+[tool.pixi.package.build.backend]
+name = "pixi-build-python"
+version = "0.1.*"
 channels = [
     "https://prefix.dev/pixi-build-backends",
     "https://prefix.dev/conda-forge",
