@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.11"
 
 [[package]]
@@ -531,26 +531,26 @@ wheels = [
 
 [[package]]
 name = "intel-cmplr-lib-ur"
-version = "2025.2.0"
+version = "2025.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "umf" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b6/1c/9e06795a34f56d23198aa9aa1c096791b5fa844d88ca99b5baabc5803197/intel_cmplr_lib_ur-2025.2.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:bd65263be09d66c750900cb7753d4dcb8eb41fe1f6ad2db6658d3f83126f5078", size = 29313819, upload-time = "2025-06-24T13:14:26.312Z" },
-    { url = "https://files.pythonhosted.org/packages/f8/ba/89e0d199fc210fbd321114d58ae0278ce8b8b71d2ef8e716e64412de0d10/intel_cmplr_lib_ur-2025.2.0-py2.py3-none-win_amd64.whl", hash = "sha256:30cd6026858808f885395b27e3da8eb90aaf62838933932bab62e8533f65b9df", size = 1169341, upload-time = "2025-06-24T13:20:02.174Z" },
+    { url = "https://files.pythonhosted.org/packages/92/18/28198666e0ee1709a471c3e376001146e629214d67553bc9fa3e7bbc9b8e/intel_cmplr_lib_ur-2025.2.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:ecc6eba009ead8ea819d931107ba11e2b502f5d8ebbd287e4901074a764f9792", size = 29313080, upload-time = "2025-08-13T18:31:36.833Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/70/938e81f58886fd4e114d5a5480d98c1396e73e40b7650f566ad0c4395311/intel_cmplr_lib_ur-2025.2.1-py2.py3-none-win_amd64.whl", hash = "sha256:497348e3bcb9fa0e079ade2d7cf2c10931e78eb9845285d1b6bb6dcd2764964a", size = 1169341, upload-time = "2025-08-13T18:31:17.978Z" },
 ]
 
 [[package]]
 name = "intel-openmp"
-version = "2025.2.0"
+version = "2025.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "intel-cmplr-lib-ur" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/39/17/45e67730f8757a00d665095338b21ca04890d2a3d52a44d725fb5393a044/intel_openmp-2025.2.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:57f52a5f374e70dce56591ab23bf274252a68128d5b8de8f897f3683f65374c8", size = 73412223, upload-time = "2025-06-24T13:14:46.866Z" },
-    { url = "https://files.pythonhosted.org/packages/bc/37/bab8e9283407798d8782f4d9b374436e51c7a297e1b6dc05073df550c010/intel_openmp-2025.2.0-py2.py3-none-win_amd64.whl", hash = "sha256:1710356ae0db744ca028ed380759a2007548ad1819f743be9d675603cb127377", size = 34021989, upload-time = "2025-06-24T13:20:19.438Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/0a/160013c2e8920e7f4d5bfb0b46dbe9fdd37ff50adcc11a1bad674f22bd78/intel_openmp-2025.2.1-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:4656e8e864998db776dbb6d045067f75c227f78c72943e07e15b0d1d65ff45c2", size = 73411361, upload-time = "2025-08-13T18:31:57.96Z" },
+    { url = "https://files.pythonhosted.org/packages/89/ed/13fed53fcc7ea17ff84095e89e63418df91d4eeefdc74454243d529bf5a3/intel_openmp-2025.2.1-py2.py3-none-win_amd64.whl", hash = "sha256:ac69973d6c489ec3697bb320ccce0b274de4462f463e5ea0f078abbcbb933e09", size = 34021986, upload-time = "2025-08-13T18:31:09.507Z" },
 ]
 
 [[package]]
@@ -1065,7 +1065,7 @@ xdoctest = [
 requires-dist = [
     { name = "attrs", specifier = ">=21.2.0" },
     { name = "click", specifier = ">=8.0.1" },
-    { name = "intel-cmplr-lib-ur", specifier = "==2025.2.0" },
+    { name = "intel-cmplr-lib-ur", specifier = "==2025.2.1" },
     { name = "loguru", specifier = ">=0.6.0" },
     { name = "mkl-devel", specifier = ">=2025.2.0" },
     { name = "numpy", specifier = ">=2.3.1" },
@@ -1667,14 +1667,14 @@ wheels = [
 
 [[package]]
 name = "pytest-durations"
-version = "1.5.2"
+version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2c/d2/8d3c4194e4419a4f24a7ba01e88532631617fa0a7b73055ddcf13de9553c/pytest_durations-1.5.2.tar.gz", hash = "sha256:953a5b84b268d37fbf98fd0818cb60d573c183fc9b0d9ba74b05bd9b5592b751", size = 7981, upload-time = "2025-04-29T16:05:01.128Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/66/11/9a700db071b4d37ccf548c64cdd64309513d11e4d2975cbad286efa2fe94/pytest_durations-1.6.0.tar.gz", hash = "sha256:daac29ea0a915413a69157e3dd698aef5367075e41d4555c2da6fb0df53f19be", size = 11325, upload-time = "2025-08-27T14:41:21.458Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/00/ae/36c772cc7dcf8981780a2c571bda68fd27a2c12fc190229df8d74bc1f419/pytest_durations-1.5.2-py3-none-any.whl", hash = "sha256:76e0c95cb4d6e2496f1a06e52bb94258a6781be8f9198fe1b2055451a1f0c90e", size = 11053, upload-time = "2025-04-29T16:05:00.261Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/29/86024926983a9e92ddab9994570aec94f207de97fdfc44231a709fdda78f/pytest_durations-1.6.0-py3-none-any.whl", hash = "sha256:0d61e8e011190437fbf3b120cfba1526634c140265f99cd2f88d7d60a73cae27", size = 13300, upload-time = "2025-08-27T14:41:20.331Z" },
 ]
 
 [[package]]
