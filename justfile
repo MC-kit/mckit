@@ -99,15 +99,14 @@ default:
 [group: 'dev']
 @up:
   pre-commit autoupdate
-  uv self update
-  uv sync --upgrade
+  pixi upgrade
   pre-commit run -a 
   pytest
 
 # show dependencies
 [group: 'dev']
 @tree *args:
-  uv tree --outdated {{args}}
+  pixi tree {{args}}
 
 # test up to the first fail
 [group: 'test']
