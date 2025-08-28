@@ -13,7 +13,7 @@ export JUST_LOG := log
 default:
   @just --list
 
-#git push bypassing pixi-provided openssl libraries
+# git push bypassing pixi-provided openssl libraries
 [group: 'dev']
 @gp:
   LD_LIBRARY_PATH="" git push
@@ -23,11 +23,19 @@ default:
 @venv:
   [ -d .venv ] || uv venv --python {{default_python}} --seed
 
+# download/update submodules 
+[group: 'dev']
+@submodule: 
+  git submodule update --init --recursive --depth 1
+  
 # build package
 [group: 'dev']
-@build: venv
-  git submodule update --init --recursive --depth 1
+@uv_build: submodule venv
   uv build
+
+[group: 'dev']
+@build: submodule 
+  pixi build
 
 # clean reproducible files
 [group: 'dev']
@@ -48,12 +56,12 @@ default:
       "build"
       "cmake-build-debug"
       "dist"
-      "docs/_build"
       "htmlcov"
   )
   for d in "${dirs_to_clean[@]}"; do
       find . -type d -name "$d" -exec rm -rf {} +
   done
+  rm -fr "docs/_build"
   files_to_clean=(
       "*.so"
       "*.so.*"
@@ -62,14 +70,15 @@ default:
       "setup.py"
   )
   for f in "${files_to_clean[@]}"; do
-      find src/mckit -type f -name "$f" -exec rm -rf {} +
+      find src/mckit -type f -name "$f" -exec rm -f {} +
   done
+  # TODO @dvp: check if `pixi clean` is enough for the task
 
 
 # install package
 [group: 'dev']
-@install: build
-  uv sync   
+@install *args: build
+  pixi install {{args}}  
 
 # clean build
 [group: 'dev']
