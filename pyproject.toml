@@ -195,6 +195,7 @@ sort = "Cover"
 #     https://dev.to/tusharsadhwani/the-comprehensive-guide-to-mypy-561m
 [tool.mypy]
 python_version = "3.13"
+cache_dir = ".cache/mypy"
 # strict = true     # TODO dvp: uncomment this to get strict control
 follow_imports = "silent"
 # namespace_packages = true
@@ -270,7 +271,8 @@ exclude-deps = [
 [tool.pixi.workspace]
 preview = ["pixi-build"]
 channels = ["conda-forge"]
-platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+# platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+platforms = ["linux-64", "win-64"]
 
 # There can be multiple packages in a workspace
 # In `package` you specify properties specific to the package
@@ -309,10 +311,9 @@ nlopt = ">=2.10.0,<3"
 mkl-devel = ">=2024.2.2,<2025"
 numpy = ">=2.3.2,<3"
 
-# [tool.pixi.feature.py311.dependencies]
-# python = "3.11.*"
 # [tool.pixi.feature.py312.dependencies]
 # python = "3.12.*"
+
 [tool.pixi.feature.py313.dependencies]
 python = "3.13.*"
 
@@ -323,6 +324,8 @@ analyze = { features = ["analyze", "py313"], solve-group = "default" }
 docs = { features = ["docs", "py313"], solve-group = "default" }
 typeguard = { features = ["typeguard", "py313"], solve-group = "default" }
 pypi = { features = ["pypi", "py313"], solve-group = "default" }
+# py312 = { features = ["test", "py312"], solve-group = "default" }
+py313 = { features = ["test", "py313"], solve-group = "default" }
 
 
 [tool.pixi.tasks]
