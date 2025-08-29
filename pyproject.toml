@@ -39,7 +39,7 @@ dependencies = [
     "sly>=0.5,<0.6",
     "tomli-w>=1.2.0,<2",
     "tqdm>=4.67.1,<5",
-    "typer>=0.16.1,<0.17",     # TODO @dvp: switch to cyclopts, same for click
+    "typer>=0.16.1,<0.17", # TODO @dvp: switch to cyclopts, same for click
 ]
 
 [project.urls]
@@ -270,8 +270,7 @@ exclude-deps = [
 [tool.pixi.workspace]
 preview = ["pixi-build"]
 channels = ["conda-forge"]
-# platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
-platforms = ["linux-64", "win-64"]
+platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
 # There can be multiple packages in a workspace
 # In `package` you specify properties specific to the package
