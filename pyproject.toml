@@ -39,7 +39,7 @@ dependencies = [
     "sly>=0.5,<0.6",
     "tomli-w>=1.2.0,<2",
     "tqdm>=4.67.1,<5",
-    "typer>=0.16.1,<0.17", # TODO @dvp: switch to cyclopts, same for click
+    "typer>=0.17.3,<0.18", # TODO @dvp: switch to cyclopts, same for click
 ]
 
 [project.urls]
@@ -59,8 +59,8 @@ logging.level = "INFO"
 cmake.build-type = "Debug"
 
 
-[tool.cibuildwheel]
-build-frontend = "build[uv]"
+#[tool.cibuildwheel]
+#build-frontend = "build[uv]"
 
 
 [dependency-groups]
@@ -86,6 +86,7 @@ test = [
     "pytest-durations>=1.5.2",
     "pytest-emoji>=0.2.0",
     "pytest-benchmark>=5.1.0",
+    "pytest-xdist[psutil]>=3.8.0",
     "coverage[toml]>=7.9.2",
     "xdoctest>=1.2.0",
 ]
@@ -119,6 +120,7 @@ wrk
 '''
 python_functions = "test_*  profile_*"
 addopts = '''
+-n auto
 -ra
 -q
 --tb=short
@@ -310,9 +312,13 @@ mckit = { path = ".", editable = true }
 nlopt = ">=2.10.0,<3"
 mkl-devel = ">=2024.2.2,<2025"
 numpy = ">=2.3.2,<3"
+# nlopt = ">=2.10.0,<3"
+# mkl-devel = ">=2024.2.2,<2025"
+# numpy = ">=2.3.2,<3"
 
-# [tool.pixi.feature.py312.dependencies]
-# python = "3.12.*"
+
+[tool.pixi.feature.py312.dependencies]
+python = "3.12.*"
 
 [tool.pixi.feature.py313.dependencies]
 python = "3.13.*"
@@ -324,7 +330,7 @@ analyze = { features = ["analyze", "py313"], solve-group = "default" }
 docs = { features = ["docs", "py313"], solve-group = "default" }
 typeguard = { features = ["typeguard", "py313"], solve-group = "default" }
 pypi = { features = ["pypi", "py313"], solve-group = "default" }
-# py312 = { features = ["test", "py312"], solve-group = "default" }
+py312 = { features = ["test", "py312"] }
 py313 = { features = ["test", "py313"], solve-group = "default" }
 
 
