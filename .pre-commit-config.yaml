@@ -61,12 +61,12 @@ repos:
       - id: creosote
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.8.13
+    rev: 0.8.14
     hooks:
       - id: uv-lock 
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.10
+    rev: v0.12.11
     hooks:
       # linter
       - id: ruff-check
@@ -96,7 +96,7 @@ repos:
 
   # Clang format the codebase automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: "v20.1.4"
+    rev: "v21.1.0"
     hooks:
       - id: clang-format
         types_or: [c++, c, cuda]
