@@ -3008,7 +3008,7 @@ packages:
 - pypi: ./
   name: mckit
   version: 0.8.6
-  sha256: 771138c86bbbb79a66bd4700af6a3d1957dc9a370a9d53e7ddbf1bbfe699e5f4
+  sha256: 5bd1d2631c832c43453c4ddf9021a0b121655f8b1a3e735374fa89548b1f6d46
   requires_dist:
   - attrs>=25.3.0,<26
   - click>=8.2.1,<9

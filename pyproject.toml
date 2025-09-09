@@ -71,7 +71,10 @@ style = [
     { include-group = "mypy" },
     { include-group = "lint" },
 ]
-pre_commit = ["pre-commit>=2.15.0", "pydocstringformatter>=0.7.3"]
+pre_commit = [
+    "pre-commit>=2.15.0",
+    "pydocstringformatter>=0.7.3",
+]
 ruff = ["ruff>=0.0.259"]
 mypy = [
     "mypy>=1.2.0",
@@ -87,8 +90,11 @@ test = [
     "pytest-emoji>=0.2.0",
     "pytest-benchmark>=5.1.0",
     "pytest-xdist[psutil]>=3.8.0",
-    "coverage[toml]>=7.9.2",
     "xdoctest>=1.2.0",
+    { include-group = "coverage"}  # coverage may be used on its own, see GHA test
+]
+coverage = [
+    "coverage[toml]>=7.9.2",
 ]
 # environments not in dev
 typeguard = ["typeguard>=4.1.5"]

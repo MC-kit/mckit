@@ -1013,6 +1013,9 @@ analyze = [
     { name = "jupyterlab" },
     { name = "jupytext" },
 ]
+coverage = [
+    { name = "coverage" },
+]
 dev = [
     { name = "coverage" },
     { name = "mypy" },
@@ -1106,6 +1109,7 @@ analyze = [
     { name = "jupyterlab", specifier = ">=4.2.5" },
     { name = "jupytext", specifier = ">=1.16.4" },
 ]
+coverage = [{ name = "coverage", extras = ["toml"], specifier = ">=7.9.2" }]
 dev = [
     { name = "coverage", extras = ["toml"], specifier = ">=7.9.2" },
     { name = "mypy", specifier = ">=1.2.0" },

@@ -56,6 +56,7 @@ default:
       "build"
       "cmake-build-debug"
       "dist"
+      "docs/_build"
       "htmlcov"
   )
   for d in "${dirs_to_clean[@]}"; do
@@ -137,13 +138,13 @@ default:
 [group: 'test']
 @coverage:
   uv run --no-dev --group test coverage run --parallel -m pytest
-  uv run --no-dev --group test coverage combine
-  uv run --no-dev --group test coverage report --show-missing --skip-covered
+  uv run --no-dev --group coverage coverage combine
+  uv run --no-dev --group coverage coverage report --show-missing --skip-covered
 
 # coverage to html
 [group: 'test']
 coverage-html: coverage
-  @uv run --no-dev --group test coverage html
+  @uv run --no-dev --group coverage coverage html
 
 # check correct typing at runtime
 [group: 'test']
