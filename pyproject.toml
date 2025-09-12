@@ -39,7 +39,7 @@ dependencies = [
     "sly>=0.5,<0.6",
     "tomli-w>=1.2.0,<2",
     "tqdm>=4.67.1,<5",
-    "typer>=0.17.3,<0.18", # TODO @dvp: switch to cyclopts, same for click
+    "typer>=0.17.4,<0.18", # TODO @dvp: switch to cyclopts, same for click
 ]
 
 [project.urls]
