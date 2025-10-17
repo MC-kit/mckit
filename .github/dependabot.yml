@@ -5,8 +5,7 @@ updates:
   - package-ecosystem: pip
     directory: "/"
     schedule:
-      interval: weekly
-      day: monday
+      interval: monthly
     labels:
       - "kind/dependencies"
       - "bot"
@@ -18,20 +17,24 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-      day: tuesday
+      day: sunday
     labels:
       - "area/ci"
       - "github_actions"
       - "kind/dependencies"
       - "bot"
+    groups:
+      # open a single pull-request for all GitHub actions updates
+      github-actions:
+        patterns:
+        - '*'
     open-pull-requests-limit: 10
     target-branch: devel
 
   - package-ecosystem: "gitsubmodule"
     directory: "/"
     schedule:
-      interval: weekly
-      day: wednesday
+      interval: monthly
     labels:
       - "kind/dependencies"
       - "bot"

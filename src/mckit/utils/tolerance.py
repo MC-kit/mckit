@@ -40,7 +40,8 @@ def tolerance_estimator(
     For integers - direct comparison.
     Scans generic iterables and compares objects implementing MayBeClose interface.
 
-    Returns:
+    Returns
+    -------
         estimator with the given tolerance limits
     """
 

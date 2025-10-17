@@ -177,7 +177,8 @@ class Composition(Card):
         Args:
             item: Isotope. It can be either isotope name or Element instance.
 
-        Returns:
+        Returns
+        -------
             True if the composition contains the isotope, False otherwise.
         """
         if not isinstance(item, Element):
@@ -193,7 +194,8 @@ class Composition(Card):
         Args:
             _isotope: Isotope. It can be either isotope name or Element instance.
 
-        Returns:
+        Returns
+        -------
             Atomic fraction of the specified isotope.
         """
         if not isinstance(_isotope, Element):
@@ -208,7 +210,8 @@ class Composition(Card):
         Args:
             _isotope : Isotope. It can be either isotope name or Element instance.
 
-        Returns:
+        Returns
+        -------
             Weight fraction of the specified isotope.
         """
         if not isinstance(_isotope, Element):
@@ -224,7 +227,8 @@ class Composition(Card):
     def expand(self) -> Composition:
         """Expands elements with natural abundances into detailed isotope composition.
 
-        Returns:
+        Returns
+        -------
             New expanded composition or self.
         """
         composition: dict[Element, float] = {}
@@ -248,7 +252,8 @@ class Composition(Card):
         Args:
             tolerance: Relative tolerance to consider isotope fractions as equal. Default: 1.e-8
 
-        Returns:
+        Returns
+        -------
             self - if composition is reduced successfully to natural.
             None - if the composition cannot be reduced to natural, because some nuclides are
                    presented with unnatural abundance.
@@ -299,7 +304,8 @@ class Composition(Card):
         Args:
             compositions: List of pairs composition, fraction.
 
-        Returns:
+        Returns
+        -------
             Mixture.
         """
         atomics = []
@@ -321,7 +327,8 @@ def mixture_by_volume(
         fractions_spec: list of specs (Composition, density, volume_fraction)
         _number: ... to assign as composition 'name'
 
-    Returns:
+    Returns
+    -------
         Composition: the mix by atomic fractions
     """
     compositions = [t[0] for t in fractions_spec]
@@ -453,7 +460,8 @@ class Material:
             factor: By this factor density of material will be multiplied. If factor
                      is specified, then its value will be used, otherwise - old_vol/new_vol
 
-        Returns:
+        Returns
+        -------
             New material that takes with corrected density.
         """
         if factor is None:
@@ -490,7 +498,8 @@ class Material:
                 'volume' - volume fractions;
                 'atomic' - atomic fractions.
 
-        Returns:
+        Returns
+        -------
             New material.
         """
         if not materials:
@@ -527,7 +536,8 @@ class Material:
 class Element:
     """Represents isotope or isotope mixture for natural abundance case.
 
-    Attributes:
+    Attributes
+    ----------
         _charge: Z of the element,
         _mass_number: A of the element
         _lib:  Data library ID. Usually it is MCNP library, like '31b' for FENDL31b.
@@ -617,7 +627,8 @@ class Element:
     def __repr__(self) -> str:
         """Create str representation for debugging.
 
-        Examples:
+        Examples
+        --------
             >>> print(repr(Element("H")))
             Element("H")
             >>> print(repr(Element("Ta181", isomer=1)))
@@ -690,7 +701,8 @@ class Element:
     def expand(self) -> dict[Element, float]:
         """Expands natural element into individual isotopes.
 
-        Returns:
+        Returns
+        -------
             A dictionary of elements that are comprised by the isotopes of this one and their fractions.
         """
         result = {}
@@ -706,7 +718,8 @@ class Element:
     def _split_name(_name: str) -> tuple[str, str]:
         """Splits element's name into charge and mass number parts.
 
-        Examples:
+        Examples
+        --------
             >>> Element._split_name("1001")
             ('1', '001')
             >>> Element._split_name("H")

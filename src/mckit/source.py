@@ -28,7 +28,8 @@ class Distribution:
         distribution_variable:   Source variable's name. Default: None.
         is_discrete: Indicate that the variable is discrete. Default: False.
 
-    Attributes:
+    Attributes
+    ----------
         _name: Distribution's name
         _var: Name of source variable
         _is_discrete: is this discrete or histogram distribution
@@ -70,7 +71,8 @@ class Distribution:
     def size(self) -> int:
         """The distribution's size.
 
-        Returns:
+        Returns
+        -------
             The number of probability values.
         """
         return len(self._probs)
@@ -82,7 +84,7 @@ class Distribution:
 
     @property
     def has_nested_distributions(self) -> bool:
-        """Are there nested (inner) distributions?"""
+        """Cehck if there are nested (inner) distributions."""
         return isinstance(self._values[0], Distribution)
 
     @staticmethod
@@ -98,7 +100,8 @@ class Distribution:
             size: The length of intensity matrix along variable dimension.
             is_discrete:  True <=> the distribution is discrete.
 
-        Raises:
+        Raises
+        ------
             ValueError: if the distribution is neither discrete, nor pdf, nor histogram.
         """
         discrete_or_pdf = len(bins_or_distrs) == size
@@ -126,7 +129,8 @@ class Distribution:
         If values of this distribution are distributions themselves,
         then they are returned.
 
-        Returns:
+        Returns
+        -------
             Set:  A set of nested distributions, if any, empty set otherwise.
         """
         return set(self._values) if self.has_nested_distributions else set()
@@ -134,7 +138,8 @@ class Distribution:
     def depends_on(self) -> Distribution | None:
         """Gets distribution this one depends on.
 
-        Returns:
+        Returns
+        -------
             Distribution|None:  Distribution this one depends on, if any. None otherwise.
         """
         if isinstance(self._probs, Distribution):
@@ -204,7 +209,8 @@ def create_bin_distributions(
         start_name:  Starting name for distributions.
                      For every new distribution the name is incremented by 1.
 
-    Returns:
+    Returns
+    -------
         free_name, list of distributions
     """
     distributions = []

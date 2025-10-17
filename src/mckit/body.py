@@ -56,7 +56,8 @@ class Shape(_Shape):
         args (Tuple[Shape|Surface...]):
             A tuple of shape's arguments.
 
-    Methods:
+    Methods
+    -------
         test_box(box)
             Tests if the box intersects the shape.
         volume(box, min_volume)
@@ -136,7 +137,8 @@ class Shape(_Shape):
             parent_opc:  Operation code of parent shape.
                          It is needed for proper use of parenthesis.
 
-        Returns:
+        Returns
+        -------
             List of words.
         """
         words = []
@@ -206,7 +208,8 @@ class Shape(_Shape):
     def complement(self):
         """Gets complement to the shape.
 
-        Returns:
+        Returns
+        -------
             Complement shape.
         """
         opc = self.opc
@@ -226,7 +229,8 @@ class Shape(_Shape):
     def is_complement(self, other: Shape) -> bool:
         """Checks if this shape is complement to the other.
 
-        Returns:
+        Returns
+        -------
             Test result.
         """
         if hash(self) != ~hash(other):
@@ -252,7 +256,8 @@ class Shape(_Shape):
         Args:
             other: A list of Shape or Body objects, which must be intersected.
 
-        Returns:
+        Returns
+        -------
             New shape.
         """
         return Shape("I", self, *other)
@@ -263,7 +268,8 @@ class Shape(_Shape):
         Args:
             other :  A list of Shape or Body objects, which must be joined.
 
-        Returns:
+        Returns
+        -------
             New shape.
         """
         return Shape("U", self, *other)
@@ -274,7 +280,8 @@ class Shape(_Shape):
         Args:
             transformation : Transformation to be applied.
 
-        Returns:
+        Returns
+        -------
             New shape.
         """
         opc = self.opc
@@ -293,7 +300,8 @@ class Shape(_Shape):
     def complexity(self) -> int:
         """Gets complexity of shape.
 
-        Returns:
+        Returns
+        -------
             The complexity of the shape description. It is the number of
             surfaces needed to describe the shape. Repeats are taken into
             account.
@@ -362,11 +370,14 @@ class Shape(_Shape):
     def get_simplest(self, trim_size: int = 0) -> list[Shape]:  # noqa: PLR0911
         """Gets the simplest found description of the shape.
 
-        Args:
-            trim_size : Shape variants with complexity greater than minimal one more than
-                trim_size are thrown away.
+        Parameters
+        ----------
+        trim_size
+            Shape variants with complexity greater than minimal one more than
+            trim_size are thrown away.
 
-        Returns:
+        Returns
+        -------
             A list of shapes with minimal complexity.
         """
         if self.opc not in {"I", "U"}:  # not an intersection or a union
@@ -428,12 +439,17 @@ class Shape(_Shape):
         where `value` is not found in the current column.
         Run the process recursively on `remainder`.
 
-        Args:
-            results: ...
-            value: ...
-            level: for recursion logging
+        Parameters
+        ----------
+        results
+            ...
+        value
+            ...
+        level
+            for recursion logging
 
-        Returns:
+        Returns
+        -------
             table with column numbers, where `value` is found ?
         """
         _LOG.debug(f"coverage level: {level}, results size: {results.size}, shape: {results.shape}")
@@ -462,11 +478,13 @@ class Shape(_Shape):
         dictionary values. Otherwise, the original surface is used. But new
         shape is created anyway.
 
-        Args:
-            replace_dict:
-                A dictionary of surfaces to be replaced.
+        Parameters
+        ----------
+        replace_dict
+            A dictionary of surfaces to be replaced.
 
-        Returns:
+        Returns
+        -------
             New Shape object obtained by replacing certain surfaces.
         """
         if self.opc in {"C", "S"}:  # complement or 'no operation'
@@ -482,10 +500,13 @@ class Shape(_Shape):
     def from_polish_notation(polish: list[Surface | Shape | str]) -> Shape:
         """Creates Shape instance from reversed Polish notation.
 
-        Args:
-            polish:  List of surfaces and operations written in reversed Polish Notation.
+        Parameters
+        ----------
+        polish
+            List of surfaces and operations written in reversed Polish Notation.
 
-        Returns:
+        Returns
+        -------
             The geometry represented by Shape instance.
         """
         operands = []
@@ -517,8 +538,9 @@ def _clean_args(opc: str, *_args: Shape | Surface | Body) -> tuple[str, list[Sha
     Try  to reduce levels of operations if only one arg is provided
     or one of the args is Empty or Universe
 
-    Returns:
-        opc and args simplified and args being converted to Shape
+    Returns
+    -------
+    opc and args simplified and args being converted to Shape
     """
     args = [a.shape if isinstance(a, Body) else a for a in _args]
     _verify_opc(opc, *args)
@@ -586,7 +608,7 @@ class Body(Card):
     options :
         A set of cell's options.
 
-    Methods:
+    Methods
     -------
     intersection(other)
         Returns an intersection of this cell with the other.
@@ -629,12 +651,13 @@ class Body(Card):
 
     @property
     def is_graveyard(self) -> bool:
-        """Is this cell a graveyard?
+        """Check if this cell is in a graveyard.
 
         The graveyard cells have zero importance for all the kinds of particles.
 
-        Returns:
-            True, if all cell is of zero importance for all the kinds of particles, otherwise - False
+        Returns
+        -------
+        True, if all cell is of zero importance for all the kinds of particles, otherwise - False
         """
         # noinspection PyTypeChecker
         return all(self.importance(c) == 0.0 for c in "NPE")
@@ -642,11 +665,14 @@ class Body(Card):
     def importance(self, particle: Literal["N", "P", "E"] = "N") -> float:
         """Retrieve importance of a cell for a particle kind.
 
-        Args:
-            particle: kind
+        Parameters
+        ----------
+        particle
+            kind
 
-        Returns:
-            The importance value, if specified, zero otherwise.
+        Returns
+        -------
+        The importance value, if specified, zero otherwise.
         """
         return self.options.get(f"IMP{particle}", 0.0)
 
@@ -703,7 +729,8 @@ class Body(Card):
     def material(self) -> mm.Material | None:
         """Gets body's Material.
 
-        Returns:
+        Returns
+        -------
             The material, if present, otherwise None
         """
         composition = self.options.get("MAT", None)
@@ -719,7 +746,8 @@ class Body(Card):
         Args:
             other:  Other cell.
 
-        Returns:
+        Returns
+        -------
             The cell representing the intersection.
         """
         geometry = self._shape.intersection(other)
@@ -734,7 +762,8 @@ class Body(Card):
         Args:
             other: Other cell.
 
-        Returns:
+        Returns
+        -------
             cell: The result.
         """
         geometry = self._shape.union(other)
@@ -764,7 +793,8 @@ class Body(Card):
                 Max size of set to return. It is used to prevent unlimited growth
                 of the variant set.
 
-        Returns:
+        Returns
+        -------
             Simplified version of this cell.
         """
         self._shape.collect_statistics(box, min_volume)
@@ -776,7 +806,8 @@ class Body(Card):
     def split(self, box: Box = GLOBAL_BOX, min_volume: float = MIN_BOX_VOLUME) -> list[Body]:
         """Splits cell into disjoint cells.
 
-        Returns:
+        Returns
+        -------
             cells list
         """
         self.shape.collect_statistics(box, min_volume)
@@ -812,7 +843,8 @@ class Body(Card):
                 Keyword parameters for simplify method if simplify is True.
                 Default: all False.
 
-        Returns:
+        Returns
+        -------
             The list of resulting cells.
         """
         if universe is None:
@@ -843,7 +875,8 @@ class Body(Card):
         Args:
             transformation: Transformation to be applied.
 
-        Returns:
+        Returns
+        -------
             The result of this cell transformation.
         """
         geometry = self._shape.transform(transformation)
@@ -916,7 +949,6 @@ def simplify_mp(
 
     Parameters
     ----------
-
     cells:
         iterable over cells to simplify
     box :

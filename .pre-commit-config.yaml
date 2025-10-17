@@ -55,11 +55,10 @@ repos:
         exclude: data|\.ipynb$
       - id: requirements-txt-fixer
 
-
-  - repo: https://github.com/fredrikaverpil/creosote
-    rev: v4.1.0
-    hooks:
-      - id: creosote
+  # - repo: https://github.com/fredrikaverpil/creosote
+  #   rev: v4.1.0
+  #   hooks:
+  #     - id: creosote
 
   - repo: https://github.com/astral-sh/uv-pre-commit
     rev: 0.8.17

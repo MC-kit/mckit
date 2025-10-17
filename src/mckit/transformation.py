@@ -55,7 +55,7 @@ class Transformation(Card, MaybeClose):
     options : dict
         Other options, like name, comment, etc.
 
-    Methods:
+    Methods
     -------
     apply2gq(m, v, k)
         Gets parameters of generic quadratic surface in the main coordinate
@@ -143,7 +143,8 @@ class Transformation(Card, MaybeClose):
                 Free term of generic quadratic equation in the auxiliary coordinate
                 system.
 
-        Returns:
+        Returns
+        -------
             m, v, k
             m : numpy.ndarray
                 A 3x3 matrix which defines quadratic coefficients of GQ surface
@@ -170,7 +171,8 @@ class Transformation(Card, MaybeClose):
             k1: Free term of plane equation in the auxiliary coordinate
                 system.
 
-        Returns:
+        Returns
+        -------
             - v, A vector of size 3 which defines vector,
                  normal to the plane surface in the main coordinate system.
             - k, Free term of plane surface equation in the main coordinate system.
@@ -187,7 +189,8 @@ class Transformation(Card, MaybeClose):
                 It has shape (3,) if there is the only point or (N, 3) - if there
                 are N points.
 
-        Returns:
+        Returns
+        -------
             Coordinates of the point(s) in the main coordinate system.
         """
         # Matrix U is transposed to change U p1 -> p1 U^T - to preserve shape
@@ -200,7 +203,8 @@ class Transformation(Card, MaybeClose):
         Args:
             v1: Coordinates of the vector(s) in the auxiliary coordinate system.
 
-        Returns:
+        Returns
+        -------
             Coordinates of the vector(s) in the main coordinate system.
         """
         # In contrast with apply2point - no translation is needed.
@@ -217,7 +221,8 @@ class Transformation(Card, MaybeClose):
         Args:
             tr: Transformation to be modified.
 
-        Returns:
+        Returns
+        -------
             New transformation - the result.
         """
         rot = np.dot(self._u, tr._u)
@@ -229,7 +234,8 @@ class Transformation(Card, MaybeClose):
 
         Gets new transformation which is complement to this one.
 
-        Returns:
+        Returns
+        -------
             Reversed version of this transformation.
         """
         u1 = np.transpose(self._u)

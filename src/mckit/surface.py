@@ -82,10 +82,12 @@ def create_surface(kind: str, *_params: float, **options) -> Surface | None:
                 In particular, transform  - transformation instance
                 to be applied to the surface being created.
 
-    Returns:
+    Returns
+    -------
         New surface.
 
-    Raises:
+    Raises
+    ------
         NotImplementedError: when some logic is not implemented yet
         ValueError: on incompatible `params`
     """
@@ -263,7 +265,8 @@ def create_replace_dictionary(
         tol : float
             Tolerance
 
-    Returns:
+    Returns
+    -------
         A replacement dictionary. surface -> (replace_surface, sense). Sense is +1
         if surfaces have the same direction of normals. -1 otherwise.
     """
@@ -289,7 +292,8 @@ def _drop_empty_transformation(options: dict[str, Any]) -> None:
 class Surface(Card, MaybeClose):
     """Base class for all surface classes.
 
-    Methods:
+    Methods
+    -------
         equals(other, box, tol)
             Checks if this surface and surf are equal inside the box.
         test_point(p)
@@ -321,7 +325,8 @@ class Surface(Card, MaybeClose):
     def apply_transformation(self) -> Surface:
         """Applies transformation specified for the surface.
 
-        Returns:
+        Returns
+        -------
             A new surface with transformed parameters, if there's specified transformation,
             otherwise returns self.
         """
@@ -339,7 +344,8 @@ class Surface(Card, MaybeClose):
         Args:
             tr: Transformation to be applied.
 
-        Returns:
+        Returns
+        -------
             The result of this surface transformation.
         """
 
@@ -442,7 +448,8 @@ class RCC(Surface, _RCC):
         Args:
             tr:  Transformation to be applied.
 
-        Returns:
+        Returns
+        -------
             New RCC shape with the transformation stored in options.
         """
         center, direction, radius = self.get_params()
@@ -487,11 +494,7 @@ class RCC(Surface, _RCC):
 
 # noinspection PyProtectedMember
 class BOX(Surface, _BOX):
-    """Macrobody BOX surface.
-
-    Parameters
-    ----------
-    """
+    """Macrobody BOX surface."""
 
     def __init__(self, center, dir_x, dir_y, dir_z, **options):
         dir_x = np.array(dir_x)
@@ -603,7 +606,8 @@ class BOX(Surface, _BOX):
         Args:
             tr:  Transformation to be applied.
 
-        Returns:
+        Returns
+        -------
             New shape.
         """
         center, dir_x, dir_y, dir_z = self.get_params()
@@ -678,7 +682,8 @@ class Plane(Surface, _Plane):
         Skips Plane.__init__ (directly calls _Plane.__init__) to avoid time-consuming
         significant digits computation.
 
-        Returns:
+        Returns
+        -------
             New copy of self
         """
         instance = Plane.__new__(Plane, self._v, self._k)

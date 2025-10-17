@@ -26,7 +26,8 @@ def data() -> Callable[[str], Path]:
 def clite_text(data) -> str:
     """C-lite model text.
 
-    Returns:
+    Returns
+    -------
         Loaded text of a C-lite model.
     """
     with ZipFile(data("data/4M.zip")) as data_archive:

@@ -2,62 +2,63 @@ target-version = "py312"
 line-length = 100
 src = ["src", "tests"]
 exclude = [
-    "*.egg-info",
-    ".cache",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".mypy_cache",
-    ".nox",
-    ".ruff_cache",
-    ".unclassified",
-    ".venv",
-    "__pycache__",
-    "_build",
-    "adhoc",
-    "build",
-    "data", 
-    "dist",
-    "docs/source/conf.py",
-    "extern",
-    "notebooks",
-    "venv",
-    "wrk",
+  "*.egg-info",
+  ".cache",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".git-rewrite",
+  ".mypy_cache",
+  ".nox",
+  ".ruff_cache",
+  ".unclassified",
+  ".venv",
+  "__pycache__",
+  "_build",
+  "adhoc",
+  "build",
+  "data",
+  "dist",
+  "docs/source/conf.py",
+  "extern",
+  "notebooks",
+  "venv",
+  "wrk",
 ]
 
 [lint]
-select=["ALL"]
-ignore=[
+select = ["ALL"]
+ignore = [
   "ANN",
   "ARG",
-  "C901", # too complex - ...
+  "C901",   # too complex - ...
   "COM812",
   "D203",
-  "D100", # Missing docstring in public module
-  "D101", # Missing docstring in public class
-  "D102", # Missing docstring in public method
-  "D103", # Missing docstring in public function
-  "D105", # D105 Missing docstring in magic method (__hash__, __eq__)
-  "D104", # Missing docstring in public package
-  "D106", # Missing docstring in public nested class
-  "D107", # Missing docstring in __init__
-  "DTZ005",  #  `datetime.datetime.now()` called without a `tz` argument
+  "D100",   # Missing docstring in public module
+  "D101",   # Missing docstring in public class
+  "D102",   # Missing docstring in public method
+  "D103",   # Missing docstring in public function
+  "D105",   # D105 Missing docstring in magic method (__hash__, __eq__)
+  "D104",   # Missing docstring in public package
+  "D106",   # Missing docstring in public nested class
+  "D107",   # Missing docstring in __init__
+  "DTZ005", #  `datetime.datetime.now()` called without a `tz` argument
   "D211",
   "D213",
-  "E402", # Module level import not at top of file
-  "E501", # Line too long (<LENGTH> > 100 characters)
+  "D401",   # the first sentence in the docstring should be in imperative mod
+  "E402",   # Module level import not at top of file
+  "E501",   # Line too long (<LENGTH> > 100 characters)
 
-  "EM",  # exception message
-  "EM102", #  Exception must not use an f-string literal, assign to variable first
+  "EM",     # exception message
+  "EM102",  #  Exception must not use an f-string literal, assign to variable first
   "ERA001", #  Found commented-out code
-  "F811", # parser 
-  "F821", # ...
-  "FBT", #  Boolean-typed positional argument in function definition
-  "FIX", #  TODO
-  "N803", # Argument name `R` should be lowercase
-  "N806", # Variable `D` in function should be lowercase
-  "N802", # function name should be lowercase
+  "F811",   # parser 
+  "F821",   # ...
+  "FBT",    #  Boolean-typed positional argument in function definition
+  "FIX",    #  TODO
+  "N803",   # Argument name `R` should be lowercase
+  "N806",   # Variable `D` in function should be lowercase
+  "N802",   # function name should be lowercase
   "ISC001", # may cause conflicts when used with the ruff formatter
 
   "PLE1205", # logging-too-many-args - we use loguru with '{' style of placeholders
@@ -66,18 +67,18 @@ ignore=[
   "PLR0913", # Too many arguments to function call (6 > 5)
   "PLR0915", # Too many statements (65 > 50)
   "PLR2004", # magic number - don't want to declare 0.0 as constant
-#    "PLR5501", # Consider using `elif` instead of `else` then `if` to remove one indentation level
+  #    "PLR5501", # Consider using `elif` instead of `else` then `if` to remove one indentation level
 
-  "PT019", # Fixture `_bin` without value is injected as parameter (false positive?)
+  "PT019",  # Fixture `_bin` without value is injected as parameter (false positive?)
   "RUF009", # attrib() - remove attrs
-  "S101", # Use of `assert` detected  - TODO - replace assert statements with exception raise
+  "S101",   # Use of `assert` detected  - TODO - replace assert statements with exception raise
   "SLF001", #  Private member accessed: `_cells`
-  "T201", #  `print` found
+  "T201",   #  `print` found
 
-  "TC", # move import to type-checking block
-  "TC001", #  Move application import `.box.Box` into a type-checking block
-  "TC006", #  [*] Add quotes to type expression in `typing.cast()`
-  "TD", # TODO
+  "TC",     # move import to type-checking block
+  "TC001",  #  Move application import `.box.Box` into a type-checking block
+  "TC006",  #  [*] Add quotes to type expression in `typing.cast()`
+  "TD",     # TODO
   "TRY003", # Avoid specifying long messages outside the exception class
   "UP036",  # version_info >= (3, 11)
   "UP047",
@@ -108,7 +109,7 @@ ignore=[
 max-complexity = 15
 
 [lint.flake8-annotations]
-mypy-init-return = true  # skip return type for __init__() methods
+mypy-init-return = true # skip return type for __init__() methods
 
 [lint.flake8-pytest-style]
 parametrize-names-type = "csv"
@@ -123,19 +124,27 @@ strict = true
 
 [lint.isort]
 known-first-party = ["src"]
-known-third-party = ["mpl_toolkits", "matplotlib", "numpy", "scipy", "loguru", "tqdm", "dotenv"]
+known-third-party = [
+  "mpl_toolkits",
+  "matplotlib",
+  "numpy",
+  "scipy",
+  "loguru",
+  "tqdm",
+  "dotenv",
+]
 default-section = "third-party"
 lines-between-types = 1
 required-imports = ["from __future__ import annotations"]
 case-sensitive = true
 section-order = [
-    "future",
-    "typing",
-    "standard-library",
-    "third-party",
-    "first-party",
-    "local-folder",
-    "testing"
+  "future",
+  "typing",
+  "standard-library",
+  "third-party",
+  "first-party",
+  "local-folder",
+  "testing",
 ]
 
 [lint.isort.sections]
@@ -143,7 +152,7 @@ section-order = [
 "testing" = ["tests"]
 
 [lint.pydocstyle]
-convention = "google" # Use Google-style docstrings.
+convention = "numpy"
 
 [format]
 docstring-code-format = true

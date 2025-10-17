@@ -55,7 +55,8 @@ class Index(dict[Key, Item]):
 def ignore(_: Key) -> Item | None:
     """Default factory for `IgnoringIndex`.
 
-    Returns:
+    Returns
+    -------
         None - always.
     """
     return None
@@ -100,7 +101,8 @@ def raise_on_duplicate_strategy(key: Key, prev: Item, curr: Item) -> None:
         prev: the value already in `Index`.
         curr: the new value to add to `Index`.
 
-    Raises:
+    Raises
+    ------
         NumberedItemDuplicateError: exception to inform on `key`, `prev` and `curr` values.
     """
     raise NumberedItemDuplicateError(key, prev, curr)
@@ -116,7 +118,8 @@ def ignore_equal_objects_strategy(key: Key, prev: Item, curr: Item) -> None:
         prev: the value already in `Index`.
         curr: the new value to add to `Index`.
 
-    Raises:
+    Raises
+    ------
         NumberedItemDuplicateError: exception to inform on `key`, `prev` and `curr` values.
     """
     if prev is not curr and prev != curr:

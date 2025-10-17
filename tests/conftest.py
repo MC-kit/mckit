@@ -13,7 +13,8 @@ def cd_tmpdir(tmpdir):
     Args:
         tmpdir: pytest fixture for temp directory
 
-    Yields:
+    Yields
+    ------
         None
     """
     old_dir = tmpdir.chdir()

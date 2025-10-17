@@ -36,7 +36,8 @@ def significant_digits(
         reltol: Relative tolerance needed to represent the value.
         resolution:  The threshold value, below which numbers are believed to be zero, optional.
 
-    Returns:
+    Returns
+    -------
         The number of significant digits.
     """
     if value == 0.0 or (resolution and abs(value) < resolution):
@@ -65,7 +66,8 @@ def get_decades(value: float) -> int:
     Args:
         value: ... to check
 
-    Returns:
+    Returns
+    -------
         Number of decades.
     """
     decimal_power = np.log10(abs(float(value))) if value != 0 else 0
@@ -93,7 +95,8 @@ def round_scalar(value: float, digits: int | None = None) -> float:
         value: The value to be rounded.
         digits: The number of significant digits, optional.
 
-    Returns:
+    Returns
+    -------
         Rounded value.
     """
     if digits is None:
@@ -108,7 +111,8 @@ def round_array(array: FloatArray, digits_array: IntArray | None = None) -> ndar
         array:   Array of values.
         digits_array:   Array of corresponding significant digits.
 
-    Returns:
+    Returns
+    -------
         Rounded array.
     """
     if digits_array is None:

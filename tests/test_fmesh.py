@@ -7,10 +7,11 @@ from itertools import product
 import numpy as np
 import pytest
 
+from mckit.geometry import EX, EY, EZ
+
 from mckit import read_meshtal
 from mckit.body import Body
 from mckit.fmesh import CylMesh, RectMesh
-from mckit.geometry import EX, EY, EZ
 from mckit.material import Material
 from mckit.surface import create_surface
 from mckit.transformation import Transformation
@@ -343,7 +344,7 @@ class TestRectMesh:
         if expected is None:
             with pytest.raises(
                 ValueError,
-                match="Wrong number of fixed spatial variables|Specified point lies outside of the mesh",
+                match=r"Wrong number of fixed spatial variables|Specified point lies outside of the mesh",
             ):
                 mesh.slice_axis_index(**args)
         else:

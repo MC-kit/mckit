@@ -28,7 +28,7 @@ class Card(ABC):
 
     @property
     def is_anonymous(self) -> bool:
-        """Is the card is named?"""
+        """Check if the card has name."""
         return self.name() is None
 
     @property

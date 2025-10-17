@@ -78,7 +78,8 @@ def cell_selector(cell_names: int | Iterable[int]) -> Callable[[Body], list[Body
         cell_names:
             Names of cells to be selected.
 
-    Returns:
+    Returns
+    -------
         Selector function.
     """
     if isinstance(cell_names, int):
@@ -107,7 +108,7 @@ def surface_selector(surface_names):
     surface_names : int or iterable
         Names of surfaces to be selected.
 
-    Returns:
+    Returns
     -------
     selector : func
         Selector function
@@ -142,7 +143,7 @@ class Universe:
     common_materials : set
         A set of common materials. Default: None.
 
-    Methods:
+    Methods
     -------
     add_cells(cell)
         Adds new cell to the universe.
@@ -377,7 +378,8 @@ class Universe:
     def alone(self) -> Universe:
         """Gets this universe alone, without inner universes.
 
-        Returns:
+        Returns
+        -------
             A copy of the universe with FILL cards removed.
         """
         cells = []
@@ -465,7 +467,8 @@ class Universe:
             skip_graveyard_cells:
                 Don't compute boxes for 'graveyard' cells (with zero importance for all the kinds of particles).
 
-        Returns:
+        Returns
+        -------
             Universe bounding box.
         """
         boxes = []
@@ -498,7 +501,8 @@ class Universe:
     def find_common_materials(self):
         """Finds common materials among universes included.
 
-        Returns:
+        Returns
+        -------
             A set of common materials.
         """
         comp_count = defaultdict(int)
@@ -514,7 +518,8 @@ class Universe:
             inner:  Whether to take surfaces of inner universes. Default: False -
                     return surfaces of this universe only.
 
-        Returns:
+        Returns
+        -------
             A set of surfaces that belong to the universe.
         """
         surfs = set()
@@ -539,7 +544,8 @@ class Universe:
         Args:
             exclude_common :  Exclude common compositions from the result. Default: False.
 
-        Returns:
+        Returns
+        -------
             A set of Composition objects.
         """
         compositions = set()
@@ -554,7 +560,8 @@ class Universe:
     def get_universes(self) -> set[Universe]:
         """Gets set of self and all inner universes.
 
-        Returns:
+        Returns
+        -------
             A set of all the universes.
         """
         universes = {self}
@@ -571,7 +578,8 @@ class Universe:
     def name_clashes(self) -> dict[str, dict[int, set[Universe]]]:
         """Checks, if there is name clashes.
 
-        Returns:
+        Returns
+        -------
             Description of found clashes. If no clashes - the dictionary is empty.
         """
         universes = self.get_universes()
@@ -721,7 +729,7 @@ class Universe:
             Whether to consider inner universes. Default: False - only this
             universe will be taken into account.
 
-        Returns:
+        Returns
         -------
         items : list
             List of selected items.
@@ -784,7 +792,8 @@ class Universe:
                 An array of point coordinates. If there is only one point it has
                 shape (3,); if there are n points, it has shape (n, 3).
 
-        Returns:
+        Returns
+        -------
             An array of cell indices to which a particular point belongs to.
             Its length equals to the number of points.
         """
@@ -798,7 +807,8 @@ class Universe:
     def transform(self, tr: Transformation) -> Universe:
         """Applies transformation tr to this universe.
 
-        Returns:
+        Returns
+        -------
              a new universe with applied transformation.
         """
         new_cells = [c.transform(tr) for c in self]
@@ -813,7 +823,8 @@ class Universe:
     def apply_transformation(self) -> Universe:
         """Applies transformations specified in cells.
 
-        Returns:
+        Returns
+        -------
              a new universe.
         """
         new_cells = [c.apply_transformation() for c in self]
@@ -852,7 +863,7 @@ def produce_universes(cells: Iterable[Body]) -> Universe:
     cells : Iterable[Body]
         Cells to process.
 
-    Returns:
+    Returns
     -------
     universe : Universe
         The top level universe with name = 0.
@@ -990,7 +1001,7 @@ def transformations_to_universe_mapper(universe: Universe) -> IU:
 
 
 def is_shared_between_universes(item: tuple[Name, dict[Name, int]]) -> bool:
-    entity, universes_counts = item
+    _, universes_counts = item
     return len(universes_counts.keys()) > 1
 
 

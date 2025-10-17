@@ -694,7 +694,7 @@ class TestComposition:
         "_input", [{"atomic": [], "weight": []}, {"atomic": []}, {"weight": []}, {}]
     )
     def test_create_failure(self, _input):
-        with pytest.raises(ValueError, match="Incorrect set of parameters."):
+        with pytest.raises(ValueError, match=r"Incorrect set of parameters\."):
             Composition(**_input)
 
     @pytest.mark.parametrize(
