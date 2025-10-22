@@ -889,7 +889,7 @@ wheels = [
 
 [[package]]
 name = "jupyterlab"
-version = "4.4.9"
+version = "4.4.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "async-lru" },
@@ -906,9 +906,9 @@ dependencies = [
     { name = "tornado" },
     { name = "traitlets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/45/b2/7dad2d0049a904d17c070226a4f78f81905f93bfe09503722d210ccf9335/jupyterlab-4.4.9.tar.gz", hash = "sha256:ea55aca8269909016d5fde2dc09b97128bc931230183fe7e2920ede5154ad9c2", size = 22966654, upload-time = "2025-09-26T17:28:20.158Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6a/5d/75c42a48ff5fc826a7dff3fe4004cda47c54f9d981c351efacfbc9139d3c/jupyterlab-4.4.10.tar.gz", hash = "sha256:521c017508af4e1d6d9d8a9d90f47a11c61197ad63b2178342489de42540a615", size = 22969303, upload-time = "2025-10-22T14:50:58.768Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1f/fd/ac0979ebd1b1975c266c99b96930b0a66609c3f6e5d76979ca6eb3073896/jupyterlab-4.4.9-py3-none-any.whl", hash = "sha256:394c902827350c017430a8370b9f40c03c098773084bc53930145c146d3d2cb2", size = 12292552, upload-time = "2025-09-26T17:28:15.663Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/46/1eaa5db8d54a594bdade67afbcae42e9a2da676628be3eb39f36dcff6390/jupyterlab-4.4.10-py3-none-any.whl", hash = "sha256:65939ab4c8dcd0c42185c2d0d1a9d60b254dc8c46fc4fdb286b63c51e9358e07", size = 12293385, upload-time = "2025-10-22T14:50:54.075Z" },
 ]
 
 [[package]]
@@ -940,7 +940,7 @@ wheels = [
 
 [[package]]
 name = "jupytext"
-version = "1.17.3"
+version = "1.18.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "markdown-it-py" },
@@ -949,9 +949,9 @@ dependencies = [
     { name = "packaging" },
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/15/14/41faf71e168fcc6c48268f0fc67ba0d6acf6ee4e2c5c785c2bccb967c29d/jupytext-1.17.3.tar.gz", hash = "sha256:8b6dae76d63c95cad47b493c38f0d9c74491fb621dcd0980abfcac4c8f168679", size = 3753151, upload-time = "2025-08-28T18:30:51.117Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9b/5d/82a614a49493fa84b2019a3e03020a8b9927208ae177b81f7e0b30330c82/jupytext-1.18.1.tar.gz", hash = "sha256:5c0962ca8d222db45cbe1848b4805dbbe3ddb957603fc96651b6cd7fd403fafb", size = 4270997, upload-time = "2025-10-19T15:06:30.992Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/86/751ec86adb66104d15e650b704f89dddd64ba29283178b9651b9bc84b624/jupytext-1.17.3-py3-none-any.whl", hash = "sha256:09b0a94cd904416e823a5ba9f41bd181031215b6fc682d2b5c18e68354feb17c", size = 166548, upload-time = "2025-08-28T18:30:47.733Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/0d/2d240e7098e0cafba4d25e9530e7596b1bb1bd4476e41b10346bcaaa36d6/jupytext-1.18.1-py3-none-any.whl", hash = "sha256:24f999400726a1c658beae55e15fdd2a6255ab1a418697864cd779874e6011ab", size = 167143, upload-time = "2025-10-19T15:06:28.975Z" },
 ]
 
 [[package]]
@@ -1071,6 +1071,7 @@ dependencies = [
     { name = "attrs" },
     { name = "click" },
     { name = "coverage" },
+    { name = "esbonio" },
     { name = "jupyterlab" },
     { name = "jupytext" },
     { name = "loguru" },
@@ -1080,9 +1081,9 @@ dependencies = [
     { name = "pep8-naming" },
     { name = "ply" },
     { name = "pre-commit" },
-    { name = "pydocstringformatter" },
     { name = "pylint" },
     { name = "pylint-per-file-ignores" },
+    { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-benchmark" },
     { name = "pytest-cov" },
@@ -1092,14 +1093,14 @@ dependencies = [
     { name = "pytest-xdist", extra = ["psutil"] },
     { name = "python-dotenv" },
     { name = "repairwheel" },
-    { name = "rstcheck" },
+    { name = "rstcheck", extra = ["sphinx"] },
     { name = "ruff" },
     { name = "scikit-build-core" },
     { name = "sly" },
     { name = "sphinx" },
     { name = "sphinx-autobuild" },
     { name = "sphinx-autodoc-typehints" },
-    { name = "sphinx-click" },
+    { name = "sphinx-togglebutton" },
     { name = "tomli-w" },
     { name = "tqdm" },
     { name = "typeguard" },
@@ -1121,7 +1122,6 @@ dev = [
     { name = "mypy" },
     { name = "pep8-naming" },
     { name = "pre-commit" },
-    { name = "pydocstringformatter" },
     { name = "pylint" },
     { name = "pylint-per-file-ignores" },
     { name = "pyright" },
@@ -1155,7 +1155,6 @@ mypy = [
 ]
 pre-commit = [
     { name = "pre-commit" },
-    { name = "pydocstringformatter" },
 ]
 pypi = [
     { name = "mkl-devel" },
@@ -1173,7 +1172,6 @@ style = [
     { name = "mypy" },
     { name = "pep8-naming" },
     { name = "pre-commit" },
-    { name = "pydocstringformatter" },
     { name = "pylint" },
     { name = "pylint-per-file-ignores" },
     { name = "pyright" },
@@ -1200,8 +1198,9 @@ requires-dist = [
     { name = "attrs", specifier = ">=25.4.0,<26" },
     { name = "click", specifier = ">=8.3.0,<9" },
     { name = "coverage", extras = ["toml"], specifier = ">=7.11.0,<8" },
-    { name = "jupyterlab", specifier = ">=4.4.9,<5" },
-    { name = "jupytext", specifier = ">=1.17.3,<2" },
+    { name = "esbonio", specifier = ">=0.16.5,<0.17" },
+    { name = "jupyterlab", specifier = ">=4.4.10,<5" },
+    { name = "jupytext", specifier = ">=1.18.1,<2" },
     { name = "loguru", specifier = ">=0.7.3,<0.8" },
     { name = "mkl-devel", specifier = ">=2025.2.0,<2026" },
     { name = "mypy" },
@@ -1209,9 +1208,9 @@ requires-dist = [
     { name = "pep8-naming" },
     { name = "ply", specifier = ">=3.11,<4" },
     { name = "pre-commit" },
-    { name = "pydocstringformatter" },
     { name = "pylint" },
     { name = "pylint-per-file-ignores" },
+    { name = "pyright" },
     { name = "pytest", specifier = ">=8.4.2,<9" },
     { name = "pytest-benchmark", specifier = ">=5.1.0,<6" },
     { name = "pytest-cov", specifier = ">=7.0.0,<8" },
@@ -1221,18 +1220,18 @@ requires-dist = [
     { name = "pytest-xdist", extras = ["psutil"], specifier = ">=3.8.0,<4" },
     { name = "python-dotenv", specifier = ">=1.1.1,<2" },
     { name = "repairwheel", specifier = ">=0.3.2,<0.4" },
-    { name = "rstcheck", specifier = ">=6.2.5,<7" },
+    { name = "rstcheck", extras = ["toml", "sphinx"], specifier = ">=6.2.5,<7" },
     { name = "ruff" },
     { name = "scikit-build-core", specifier = ">=0.11.6,<0.12" },
     { name = "sly", specifier = ">=0.5,<0.6" },
     { name = "sphinx", specifier = ">=8.2.3,<9" },
     { name = "sphinx-autobuild", specifier = ">=2025.8.25,<2026" },
     { name = "sphinx-autodoc-typehints", specifier = ">=3.5.2,<4" },
-    { name = "sphinx-click", specifier = ">=6.1.0,<7" },
+    { name = "sphinx-togglebutton", specifier = ">=0.3.2,<0.4" },
     { name = "tomli-w", specifier = ">=1.2.0,<2" },
     { name = "tqdm", specifier = ">=4.67.1,<5" },
     { name = "typeguard", specifier = ">=4.4.4,<5" },
-    { name = "typer", specifier = ">=0.19.2,<0.20" },
+    { name = "typer", specifier = ">=0.20.0,<0.21" },
     { name = "types-setuptools" },
     { name = "xdoctest", specifier = ">=1.3.0,<2" },
 ]
@@ -1248,7 +1247,6 @@ dev = [
     { name = "mypy", specifier = ">=1.2.0" },
     { name = "pep8-naming", specifier = ">=0.12.1" },
     { name = "pre-commit", specifier = ">=2.15.0" },
-    { name = "pydocstringformatter", specifier = ">=0.7.3" },
     { name = "pylint" },
     { name = "pylint-per-file-ignores" },
     { name = "pyright", specifier = ">=1.1.406" },
@@ -1280,10 +1278,7 @@ mypy = [
     { name = "pep8-naming", specifier = ">=0.12.1" },
     { name = "types-setuptools", specifier = ">=80.9.0.20250529" },
 ]
-pre-commit = [
-    { name = "pre-commit", specifier = ">=2.15.0" },
-    { name = "pydocstringformatter", specifier = ">=0.7.3" },
-]
+pre-commit = [{ name = "pre-commit", specifier = ">=2.15.0" }]
 pypi = [
     { name = "mkl-devel" },
     { name = "numpy" },
@@ -1296,7 +1291,6 @@ style = [
     { name = "mypy", specifier = ">=1.2.0" },
     { name = "pep8-naming", specifier = ">=0.12.1" },
     { name = "pre-commit", specifier = ">=2.15.0" },
-    { name = "pydocstringformatter", specifier = ">=0.7.3" },
     { name = "pylint" },
     { name = "pylint-per-file-ignores" },
     { name = "pyright", specifier = ">=1.1.406" },
@@ -1800,15 +1794,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/a4/7d/e09391c2eebeab681df2b74bfe6c43422fffede8dc74187b2b0bf6fd7571/pydantic_core-2.33.2-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:61c18fba8e5e9db3ab908620af374db0ac1baa69f0f32df4f61ae23f15e586ac", size = 1806162, upload-time = "2025-04-23T18:32:20.188Z" },
     { url = "https://files.pythonhosted.org/packages/f1/3d/847b6b1fed9f8ed3bb95a9ad04fbd0b212e832d4f0f50ff4d9ee5a9f15cf/pydantic_core-2.33.2-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:95237e53bb015f67b63c91af7518a62a8660376a6a0db19b89acc77a4d6199f5", size = 1981560, upload-time = "2025-04-23T18:32:22.354Z" },
     { url = "https://files.pythonhosted.org/packages/6f/9a/e73262f6c6656262b5fdd723ad90f518f579b7bc8622e43a942eec53c938/pydantic_core-2.33.2-cp313-cp313t-win_amd64.whl", hash = "sha256:c2fc0a768ef76c15ab9238afa6da7f69895bb5d1ee83aeea2e3509af4472d0b9", size = 1935777, upload-time = "2025-04-23T18:32:25.088Z" },
-]
-
-[[package]]
-name = "pydocstringformatter"
-version = "0.7.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b3/51/5c21963eb7bdba245ec808fdb0ef8abc0cd87ef674f2b6ba1fd76f3a0ffa/pydocstringformatter-0.7.3.tar.gz", hash = "sha256:dfcc07bec1706803d563275e282ef9e629b02dc19983ec6778d07a9f500bb62b", size = 24024, upload-time = "2023-01-02T15:09:30.152Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/38/b3a99e9cc66941e044ad3d40e90a72b1191925b8af13e3e4d8edc5c0eb87/pydocstringformatter-0.7.3-py3-none-any.whl", hash = "sha256:3654f52c49fc729b49712d1e7c49384dfd253bdffeda4939e79dab31491c563f", size = 31287, upload-time = "2023-01-02T15:09:28.904Z" },
 ]
 
 [[package]]
@@ -2470,20 +2455,6 @@ wheels = [
 ]
 
 [[package]]
-name = "sphinx-click"
-version = "6.1.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "click" },
-    { name = "docutils" },
-    { name = "sphinx" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/de/4b/c433ea57136eac0ccb8d76d33355783f1e6e77f1f13dc7d8f15dba2dc024/sphinx_click-6.1.0.tar.gz", hash = "sha256:c702e0751c1a0b6ad649e4f7faebd0dc09a3cc7ca3b50f959698383772f50eef", size = 26855, upload-time = "2025-09-11T11:05:45.53Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/88/95/a2fa680f02ee9cbe4532169d2e60b102fe415b6cfa25584ac2d112e4c43b/sphinx_click-6.1.0-py3-none-any.whl", hash = "sha256:7dbed856c3d0be75a394da444850d5fc7ecc5694534400aa5ed4f4849a8643f9", size = 8931, upload-time = "2025-09-11T11:05:43.897Z" },
-]
-
-[[package]]
 name = "sphinx-togglebutton"
 version = "0.3.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2710,7 +2681,7 @@ wheels = [
 
 [[package]]
 name = "typer"
-version = "0.19.2"
+version = "0.20.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -2718,9 +2689,9 @@ dependencies = [
     { name = "shellingham" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/21/ca/950278884e2ca20547ff3eb109478c6baf6b8cf219318e6bc4f666fad8e8/typer-0.19.2.tar.gz", hash = "sha256:9ad824308ded0ad06cc716434705f691d4ee0bfd0fb081839d2e426860e7fdca", size = 104755, upload-time = "2025-09-23T09:47:48.256Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8f/28/7c85c8032b91dbe79725b6f17d2fffc595dff06a35c7a30a37bef73a1ab4/typer-0.20.0.tar.gz", hash = "sha256:1aaf6494031793e4876fb0bacfa6a912b551cf43c1e63c800df8b1a866720c37", size = 106492, upload-time = "2025-10-20T17:03:49.445Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/00/22/35617eee79080a5d071d0f14ad698d325ee6b3bf824fc0467c03b30e7fa8/typer-0.19.2-py3-none-any.whl", hash = "sha256:755e7e19670ffad8283db353267cb81ef252f595aa6834a0d1ca9312d9326cb9", size = 46748, upload-time = "2025-09-23T09:47:46.777Z" },
+    { url = "https://files.pythonhosted.org/packages/78/64/7713ffe4b5983314e9d436a90d5bd4f63b6054e2aca783a3cfc44cb95bbf/typer-0.20.0-py3-none-any.whl", hash = "sha256:5b463df6793ec1dca6213a3cf4c0f03bc6e322ac5e16e13ddd622a889489784a", size = 47028, upload-time = "2025-10-20T17:03:47.617Z" },
 ]
 
 [[package]]
