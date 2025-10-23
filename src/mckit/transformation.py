@@ -85,7 +85,7 @@ class Transformation(Card, MaybeClose):
         if translation is not ORIGIN:
             translation = np.asarray(translation, dtype=float)
             if translation.shape != (3,):
-                raise ValueError(f"Transaction #{self.name()}: wrong length of translation vector.")
+                raise ValueError(f"Translation #{self.name()}: wrong length of translation vector.")
 
         if rotation is None:
             u = IDENTITY_ROTATION
