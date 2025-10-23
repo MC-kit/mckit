@@ -31,7 +31,7 @@ dependencies = [
     "attrs (>=21.2.0)",
     "click (>=8.0.1)",
     "loguru (>=0.6.0)",
-    "intel-cmplr-lib-ur == 2025.2.1", # next version 2025.0.5 is for windows only TODO check for updates
+    "intel-cmplr-lib-ur == 2025.3.0", # next version 2025.0.5 is for windows only TODO check for updates
     "mkl-devel (>=2025.2.0)",
     "numpy (>=2.3.1)",
     "ply (>=3.11)",
