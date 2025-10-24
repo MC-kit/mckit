@@ -12,6 +12,19 @@
 #     name: python3
 # ---
 
+# %% [markdown]
+# # Rotation matrix demo
+#
+# Rotation matrix is defined by coordinates of new axes orts $[e_x', e_y', e_z']$, which present coordinates of the new orts in the original one: $[e_x, e_y, e_z]$.
+# Rotation of a given vector $v=[v_x,v_y, v_z]$ in original coordinates, means linear combination of $v_x \cdot e_x' + v_y \cdot e_y' + v_z \cdot e_z' $.
+#
+# The new orts form columns of the rotation matix in C-format for usuage in numpy-like code.
+#
+# MCNP uses Fortran presentation in the transformation specs. 
+#
+# So, for the MCNP specification the transformation matrix should be saved as transposed, and transposed back on reading.
+#
+
 # %%
 import numpy as np
 
@@ -36,7 +49,7 @@ r4 = calc_z_rotation(np.pi/4)
 r4
 
 # %%
-r4 @ [1, 0, 0]
+r4 @ [-1, -1, 0]
 
 # %%
 tr = Transformation(rotation=r4)
@@ -46,24 +59,3 @@ tr.apply2point([1, 0, 0])
 
 # %%
 np.array(tr.get_words()).reshape((4,6))
-
-# %%
-180*(9/8)
-
-# %%
-r15 = calc_z_rotation((17/16)*np.pi)
-r15
-
-# %%
-r15 @ [1, 0, 0]
-
-# %%
-tr15 = Transformation(rotation=r15)
-
-# %%
-tr15.apply2point([1,0,0])
-
-# %%
-np.array(tr15.get_words()).reshape((4,6))
-
-# %%
