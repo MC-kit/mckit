@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# dvp 24-11-26
+# dvp 25-10-23
+
+module add anaconda3  # for Python 3.7, because the default 3.4 doesn't work with dataclasses
 
 # Extract lost particles launching script.
 

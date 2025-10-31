@@ -28,7 +28,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 __appname__ = "extract_lost_particles"
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 DESCRIPTION_START_RE = re.compile(r"^1\s+lost particle no.\s*(?P<lp_no>(\d+|\*\*\*))")
 HISTORY_NO_RE = re.compile(r"history no.\s+(?P<hist_no>\d+)$")
@@ -90,8 +90,8 @@ def extract_descriptions(p: Path) -> Iterator[tuple[int, list[str]]]:
 
 @dataclass
 class _Description:
-    cell_fail: int | None
-    surface: int | None
+    cell_fail: int
+    surface: int
     cell_in: int
     x: float
     y: float
@@ -134,8 +134,8 @@ def _parse_description(lines: list[str]) -> _Description:
         x, y, z = map(float, lines[8].split()[-3:])
         u, v, w = map(float, lines[9].split()[-3:])
     elif "no intersection found" in lines[0]:
-        surface = None
-        cell_fail = None
+        surface = 0
+        cell_fail = 0
         line2 = lines[2].strip()
         cell_in = int(line2.split(".")[0].rsplit(maxsplit=2)[-1])
         x, y, z = map(float, lines[5].split()[-3:])
@@ -313,6 +313,7 @@ def main() -> None:
         datefmt="%Y-%d-%m %H:%M:%S",
     )
     LOG.info("extract-lost-particles, v%s", __version__)
+    LOG.info("python version: %s", sys.version)
 
     db = "lost-particles.sqlite"
     if _collect_lost_particles(db):
