@@ -47,7 +47,6 @@ export JUST_LOG := log
       ".eggs"
       ".mypy_cache"
       ".nox"
-      ".pixi"
       ".pytest_cache"
       ".ruff_cache"
       ".venv"
@@ -73,7 +72,7 @@ export JUST_LOG := log
   for f in "${files_to_clean[@]}"; do
       find src/mckit -type f -name "$f" -exec rm -f {} +
   done
-  # TODO @dvp: check if `pixi clean` is enough for the task
+  pixi clean
 
 
 # install package
