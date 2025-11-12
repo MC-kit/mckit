@@ -18,4 +18,5 @@
 *.pyd binary
 # SCM syntax highlighting & preventing 3-way merges
 poetry.lock merge=binary linguist-language=YAML linguist-generated=true
+uv.lock merge=binary linguist-language=YAML linguist-generated=true
 pixi.lock merge=binary linguist-language=YAML linguist-generated=true
