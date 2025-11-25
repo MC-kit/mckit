@@ -53,7 +53,7 @@ jobs:
       !contains(github.event.head_commit.message, '[skip_ci]')
     steps:
       - name: ✅ Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 📦 Install uv
         uses: astral-sh/setup-uv@v6
@@ -75,7 +75,7 @@ jobs:
   #     !contains(github.event.head_commit.message, '[skip_ci]')
   #   steps:
   #     - name: ✅ Check out the repository
-  #       uses: actions/checkout@v5
+  #       uses: actions/checkout@v6
 
   #     - name: 📦 Install uv
   #       uses: astral-sh/setup-uv@v6
@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: ✅ Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
           submodules: 'true'
@@ -139,7 +139,7 @@ jobs:
     steps:
 
       - name: ✅ Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
           submodules: 'true'
@@ -173,7 +173,7 @@ jobs:
     steps:
 
       - name: ✅ Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: 📦 Install uv
         uses: astral-sh/setup-uv@v6
