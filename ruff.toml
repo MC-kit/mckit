@@ -109,7 +109,7 @@ ignore = [
 max-complexity = 15
 
 [lint.flake8-annotations]
-mypy-init-return = true # skip return type for __init__() methods
+mypy-init-return = true  # skip return type for __init__() methods
 
 [lint.flake8-pytest-style]
 parametrize-names-type = "csv"

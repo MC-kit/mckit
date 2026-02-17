@@ -23,18 +23,13 @@ export JUST_LOG := log
 @venv:
   [ -d .venv ] || uv venv --python {{default_python}} --seed
 
-# download/update submodules 
-[group: 'dev']
-@submodule: 
-  git submodule update --init --recursive --depth 1
-  
 # build package
 [group: 'dev']
-@uv_build: submodule venv
+@uv_build:  venv
   uv build
 
 [group: 'dev']
-@build: submodule 
+@build:
   pixi build
 
 # clean reproducible files
@@ -46,7 +41,6 @@ export JUST_LOG := log
       ".cache"
       ".eggs"
       ".mypy_cache"
-      ".nox"
       ".pytest_cache"
       ".ruff_cache"
       ".venv"
@@ -61,7 +55,6 @@ export JUST_LOG := log
   for d in "${dirs_to_clean[@]}"; do
       find . -type d -wholename "$d" -exec rm -rf {} +
   done
-  rm -fr "docs/_build"
   files_to_clean=(
       "*.so"
       "*.so.*"
@@ -117,6 +110,11 @@ export JUST_LOG := log
 [group: 'dev']
 @tree *args:
   uv tree --outdated {{args}}
+
+# run pyupgrade
+[group: 'dev']
+@pyupgrade *args="--py314-plus":  # this check python version on moving to the python-3.14
+  uvx pyupgrade {{args}}  # presumably, code is updated by ruff, just to check sometimes
 
 # test up to the first fail
 [group: 'test']
@@ -184,6 +182,11 @@ typeguard *args:
 [group: 'lint']
 @pyright:
   uv run --no-dev --group pyright pyright src tests
+
+# Lint with ty
+[group: 'lint']
+@ty:
+  uvx ty check 
 
 # Check rst-texts
 [group: 'docs']

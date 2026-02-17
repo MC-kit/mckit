@@ -35,10 +35,8 @@ repos:
         exclude: \.rst$
       - id: check-shebang-scripts-are-executable
         exclude: notebooks  # jupytext creates python scripts with shebangs but without permissions
-      - id: check-symlinks
       - id: check-toml
       - id: check-yaml
-        exclude: recipe/meta.yaml
       - id: debug-statements
         exclude: notebooks
       - id: destroyed-symlinks
@@ -50,28 +48,35 @@ repos:
         args:
           - --pytest-test-first
       - id: mixed-line-ending
-      - id: pretty-format-json
-        args: [--autofix, --no-ensure-ascii, --no-sort-keys]
-        exclude: data|\.ipynb$
-      - id: requirements-txt-fixer
 
-  # - repo: https://github.com/fredrikaverpil/creosote
-  #   rev: v4.1.0
-  #   hooks:
-  #     - id: creosote
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.36.0
+    hooks:
+      - id: check-dependabot
+      - id: check-github-workflows
+        args: ["--verbose"]
+      - id: check-readthedocs
+
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: "v2.11.1"
+    hooks:
+      - id: pyproject-fmt
+
+  - repo: https://github.com/fredrikaverpil/creosote
+    rev: v4.1.0
+    hooks:
+      - id: creosote
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.8.17
+    rev: 0.9.24
     hooks:
       - id: uv-lock 
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.0
+    rev: v0.14.11
     hooks:
-      # linter
       - id: ruff-check
         exclude: ^notebooks|^extern
-      # formatter 
       - id: ruff-format
         exclude: ^notebooks|^extern|ipynb$
 
@@ -100,3 +105,8 @@ repos:
     hooks:
       - id: clang-format
         types_or: [c++, c, cuda]
+
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
