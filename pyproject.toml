@@ -28,15 +28,15 @@ classifiers = [
 ]
 dependencies = [
   "attrs>=25.4,<26",
-  "click>=8.3,<9",
+  "click>=8.3.1,<9",
   "loguru>=0.7.3,<0.8",
-  "mkl-devel>=2025.3,<2026",
+  "mkl-devel>=2025.3.1,<2026",
   "numpy",
   "ply>=3.11,<4",
   "sly>=0.5,<0.6",
   "tomli-w>=1.2,<2",
-  "tqdm>=4.67.1,<5",
-  "typer>=0.20,<0.21",
+  "tqdm>=4.67.3,<5",
+  "typer>=0.24,<0.25",
 ]
 
 urls.Documentation = "https://mckit.readthedocs.io"
@@ -97,54 +97,6 @@ cmake.build-type = "Debug"
 
 #[tool.cibuildwheel]
 #build-frontend = "build[uv]"
-
-[tool.pytest.ini_options.bak]
-minversion = "8.4"
-cache_dir = '.cache/pytest'
-norecursedirs = '''
-*.egg-info
-.*
-build
-data
-dist
-docs/_build
-docs/examples
-htmlcov
-notebooks
-tools
-wrk
-'''
-python_functions = "test_*  profile_*"
-addopts = '''
--n auto
--ra
--q
---tb=short
---doctest-modules
---strict-markers
---ignore setup.py
---failed-first
---xdoctest
---pytest-durations-min=1
---pytest-resultlog="pytest-result.log"
---benchmark-disable
---benchmark-storage=.cache/benchmarks
---benchmark-autosave
---benchmark-group-by=name,fullname
-'''
-doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ALLOW_UNICODE ALLOW_BYTES NUMBER"
-testpaths = [ "tests", "src" ]
-markers = [ "slow: marks tests as slow (deselect with '-m \"not slow\"')" ]
-# xfail tests that pass should fail the test suite
-xfail_strict = true
-filterwarnings = [
-  "error",
-  "ignore:.*not typechecking multipledispatch.dispatcher.*UserWarning",
-  'ignore:.*io.FileIO \[closed\]',
-  'ignore:.*Implicit None on return values:DeprecationWarning',
-]
-log_format = "%(asctime)s %(levelname)s %(message)s"
-log_date_format = "%Y-%m-%d %H:%M:%S"
 
 [tool.coverage.paths]
 source = [ "src" ]
@@ -310,13 +262,16 @@ mckit = { path = ".", editable = true }
 [tool.pixi.dependencies]
 nlopt = ">=2.10.0,<3"
 mkl-devel = ">=2025.3.0,<2026"
-numpy = ">=2.4,<3"
+numpy = ">=2.4.2,<3"
 
 [tool.pixi.feature.py312.dependencies]
 python = "3.12.*"
 
 [tool.pixi.feature.py313.dependencies]
 python = "3.13.*"
+
+[tool.pixi.feature.py314.dependencies]
+python = "3.14.*"
 
 [tool.pixi.environments]
 default = { features = [ "dev", "py313" ], solve-group = "default" }
@@ -347,4 +302,4 @@ pypi_build = "uv build --no-build-isolation"
 repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
 
 [tool.pixi.feature.dev.target.linux-64.dependencies]
-gdb = ">=16.3,<17"
+gdb = ">=17.1,<18"
