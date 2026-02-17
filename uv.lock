@@ -1173,16 +1173,16 @@ typeguard = [
 
 [package.metadata]
 requires-dist = [
-    { name = "attrs", specifier = ">=25.4,<26" },
-    { name = "click", specifier = ">=8.3.1,<9" },
-    { name = "loguru", specifier = ">=0.7.3,<0.8" },
-    { name = "mkl-devel", specifier = ">=2025.3.1,<2026" },
+    { name = "attrs", specifier = ">=25.4" },
+    { name = "click", specifier = ">=8.3.1" },
+    { name = "loguru", specifier = ">=0.7.3" },
+    { name = "mkl-devel", specifier = ">=2025.3.1" },
     { name = "numpy" },
-    { name = "ply", specifier = ">=3.11,<4" },
-    { name = "sly", specifier = ">=0.5,<0.6" },
-    { name = "tomli-w", specifier = ">=1.2,<2" },
-    { name = "tqdm", specifier = ">=4.67.3,<5" },
-    { name = "typer", specifier = ">=0.24,<0.25" },
+    { name = "ply", specifier = ">=3.11" },
+    { name = "sly", specifier = ">=0.5" },
+    { name = "tomli-w", specifier = ">=1.2" },
+    { name = "tqdm", specifier = ">=4.67.3" },
+    { name = "typer", specifier = ">=0.24" },
 ]
 
 [package.metadata.requires-dev]

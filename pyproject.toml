@@ -27,16 +27,16 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
-  "attrs>=25.4,<26",
-  "click>=8.3.1,<9",
-  "loguru>=0.7.3,<0.8",
-  "mkl-devel>=2025.3.1,<2026",
+  "attrs>=25.4",
+  "click>=8.3.1",
+  "loguru>=0.7.3",
+  "mkl-devel>=2025.3.1",
   "numpy",
-  "ply>=3.11,<4",
-  "sly>=0.5,<0.6",
-  "tomli-w>=1.2,<2",
-  "tqdm>=4.67.3,<5",
-  "typer>=0.24,<0.25",
+  "ply>=3.11",
+  "sly>=0.5",
+  "tomli-w>=1.2",
+  "tqdm>=4.67.3",
+  "typer>=0.24",
 ]
 
 urls.Documentation = "https://mckit.readthedocs.io"
@@ -270,9 +270,6 @@ python = "3.12.*"
 [tool.pixi.feature.py313.dependencies]
 python = "3.13.*"
 
-[tool.pixi.feature.py314.dependencies]
-python = "3.14.*"
-
 [tool.pixi.environments]
 default = { features = [ "dev", "py313" ], solve-group = "default" }
 analyze = { features = [ "analyze", "py313" ], solve-group = "default" }
@@ -303,3 +300,6 @@ repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
 
 [tool.pixi.feature.dev.target.linux-64.dependencies]
 gdb = ">=17.1,<18"
+
+[tool.pixi.feature.dev.dependencies]
+cmake = ">=4.2.3,<5"
