@@ -3,7 +3,7 @@ minversion = "9.0"
 cache_dir = ".cache/pytest"
 strict = true
 norecursedirs = [
-    "*.egg-info",
+    ".egg-info",
     ".*",
     "build",
     "data",
@@ -49,5 +49,6 @@ filterwarnings = [
     'ignore:.*io.FileIO \[closed\]',
     'ignore:.*Implicit None on return values:DeprecationWarning',
 ]
+log_level = "INFO"
 log_format = "%(asctime)s %(levelname)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"

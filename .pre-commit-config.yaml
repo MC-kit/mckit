@@ -50,7 +50,7 @@ repos:
       - id: mixed-line-ending
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.36.0
+    rev: 0.37.0
     hooks:
       - id: check-dependabot
       - id: check-github-workflows
@@ -58,22 +58,22 @@ repos:
       - id: check-readthedocs
 
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: "v2.11.1"
+    rev: "v2.16.2"
     hooks:
       - id: pyproject-fmt
 
   - repo: https://github.com/fredrikaverpil/creosote
-    rev: v4.1.0
+    rev: v5.0.0
     hooks:
       - id: creosote
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.9.24
+    rev: 0.10.7
     hooks:
       - id: uv-lock 
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.11
+    rev: v0.15.4
     hooks:
       - id: ruff-check
         exclude: ^notebooks|^extern

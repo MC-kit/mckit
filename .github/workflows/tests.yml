@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: ✅ Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
@@ -158,7 +158,7 @@ jobs:
         run: uv run coverage run --parallel -m pytest -vv --emoji
 
       - name: 🔃 Upload coverage data
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-data-${{ runner.os }}-${{ matrix.python-version }}
           path: ".coverage.*"
@@ -183,7 +183,7 @@ jobs:
             **/pyproject.toml      
 
       - name: 🔃 Download coverage data
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: coverage-data-*
           merge-multiple: true

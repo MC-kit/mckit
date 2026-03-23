@@ -11,7 +11,7 @@ keywords = [ "mckit", "MCNP" ]
 license = "MIT"
 maintainers = [ { name = "dvp2015", email = "dmitri_portnov@yahoo.com" } ]
 authors = [ { name = "rrn" } ]
-requires-python = ">=3.12" # connectorx==0.4.3 prevents <4
+requires-python = ">=3.12"  # connectorx==0.4.3 prevents <4
 classifiers = [
   "Development Status :: 4 - Beta",
   "Environment :: Console",
@@ -38,7 +38,6 @@ dependencies = [
   "tqdm>=4.67.3",
   "typer>=0.24",
 ]
-
 urls.Documentation = "https://mckit.readthedocs.io"
 urls.Homepage = "https://github.com/MC-kit/mckit"
 urls.Issues = "https://github.com/MC-kit/mckit/issues"
@@ -55,16 +54,28 @@ test = [
   "pytest-mock>=3.14",
   # "pytest-xdist[psutil]>=3.8",
   "xdoctest>=1.2",
-  { include-group = "coverage" }, # coverage may be used on its own, see GHA test
+  { include-group = "coverage" },  # coverage may be used on its own, see GHA test
 ]
 docs = [
   "esbonio>=0.16.5",
   "rstcheck[sphinx,toml]>=6.2.5",
-  "sphinx>=8.2.3",
+  "sphinx>=9.1",
   "sphinx-autobuild>=2025.8.25",
   "sphinx-autodoc-typehints>=3.2",
   "sphinx-togglebutton>=0.3.2",
 ]
+analyze = [ "jupyterlab>=4.2.5", "jupytext>=1.16.4" ]
+coverage = [ "coverage[toml]>=7.9.2" ]
+lint = [ "pylint", "pylint-per-file-ignores" ]
+mypy = [
+  "mypy>=1.2",
+  "pep8-naming>=0.12.1",
+  "types-setuptools>=80.9.0.20250529",
+]
+pre_commit = [ "pre-commit>=4.3" ]
+pypi = [ "mkl-devel", "numpy", "repairwheel", "scikit-build-core" ]
+pyright = [ "pyright>=1.1.406" ]
+ruff = [ "ruff>=0.0.259" ]
 style = [
   { include-group = "lint" },
   { include-group = "mypy" },
@@ -72,21 +83,8 @@ style = [
   { include-group = "pyright" },
   { include-group = "ruff" },
 ]
-pre_commit = [ "pre-commit>=4.3" ]
-ruff = [ "ruff>=0.0.259" ]
-mypy = [
-  "mypy>=1.2",
-  "pep8-naming>=0.12.1",
-  "types-setuptools>=80.9.0.20250529",
-]
-lint = [ "pylint", "pylint-per-file-ignores" ]
-pyright = [ "pyright>=1.1.406" ]
-coverage = [ "coverage[toml]>=7.9.2" ]
-pypi = [ "mkl-devel", "numpy", "repairwheel", "scikit-build-core" ]
-
 # environments not in dev
 typeguard = [ "typeguard>=4.1.5" ]
-analyze = [ "jupyterlab>=4.2.5", "jupytext>=1.16.4" ]
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"
@@ -95,40 +93,35 @@ build.verbose = false
 logging.level = "INFO"
 cmake.build-type = "Debug"
 
-#[tool.cibuildwheel]
-#build-frontend = "build[uv]"
-
-[tool.coverage.paths]
-source = [ "src" ]
-
-[tool.coverage.run]
-branch = true
-source = [ "src" ]
-omit = [ "*_tab.py", "**/__init__.py", "tools/*.py" ]
-parallel = true
-
-[tool.coverage.report]
-show_missing = true
-skip_covered = true
-fail_under = 90                         # TODO dvp: increase limit to 100 with code maturing
-omit = [ "*_tab.py", "**/__init__.py" ]
+[tool.coverage]
+run.branch = true
+run.omit = [ "**/__init__.py", "*_tab.py", "tools/*.py" ]
+run.parallel = true
+run.source = [ "src" ]
+# [tool.cibuildwheel]
+# build-frontend = "build[uv]"
+paths.source = [ "src" ]
 # Regexes for lines to exclude from consideration
-exclude_lines = [
-  # Have to re-enable the standard pragma
-  "pragma: no cover",
+report.exclude_lines = [
   # Don't complain about missing debug-only code:
   "def __repr__",
+  "if __name__ == .__main__.:",
+  # Don't complain if non-runnable code isn't run:
+  "if 0:",
   "if self.debug",
+  "if TYPE_CHECKING:",
+  # Have to re-enable the standard pragma
+  "pragma: no cover",
   # Don't complain if tests don't hit defensive assertion code:
   "raise AssertionError",
   "raise NotImplementedError",
-  # Don't complain if non-runnable code isn't run:
-  "if 0:",
-  "if __name__ == .__main__.:",
-  "if TYPE_CHECKING:",
 ]
-ignore_errors = true
-sort = "Cover"
+report.fail_under = 90  # TODO dvp: increase limit to 100 with code maturing
+report.ignore_errors = true
+report.omit = [ "**/__init__.py", "*_tab.py" ]
+report.show_missing = true
+report.skip_covered = true
+report.sort = "Cover"
 
 # MyPy config
 # See https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml-file
@@ -151,13 +144,12 @@ error_summary = true
 warn_redundant_casts = true
 warn_unreachable = true
 warn_unused_ignores = true
-exclude = '''
-  (?x)(
-  parser\.py$  # mypy doesn't parser code
-| _tab\.py$    # ...
-| lexer\.py$   # ...
+exclude = """  (?x)(
+  parser.py$  # mypy doesn't like parser code
+| _tab.py$    # ...
+| lexer.py$   # ...
   )
-'''
+"""
 pretty = true
 
 [[tool.mypy.overrides]]
@@ -220,86 +212,58 @@ exclude-deps = [
 
 [tool.rstcheck]
 report_level = "ERROR"
-ignore_messages = "(Unknown directive type \"(todo.*|automodule)\".$)"
+ignore_messages = '(Unknown directive type "(todo.*|automodule)".$)'
 
-[tool.pixi.workspace]
-preview = [ "pixi-build" ]
-channels = [ "conda-forge" ]
-# platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
-platforms = [ "linux-64", "win-64" ]
-
+[tool.pixi]
+dependencies.nlopt = ">=2.10.0,<3"
+dependencies.mkl-devel = ">=2025.3.0,<2026"
+dependencies.numpy = ">=2.4.2,<3"
+environments.default = { features = [ "dev", "py313" ], solve-group = "default" }
+environments.analyze = { features = [ "analyze", "py313" ], solve-group = "default" }
+environments.docs = { features = [ "docs", "py313" ], solve-group = "default" }
+environments.typeguard = { features = [ "typeguard", "py313" ], solve-group = "default" }
+environments.pypi = { features = [ "pypi", "py313" ], solve-group = "default" }
+environments.py312 = { features = [ "test", "py312" ] }
+environments.py313 = { features = [ "test", "py313" ], solve-group = "default" }
+feature.dev.dependencies.cmake = ">=4.2.3,<5"
+feature.dev.target.linux-64.dependencies.gdb = ">=17.1,<18"
+feature.py312.dependencies.python = "3.12.*"
+feature.py313.dependencies.python = "3.13.*"
+feature.pypi.tasks.pypi_build = "uv build --no-build-isolation"
+feature.pypi.tasks.repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
+feature.typeguard.tasks.typeguard = "pytest -vv --emoji --typeguard-packages=src"
 # There can be multiple packages in a workspace
 # In `package` you specify properties specific to the package
-[tool.pixi.package]
-name = "mckit"
-version = "0.8.6"
-
+package.name = "mckit"
+package.version = "0.8.6"
 # Here the build system of the package is specified
 # We are using `pixi-build-python` in order to build a Python package
-[tool.pixi.package.build.backend]
-name = "pixi-build-python"
-version = "*"
-channels = [
+package.build.backend.name = "pixi-build-python"
+package.build.backend.version = "*"
+package.build.backend.channels = [
   "https://prefix.dev/pixi-build-backends",
   "https://prefix.dev/conda-forge",
 ]
-
-[tool.pixi.package.host-dependencies]
 # hatchling = "*"
-scikit-build-core = "*"
-numpy = "*"
-mkl-devel = "*"
-nlopt = "*"
-
-[tool.pixi.package.run-dependencies]
-numpy = "*"
-mkl-devel = "*"
-nlopt = "*"
-
-[tool.pixi.pypi-dependencies]
-mckit = { path = ".", editable = true }
-
-[tool.pixi.dependencies]
-nlopt = ">=2.10.0,<3"
-mkl-devel = ">=2025.3.0,<2026"
-numpy = ">=2.4.2,<3"
-
-[tool.pixi.feature.py312.dependencies]
-python = "3.12.*"
-
-[tool.pixi.feature.py313.dependencies]
-python = "3.13.*"
-
-[tool.pixi.environments]
-default = { features = [ "dev", "py313" ], solve-group = "default" }
-analyze = { features = [ "analyze", "py313" ], solve-group = "default" }
-docs = { features = [ "docs", "py313" ], solve-group = "default" }
-typeguard = { features = [ "typeguard", "py313" ], solve-group = "default" }
-pypi = { features = [ "pypi", "py313" ], solve-group = "default" }
-py312 = { features = [ "test", "py312" ] }
-py313 = { features = [ "test", "py313" ], solve-group = "default" }
-
-[tool.pixi.tasks]
-fast-test = "pytest -m 'not slow'"
-test = "pytest"
-mypy = "mypy src"
-pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
-ruff = """
+package.host-dependencies.scikit-build-core = "*"
+package.host-dependencies.numpy = "*"
+package.host-dependencies.mkl-devel = "*"
+package.host-dependencies.nlopt = "*"
+package.run-dependencies.numpy = "*"
+package.run-dependencies.mkl-devel = "*"
+package.run-dependencies.nlopt = "*"
+pypi-dependencies.mckit = { path = ".", editable = true }
+tasks.fast-test = "pytest -m 'not slow'"
+tasks.test = "pytest"
+tasks.mypy = "mypy src"
+tasks.pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
+tasks.ruff = """
   ruff check --fix src tests
   ruff format src tests
 """
-pylint = "pylint --recursive=y src tests"
-pyright = "pyright src tests"
-
-[tool.pixi.feature.typeguard.tasks]
-typeguard = "pytest -vv --emoji --typeguard-packages=src"
-
-[tool.pixi.feature.pypi.tasks]
-pypi_build = "uv build --no-build-isolation"
-repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
-
-[tool.pixi.feature.dev.target.linux-64.dependencies]
-gdb = ">=17.1,<18"
-
-[tool.pixi.feature.dev.dependencies]
-cmake = ">=4.2.3,<5"
+tasks.pylint = "pylint --recursive=y src tests"
+tasks.pyright = "pyright src tests"
+workspace.preview = [ "pixi-build" ]
+workspace.channels = [ "conda-forge" ]
+# platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+workspace.platforms = [ "linux-64", "win-64" ]

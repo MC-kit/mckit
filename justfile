@@ -1,3 +1,17 @@
+# Examples: msgspec
+
+# Disable showing recipe lines before execution.
+set quiet
+
+# Enable unstable features.
+set unstable
+
+# Configure the shell for Windows.
+set windows-shell := ["pwsh.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command"]
+
+# We don't want to install any dev dependencies by default.
+# export UV_NO_DEV := "true"
+
 alias t := test
 alias c := check
 set dotenv-load := true
@@ -27,6 +41,11 @@ export JUST_LOG := log
 [group: 'dev']
 @uv_build:  venv
   uv build
+
+# check distribution with twine
+[group: 'dev']
+@check-dist: build
+  uvx twine check dist/*
 
 [group: 'dev']
 @build:
@@ -150,8 +169,9 @@ export JUST_LOG := log
 
 # coverage to html
 [group: 'test']
-coverage-html: coverage
-  @uv run --no-dev --group coverage coverage html
+@coverage-html: coverage
+  uv run --no-dev --group coverage coverage html
+  open htmlcov/index.html
 
 # check correct typing at runtime
 [group: 'test']
@@ -177,7 +197,7 @@ typeguard *args:
 
 [group: 'lint']
 @pylint:
-  uv run --no-dev --group lint pylint --recursive=y src tests
+  uv run --no-dev --group lint pylint --recursive=y --output-format colorized src tests
 
 [group: 'lint']
 @pyright:
