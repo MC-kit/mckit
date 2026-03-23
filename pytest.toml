@@ -17,7 +17,7 @@ norecursedirs = [
 ]
 python_functions = ["test_*", "profile_*"]
 addopts = [
-    "-n=auto",
+  #   "-n=auto",
     "-ra",
     "-q",
     "--tb=short",
