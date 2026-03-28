@@ -3,7 +3,7 @@ minversion = "9.0"
 cache_dir = ".cache/pytest"
 strict = true
 norecursedirs = [
-    ".egg-info",
+    "*.egg-info",
     ".*",
     "build",
     "data",
@@ -23,6 +23,7 @@ addopts = [
     "--cov",
     "--cov-config", "pyproject.toml",
     "--cov-report", "html",
+    "--tb=short",
     "--doctest-modules",
     "--strict-markers",
     "--ignore=setup.py",
