@@ -163,7 +163,7 @@ export JUST_LOG := log
 # create coverage data
 [group: 'test']
 @coverage:
-  uv run --no-dev --group test coverage run --parallel -m pytest
+  uv run --no-dev --group test pytest --cov --cov-report=
   uv run --no-dev --group coverage coverage combine
   uv run --no-dev --group coverage coverage report --show-missing --skip-covered
 

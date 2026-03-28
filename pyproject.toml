@@ -49,12 +49,12 @@ dev = [ { include-group = "style" }, { include-group = "test" } ]
 test = [
   "pytest>=9",
   "pytest-benchmark>=5.1",
+  "pytest-cov>=7.1.0",
   "pytest-durations>=1.5",
   "pytest-emoji>=0.2",
   "pytest-mock>=3.14",
-  # "pytest-xdist[psutil]>=3.8",
+  "pytest-xdist[psutil]>=3.8",
   "xdoctest>=1.2",
-  { include-group = "coverage" },  # coverage may be used on its own, see GHA test
 ]
 docs = [
   "esbonio>=0.16.5",
@@ -267,3 +267,4 @@ workspace.preview = [ "pixi-build" ]
 workspace.channels = [ "conda-forge" ]
 # platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 workspace.platforms = [ "linux-64", "win-64" ]
+
