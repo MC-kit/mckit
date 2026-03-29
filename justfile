@@ -105,7 +105,7 @@ export JUST_LOG := log
 [group: 'dev']
 @check-full: check mypy pylint pyright
  
-# Bump project version
+# Bump project version  # TODO dvp: revise for pixi
 [group: 'dev']
 @bump *args="patch":
   uv version --bump {{args}}
@@ -143,17 +143,17 @@ export JUST_LOG := log
 # test with clean cache
 [group: 'test']
 @test-cache-clear *args:
-  pytest -vv --emoji --cache-clear {{args}}
+  pytest --cache-clear {{args}}
 
 # test fast
 [group: 'test']
 @test-fast *args:
-  pytest -vv --emoji -m "not slow" {{args}}
+  pytest -m "not slow" {{args}}
 
 # run all the tests
 [group: 'test']
 @test *args:
-  pytest -vv --emoji {{args}}
+  pytest {{args}}
 
 # run documentation tests 
 [group: 'test']
@@ -163,20 +163,18 @@ export JUST_LOG := log
 # create coverage data
 [group: 'test']
 @coverage:
-  uv run --no-dev --group test pytest --cov --cov-report=
-  uv run --no-dev --group coverage coverage combine
-  uv run --no-dev --group coverage coverage report --show-missing --skip-covered
+  uv run --no-dev --group test pytest --cov --cov-report term-missing:skip-covered
 
 # coverage to html
 [group: 'test']
 @coverage-html: coverage
-  uv run --no-dev --group coverage coverage html
+  uv run --no-dev --group test pytest --cov --cov-report html:htmlcov
   open htmlcov/index.html
 
 # check correct typing at runtime
 [group: 'test']
 typeguard *args:
-  @uv run --no-dev --group test --group typeguard pytest -vv --emoji --typeguard-packages=src {{args}}
+  @uv run --no-dev --group test --group typeguard pytest --typeguard-packages=src {{args}}
 
 
 # ruff check and format

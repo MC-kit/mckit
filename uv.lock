@@ -1108,7 +1108,6 @@ dev = [
     { name = "pytest-benchmark" },
     { name = "pytest-cov" },
     { name = "pytest-durations" },
-    { name = "pytest-emoji" },
     { name = "pytest-mock" },
     { name = "pytest-xdist", extra = ["psutil"] },
     { name = "ruff" },
@@ -1162,7 +1161,6 @@ test = [
     { name = "pytest-benchmark" },
     { name = "pytest-cov" },
     { name = "pytest-durations" },
-    { name = "pytest-emoji" },
     { name = "pytest-mock" },
     { name = "pytest-xdist", extra = ["psutil"] },
     { name = "xdoctest" },
@@ -1202,7 +1200,6 @@ dev = [
     { name = "pytest-benchmark", specifier = ">=5.1" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
     { name = "pytest-durations", specifier = ">=1.5" },
-    { name = "pytest-emoji", specifier = ">=0.2" },
     { name = "pytest-mock", specifier = ">=3.14" },
     { name = "pytest-xdist", extras = ["psutil"], specifier = ">=3.8" },
     { name = "ruff", specifier = ">=0.0.259" },
@@ -1250,7 +1247,6 @@ test = [
     { name = "pytest-benchmark", specifier = ">=5.1" },
     { name = "pytest-cov", specifier = ">=7.1.0" },
     { name = "pytest-durations", specifier = ">=1.5" },
-    { name = "pytest-emoji", specifier = ">=0.2" },
     { name = "pytest-mock", specifier = ">=3.14" },
     { name = "pytest-xdist", extras = ["psutil"], specifier = ">=3.8" },
     { name = "xdoctest", specifier = ">=1.2" },
@@ -1898,18 +1894,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/90/59/1e73dd71c87aa47bcf37e4f5c25596e94d5628bee15bdbeaaae1585a26e4/pytest_durations-1.6.1.tar.gz", hash = "sha256:bc43fbabb1fef6bb75766d35a6bf142c1e153fef01677ccd4705cc376bf2be34", size = 11630, upload-time = "2025-08-29T06:49:54.554Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c8/a2/1d1914f3ff2c85003962b3f07f7b908fc9fd745584e9a51d392a65e261f6/pytest_durations-1.6.1-py3-none-any.whl", hash = "sha256:af7e0f6b883e7897c8dc1cb294016c6144c25f93a8930d48aec4b40ef461c51e", size = 13521, upload-time = "2025-08-29T06:49:53.386Z" },
-]
-
-[[package]]
-name = "pytest-emoji"
-version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pytest" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/88/4d/d489f939f0717a034cea7955d36bc2a7a5ba1b263871e63ad8cb16d47555/pytest-emoji-0.2.0.tar.gz", hash = "sha256:e1bd4790d87649c2d09c272c88bdfc4d37c1cc7c7a46583087d7c510944571e8", size = 6171, upload-time = "2019-02-19T09:33:17.454Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f7/51/80af966c0aded877da7577d21c4601ca98c6f603c6e6073ddea071af01ec/pytest_emoji-0.2.0-py3-none-any.whl", hash = "sha256:6e34ed21970fa4b80a56ad11417456bd873eb066c02315fe9df0fafe6d4d4436", size = 5664, upload-time = "2019-02-19T09:33:15.771Z" },
 ]
 
 [[package]]

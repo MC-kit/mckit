@@ -49,9 +49,8 @@ dev = [ { include-group = "style" }, { include-group = "test" } ]
 test = [
   "pytest>=9",
   "pytest-benchmark>=5.1",
-  "pytest-cov>=7.1.0",
+  "pytest-cov>=7.1",
   "pytest-durations>=1.5",
-  "pytest-emoji>=0.2",
   "pytest-mock>=3.14",
   "pytest-xdist[psutil]>=3.8",
   "xdoctest>=1.2",
@@ -216,7 +215,7 @@ ignore_messages = '(Unknown directive type "(todo.*|automodule)".$)'
 
 [tool.pixi]
 dependencies.nlopt = ">=2.10.0,<3"
-dependencies.mkl-devel = ">=2025.3.0,<2026"
+dependencies.mkl-devel = ">=2025.3.0,<2027"
 dependencies.numpy = ">=2.4.2,<3"
 environments.default = { features = [ "dev", "py313" ], solve-group = "default" }
 environments.analyze = { features = [ "analyze", "py313" ], solve-group = "default" }
@@ -231,7 +230,7 @@ feature.py312.dependencies.python = "3.12.*"
 feature.py313.dependencies.python = "3.13.*"
 feature.pypi.tasks.pypi_build = "uv build --no-build-isolation"
 feature.pypi.tasks.repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
-feature.typeguard.tasks.typeguard = "pytest -vv --emoji --typeguard-packages=src"
+feature.typeguard.tasks.typeguard = "pytest --typeguard-packages=src"
 # There can be multiple packages in a workspace
 # In `package` you specify properties specific to the package
 package.name = "mckit"
@@ -253,16 +252,16 @@ package.run-dependencies.numpy = "*"
 package.run-dependencies.mkl-devel = "*"
 package.run-dependencies.nlopt = "*"
 pypi-dependencies.mckit = { path = ".", editable = true }
-tasks.fast-test = "pytest -m 'not slow'"
-tasks.test = "pytest"
-tasks.mypy = "mypy src"
-tasks.pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
-tasks.ruff = """
+feature.dev.tasks.fast-test = "pytest -m 'not slow'"
+feature.dev.tasks.test = "pytest"
+feature.dev.tasks.mypy = "mypy src"
+feature.dev.tasks.pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
+feature.dev.tasks.ruff = """
   ruff check --fix src tests
   ruff format src tests
 """
-tasks.pylint = "pylint --recursive=y src tests"
-tasks.pyright = "pyright src tests"
+feature.dev.tasks.pylint = "pylint --recursive=y src tests"
+feature.dev.tasks.pyright = "pyright src tests"
 workspace.preview = [ "pixi-build" ]
 workspace.channels = [ "conda-forge" ]
 # platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
