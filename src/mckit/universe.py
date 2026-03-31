@@ -10,6 +10,7 @@ import sys
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from contextlib import contextmanager
+from dataclasses import dataclass
 from functools import reduce
 from io import StringIO
 from logging import getLogger
@@ -17,7 +18,6 @@ from pathlib import Path
 
 import numpy as np
 
-from attr import attrib, attrs
 from click import progressbar
 
 from mckit.constants import MCNP_ENCODING
@@ -787,15 +787,16 @@ class Universe:
     def test_points(self, points: npt.ArrayLike[float]) -> npt.NDArray[int]:
         """Finds cell to which each point belongs to.
 
-        Args:
-            points:
-                An array of point coordinates. If there is only one point it has
-                shape (3,); if there are n points, it has shape (n, 3).
+        Parameters
+        ----------
+        points:
+            An array of point coordinates. If there is only one point it has
+            shape (3,); if there are n points, it has shape (n, 3).
 
         Returns
         -------
-            An array of cell indices to which a particular point belongs to.
-            Its length equals to the number of points.
+        An array of cell indices to which a particular point belongs to.
+        Its length equals to the number of points.
         """
         points = np.asarray(points, dtype=float)
         result = np.empty(points.size // 3, dtype=int)
@@ -846,10 +847,10 @@ class Universe:
         return self._comment
 
 
-@attrs
+@dataclass
 class _UniverseCellsGroup:
-    universe: Universe = attrib()
-    cells: list[Body] = attrib()
+    universe: Universe
+    cells: list[Body]
 
 
 def produce_universes(cells: Iterable[Body]) -> Universe:

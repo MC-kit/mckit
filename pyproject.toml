@@ -27,7 +27,6 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
-  "attrs>=25.4",
   "click>=8.3.1",
   "loguru>=0.7.3",
   "mkl-devel>=2025.3.1",
@@ -226,6 +225,16 @@ environments.py312 = { features = [ "test", "py312" ] }
 environments.py313 = { features = [ "test", "py313" ], solve-group = "default" }
 feature.dev.dependencies.cmake = ">=4.2.3,<5"
 feature.dev.target.linux-64.dependencies.gdb = ">=17.1,<18"
+feature.dev.tasks.fast-test = "pytest -m 'not slow'"
+feature.dev.tasks.test = "pytest"
+feature.dev.tasks.mypy = "mypy src"
+feature.dev.tasks.pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
+feature.dev.tasks.ruff = """
+  ruff check --fix src tests
+  ruff format src tests
+"""
+feature.dev.tasks.pylint = "pylint --recursive=y src tests"
+feature.dev.tasks.pyright = "pyright src tests"
 feature.py312.dependencies.python = "3.12.*"
 feature.py313.dependencies.python = "3.13.*"
 feature.pypi.tasks.pypi_build = "uv build --no-build-isolation"
@@ -252,18 +261,7 @@ package.run-dependencies.numpy = "*"
 package.run-dependencies.mkl-devel = "*"
 package.run-dependencies.nlopt = "*"
 pypi-dependencies.mckit = { path = ".", editable = true }
-feature.dev.tasks.fast-test = "pytest -m 'not slow'"
-feature.dev.tasks.test = "pytest"
-feature.dev.tasks.mypy = "mypy src"
-feature.dev.tasks.pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
-feature.dev.tasks.ruff = """
-  ruff check --fix src tests
-  ruff format src tests
-"""
-feature.dev.tasks.pylint = "pylint --recursive=y src tests"
-feature.dev.tasks.pyright = "pyright src tests"
 workspace.preview = [ "pixi-build" ]
 workspace.channels = [ "conda-forge" ]
 # platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 workspace.platforms = [ "linux-64", "win-64" ]
-

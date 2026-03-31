@@ -5,10 +5,9 @@ from __future__ import annotations
 from typing import TextIO
 
 from collections.abc import Callable, Iterable, Iterator
+from dataclasses import dataclass
 from itertools import repeat
 from pathlib import Path
-
-from attr import attrib, attrs
 
 from mckit.card import Card
 from mckit.constants import MCNP_ENCODING
@@ -35,18 +34,18 @@ from .mcnp_section_parser import Card as TextCard
 from .mcnp_section_parser import InputSections, Kind, distribute_cards, parse_sections_text
 
 
-@attrs
+@dataclass
 class ParseResult:
-    universe: Universe = attrib()
-    cells: list[Body] = attrib()
-    cells_index: CellStrictIndex = attrib()
-    surfaces: list[Surface] = attrib()
-    surfaces_index: SurfaceStrictIndex = attrib()
-    compositions: list[Composition] | None = attrib()
-    compositions_index: CompositionStrictIndex | None = attrib()
-    transformations: list[Transformation] | None = attrib()
-    transformations_index: TransformationStrictIndex | None = attrib()
-    sections: InputSections = attrib()
+    universe: Universe
+    cells: list[Body]
+    cells_index: CellStrictIndex
+    surfaces: list[Surface]
+    surfaces_index: SurfaceStrictIndex
+    compositions: list[Composition] | None
+    compositions_index: CompositionStrictIndex | None
+    transformations: list[Transformation] | None
+    transformations_index: TransformationStrictIndex | None
+    sections: InputSections
 
     @property
     def title(self):
@@ -71,7 +70,7 @@ def from_text(text: str) -> ParseResult:
         # fmt: off
         text_compositions, text_transformations, _1, _2, _3 = distribute_cards(
             sections.data_cards
-        )  # type: list[TextCard], list[TextCard], list[TextCard], list[TextCard], list[TextCard],
+        )
         # fmt: on
         transformations = parse_transformations(text_transformations)
         transformations_index = TransformationStrictIndex.from_iterable(transformations)
