@@ -167,7 +167,7 @@ export JUST_LOG := log
 
 # coverage to html
 [group: 'test']
-@coverage-html: coverage
+@coverage-html:
   uv run --no-dev --group test pytest --cov --cov-report html:htmlcov
   open htmlcov/index.html
 
