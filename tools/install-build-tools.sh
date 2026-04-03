@@ -1,11 +1,11 @@
 #!/bin/bash
 
 #
-#  Install prerequisites for python, pyenv, python itself, poetry.
+#  Install prerequisites for python.
 #
-#  dvp Apr 2022
+#  dvp Apr 2026
 #
-#  Be patient: this script has been changed since last usage and not tested after that.
+#  Be patient: this script has been changed since the last usage and not tested after that.
 #
 
 OS="$(uname)"
@@ -18,9 +18,12 @@ install_linux_prerequisites() {
 
 
 install_all() {
-    [[ "$OS" == "Linux" ]] || echo "ERROR: Install build tools is not implemented for $OS" && return 1
-
-    install_linux_prerquisites
+    if [[ "$OS" == "Linux" ]]; then
+        install_linux_prerequisites
+    else
+        echo "ERROR: Install build tools is not implemented for $OS"
+        return 1
+    fi
 }
 
 install_all "$@"
