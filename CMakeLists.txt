@@ -5,7 +5,7 @@ include(CMakePrintHelpers)
 # to make CMake happy, if not running under skbuild
 if(NOT DEFINED SKBUILD_PROJECT_NAME)
   set(SKBUILD_PROJECT_NAME mckit)
-  set(SKBUILD_PROJECT_VERSION 0.8.5) # TODO: add this version update to just
+  set(SKBUILD_PROJECT_VERSION 0.8.6) # TODO: add this version update to just
                                      # bump action
 endif()
 
@@ -57,7 +57,17 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   # "${PROJECT_SOURCE_DIR}/extern/nlopt/CMakeLists.txt") message( FATAL_ERROR
   # "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed.
   # Please update submodules and try again." ) endif()
+
+  # Set C++ standard
+  set(CMAKE_CXX_STANDARD 20)
+  # Use Inter Procedural Optimization, if possible
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT ipo_supported)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ${ipo_supported})
+  cmake_print_variables(ipo_supported)
 endif()
+
+
 
 # list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake) list(APPEND
 # CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR}/cmake)
