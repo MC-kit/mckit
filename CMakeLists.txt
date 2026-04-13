@@ -127,9 +127,9 @@ endif()
 install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
 
 # copy libraries to the source tree for editable installation install(TARGETS
-# nlopt DESTINATION $ENV{MCKIT_SRC}/src/mckit)
-# install(TARGETS geometry DESTINATION $ENV{MCKIT_SRC}/src/mckit)
-install(TARGETS geometry DESTINATION ${CMAKE_SOURCE_DIR}/src/mckit)
+# nlopt DESTINATION $ENV{MCKIT_SRC}/src/mckit) install(TARGETS geometry
+# DESTINATION $ENV{MCKIT_SRC}/src/mckit) install(TARGETS geometry DESTINATION
+# ${CMAKE_SOURCE_DIR}/src/mckit)
 
 include(FeatureSummary)
 
