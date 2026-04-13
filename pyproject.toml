@@ -222,7 +222,8 @@ environments.docs = { features = [ "docs", "py313" ], solve-group = "default" }
 environments.typeguard = { features = [ "typeguard", "py313" ], solve-group = "default" }
 environments.pypi = { features = [ "pypi", "py313" ], solve-group = "default" }
 environments.py312 = { features = [ "test", "py312" ] }
-environments.py313 = { features = [ "test", "py313" ], solve-group = "default" }
+environments.py313 = { features = [ "test", "py313" ] }
+environments.py314 = { features = [ "test", "py314" ] }
 feature.dev.dependencies.cmake = ">=4.2.3,<5"
 feature.dev.target.linux-64.dependencies.gdb = ">=17.1,<18"
 feature.dev.tasks.fast-test = "pytest -m 'not slow'"
@@ -237,6 +238,7 @@ feature.dev.tasks.pylint = "pylint --recursive=y src tests"
 feature.dev.tasks.pyright = "pyright src tests"
 feature.py312.dependencies.python = "3.12.*"
 feature.py313.dependencies.python = "3.13.*"
+feature.py314.dependencies.python = "3.14.*"
 feature.pypi.tasks.pypi_build = "uv build --no-build-isolation"
 feature.pypi.tasks.repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
 feature.typeguard.tasks.typeguard = "pytest --typeguard-packages=src"
@@ -265,3 +267,4 @@ workspace.preview = [ "pixi-build" ]
 workspace.channels = [ "conda-forge" ]
 # platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 workspace.platforms = [ "linux-64", "win-64" ]
+
