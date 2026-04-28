@@ -67,8 +67,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   cmake_print_variables(ipo_supported)
 endif()
 
-
-
 # list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake) list(APPEND
 # CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
