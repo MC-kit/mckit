@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "scikit_build_core.build"
-requires = [ "numpy", "scikit-build-core>=0.10" ]
+requires = [ "numpy", "scikit-build-core>=0.12" ]
 
 [project]
 name = "mckit"
@@ -11,7 +11,7 @@ keywords = [ "mckit", "MCNP" ]
 license = "MIT"
 maintainers = [ { name = "dvp2015", email = "dmitri_portnov@yahoo.com" } ]
 authors = [ { name = "rrn" } ]
-requires-python = ">=3.12"  # connectorx==0.4.3 prevents <4
+requires-python = ">=3.12"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Environment :: Console",
@@ -26,16 +26,25 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
   "Topic :: Scientific/Engineering :: Physics",
 ]
+# dependencies = [
+#   "click>=8.3.3,<9",
+#   "loguru>=0.7.3,<0.8",
+#   "mkl-devel",
+#   "numpy",
+#   "ply>=3.11,<4",
+#   "sly>=0.5,<0.6",
+#   "tomli-w>=1.2,<2",
+#   "tqdm>=4.67.3,<5",
+# ]
 dependencies = [
-  "click>=8.3.1",
-  "loguru>=0.7.3",
-  "mkl-devel>=2025.3.1",
+  "click>=8.3.3,<9",
+  "loguru>=0.7.3,<0.8",
+  "mkl-devel",
   "numpy",
-  "ply>=3.11",
-  "sly>=0.5",
-  "tomli-w>=1.2",
-  "tqdm>=4.67.3",
-  "typer>=0.24",
+  "ply>=3.11,<4",
+  "sly>=0.5,<0.6",
+  "tomli-w>=1.2,<2",
+  "tqdm>=4.67.3,<5",
 ]
 urls.Documentation = "https://mckit.readthedocs.io"
 urls.Homepage = "https://github.com/MC-kit/mckit"
@@ -47,31 +56,26 @@ scripts.mckit = "mckit.cli.runner:mckit"
 dev = [ { include-group = "style" }, { include-group = "test" } ]
 test = [
   "pytest>=9",
-  "pytest-benchmark>=5.1",
+  "pytest-benchmark>=5.2",
   "pytest-cov>=7.1",
-  "pytest-durations>=1.5",
-  "pytest-mock>=3.14",
+  "pytest-durations>=1.6",
+  "pytest-mock>=3.15",
   "pytest-xdist[psutil]>=3.8",
-  "xdoctest>=1.2",
+  "xdoctest>=1.3",
 ]
 docs = [
-  "esbonio>=0.16.5",
+  "esbonio>=2",
   "rstcheck[sphinx,toml]>=6.2.5",
   "sphinx>=9.1",
   "sphinx-autobuild>=2025.8.25",
-  "sphinx-autodoc-typehints>=3.2",
-  "sphinx-togglebutton>=0.3.2",
+  "sphinx-autodoc-typehints>=3.10",
+  "sphinx-togglebutton>=0.4",
 ]
-analyze = [ "jupyterlab>=4.2.5", "jupytext>=1.16.4" ]
-coverage = [ "coverage[toml]>=7.9.2" ]
+analyze = [ "jupyterlab>=4.5", "jupytext>=1.19" ]
 lint = [ "pylint", "pylint-per-file-ignores" ]
-mypy = [
-  "mypy>=1.2",
-  "pep8-naming>=0.12.1",
-  "types-setuptools>=80.9.0.20250529",
-]
+mypy = [ "mypy>=1.2", "pep8-naming>=0.12.1", "types-setuptools>=80.9.0.20250529" ]
 pre_commit = [ "pre-commit>=4.3" ]
-pypi = [ "mkl-devel", "numpy", "repairwheel", "scikit-build-core" ]
+pypi = [ "mkl-devel", "numpy", "repairwheel>=0.3", "scikit-build-core" ]
 pyright = [ "pyright>=1.1.406" ]
 ruff = [ "ruff>=0.0.259" ]
 style = [
@@ -82,7 +86,7 @@ style = [
   { include-group = "ruff" },
 ]
 # environments not in dev
-typeguard = [ "typeguard>=4.1.5" ]
+typeguard = [ "typeguard>=4.5" ]
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"
@@ -211,29 +215,36 @@ report_level = "ERROR"
 ignore_messages = '(Unknown directive type "(todo.*|automodule)".$)'
 
 [tool.pixi]
-dependencies.nlopt = ">=2.10.0,<3"
-dependencies.mkl-devel = ">=2025.3.0,<2027"
-dependencies.numpy = ">=2.4.2,<3"
+dependencies.nlopt = ">=2.10.1"
+dependencies.mkl-devel = ">=2025.3.1"
+dependencies.numpy = ">=2.4.3"
 environments.default = { features = [ "dev", "py313" ], solve-group = "default" }
-environments.analyze = { features = [ "analyze", "py313" ], solve-group = "default" }
+environments.analyze = { features = [
+  "analyze",
+  "py313",
+], solve-group = "default" }
 environments.docs = { features = [ "docs", "py313" ], solve-group = "default" }
-environments.typeguard = { features = [ "typeguard", "py313" ], solve-group = "default" }
+environments.typeguard = { features = [
+  "typeguard",
+  "py313",
+], solve-group = "default" }
 environments.pypi = { features = [ "pypi", "py313" ], solve-group = "default" }
 environments.py312 = { features = [ "test", "py312" ] }
 environments.py313 = { features = [ "test", "py313" ] }
 environments.py314 = { features = [ "test", "py314" ] }
-feature.dev.dependencies.cmake = ">=4.2.3,<5"
-feature.dev.target.linux-64.dependencies.gdb = ">=17.1,<18"
-feature.dev.tasks.fast-test = "pytest -m 'not slow'"
-feature.dev.tasks.test = "pytest"
+# feature.dev.dependencies.cmake = ">=4.3.2,<5"
+# feature.dev.target.linux-64.dependencies.gdb = ">=17.1,<18"
 feature.dev.tasks.mypy = "mypy src"
 feature.dev.tasks.pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
-feature.dev.tasks.ruff = """
-  ruff check --fix src tests
-  ruff format src tests
-"""
+feature.dev.tasks.ruff = { cmd = [
+  "ruff check --fix src tests",
+  "&&",
+  "ruff format src tests",
+] }
 feature.dev.tasks.pylint = "pylint --recursive=y src tests"
 feature.dev.tasks.pyright = "pyright src tests"
+feature.test.tasks.fast-test = "pytest -m 'not slow'"
+feature.test.tasks.test = "pytest"
 feature.py312.dependencies.python = "3.12.*"
 feature.py313.dependencies.python = "3.13.*"
 feature.py314.dependencies.python = "3.14.*"
@@ -264,4 +275,6 @@ pypi-dependencies.mckit = { path = ".", editable = true }
 workspace.preview = [ "pixi-build" ]
 workspace.channels = [ "conda-forge" ]
 # platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
-workspace.platforms = [ "linux-64", "win-64" ]
+# workspace.platforms = ["linux-64", "win-64"]
+workspace.platforms = [ "linux-64" ]
+workspace.conda-pypi-map = {}  # fix: pixi failed to load conda-pypi map - timeout
