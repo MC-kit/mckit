@@ -49,7 +49,6 @@ updates:
       interval: weekly
       day: thursday
     labels:
-      - "ci"
       - "dependencies"
       - "bot"
     open-pull-requests-limit: 10
