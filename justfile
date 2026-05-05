@@ -47,9 +47,10 @@ export JUST_LOG := log
 @check-dist: build
     uvx twine check dist/*
 
+# build conda package
 [group('dev')]
 @build:
-    pixi build
+    pixi build --output-dir .output
 
 # clean reproducible files
 [group('dev')]

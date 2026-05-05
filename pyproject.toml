@@ -1,13 +1,13 @@
 [build-system]
 build-backend = "scikit_build_core.build"
-requires = [ "numpy", "scikit-build-core>=0.12" ]
+requires = ["numpy", "scikit-build-core>=0.12"]
 
 [project]
 name = "mckit"
 version = "0.8.6"
 description = "Tools to process MCNP models and results"
 readme = "README.rst"
-keywords = [ "mckit", "MCNP" ]
+keywords = ["mckit", "MCNP"]
 license = "MIT"
 requires-python = ">=3.12"
 classifiers = [
@@ -58,7 +58,7 @@ Issues = "https://github.com/MC-kit/mckit/issues"
 Repository = "https://github.com/MC-kit/mckit"
 
 [dependency-groups]
-dev = [ { include-group = "style" }, { include-group = "test" } ]
+dev = [{ include-group = "style" }, { include-group = "test" }]
 test = [
   "pytest>=9",
   "pytest-benchmark>=5.2",
@@ -76,13 +76,13 @@ docs = [
   "sphinx-autodoc-typehints>=3.10",
   "sphinx-togglebutton>=0.4",
 ]
-analyze = [ "jupyterlab>=4.5", "jupytext>=1.19" ]
-lint = [ "pylint", "pylint-per-file-ignores" ]
-mypy = [ "mypy>=1.2", "pep8-naming>=0.12.1", "types-setuptools>=80.9.0.20250529" ]
-pre_commit = [ "pre-commit>=4.3" ]
-pypi = [ "mkl-devel", "numpy", "repairwheel>=0.3", "scikit-build-core" ]
-pyright = [ "pyright>=1.1.406" ]
-ruff = [ "ruff>=0.0.259" ]
+analyze = ["jupyterlab>=4.5", "jupytext>=1.19"]
+lint = ["pylint", "pylint-per-file-ignores"]
+mypy = ["mypy>=1.2", "pep8-naming>=0.12.1", "types-setuptools>=80.9.0.20250529"]
+pre_commit = ["pre-commit>=4.3"]
+pypi = ["mkl-devel", "numpy", "repairwheel>=0.3", "scikit-build-core"]
+pyright = ["pyright>=1.1.406"]
+ruff = ["ruff>=0.0.259"]
 style = [
   { include-group = "lint" },
   { include-group = "mypy" },
@@ -91,7 +91,7 @@ style = [
   { include-group = "ruff" },
 ]
 # environments not in dev
-typeguard = [ "typeguard>=4.5" ]
+typeguard = ["typeguard>=4.5"]
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"
@@ -105,24 +105,20 @@ level = "INFO"
 
 [tool.pixi]
 [tool.pixi.dependencies]
+python = "*"
 nlopt = ">=2.10.1"
 mkl-devel = ">=2025.3.1"
 numpy = ">=2.4.3"
 [tool.pixi.environments]
-default = { features = [ "dev", "py313" ], solve-group = "default" }
-analyze = { features = [
-  "analyze",
-  "py313",
-], solve-group = "default" }
-docs = { features = [ "docs", "py313" ], solve-group = "default" }
-typeguard = { features = [
-  "typeguard",
-  "py313",
-], solve-group = "default" }
-pypi = { features = [ "pypi", "py313" ], solve-group = "default" }
-py312 = { features = [ "test", "py312" ] }
-py313 = { features = [ "test", "py313" ] }
-py314 = { features = [ "test", "py314" ] }
+default = { features = ["dev"], solve-group = "default" }
+prod = { solve-group = "default" }
+analyze = { features = ["analyze"], solve-group = "default" }
+docs = { features = ["docs"], solve-group = "default" }
+typeguard = { features = ["typeguard"], solve-group = "default" }
+pypi = { features = ["pypi"], solve-group = "default" }
+py312 = { features = ["test", "py312"] }
+py313 = { features = ["test", "py313"] }
+py314 = { features = ["test", "py314"] }
 [tool.pixi.feature]
 dev.tasks.mypy = "mypy src"
 dev.tasks.pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
@@ -141,29 +137,41 @@ py314.dependencies.python = "3.14.*"
 pypi.tasks.pypi_build = "uv build --no-build-isolation"
 pypi.tasks.repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
 typeguard.tasks.typeguard = "pytest --typeguard-packages=src"
+
 [tool.pixi.package]
 name = "mckit"
 version = "0.8.6"
-build.backend.name = "pixi-build-python"
-build.backend.version = "*"
-build.backend.channels = [
-  "https://prefix.dev/pixi-build-backends",
-  "https://prefix.dev/conda-forge",
-]
+
 host-dependencies.scikit-build-core = "*"
 host-dependencies.numpy = "*"
 host-dependencies.mkl-devel = "*"
 host-dependencies.nlopt = "*"
-run-dependencies.numpy = "*"
-run-dependencies.mkl-devel = "*"
-run-dependencies.nlopt = "*"
+
+[tool.pixi.package.run-dependencies]
+numpy = "*"
+mkl-devel = "*"
+nlopt = "*"
+click = ">=8.3"
+loguru = ">=0.7"
+ply = ">=3.11"
+sly = ">=0.5"
+tomli-w = ">=1.2"
+
+
+[tool.pixi.package.build.backend]
+name = "pixi-build-python"
+# name = "pixi-build-rattler-build"
+version = "*"
+
+
 [tool.pixi.pypi-dependencies]
 mckit = { path = ".", editable = true }
+
 [tool.pixi.workspace]
-channels = [ "conda-forge" ]
-platforms = [ "linux-64" ]
-conda-pypi-map = {}  # fix: pixi failed to load conda-pypi map - timeout
-preview = [ "pixi-build" ]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+conda-pypi-map = {}        # fix: pixi failed to load conda-pypi map - timeout
+preview = ["pixi-build"]
 
 [tool.mypy]
 python_version = "3.13"
@@ -175,8 +183,8 @@ follow_imports = "silent"
 warn_return_any = true
 warn_unused_configs = true
 show_error_codes = true
-enable_error_code = [ "ignore-without-code", "redundant-expr", "truthy-bool" ]
-disable_error_code = [ "annotation-unchecked" ]
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+disable_error_code = ["annotation-unchecked"]
 show_error_context = true
 error_summary = true
 warn_redundant_casts = true
@@ -219,13 +227,13 @@ module = [
 ]
 ignore_missing_imports = true
 [[tool.mypy.overrides]]
-module = [ "tomllib" ]
+module = ["tomllib"]
 allow_redefinition = true
 disable_error_code = "no-redef"
 
 [tool.coverage]
 [tool.coverage.paths]
-source = [ "src" ]
+source = ["src"]
 [tool.coverage.report]
 exclude_lines = [
   # Don't complain about missing debug-only code:
@@ -241,17 +249,17 @@ exclude_lines = [
   "raise AssertionError",
   "raise NotImplementedError",
 ]
-fail_under = 90  # TODO dvp: increase limit to 100 with code maturing
+fail_under = 90 # TODO dvp: increase limit to 100 with code maturing
 ignore_errors = true
-omit = [ "**/__init__.py", "*_tab.py" ]
+omit = ["**/__init__.py", "*_tab.py"]
 show_missing = true
 skip_covered = true
 sort = "Cover"
 [tool.coverage.run]
 branch = true
-omit = [ "**/__init__.py", "*_tab.py", "tools/*.py" ]
+omit = ["**/__init__.py", "*_tab.py", "tools/*.py"]
 parallel = true
-source = [ "src" ]
+source = ["src"]
 
 [tool.xdoctest]
 quiet = true
@@ -263,10 +271,10 @@ options = ""
 formats = "ipynb,py:percent"
 
 [tool.creosote]
-paths = [ "src", "adhoc" ]
-venvs = [ ".pixi/envs/default", ".pixi/envs/analyze", ".pixi/envs/docs" ]
+paths = ["src", "adhoc"]
+venvs = [".pixi/envs/default", ".pixi/envs/analyze", ".pixi/envs/docs"]
 deps-file = "pyproject.toml"
-sections = [ "project.dependencies" ]
+sections = ["project.dependencies"]
 exclude-deps = [
   "intel-cmplr-lib-ur",
   "mkl-devel",
