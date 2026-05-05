@@ -50,7 +50,7 @@ repos:
       - id: mixed-line-ending
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.37.0
+    rev: 0.37.2
     hooks:
       - id: check-dependabot
       - id: check-github-workflows
@@ -58,22 +58,22 @@ repos:
       - id: check-readthedocs
 
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: "v2.16.2"
+    rev: "v2.21.2"
     hooks:
       - id: pyproject-fmt
 
   - repo: https://github.com/fredrikaverpil/creosote
-    rev: v5.0.0
+    rev: v5.2.0
     hooks:
       - id: creosote
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.10.7
+    rev: 0.11.9
     hooks:
       - id: uv-lock 
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.4
+    rev: v0.15.12
     hooks:
       - id: ruff-check
         exclude: ^notebooks|^extern
@@ -101,7 +101,7 @@ repos:
 
   # Clang format the codebase automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: "v21.1.0"
+    rev: "v22.1.4"
     hooks:
       - id: clang-format
         types_or: [c++, c, cuda]

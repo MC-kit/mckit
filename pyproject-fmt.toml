@@ -1,0 +1,3 @@
+# https://github.com/tox-dev/toml-fmt/blob/main/pyproject-fmt/docs/configuration.rst
+table_format = "long"
+generate_python_version_classifiers = true
