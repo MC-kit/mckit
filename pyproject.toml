@@ -165,9 +165,6 @@ platforms = [ "linux-64" ]
 conda-pypi-map = {}  # fix: pixi failed to load conda-pypi map - timeout
 preview = [ "pixi-build" ]
 
-# MyPy config
-# See https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml-file
-#     https://dev.to/tusharsadhwani/the-comprehensive-guide-to-mypy-561m
 [tool.mypy]
 python_version = "3.13"
 cache_dir = ".cache/mypy"

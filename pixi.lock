@@ -2143,7 +2143,7 @@ packages:
 - pypi: ./
   name: mckit
   version: 0.8.6
-  sha256: 43f2a626a6bab3ecb9ce630a8d3d1b54be991d4aa37c03ca19a65a443c2e8784
+  sha256: 200a8f791cb2989b7a4a683d31c70ec966ec6ce6a9d4efe130e388d8af1fd186
   requires_dist:
   - click>=8.3.3,<9
   - loguru>=0.7.3,<0.8
