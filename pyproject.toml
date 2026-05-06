@@ -24,25 +24,6 @@
   readme="README.rst"
   requires-python=">=3.12"
   version="0.8.6"
-  # dependencies = [
-  #   "click>=8.3.3,<9",
-  #   "loguru>=0.7.3,<0.8",
-  #   "mkl-devel",
-  #   "numpy",
-  #   "ply>=3.11,<4",
-  #   "sly>=0.5,<0.6",
-  #   "tomli-w>=1.2,<2",
-  #   "tqdm>=4.67.3,<5",
-  # ]
-  dependencies=[
-    "click>=8.3.3,<9",
-    "loguru>=0.7.3,<0.8",
-    "mkl-devel",
-    "numpy",
-    "ply>=3.11,<4",
-    "sly>=0.5,<0.6",
-    "tomli-w>=1.2,<2",
-  ]
   [[project.authors]]
     name="rrn"
   [[project.maintainers]]
@@ -116,7 +97,6 @@
   python   ="*"
   sly      =">=0.5"
   tomli-w  =">=1.2"
-
 [tool.pixi.environments]
   analyze  ={ features=[ "analyze" ], solve-group="default" }
   default  ={ features=[ "dev" ], solve-group="default" }
@@ -127,7 +107,6 @@
   py314    ={ features=[ "py314", "test" ] }
   pypi     ={ features=[ "pypi" ], solve-group="default" }
   typeguard={ features=[ "typeguard" ], solve-group="default" }
-
 [tool.pixi.feature]
   dev.tasks.mypy           ="mypy src"
   dev.tasks.pre-commit     ="pre-commit run --show-diff-on-failure --color=always --all-files"
@@ -164,10 +143,10 @@
 [tool.pixi.pypi-dependencies]
   mckit={ path=".", editable=true }
 [tool.pixi.workspace]
-  channels=[ "conda-forge" ]
+  channels =[ "conda-forge" ]
+  platforms=[ "linux-64", "win-64" ]
   # channels = ["https://prefix.dev/conda-forge"] - 2026-05-06 - timeout
-  conda-pypi-map={}                       # fix: pixi failed to load conda-pypi map - timeout
-  platforms     =[ "linux-64", "win-64" ]
+  conda-pypi-map={}               # fix: pixi failed to load conda-pypi map - timeout
   preview       =[ "pixi-build" ]
   requires-pixi =">=0.67"
 
@@ -229,35 +208,34 @@
     disable_error_code="no-redef"
     module            =[ "tomllib" ]
 
-[tool.coverage]
-  [tool.coverage.paths]
-    source=[ "src" ]
-  [tool.coverage.report]
-    exclude_lines=[
-      # Don't complain about missing debug-only code:
-      "def __repr__",
-      "if __name__ == .__main__.:",
-      # Don't complain if non-runnable code isn't run:
-      "if 0:",
-      "if TYPE_CHECKING:",
-      "if self.debug",
-      # Have to re-enable the standard pragma
-      "pragma: no cover",
-      # Don't complain if tests don't hit defensive assertion code:
-      "raise AssertionError",
-      "raise NotImplementedError",
-    ]
-    fail_under=90 # TODO dvp: increase limit to 100 with code maturing
-    ignore_errors=true
-    omit=[ "**/__init__.py", "*_tab.py" ]
-    show_missing=true
-    skip_covered=true
-    sort="Cover"
-  [tool.coverage.run]
-    branch  =true
-    omit    =[ "**/__init__.py", "*_tab.py", "tools/*.py" ]
-    parallel=true
-    source  =[ "src" ]
+[tool.coverage.paths]
+  source=[ "src" ]
+[tool.coverage.report]
+  exclude_lines=[
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if TYPE_CHECKING:",
+    "if self.debug",
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+  ]
+  fail_under=90 # TODO dvp: increase limit to 100 with code maturing
+  ignore_errors=true
+  omit=[ "**/__init__.py", "*_tab.py" ]
+  show_missing=true
+  skip_covered=true
+  sort="Cover"
+[tool.coverage.run]
+  branch  =true
+  omit    =[ "**/__init__.py", "*_tab.py", "tools/*.py" ]
+  parallel=true
+  source  =[ "src" ]
 
 [tool.xdoctest]
   options=""
