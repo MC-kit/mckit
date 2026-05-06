@@ -1,258 +1,259 @@
 [build-system]
-  build-backend="scikit_build_core.build"
-  requires     =[ "numpy", "scikit-build-core>=0.12" ]
+build-backend = "scikit_build_core.build"
+requires = [ "numpy", "scikit-build-core>=0.12" ]
 
 [project]
-  classifiers=[
-    "Development Status :: 4 - Beta",
-    "Environment :: Console",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "Operating System :: Microsoft :: Windows",
-    "Operating System :: POSIX :: Linux",
-    "Programming Language :: C",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    "Topic :: Scientific/Engineering :: Physics",
-  ]
-  description="Tools to process MCNP models and results"
-  keywords=[ "MCNP", "mckit" ]
-  license="MIT"
-  name="mckit"
-  readme="README.rst"
-  requires-python=">=3.12"
-  version="0.8.6"
-  [[project.authors]]
-    name="rrn"
-  [[project.maintainers]]
-    email="dmitri_portnov@yahoo.com"
-    name ="dvp2015"
-  [project.scripts]
-    mckit="mckit.cli.runner:mckit"
-  [project.urls]
-    Documentation="https://mckit.readthedocs.io"
-    Homepage     ="https://github.com/MC-kit/mckit"
-    Issues       ="https://github.com/MC-kit/mckit/issues"
-    Repository   ="https://github.com/MC-kit/mckit"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: C",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Physics",
+]
+description = "Tools to process MCNP models and results"
+keywords = [ "MCNP", "mckit" ]
+license = "MIT"
+name = "mckit"
+readme = "README.rst"
+requires-python = ">=3.12"
+version = "0.8.6"
+[[project.authors]]
+name = "rrn"
+[[project.maintainers]]
+email = "dmitri_portnov@yahoo.com"
+name = "dvp2015"
+[project.scripts]
+mckit = "mckit.cli.runner:mckit"
+[project.urls]
+Documentation = "https://mckit.readthedocs.io"
+Homepage = "https://github.com/MC-kit/mckit"
+Issues = "https://github.com/MC-kit/mckit/issues"
+Repository = "https://github.com/MC-kit/mckit"
 
 [dependency-groups]
-  analyze=[ "jupyterlab>=4.5", "jupytext>=1.19" ]
-  dev=[ { include-group="style" }, { include-group="test" } ]
-  docs=[
-    "esbonio>=2",
-    "rstcheck[sphinx,toml]>=6.2.5",
-    "sphinx-autobuild>=2025.8.25",
-    "sphinx-autodoc-typehints>=3.10",
-    "sphinx-togglebutton>=0.4",
-    "sphinx>=9.1",
-  ]
-  lint=[ "pylint", "pylint-per-file-ignores" ]
-  mypy=[ "mypy>=1.2", "pep8-naming>=0.12.1", "types-setuptools>=80.9.0.20250529" ]
-  pre_commit=[ "pre-commit>=4.3" ]
-  pypi=[ "mkl-devel", "numpy", "repairwheel>=0.3", "scikit-build-core" ]
-  pyright=[ "pyright>=1.1.406" ]
-  ruff=[ "ruff>=0.0.259" ]
-  style=[
-    { include-group="lint" },
-    { include-group="mypy" },
-    { include-group="pre_commit" },
-    { include-group="pyright" },
-    { include-group="ruff" },
-  ]
-  test=[
-    "pytest-benchmark>=5.2",
-    "pytest-cov>=7.1",
-    "pytest-durations>=1.6",
-    "pytest-mock>=3.15",
-    "pytest-xdist[psutil]>=3.8",
-    "pytest>=9",
-    "xdoctest>=1.3",
-  ]
-  # environments not in dev
-  typeguard=[ "typeguard>=4.5" ]
+analyze = [ "jupyterlab>=4.5", "jupytext>=1.19" ]
+dev = [ { include-group = "style" }, { include-group = "test" } ]
+docs = [
+  "esbonio>=2",
+  "rstcheck[sphinx,toml]>=6.2.5",
+  "sphinx-autobuild>=2025.8.25",
+  "sphinx-autodoc-typehints>=3.10",
+  "sphinx-togglebutton>=0.4",
+  "sphinx>=9.1",
+]
+lint = [ "pylint", "pylint-per-file-ignores" ]
+mypy = [ "mypy>=1.2", "pep8-naming>=0.12.1", "types-setuptools>=80.9.0.20250529" ]
+pre_commit = [ "pre-commit>=4.3" ]
+pypi = [ "mkl-devel", "numpy", "repairwheel>=0.3", "scikit-build-core" ]
+pyright = [ "pyright>=1.1.406" ]
+ruff = [ "ruff>=0.0.259" ]
+style = [
+  { include-group = "lint" },
+  { include-group = "mypy" },
+  { include-group = "pre_commit" },
+  { include-group = "pyright" },
+  { include-group = "ruff" },
+]
+test = [
+  "pytest-benchmark>=5.2",
+  "pytest-cov>=7.1",
+  "pytest-durations>=1.6",
+  "pytest-mock>=3.15",
+  "pytest-xdist[psutil]>=3.8",
+  "pytest>=9",
+  "xdoctest>=1.3",
+]
+# environments not in dev
+typeguard = [ "typeguard>=4.5" ]
 
 # pixi example: https://github.com/prefix-dev/pixi/blob/main/examples/pybind11/pyproject.toml
 [tool.scikit-build]
-  build-dir      ="build/{wheel_tag}"
-  minimum-version="build-system.requires"
-  [tool.scikit-build.build]
-    verbose=false
-  [tool.scikit-build.cmake]
-    # source-dir = "."
-    build-type="Debug"
-  [tool.scikit-build.logging]
-    level="INFO"
-
+build-dir = "build/{wheel_tag}"
+minimum-version = "build-system.requires"
+[tool.scikit-build.build]
+verbose = false
+[tool.scikit-build.cmake]
+build-type = "Debug"
+source-dir = "."
+[tool.scikit-build.logging]
+level = "INFO"
+# The following causes errors on pytest runs (mckit is not importable)
 # [tool.scikit-build.wheel]
-# packages = [ "mckit" ]
+#   packages=[ "mckit" ]
+
 [tool.pixi.dependencies]
-  click    =">=8.3"
-  loguru   =">=0.7"
-  mkl-devel=">=2026.0"
-  nlopt    =">=2.10"
-  numpy    =">=2.4.3"
-  ply      =">=3.11"
-  python   ="*"
-  sly      =">=0.5"
-  tomli-w  =">=1.2"
+click = "*"
+loguru = "*"
+mkl-devel = ">=2025.3"
+nlopt = ">=2.9"
+numpy = ">=2.4"
+ply = "*"
+python = "*"
+sly = "*"
+tomli-w = "*"
 [tool.pixi.environments]
-  analyze  ={ features=[ "analyze" ], solve-group="default" }
-  default  ={ features=[ "dev" ], solve-group="default" }
-  docs     ={ features=[ "docs" ], solve-group="default" }
-  prod     ={ solve-group="default" }
-  py312    ={ features=[ "py312", "test" ] }
-  py313    ={ features=[ "py313", "test" ] }
-  py314    ={ features=[ "py314", "test" ] }
-  pypi     ={ features=[ "pypi" ], solve-group="default" }
-  typeguard={ features=[ "typeguard" ], solve-group="default" }
+analyze = { features = [ "analyze" ], solve-group = "default" }
+default = { features = [ "dev" ], solve-group = "default" }
+docs = { features = [ "docs" ], solve-group = "default" }
+prod = { solve-group = "default" }
+py312 = { features = [ "py312", "test" ] }
+py313 = { features = [ "py313", "test" ] }
+py314 = { features = [ "py314", "test" ] }
+pypi = { features = [ "pypi" ], solve-group = "default" }
+typeguard = { features = [ "typeguard" ], solve-group = "default" }
 [tool.pixi.feature]
-  dev.tasks.mypy           ="mypy src"
-  dev.tasks.pre-commit     ="pre-commit run --show-diff-on-failure --color=always --all-files"
-  dev.tasks.pylint         ="pylint --recursive=y src tests"
-  dev.tasks.pyright        ="pyright src tests"
-  dev.tasks.ruff           ={ cmd=[ "&&", "ruff check --fix src tests", "ruff format src tests" ] }
-  py312.dependencies.python="3.12.*"
-  py313.dependencies.python="3.13.*"
-  py314.dependencies.python="3.14.*"
-  pypi.tasks.pypi_build    ="uv build --no-build-isolation"
-  pypi.tasks.repairwheel   ="repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
-  test.tasks.fast-test     ="pytest -m 'not slow'"
-  test.tasks.test          ="pytest"
-  typeguard.tasks.typeguard="pytest --typeguard-packages=src"
+dev.tasks.mypy = "mypy src"
+dev.tasks.pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
+dev.tasks.pylint = "pylint --recursive=y src tests"
+dev.tasks.pyright = "pyright src tests"
+dev.tasks.ruff = { cmd = [ "&&", "ruff check --fix src tests", "ruff format src tests" ] }
+py312.dependencies.python = "3.12.*"
+py313.dependencies.python = "3.13.*"
+py314.dependencies.python = "3.14.*"
+pypi.tasks.pypi_build = "uv build --no-build-isolation"
+pypi.tasks.repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
+test.tasks.fast-test = "pytest -m 'not slow'"
+test.tasks.test = "pytest"
+typeguard.tasks.typeguard = "pytest --typeguard-packages=src"
 [tool.pixi.package]
-  host-dependencies.mkl-devel        ="*"
-  host-dependencies.nlopt            ="*"
-  host-dependencies.numpy            ="*"
-  host-dependencies.scikit-build-core="*"
-  name                               ="mckit"
-  version                            ="0.8.6"
-  [tool.pixi.package.build.backend]
-    name   ="pixi-build-python"
-    version="*"
-  [tool.pixi.package.run-dependencies]
-    click    =">=8.3"
-    loguru   =">=0.7"
-    mkl-devel="*"
-    nlopt    ="*"
-    numpy    ="*"
-    ply      =">=3.11"
-    sly      =">=0.5"
-    tomli-w  =">=1.2"
+host-dependencies.mkl-devel = "*"
+host-dependencies.nlopt = "*"
+host-dependencies.numpy = "*"
+host-dependencies.scikit-build-core = "*"
+name = "mckit"
+version = "0.8.6"
+[tool.pixi.package.build.backend]
+name = "pixi-build-python"
+version = "*"
+[tool.pixi.package.run-dependencies]
+click = ">=8.3"
+loguru = ">=0.7"
+mkl-devel = "*"
+nlopt = "*"
+numpy = "*"
+ply = ">=3.11"
+sly = ">=0.5"
+tomli-w = ">=1.2"
 [tool.pixi.pypi-dependencies]
-  mckit={ path=".", editable=true }
+mckit = { path = ".", editable = true }
 [tool.pixi.workspace]
-  channels =[ "conda-forge" ]
-  platforms=[ "linux-64", "win-64" ]
-  # channels = ["https://prefix.dev/conda-forge"] - 2026-05-06 - timeout
-  conda-pypi-map={}               # fix: pixi failed to load conda-pypi map - timeout
-  preview       =[ "pixi-build" ]
-  requires-pixi =">=0.67"
+channels = [ "conda-forge" ]
+platforms = [ "linux-64", "win-64" ]
+# channels = ["https://prefix.dev/conda-forge"] - 2026-05-06 - timeout
+conda-pypi-map = {}        # fix: pixi failed to load conda-pypi map - timeout
+preview = [ "pixi-build" ]
+requires-pixi = ">=0.67"
 
 [tool.mypy]
-  cache_dir     =".cache/mypy"
-  files         ="src/**/*.py"
-  python_version="3.13"
-  # strict = true     # TODO dvp: uncomment this to get strict control
-  follow_imports="silent"
-  # namespace_packages = true
-  disable_error_code=[ "annotation-unchecked" ]
-  enable_error_code=[ "ignore-without-code", "redundant-expr", "truthy-bool" ]
-  error_summary=true
-  exclude="""  (?x)(
+cache_dir = ".cache/mypy"
+files = "src/**/*.py"
+python_version = "3.13"
+# strict = true     # TODO dvp: uncomment this to get strict control
+follow_imports = "silent"
+# namespace_packages = true
+disable_error_code = [ "annotation-unchecked" ]
+enable_error_code = [ "ignore-without-code", "redundant-expr", "truthy-bool" ]
+error_summary = true
+exclude = """  (?x)(
   parser.py$  # mypy doesn't like parser code
 | _tab.py$    # ...
 | lexer.py$   # ...
   )
 """
-  pretty=true
-  show_error_codes=true
-  show_error_context=true
-  warn_redundant_casts=true
-  warn_return_any=true
-  warn_unreachable=true
-  warn_unused_configs=true
-  warn_unused_ignores=true
-  [[tool.mypy.overrides]]
-    ignore_missing_imports=true
-    module=[
-      "IPython.core.magic",
-      "IPython.core.magic_arguments",
-      "click",
-      "click.testing",
-      "cyclopts",
-      "dask.*",
-      "duckdb",
-      "eliot",
-      "eliot.*",
-      "loguru",
-      "mckit.*",                      # TODO (dvp, style): make everything typed including extension 'geometry',
-      "msgspec",
-      "multipledispatch",
-      "nox",
-      "numpy",
-      "numpy.testing",
-      "pandas",
-      "polars",
-      "pytest",
-      "rich.*",
-      "scipy.constants",
-      "scipy.sparse",
-      "tomli",
-      "tomllib",
-      "xdoctest",
-    ]
-  [[tool.mypy.overrides]]
-    allow_redefinition=true
-    disable_error_code="no-redef"
-    module            =[ "tomllib" ]
+pretty = true
+show_error_codes = true
+show_error_context = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+[[tool.mypy.overrides]]
+ignore_missing_imports = true
+module = [
+  "IPython.core.magic",
+  "IPython.core.magic_arguments",
+  "click",
+  "click.testing",
+  "cyclopts",
+  "dask.*",
+  "duckdb",
+  "eliot",
+  "eliot.*",
+  "loguru",
+  "mckit.*",                      # TODO (dvp, style): make everything typed including extension 'geometry',
+  "msgspec",
+  "multipledispatch",
+  "nox",
+  "numpy",
+  "numpy.testing",
+  "pandas",
+  "polars",
+  "pytest",
+  "rich.*",
+  "scipy.constants",
+  "scipy.sparse",
+  "tomli",
+  "tomllib",
+  "xdoctest",
+]
+[[tool.mypy.overrides]]
+allow_redefinition = true
+disable_error_code = "no-redef"
+module = [ "tomllib" ]
 
 [tool.coverage.paths]
-  source=[ "src" ]
+source = [ "src" ]
 [tool.coverage.report]
-  exclude_lines=[
-    # Don't complain about missing debug-only code:
-    "def __repr__",
-    "if __name__ == .__main__.:",
-    # Don't complain if non-runnable code isn't run:
-    "if 0:",
-    "if TYPE_CHECKING:",
-    "if self.debug",
-    # Have to re-enable the standard pragma
-    "pragma: no cover",
-    # Don't complain if tests don't hit defensive assertion code:
-    "raise AssertionError",
-    "raise NotImplementedError",
-  ]
-  fail_under=90 # TODO dvp: increase limit to 100 with code maturing
-  ignore_errors=true
-  omit=[ "**/__init__.py", "*_tab.py" ]
-  show_missing=true
-  skip_covered=true
-  sort="Cover"
+exclude_lines = [
+  # Don't complain about missing debug-only code:
+  "def __repr__",
+  "if __name__ == .__main__.:",
+  # Don't complain if non-runnable code isn't run:
+  "if 0:",
+  "if TYPE_CHECKING:",
+  "if self.debug",
+  # Have to re-enable the standard pragma
+  "pragma: no cover",
+  # Don't complain if tests don't hit defensive assertion code:
+  "raise AssertionError",
+  "raise NotImplementedError",
+]
+fail_under = 90 # TODO dvp: increase limit to 100 with code maturing
+ignore_errors = true
+omit = [ "**/__init__.py", "*_tab.py" ]
+show_missing = true
+skip_covered = true
+sort = "Cover"
 [tool.coverage.run]
-  branch  =true
-  omit    =[ "**/__init__.py", "*_tab.py", "tools/*.py" ]
-  parallel=true
-  source  =[ "src" ]
+branch = true
+omit = [ "**/__init__.py", "*_tab.py", "tools/*.py" ]
+parallel = true
+source = [ "src" ]
 
 [tool.xdoctest]
-  options=""
-  quiet  =true
+options = ""
+quiet = true
 
 [tool.jupytext]
-  # https://jupytext.readthedocs.io/en/latest/config.html
-  # Pair ipynb notebooks to py:percent text notebooks
-  formats="ipynb,py:percent"
+# https://jupytext.readthedocs.io/en/latest/config.html
+# Pair ipynb notebooks to py:percent text notebooks
+formats = "ipynb,py:percent"
 
 [tool.creosote]
-  deps-file   ="pyproject.toml"
-  exclude-deps=[ "intel-cmplr-lib-ur", "mkl-devel", "python-dotenv", "tomli", "tqdm", "typer" ]
-  paths       =[ "adhoc", "src" ]
-  sections    =[ "project.dependencies" ]
-  venvs       =[ ".pixi/envs/analyze", ".pixi/envs/default", ".pixi/envs/docs" ]
+deps-file = "pyproject.toml"
+exclude-deps = [ "intel-cmplr-lib-ur", "mkl-devel", "python-dotenv", "tomli", "tqdm", "typer" ]
+paths = [ "adhoc", "src" ]
+sections = [ "project.dependencies" ]
+venvs = [ ".pixi/envs/analyze", ".pixi/envs/default", ".pixi/envs/docs" ]
 
 [tool.rstcheck]
-  ignore_messages='(Unknown directive type "(todo.*|automodule)".$)'
-  report_level   ="ERROR"
+ignore_messages = '(Unknown directive type "(todo.*|automodule)".$)'
+report_level = "ERROR"
