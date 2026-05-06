@@ -167,8 +167,8 @@ mckit = { path = ".", editable = true }
 channels = [ "conda-forge" ]
 # channels = ["https://prefix.dev/conda-forge"] - 2026-05-06 - timeout
 platforms = [ "linux-64", "win-64" ]
+conda-pypi-map = {}  # fix: pixi failed to load conda-pypi map - timeout
 requires-pixi = ">=0.67"
-# conda-pypi-map = {}                           # fix: pixi failed to load conda-pypi map - timeout
 preview = [ "pixi-build" ]
 
 [tool.mypy]
