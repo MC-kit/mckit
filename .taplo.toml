@@ -1,0 +1,25 @@
+# Global formatting: key sorting is disabled by default.
+[formatting]
+reorder_keys = false
+compact_arrays = false
+
+# Rule 1: Sort the 'dependencies' table alphabetically.
+[[rule]]
+include = [ "pyproject.toml" ]
+keys = [ "dependencies" ]
+[rule.formatting]
+reorder_keys = true
+
+# Rule 2: Sort all 'dev-dependencies' tables alphabetically.
+[[rule]]
+include = [ "pyproject.toml" ]
+keys = [ "dev-dependencies" ]
+[rule.formatting]
+reorder_keys = true
+
+# Rule 3: Sort 'dependency-groups' tables alphabetically.
+[[rule]]
+include = [ "pyproject.toml" ]
+keys = [ "dependency-groups" ]
+[rule.formatting]
+reorder_keys = true
