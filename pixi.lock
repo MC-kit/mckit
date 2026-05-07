@@ -3240,7 +3240,7 @@ packages:
 - pypi: ./
   name: mckit
   version: 0.8.6
-  sha256: f5ef9831899a3c910742ae49259f81bcc49b63148dc58a975009e5174dd3b9c3
+  sha256: ecd7fa918f32befc2e549ceb360bee12c6ad3ee355821ce67d6da27e0a89496d
   requires_python: '>=3.12'
 - pypi: https://files.pythonhosted.org/packages/fb/86/dd6e5db36df29e76c7a7699123569a4a18c1623ce68d826ed96c62643cae/mdit_py_plugins-0.5.0-py3-none-any.whl
   name: mdit-py-plugins
