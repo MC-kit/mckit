@@ -113,11 +113,7 @@ dev.tasks.mypy = "mypy src"
 dev.tasks.pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
 dev.tasks.pylint = "pylint --recursive=y src tests"
 dev.tasks.pyright = "pyright src tests"
-dev.tasks.ruff = { cmd = [
-  "&&",
-  "ruff check --fix src tests",
-  "ruff format src tests",
-] }
+dev.tasks.ruff = { cmd = [ "&&", "ruff check --fix src tests", "ruff format src tests" ] }
 py312.dependencies.python = "3.12.*"
 py313.dependencies.python = "3.13.*"
 py314.dependencies.python = "3.14.*"
@@ -253,14 +249,7 @@ formats = "ipynb,py:percent"
 
 [tool.creosote]
 deps-file = "pyproject.toml"
-exclude-deps = [
-  "intel-cmplr-lib-ur",
-  "mkl-devel",
-  "python-dotenv",
-  "tomli",
-  "tqdm",
-  "typer",
-]
+exclude-deps = [ "intel-cmplr-lib-ur", "mkl-devel", "python-dotenv", "tomli", "tqdm", "typer" ]
 paths = [ "adhoc", "src" ]
 sections = [ "project.dependencies" ]
 venvs = [ ".pixi/envs/analyze", ".pixi/envs/default", ".pixi/envs/docs" ]

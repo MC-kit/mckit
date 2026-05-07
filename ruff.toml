@@ -1,6 +1,6 @@
 target-version = "py312"
 line-length = 100
-src = ["src", "tests"]
+src = [ "src", "tests" ]
 exclude = [
   ".cache",
   ".direnv",
@@ -34,25 +34,25 @@ exclude = [
 ]
 
 [lint]
-select = ["ALL"]
+select = [ "ALL" ]
 ignore = [
   "ANN",
   "ARG",
   "C901",   # too complex - ...
   "COM812",
-  "D203",
   "D100",   # Missing docstring in public module
   "D101",   # Missing docstring in public class
   "D102",   # Missing docstring in public method
   "D103",   # Missing docstring in public function
-  "D105",   # D105 Missing docstring in magic method (__hash__, __eq__)
   "D104",   # Missing docstring in public package
+  "D105",   # D105 Missing docstring in magic method (__hash__, __eq__)
   "D106",   # Missing docstring in public nested class
   "D107",   # Missing docstring in __init__
-  "DTZ005", #  `datetime.datetime.now()` called without a `tz` argument
+  "D203",
   "D211",
   "D213",
   "D401",   # the first sentence in the docstring should be in imperative mod
+  "DTZ005", #  `datetime.datetime.now()` called without a `tz` argument
   "E402",   # Module level import not at top of file
   "E501",   # Line too long (<LENGTH> > 100 characters)
 
@@ -63,10 +63,10 @@ ignore = [
   "F821",   # ...
   "FBT",    #  Boolean-typed positional argument in function definition
   "FIX",    #  TODO
+  "ISC001", # may cause conflicts when used with the ruff formatter
+  "N802",   # function name should be lowercase
   "N803",   # Argument name `R` should be lowercase
   "N806",   # Variable `D` in function should be lowercase
-  "N802",   # function name should be lowercase
-  "ISC001", # may cause conflicts when used with the ruff formatter
 
   "PLE1205", # logging-too-many-args - we use loguru with '{' style of placeholders
 
@@ -92,24 +92,12 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"benchmarks/*" = ["S101"]
-"build.py" = ["T203"]
-"src/mckit/parser/*" = ["D", "N"]
-"tests/*" = [
-  "ANN",
-  "D100",
-  "D101",
-  "D102",
-  "D103",
-  "D104",
-  "F811",
-  "F821",
-  "PLR2004",
-  "S101",
-  "UP036",
-]
-"tools/*" = ["T201", "INP001", "S603", "S607"]
-"tutorial/*" = ["INP001"]
+"benchmarks/*" = [ "S101" ]
+"build.py" = [ "T203" ]
+"src/mckit/parser/*" = [ "D", "N" ]
+"tests/*" = [ "ANN", "D100", "D101", "D102", "D103", "D104", "F811", "F821", "PLR2004", "S101", "UP036" ]
+"tools/*" = [ "INP001", "S603", "S607", "T201" ]
+"tutorial/*" = [ "INP001" ]
 
 [lint.mccabe]
 # Unlike Flake8, default to a complexity level of 10.
@@ -125,10 +113,7 @@ parametrize-names-type = "csv"
 strict = true
 
 [lint.pep8-naming]
-ignore-names = [
-    "*eV*",
-    "*He*",
-]
+ignore-names = [ "*He*", "*eV*" ]
 
 # warning: The isort option `isort.split-on-trailing-comma` is incompatible
 # with the formatter `format.skip-magic-trailing-comma=true` option.
@@ -136,19 +121,11 @@ ignore-names = [
 # or `format.skip-magic-trailing-comma=false`.
 
 [lint.isort]
-known-first-party = ["src"]
-known-third-party = [
-  "mpl_toolkits",
-  "matplotlib",
-  "numpy",
-  "scipy",
-  "loguru",
-  "tqdm",
-  "dotenv",
-]
+known-first-party = [ "src" ]
+known-third-party = [ "dotenv", "loguru", "matplotlib", "mpl_toolkits", "numpy", "scipy", "tqdm" ]
 default-section = "third-party"
 lines-between-types = 1
-required-imports = ["from __future__ import annotations"]
+required-imports = [ "from __future__ import annotations" ]
 case-sensitive = true
 section-order = [
   "future",
@@ -161,8 +138,8 @@ section-order = [
 ]
 
 [lint.isort.sections]
-"typing" = ["typing", "typing_extension"]
-"testing" = ["tests"]
+"typing" = [ "typing", "typing_extension" ]
+"testing" = [ "tests" ]
 
 [lint.pydocstyle]
 convention = "numpy"

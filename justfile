@@ -157,12 +157,12 @@ export JUST_LOG := log
 # run documentation tests
 [group('test')]
 @xdoctest *args:
-    uv run --no-dev --group test --group test python -m xdoctest --silent --style google -c all src tools {{ args }}
+    uv run --no-dev --group test --group test xdoctest --silent -c all -m mckit {{ args }}
 
 # create coverage data
 [group('test')]
 @coverage:
-    uv run --no-dev --group test pytest --cov --cov-report term-missing:skip-covered
+    uv run --no-dev --group test pytest --cov --cov-report=term-missing:skip-covered
 
 # coverage to html
 [group('test')]

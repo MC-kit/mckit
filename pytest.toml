@@ -15,40 +15,38 @@ norecursedirs = [
     "tools",
     "wrk",
 ]
-python_functions = ["test_*", "profile_*"]
+python_functions = [ "profile_*", "test_*" ]
 addopts = [
-    "-n=auto",
-    "-ra",
-    "-q",
-    "--cov-config", "pyproject.toml",
-    "--tb=short",
-    "--doctest-modules",
-    "--strict-markers",
-    "--ignore=setup.py",
+    "--benchmark-autosave",
+    "--benchmark-disable",
+    "--benchmark-group-by=name,fullname",
+    "--benchmark-storage=.cache/benchmarks",
     "--failed-first",
-    "--xdoctest",
+    "--ignore=setup.py",
+    "--numprocesses=logical",
     "--pytest-durations-min=1",
     "--pytest-resultlog=pytest-result.log",
-    "--benchmark-disable",
-    "--benchmark-storage=.cache/benchmarks",
-    "--benchmark-autosave",
-    "--benchmark-group-by=name,fullname",
+    "--quiet",
+    "--strict-markers",
+    "--tb=short",
+    "--xdoctest",
+    "-ra",                                   # extra test summary: all except passed
 ]
 doctest_optionflags = [
-  "ELLIPSIS",
-  "NORMALIZE_WHITESPACE",
-  "IGNORE_EXCEPTION_DETAIL",
-  "ALLOW_UNICODE",
-  "ALLOW_BYTES",
-  "NUMBER",
+    "ALLOW_BYTES",
+    "ALLOW_UNICODE",
+    "ELLIPSIS",
+    "IGNORE_EXCEPTION_DETAIL",
+    "NORMALIZE_WHITESPACE",
+    "NUMBER",
 ]
-testpaths = ["tests", "src", "docs"]
-markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
+testpaths = [ "docs", "src", "tests" ]
+markers = [ "slow: marks tests as slow (deselect with '-m \"not slow\"')" ]
 filterwarnings = [
     "error",
     "ignore:.*not typechecking multipledispatch.dispatcher.*UserWarning",
-    'ignore:.*io.FileIO \[closed\]',
     'ignore:.*Implicit None on return values:DeprecationWarning',
+    'ignore:.*io.FileIO \[closed\]',
 ]
 log_level = "INFO"
 log_format = "%(asctime)s %(levelname)s %(message)s"

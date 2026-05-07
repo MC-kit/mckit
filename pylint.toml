@@ -15,7 +15,7 @@
 # A comma-separated list of package or module names from where C extensions may
 # be loaded. Extensions are loading into the active Python interpreter and may
 # run arbitrary code.
-extension-pkg-allow-list = ["duckdb", "mckit"]
+extension-pkg-allow-list = [ "duckdb", "mckit" ]
 
 # A comma-separated list of package or module names from where C extensions may
 # be loaded. Extensions are loading into the active Python interpreter and may
@@ -72,7 +72,7 @@ jobs = 0
 
 # List of plugins (as comma separated values of python module names) to load,
 # usually to register additional checkers.
-load-plugins = ["pylint_per_file_ignores"]
+load-plugins = [ "pylint_per_file_ignores" ]
 
 # Pickle collected data for later comparisons.
 #persistent = true
@@ -345,7 +345,7 @@ max-line-length = 120
 # known-standard-library =
 
 # Force import order to recognize a module as part of a third party library.
-known-third-party = ["enchant", "pytest"]
+known-third-party = [ "enchant", "pytest" ]
 
 # Couples of modules and preferred modules, separated by a comma.
 # preferred-modules =
@@ -379,9 +379,7 @@ known-third-party = ["enchant", "pytest"]
 disable = [
     "logging-too-many-args", # for loguru logging
 ]
-per-file-ignores = [
-    "tests/:missing-class-docstring,missing-function-docstring,redefined-outer-name,protectd-access",
-]
+per-file-ignores = [ "tests/:missing-class-docstring,missing-function-docstring,redefined-outer-name,protectd-access" ]
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
