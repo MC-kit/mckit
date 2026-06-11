@@ -3,15 +3,17 @@
 Collects information on lost particles in SQLite database.
 Subsequent runs are collected incrementally.
 
-Analyzes the database and creates CSV tables:
+if no lost particles found, just logs this
+
+Otherwise analyzes the database and creates CSV tables:
     - "lp-coordinates.csv":
         cell_fail, surface, cell_in, x, y, z, u, v, w, out_file, lp_no, hist_no
     - "lp-cell-fails-count.csv":
        cell_fail, count  -  sorted by count in descending order
 
 Besides, creates comin file for MCNP plot.
-May use template comin replacing coordinates with coordinates of the most frequent
-cell fail. If the template is not provided creates default comin file.
+May use template comin replacing coordinates with coordinates of the most leaking
+cell. If the template is not provided creates default comin file.
 
 Adapted to old python versions available on HPCs.
 """
@@ -28,7 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 __appname__ = "extract_lost_particles"
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 DESCRIPTION_START_RE = re.compile(r"^1\s+lost particle no.\s*(?P<lp_no>(\d+|\*\*\*))")
 HISTORY_NO_RE = re.compile(r"history no.\s+(?P<hist_no>\d+)$")
@@ -209,70 +211,74 @@ def _analyze(db) -> None:
                 lost_particles
             """
         ).fetchone()[0]
-        LOG.info("Total lost particles: %d", total_lp)
-        cell_fail_counts = cur.execute(
-            """
-            select
-                cell_fail,
-                count(*) cnt
-            from lost_particles
-            group by cell_fail
-            order by cnt desc
-            """
-        ).fetchall()
-        with Path("lp-cell-fails-count.csv").open("w") as fid:
-            for t in cell_fail_counts:
-                print(*t, sep=",", file=fid)
-        LOG.info("Created file lp-cell-fails-count.csv")
-
-        lost_coordinates = cur.execute(
-            """
-            select
-                cell_fail,
-                surface,
-                cell_in,
-                x, y, z,
-                u, v, w
-            from lost_particles
-            order by
-                cell_fail,
-                surface,
-                cell_in,
-                x, y, z,
-                u, v, w
-            """
-        ).fetchall()
-        with Path("lp-coordinates.csv").open("w") as fid:
-            for t in lost_coordinates:
-                print(*t, sep=",", file=fid)
-        LOG.info("Created file lp-coordinates.csv")
-
-        coordinates_to_work = cur.execute(
-            """
+        if total_lp:
+            LOG.info("Total lost particles: %d", total_lp)
+            cell_fail_counts = cur.execute(
+                """
                 select
-                    x, y, z
+                    cell_fail,
+                    count(*) cnt
                 from lost_particles
-                where
-                    cell_fail = ?
-                limit 1
-            """,
-            (cell_fail_counts[0][0],),
-        ).fetchone()
-        coordinates_text = " ".join(map(str, coordinates_to_work))
-        origin_text = "origin " + coordinates_text + " &"
-        comin_path = Path("comin")
-        if comin_path.exists():
-            LOG.info("Using existing 'comin' template %s", comin_path)
-            comin_text = Path("comin").read_text()
-            comin_lines = comin_text.split("\n")
-            comin_lines[0] = origin_text
-            new_comin_text = "\n".join(comin_lines)
+                group by cell_fail
+                order by cnt desc
+                """
+            ).fetchall()
+            with Path("lp-cell-fails-count.csv").open("w") as fid:
+                for t in cell_fail_counts:
+                    print(*t, sep=",", file=fid)
+            LOG.info("Created file lp-cell-fails-count.csv")
+
+            lost_coordinates = cur.execute(
+                """
+                select
+                    cell_fail,
+                    surface,
+                    cell_in,
+                    x, y, z,
+                    u, v, w
+                from lost_particles
+                order by
+                    cell_fail,
+                    surface,
+                    cell_in,
+                    x, y, z,
+                    u, v, w
+                """
+            ).fetchall()
+            with Path("lp-coordinates.csv").open("w") as fid:
+                for t in lost_coordinates:
+                    print(*t, sep=",", file=fid)
+            LOG.info("Created file lp-coordinates.csv")
+
+            coordinates_to_work = cur.execute(
+                """
+                    select
+                        x, y, z
+                    from lost_particles
+                    where
+                        cell_fail = ?
+                    limit 1
+                """,
+                (cell_fail_counts[0][0],),
+            ).fetchone()
+            coordinates_text = " ".join(map(str, coordinates_to_work))
+            origin_text = "origin " + coordinates_text + " &"
+            comin_path = Path("comin")
+            if comin_path.exists():
+                LOG.info("Using existing 'comin' template %s", comin_path)
+                comin_text = Path("comin").read_text()
+                comin_lines = comin_text.split("\n")
+                comin_lines[0] = origin_text
+                new_comin_text = "\n".join(comin_lines)
+            else:
+                LOG.info("Creating 'comin' file %s", comin_path)
+                new_comin_text = origin_text[:-1]
+            with Path("comin").open("w") as fid:
+                print(new_comin_text, file=fid)
+            LOG.info("Created file comin")
         else:
-            LOG.info("Creating 'comin' file %s", comin_path)
-            new_comin_text = origin_text[:-1]
-        with Path("comin").open("w") as fid:
-            print(new_comin_text, file=fid)
-        LOG.info("Created file comin")
+            LOG.info("No lost particles found")
+
 
 
 def _collect_lost_particles(db: str) -> bool:
