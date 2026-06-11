@@ -60,7 +60,7 @@ analyze = [ "jupyterlab>=4.5", "jupytext>=1.19" ]
 lint = [ "pylint", "pylint-per-file-ignores" ]
 mypy = [ "mypy>=1.2", "pep8-naming>=0.12.1", "types-setuptools>=80.9.0.20250529" ]
 pre_commit = [ "pre-commit>=4.3" ]
-pypi = [ "mkl-devel", "numpy", "repairwheel>=0.3", "scikit-build-core" ]
+# pypi = [ "mkl-devel", "numpy", "repairwheel>=0.3", "scikit-build-core" ]
 pyright = [ "pyright>=1.1.406" ]
 ruff = [ "ruff>=0.0.259" ]
 style = [
@@ -91,7 +91,7 @@ level = "DEBUG"
 [tool.pixi.dependencies]
 click = "*"
 loguru = "*"
-mkl-devel = ">=2025.3"
+mkl-devel = ">=2025.3,<2026"
 nlopt = ">=2.9"
 numpy = ">=2.4"
 ply = "*"
