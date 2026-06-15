@@ -24,8 +24,6 @@ addopts = [
     "--failed-first",
     "--ignore=setup.py",
     "--numprocesses=logical",
-    "--pytest-durations-min=1",
-    "--pytest-resultlog=pytest-result.log",
     "--quiet",
     "--strict-markers",
     "--tb=short",
