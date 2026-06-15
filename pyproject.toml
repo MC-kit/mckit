@@ -83,7 +83,7 @@ verbose = false
 build-type = "Debug"
 source-dir = "."
 [tool.scikit-build.logging]
-level = "INFO"
+level = "DEBUG"
 
 # The following causes errors on pytest runs (mckit is not importable)
 # [tool.scikit-build.wheel]
@@ -126,7 +126,7 @@ typeguard.tasks.typeguard = "pytest --typeguard-packages=src"
 host-dependencies.mkl-devel = "*"
 host-dependencies.nlopt = "*"
 host-dependencies.numpy = "*"
-host-dependencies.scikit-build-core = "*"
+host-dependencies.scikit-build-core = ">=0.12"
 name = "mckit"
 version = "0.8.6"
 [tool.pixi.package.build.backend]
