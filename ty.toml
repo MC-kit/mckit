@@ -1,0 +1,9 @@
+[src]
+include = [ "src", "tests" ]
+exclude = [ "**/*parser.py" ]
+
+[terminal]
+output-format = "concise"
+
+[rules]
+unresolved-import = "ignore"
