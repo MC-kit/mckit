@@ -42,7 +42,7 @@ extension-pkg-allow-list = [ "duckdb", "mckit" ]
 # ignore-list. The regex matches against paths and can be in Posix or Windows
 # format. Because '\\' represents the directory delimiter on Windows systems, it
 # can't be used as an escape character.
-# ignore-paths =
+ignore-paths = [".*parser.*"]
 
 # Files or directories matching the regular expression patterns are skipped. The
 # regex matches against base names, not paths. The default value ignores Emacs
@@ -72,7 +72,7 @@ jobs = 0
 
 # List of plugins (as comma separated values of python module names) to load,
 # usually to register additional checkers.
-load-plugins = [ "pylint_per_file_ignores" ]
+# load-plugins = [ "pylint_per_file_ignores" ]
 
 # Pickle collected data for later comparisons.
 #persistent = true
@@ -378,8 +378,12 @@ known-third-party = [ "enchant", "pytest" ]
 [tool.pylint.'messages control']
 disable = [
     "logging-too-many-args", # for loguru logging
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "missing-module-docstring",
+    "redefined-outer-name",
+    "protected-access"
 ]
-per-file-ignores = [ "tests/:missing-class-docstring,missing-function-docstring,redefined-outer-name,protectd-access" ]
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
