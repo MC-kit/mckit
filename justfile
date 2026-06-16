@@ -16,7 +16,7 @@ alias t := test
 alias c := check
 set dotenv-load
 
-default_python := "3.13"
+default_python := "3.14"
 TITLE := `uv version`
 VERSION := `uv version --short`
 
@@ -50,7 +50,7 @@ export JUST_LOG := log
 # build conda package
 [group('dev')]
 @build:
-    pixi build --output-dir .output
+    pixi publish --target-dir .output
 
 # clean reproducible files
 [group('dev')]

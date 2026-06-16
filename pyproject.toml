@@ -81,11 +81,11 @@ verbose = false
 build-type = "Debug"
 source-dir = "."
 [tool.scikit-build.logging]
-level = "DEBUG"
+level = "INFO"
+[tool.scikit-build.wheel]
+packages = [ "src/mckit" ]
+exclude = [ "**/__pycache__", "**/*.pyc" ]
 
-# The following causes errors on pytest runs (mckit is not importable)
-# [tool.scikit-build.wheel]
-#   packages=[ "mckit" ]
 [tool.pixi.dependencies]
 click = "*"
 loguru = "*"
@@ -96,10 +96,9 @@ ply = "*"
 python = "*"
 sly = "*"
 tomli-w = "*"
-
 [tool.pixi.environments]
 analyze = { features = [ "analyze" ], solve-group = "default" }
-default = { features = [ "test", "style" ], solve-group = "default" }
+default = { features = [ "build", "test", "style" ], solve-group = "default" }
 docs = { features = [ "docs" ], solve-group = "default" }
 prod = { solve-group = "default" }
 py312 = { features = [ "py312", "test" ] }
@@ -107,29 +106,25 @@ py313 = { features = [ "py313", "test" ] }
 py314 = { features = [ "py314", "test" ] }
 pypi = { features = [ "pypi" ], solve-group = "default" }
 typeguard = { features = [ "typeguard", "test" ], solve-group = "default" }
-
 [tool.pixi.feature]
-style.tasks.mypy = "mypy src"
-style.tasks.pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
-style.tasks.pylint = "pylint --recursive=y src tests"
-style.tasks.pyright = "pyright src tests"
-style.tasks.ruff = { cmd = [ "&&", "ruff check --fix src tests", "ruff format src tests" ] }
 py312.dependencies.python = "3.12.*"
 py313.dependencies.python = "3.13.*"
 py314.dependencies.python = "3.14.*"
 pypi.tasks.pypi_build = "uv build --no-build-isolation"
 pypi.tasks.repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
-# typeguard.dependencies = [ "typeguard>=4.5.2" ]
-typeguard.tasks.typeguard = "pytest --typeguard-packages=src"
-
+[tool.pixi.feature.build.dependencies]
+# Explicitly add build tools for faster resolution
+cmake = ">=4"
+ninja = "*"
+scikit-build-core = ">=0.12"
+[tool.pixi.feature.style]
+tasks.mypy = "mypy src"
+tasks.pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
+tasks.pylint = "pylint --recursive=y src tests"
+tasks.pyright = "pyright src tests"
+tasks.ruff = { cmd = [ "&&", "ruff check --fix src tests", "ruff format src tests" ] }
 [tool.pixi.feature.style.dependencies]
 pylint = ">=4.0.6,<5"
-
-
-[tool.pixi.feature.test.tasks]
-fast-test = "pytest -m 'not slow'"
-test = "pytest"
-
 [tool.pixi.feature.test.dependencies]
 pytest = ">=9.0.3,<10"
 pytest-cov = ">=7.1.0,<8"
@@ -138,11 +133,13 @@ pytest-mock = ">=3.15.1,<4"
 pytest-xdist = ">=3.8.0,<4"
 psutil = ">=7.2.2,<8"
 xdoctest = ">=1.3.2,<2"
-
+[tool.pixi.feature.test.tasks]
+fast-test = "pytest -m 'not slow'"
+test = "pytest"
+[tool.pixi.feature.typeguard]
+tasks.typeguard = "pytest --typeguard-packages=src"
 [tool.pixi.feature.typeguard.dependencies]
 typeguard = ">=4.5.2,<5"
-
-
 [tool.pixi.package]
 host-dependencies.mkl-devel = "*"
 host-dependencies.nlopt = "*"
@@ -150,11 +147,11 @@ host-dependencies.numpy = "*"
 host-dependencies.scikit-build-core = ">=0.12"
 name = "mckit"
 version = "0.8.6"
-
+[tool.pixi.package.build-dependencies]
+scikit-build-core = ">=0.12.1"
 [tool.pixi.package.build.backend]
 name = "pixi-build-python"
 version = "*"
-
 [tool.pixi.package.run-dependencies]
 click = ">=8.3"
 loguru = ">=0.7"
@@ -166,14 +163,18 @@ sly = ">=0.5"
 tomli-w = ">=1.2"
 [tool.pixi.pypi-dependencies]
 mckit = { path = ".", editable = true }
-
+[tool.pixi.pypi-options]
+no-build-isolation = [ "mckit" ]
 [tool.pixi.workspace]
 channels = [ "conda-forge" ]
 platforms = [ "linux-64", "win-64" ]
 # channels = ["https://prefix.dev/conda-forge"] - 2026-05-06 - timeout
 conda-pypi-map = {}  # fix: pixi failed to load conda-pypi map - timeout
-requires-pixi = ">=0.67"
+requires-pixi = ">=0.70.2"
 preview = [ "pixi-build" ]
+
+[tool.uv.extra-build-dependencies]
+mckit = [ "scikit_build_core" ]
 
 [tool.mypy]
 cache_dir = ".cache/mypy"
