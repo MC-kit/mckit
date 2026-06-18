@@ -5,7 +5,7 @@ This requires preloading of the library on all the systems.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 import os
 import sys
@@ -31,6 +31,16 @@ def _library_base_name(_lib_name: str) -> str:
 
 SUFFIX = ".dll" if WIN else ".dylib" if MACOS else ".so"
 
+
+def get_max_shared_object_version_to_check() -> int:
+    v = os.getenv("MCKIT_MAX_SO_VERSION_TO_CHECK")
+    if v:
+        return int(v)
+    return 3
+
+
+MAX_SO_VERSION: Final[int] = get_max_shared_object_version_to_check()
+
 if WIN or MACOS:
 
     def _combine_version_and_suffix(version: int, suffix: str) -> str:
@@ -42,7 +52,7 @@ else:  # Linux
         return f"{suffix}.{version}"  # .so.2
 
 
-def _iterate_suffixes_with_version(max_version: int = 2) -> Generator[str]:
+def _iterate_suffixes_with_version(max_version: int = MAX_SO_VERSION) -> Generator[str]:
     while max_version >= 0:
         yield _combine_version_and_suffix(max_version, SUFFIX)
         max_version -= 1
@@ -60,7 +70,7 @@ else:
     SHARED_LIBRARY_DIRECTORIES.append(Path(sys.prefix, "lib"))
 
 
-def _preload_library(lib_name: str, max_version: int = 2) -> None:
+def _preload_library(lib_name: str, max_version: int = MAX_SO_VERSION) -> None:
     for d in SHARED_LIBRARY_DIRECTORIES:
         for s in _iterate_suffixes_with_version(max_version):
             p = Path(d, _library_base_name(lib_name)).with_suffix(s)

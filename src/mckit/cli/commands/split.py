@@ -13,7 +13,6 @@ from pathlib import Path
 import mckit.parser.mcnp_section_parser as sp
 
 from mckit.cli._logging import logger
-from mckit.constants import MCNP_ENCODING
 
 from .common import check_if_path_exists
 
@@ -21,30 +20,42 @@ OUTER_LINE = "=" * 40
 INNER_LINE = "-" * 40
 
 
-def print_text(text: str, output_dir: Path, section_file_name: str, override: bool) -> None:
+def print_text(
+    text: str, output_dir: Path, section_file_name: str, override: bool, encoding: str = "utf8"
+) -> None:
     if text:
         out = output_dir / section_file_name
         check_if_path_exists(out, override)
-        out.write_text(text, encoding=MCNP_ENCODING)
+        out.write_text(text, encoding=encoding)
 
 
 def print_cards(
-    cards: Iterable[sp.Card], output_dir: Path, section_file_name: str, override: bool
+    cards: Iterable[sp.Card],
+    output_dir: Path,
+    section_file_name: str,
+    override: bool,
+    encoding: str = "utf8",
 ) -> None:
     if cards:
         out = output_dir / section_file_name
         check_if_path_exists(out, override)
-        with out.open("w", encoding=MCNP_ENCODING) as fid:
+        with out.open("w", encoding=encoding) as fid:
             for card in cards:
                 print(card.text, file=fid)
 
 
-def split(output_dir: Path, mcnp_file_name: str | Path, override: bool, separators=False) -> None:
+def split(
+    output_dir: Path,
+    mcnp_file_name: str | Path,
+    override: bool,
+    separators=False,
+    encoding: str = "utf8",
+) -> None:
     logger.debug("Splitting model from {}", mcnp_file_name)
     if isinstance(mcnp_file_name, str):
         mcnp_file_name = Path(mcnp_file_name)
     assert output_dir.is_dir()
-    with mcnp_file_name.open(encoding=MCNP_ENCODING) as fid:
+    with mcnp_file_name.open(encoding=encoding) as fid:
         sections: sp.InputSections = sp.parse_sections(fid)
     print_text(sections.title, output_dir, "title.txt", override)
     print_cards(sections.cell_cards, output_dir, "cells.txt", override)
@@ -59,10 +70,10 @@ def split(output_dir: Path, mcnp_file_name: str | Path, override: bool, separato
     print_text(sections.remainder, output_dir, "remainder.txt", override)
     logger.debug("The parts of %s are saved to {}", mcnp_file_name, output_dir)
     if separators:
-        write_separators(output_dir, mcnp_file_name.stem)
+        write_separators(output_dir, mcnp_file_name.stem, encoding=encoding)
 
 
-def write_separators(output: Path, model: str) -> None:
+def write_separators(output: Path, model: str, encoding: str = "utf8") -> None:
     for section in ["cells", "surfaces", "materials", "transformations", "tallies"]:
         for start_end in ["start", "end"]:
             if start_end == "start":
@@ -81,6 +92,6 @@ def write_separators(output: Path, model: str) -> None:
                 "c\n"
             )
             path: Path = output / f"{section}_{start_end}.txt"
-            path.write_text(text, encoding=MCNP_ENCODING)
+            path.write_text(text, encoding=encoding)
     path = output / "new_line.txt"
     path.write_text("\n")

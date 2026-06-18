@@ -11,7 +11,6 @@ from pathlib import Path
 from attr import attrib, attrs
 
 from mckit.card import Card
-from mckit.constants import MCNP_ENCODING
 from mckit.parser.cell_parser import Body
 from mckit.parser.cell_parser import parse as parse_cell
 from mckit.parser.common import (
@@ -53,10 +52,10 @@ class ParseResult:
         return self.sections.title
 
 
-def from_file(path: str | Path) -> ParseResult:
+def from_file(path: str | Path, encoding="utf8") -> ParseResult:
     if isinstance(path, str):
         path = Path(path)
-    with path.open("r", encoding=MCNP_ENCODING) as fid:
+    with path.open("r", encoding=encoding) as fid:
         return from_stream(fid)
 
 
@@ -71,7 +70,7 @@ def from_text(text: str) -> ParseResult:
         # fmt: off
         text_compositions, text_transformations, _1, _2, _3 = distribute_cards(
             sections.data_cards
-        )  # type: list[TextCard], list[TextCard], list[TextCard], list[TextCard], list[TextCard],
+        )
         # fmt: on
         transformations = parse_transformations(text_transformations)
         transformations_index = TransformationStrictIndex.from_iterable(transformations)

@@ -168,7 +168,7 @@ def test_when_transform_happy_path(runner, source, transformation, transformatio
 #         expected = expected.split()
 #         for e in expected:
 #             assert (out / e).exists()
-#         text = (out / "cells_start.txt").read_text(encoding=MCNP_ENCODING)
+#         text = (out / "cells_start.txt").read_text(encoding="utf8")
 #         assert is_comment_text(text), "Should be MCNP comment text"
 
 

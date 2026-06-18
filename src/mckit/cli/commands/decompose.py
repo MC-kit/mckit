@@ -34,15 +34,16 @@ def move_universe_attribute_to_comments(universe):
         cell.options["comment"] = comm
 
 
-def decompose(output, fill_descriptor_path, source, override):
+def decompose(output, fill_descriptor_path, source, override, encoding):
     logger.info("Running mckit decompose")
     logger.debug("Working dir {}", Path().absolute())
     logger.info("Processing {}", source)
     logger.debug("Loading model from {}", source)
+    logger.debug("Input encoding {}", encoding)
     source = Path(source)
     output = get_default_output_directory(source) if output is None else Path(output)
     output.mkdir(parents=True, exist_ok=True)
-    parse_result: ParseResult = from_file(source)
+    parse_result: ParseResult = from_file(source, encoding=encoding)
     model: Universe = parse_result.universe
     named_transformations = list(collect_transformations(model))
     already_processed_universes = set()
@@ -83,7 +84,7 @@ def decompose(output, fill_descriptor_path, source, override):
             fill_descriptor[str(c.name())] = descriptor
             if universe_name not in already_processed_universes:
                 move_universe_attribute_to_comments(universe)
-                save_mcnp(universe, output / fn, override)
+                save_mcnp(universe, output / fn, override, encoding=encoding)
                 logger.debug("The universe {} has been saved to {}", universe_name, fn)
                 already_processed_universes.add(universe_name)
 
