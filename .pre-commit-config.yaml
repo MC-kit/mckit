@@ -21,7 +21,7 @@ repos:
 
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v5.0.0"
+    rev: "v6.0.0"
     hooks:
       - id: check-added-large-files
         exclude: uv.lock
@@ -56,17 +56,17 @@ repos:
 
 
   - repo: https://github.com/fredrikaverpil/creosote
-    rev: v4.0.3
+    rev: v5.2.0
     hooks:
       - id: creosote
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.7.19
+    rev: 0.11.21
     hooks:
       - id: uv-lock 
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.2
+    rev: v0.15.17
     hooks:
       # linter
       - id: ruff-check
@@ -78,7 +78,7 @@ repos:
 
   # Check for common shell mistakes
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: "v0.10.0.1"
+    rev: "v0.11.0.1"
     hooks:
       - id: shellcheck
         args: [ --external-sources ]
@@ -96,7 +96,7 @@ repos:
 
   # Clang format the codebase automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: "v20.1.4"
+    rev: "v22.1.5"
     hooks:
       - id: clang-format
         types_or: [c++, c, cuda]
