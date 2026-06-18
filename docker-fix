@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Mount your current directory (containing the dist/ folder) into the container
+docker run --rm -v $(pwd):/io quay.io/pypa/manylinux_2_28_x86_64 bash -c "
+    # Navigate to the mounted directory
+    cd /io
+    export LD_LIBRARY_PATH=.venv/lib
+    uv build
+    # Repair the wheel: looks in dist/, outputs to wheelhouse/
+    auditwheel repair dist/mckit-*linux_x86_64.whl
+"
