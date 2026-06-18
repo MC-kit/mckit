@@ -771,7 +771,7 @@ class Plane(Surface, _Plane):
         self.__init__(v, k, **options)
 
     def __repr__(self):
-        return f"Plane({self._v}, {self._k}, {self.options if self.options else ''})"
+        return f"Plane({self._v}, {self._k}, {self.options or ''})"
 
     def _get_k(self):
         return round_scalar(self._k, self._k_digits)
@@ -841,7 +841,7 @@ class Sphere(Surface, _Sphere):
         return self._get_radius() == other._get_radius()
 
     def __repr__(self):
-        return f"Sphere({self._center}, {self._radius}, {self.options if self.options else ''})"
+        return f"Sphere({self._center}, {self._radius}, {self.options or ''})"
 
     def is_close_to(
         self,
@@ -984,7 +984,7 @@ class Cylinder(Surface, _Cylinder):
         return instance
 
     def __repr__(self):
-        return f"Cylinder({self._pt}, {self._axis}, {self._radius}, {self.options if self.options else ''})"
+        return f"Cylinder({self._pt}, {self._axis}, {self._radius}, {self.options or ''})"
 
     def __hash__(self):
         result = hash(self._get_radius())
@@ -1198,7 +1198,7 @@ class Cone(Surface, _Cone):
         return instance
 
     def __repr__(self):
-        return f"Cone({self._apex}, {self._axis}, {self._t2}, {self._sheet}, {self.options if self.options else ''})"
+        return f"Cone({self._apex}, {self._axis}, {self._t2}, {self._sheet}, {self.options or ''})"
 
     def __getstate__(self):
         return self._apex, self._axis, self._t2, self._sheet, Surface.__getstate__(self)
@@ -1633,4 +1633,4 @@ class Torus(Surface, _Torus):
 
     def __repr__(self):
         return f"Torus({self._center}, {self._axis}, {self._R}, \
-            {self._a}, {self._b}, {self.options if self.options else ''}"
+            {self._a}, {self._b}, {self.options or ''}"

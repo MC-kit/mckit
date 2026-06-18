@@ -82,7 +82,7 @@ def extract_comments(text) -> tuple[str, dict[int, tuple[str, ...]] | None, list
 
     res_comments = {k: tuple(v) for k, v in comments} if comments else None
 
-    return "\n".join(cleaned_text), res_comments, trailing_comment if trailing_comment else None
+    return "\n".join(cleaned_text), res_comments, trailing_comment or None
 
 
 class ParseError(ValueError):

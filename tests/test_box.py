@@ -6,12 +6,12 @@ import pickle
 import numpy as np
 import pytest
 
-from numpy.testing import assert_array_equal
-
-from mckit.box import Box
 
 # noinspection PyUnresolvedReferences,PyPackageRequirements
 from mckit.geometry import EX, EY, EZ
+from numpy.testing import assert_array_equal
+
+from mckit.box import Box
 
 
 @pytest.fixture(scope="module")
@@ -21,23 +21,27 @@ def box():
 
 @pytest.mark.parametrize(
     "point_no, point",
-    enumerate(
-        [
-            [0.1, 0.1, 0.1],
-            [0.9, 0.9, 0.9],
-            [-0.1, -0.1, 1.1],
-            [0.1, 0.1, 3.2],
-            [[0.1, 0.1, 0.1], [0.9, 0.9, 0.9], [-0.1, -0.1, 1.1], [0.1, 0.1, 3.2]],
-        ]
+    list(
+        enumerate(
+            [
+                [0.1, 0.1, 0.1],
+                [0.9, 0.9, 0.9],
+                [-0.1, -0.1, 1.1],
+                [0.1, 0.1, 3.2],
+                [[0.1, 0.1, 0.1], [0.9, 0.9, 0.9], [-0.1, -0.1, 1.1], [0.1, 0.1, 3.2]],
+            ]
+        )
     ),
 )
 @pytest.mark.parametrize(
     "case_no, answer",
-    enumerate(
-        [
-            {0: True, 1: True, 2: False, 3: False, 4: [True, True, False, False]},
-            {0: False, 1: False, 2: True, 3: False, 4: [False, False, True, False]},
-        ]
+    list(
+        enumerate(
+            [
+                {0: True, 1: True, 2: False, 3: False, 4: [True, True, False, False]},
+                {0: False, 1: False, 2: True, 3: False, 4: [False, False, True, False]},
+            ]
+        )
     ),
 )
 def test_test_point(box, point_no, point, case_no, answer):
@@ -426,29 +430,31 @@ def test_split(box, splits, case_no, split_no, ba1, ba2):
 
 @pytest.mark.parametrize(
     "case_no, expected",
-    enumerate(
-        [
+    list(
+        enumerate(
             [
-                [0.0, 0.0, 0.0],
-                [0.0, 0.0, 3.0],
-                [0.0, 2.0, 0.0],
-                [0.0, 2.0, 3.0],
-                [1.0, 0.0, 0.0],
-                [1.0, 0.0, 3.0],
-                [1.0, 2.0, 0.0],
-                [1.0, 2.0, 3.0],
-            ],
-            [
-                [-1.0, -2.0, 1.0],
-                [-1.0, -2.0, 2.0],
-                [-1.0, 0.0, 1.0],
-                [-1.0, 0.0, 2.0],
-                [2.0, -2.0, 1.0],
-                [2.0, -2.0, 2.0],
-                [2.0, 0.0, 1.0],
-                [2.0, 0.0, 2.0],
-            ],
-        ]
+                [
+                    [0.0, 0.0, 0.0],
+                    [0.0, 0.0, 3.0],
+                    [0.0, 2.0, 0.0],
+                    [0.0, 2.0, 3.0],
+                    [1.0, 0.0, 0.0],
+                    [1.0, 0.0, 3.0],
+                    [1.0, 2.0, 0.0],
+                    [1.0, 2.0, 3.0],
+                ],
+                [
+                    [-1.0, -2.0, 1.0],
+                    [-1.0, -2.0, 2.0],
+                    [-1.0, 0.0, 1.0],
+                    [-1.0, 0.0, 2.0],
+                    [2.0, -2.0, 1.0],
+                    [2.0, -2.0, 2.0],
+                    [2.0, 0.0, 1.0],
+                    [2.0, 0.0, 2.0],
+                ],
+            ]
+        )
     ),
 )
 def test_corners(box, case_no, expected):
@@ -458,14 +464,14 @@ def test_corners(box, case_no, expected):
 
 @pytest.mark.parametrize(
     "case_no, expected",
-    enumerate([[[0.0, 1.0], [0.0, 2.0], [0.0, 3.0]], [[-1.0, 2.0], [-2.0, 0.0], [1.0, 2.0]]]),
+    list(enumerate([[[0.0, 1.0], [0.0, 2.0], [0.0, 3.0]], [[-1.0, 2.0], [-2.0, 0.0], [1.0, 2.0]]])),
 )
 def test_bounds(box, case_no, expected):
     bounds = box[case_no].bounds
     assert np.all(bounds == expected)
 
 
-@pytest.mark.parametrize("case_no, expected", enumerate([6, 6]))
+@pytest.mark.parametrize("case_no, expected", list(enumerate([6, 6])))
 def test_volume(box, case_no, expected):
     vol = box[case_no].volume
     assert vol == expected

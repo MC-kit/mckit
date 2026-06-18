@@ -244,7 +244,7 @@ class TestShape:
         [13, "C", 12, "C", "I"],
     ]
 
-    @pytest.mark.parametrize("case_no, polish", enumerate(polish_cases))
+    @pytest.mark.parametrize("case_no, polish", list(enumerate(polish_cases)))
     def test_from_polish(self, geometry, surfaces, case_no, polish):
         polish = [self.filter_arg(a, surfaces) for a in polish]
         shape = Shape.from_polish_notation(polish)
@@ -252,81 +252,83 @@ class TestShape:
 
     @pytest.mark.parametrize(
         "case_no, expected",
-        enumerate(
-            [
-                (
-                    "I",
-                    [
-                        ("U", [("S", [2]), ("C", [3]), ("C", [1]), ("S", [5])]),
-                        ("S", [4]),
-                    ],
-                ),
-                ("U", [("S", [6]), ("S", [1])]),
-                ("I", [("S", [6]), ("S", [1])]),
-                (
-                    "I",
-                    [
-                        ("U", [("S", [4]), ("S", [10])]),
-                        (
-                            "U",
-                            [
-                                ("S", [7]),
-                                ("S", [10]),
-                                (
-                                    "I",
-                                    [
-                                        ("U", [("S", [3]), ("S", [4])]),
-                                        ("U", [("S", [4]), ("C", [9])]),
-                                        (
-                                            "U",
-                                            [
-                                                ("C", [6]),
-                                                ("C", [1]),
-                                                ("S", [2]),
-                                                ("S", [5]),
-                                                ("C", [3]),
-                                            ],
-                                        ),
-                                    ],
-                                ),
-                            ],
-                        ),
-                    ],
-                ),
-                ("I", [("S", [1]), ("U", [("S", [5]), ("C", [3]), ("S", [2])])]),
-                (
-                    "U",
-                    [
-                        ("S", [2]),
-                        (
-                            "I",
-                            [
-                                ("S", [6]),
-                                ("S", [4]),
-                                ("U", [("C", [3]), ("S", [8]), ("S", [5])]),
-                            ],
-                        ),
-                    ],
-                ),
-                (
-                    "I",
-                    [("U", [("S", [1]), ("S", [5])]), ("U", [("S", [1]), ("C", [5])])],
-                ),
-                (
-                    "U",
-                    [("I", [("C", [1]), ("C", [5])]), ("I", [("C", [1]), ("S", [5])])],
-                ),
-                ("U", [("S", [2]), ("C", [11]), ("S", [12])]),
-                ("U", [("C", [1]), ("S", [6])]),
-                (
-                    "I",
-                    [
-                        ("U", [("S", [2]), ("C", [11])]),
-                        ("U", [("S", [2]), ("C", [12])]),
-                    ],
-                ),
-                ("U", [("S", [13]), ("S", [12])]),
-            ]
+        list(
+            enumerate(
+                [
+                    (
+                        "I",
+                        [
+                            ("U", [("S", [2]), ("C", [3]), ("C", [1]), ("S", [5])]),
+                            ("S", [4]),
+                        ],
+                    ),
+                    ("U", [("S", [6]), ("S", [1])]),
+                    ("I", [("S", [6]), ("S", [1])]),
+                    (
+                        "I",
+                        [
+                            ("U", [("S", [4]), ("S", [10])]),
+                            (
+                                "U",
+                                [
+                                    ("S", [7]),
+                                    ("S", [10]),
+                                    (
+                                        "I",
+                                        [
+                                            ("U", [("S", [3]), ("S", [4])]),
+                                            ("U", [("S", [4]), ("C", [9])]),
+                                            (
+                                                "U",
+                                                [
+                                                    ("C", [6]),
+                                                    ("C", [1]),
+                                                    ("S", [2]),
+                                                    ("S", [5]),
+                                                    ("C", [3]),
+                                                ],
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                    ("I", [("S", [1]), ("U", [("S", [5]), ("C", [3]), ("S", [2])])]),
+                    (
+                        "U",
+                        [
+                            ("S", [2]),
+                            (
+                                "I",
+                                [
+                                    ("S", [6]),
+                                    ("S", [4]),
+                                    ("U", [("C", [3]), ("S", [8]), ("S", [5])]),
+                                ],
+                            ),
+                        ],
+                    ),
+                    (
+                        "I",
+                        [("U", [("S", [1]), ("S", [5])]), ("U", [("S", [1]), ("C", [5])])],
+                    ),
+                    (
+                        "U",
+                        [("I", [("C", [1]), ("C", [5])]), ("I", [("C", [1]), ("S", [5])])],
+                    ),
+                    ("U", [("S", [2]), ("C", [11]), ("S", [12])]),
+                    ("U", [("C", [1]), ("S", [6])]),
+                    (
+                        "I",
+                        [
+                            ("U", [("S", [2]), ("C", [11])]),
+                            ("U", [("S", [2]), ("C", [12])]),
+                        ],
+                    ),
+                    ("U", [("S", [13]), ("S", [12])]),
+                ]
+            )
         ),
     )
     def test_complement(self, geometry, surfaces, case_no, expected):
@@ -1893,7 +1895,7 @@ class TestShape:
         result = geometry[geom_no].test_points(point)
         np.testing.assert_array_equal(result, ans)
 
-    @pytest.mark.parametrize("case_no, expected", enumerate([5, 2, 2, 13, 4, 6, 4, 4, 3, 2]))
+    @pytest.mark.parametrize("case_no, expected", list(enumerate([5, 2, 2, 13, 4, 6, 4, 4, 3, 2])))
     def test_complexity(self, geometry, case_no, expected):
         assert geometry[case_no].complexity() == expected
 
@@ -1904,13 +1906,14 @@ class TestShape:
     ]
 
     @pytest.fixture(scope="class")
-    def box(self):
-        return [Box(*b) for b in self.box_data]
+    @classmethod
+    def box(cls):
+        return [Box(*b) for b in cls.box_data]
 
     @pytest.mark.parametrize("box_no", range(len(box_data)))
     @pytest.mark.parametrize(
         "case_no, expected",
-        enumerate([(0, 0, -1), (-1, -1, 0), (0, -1, 0), (0, 0, -1), (0, 0, 0), (0, 0, 0)]),
+        list(enumerate([(0, 0, -1), (-1, -1, 0), (0, -1, 0), (0, 0, -1), (0, 0, 0), (0, 0, 0)])),
     )
     def test_box(self, geometry, box, box_no: int, case_no: int, expected: tuple[int]):
         result = geometry[case_no].test_box(box[box_no])
@@ -1920,16 +1923,18 @@ class TestShape:
     @pytest.mark.parametrize("tol", [0.2, None])
     @pytest.mark.parametrize(
         "case_no, expected",
-        enumerate(
-            [
-                [[-4, 4], [-2, 2], [-2, 2]],
-                [[3, 5], [-1, 1], [-1, 1]],
-                [[2, 6], [-2, 2], [-2, 2]],
-                [[-4, 4], [-2, 2], [-2, 2]],
-                [[-3, 6], [-2, 2], [-2, 2]],
-                [[-4, 5], [-1, 1], [-1, 1]],
-                [[2, 6], [-2, 2], [-2, 2]],
-            ]
+        list(
+            enumerate(
+                [
+                    [[-4, 4], [-2, 2], [-2, 2]],
+                    [[3, 5], [-1, 1], [-1, 1]],
+                    [[2, 6], [-2, 2], [-2, 2]],
+                    [[-4, 4], [-2, 2], [-2, 2]],
+                    [[-3, 6], [-2, 2], [-2, 2]],
+                    [[-4, 5], [-1, 1], [-1, 1]],
+                    [[2, 6], [-2, 2], [-2, 2]],
+                ]
+            )
         ),
     )
     def test_bounding_box(self, geometry, tol, case_no, expected):
@@ -1952,15 +1957,17 @@ class TestShape:
     @pytest.mark.parametrize("box_no", range(len(box_data)))
     @pytest.mark.parametrize(
         "case_no, expected",
-        enumerate(
-            [
-                [7.4940, 3.6652, 0],
-                [0, 0, 0.1636],
-                [0.35997, 0, 2.3544],
-                [7.4940, 3.6652, 0],
-                [7.8540, 3.1416, 2.3544],
-                [1.9635, 1.30900, 0.1636],
-            ]
+        list(
+            enumerate(
+                [
+                    [7.4940, 3.6652, 0],
+                    [0, 0, 0.1636],
+                    [0.35997, 0, 2.3544],
+                    [7.4940, 3.6652, 0],
+                    [7.8540, 3.1416, 2.3544],
+                    [1.9635, 1.30900, 0.1636],
+                ]
+            )
         ),
     )
     def test_volume(self, geometry, box, box_no: int, case_no: int, expected):
@@ -1969,21 +1976,23 @@ class TestShape:
 
     @pytest.mark.parametrize(
         "case_no, expected",
-        enumerate(
-            [
-                [2, 3, 1, 5, 4],
-                [6, 1],
-                [6, 1],
-                [6, 1, 2, 5, 3, 4, 9, 7, 10],
-                [5, 3, 2, 1],
-                [3, 8, 5, 4, 6, 2],
-                [1, 5],
-                [1, 5],
-                [2, 11, 12],
-                [1, 6],
-                [2, 11, 12],
-                [13, 12],
-            ]
+        list(
+            enumerate(
+                [
+                    [2, 3, 1, 5, 4],
+                    [6, 1],
+                    [6, 1],
+                    [6, 1, 2, 5, 3, 4, 9, 7, 10],
+                    [5, 3, 2, 1],
+                    [3, 8, 5, 4, 6, 2],
+                    [1, 5],
+                    [1, 5],
+                    [2, 11, 12],
+                    [1, 6],
+                    [2, 11, 12],
+                    [13, 12],
+                ]
+            )
         ),
     )
     def test_get_surface(self, geometry, surfaces, case_no, expected):
@@ -1991,7 +2000,7 @@ class TestShape:
         surfs = geometry[case_no].get_surfaces()
         assert surfs == expected
 
-    @pytest.mark.parametrize("case_no, polish", enumerate(polish_cases))
+    @pytest.mark.parametrize("case_no, polish", list(enumerate(polish_cases)))
     def test_pickle(self, surfaces, case_no, polish):
         polish = [self.filter_arg(a, surfaces) for a in polish]
         g = Shape.from_polish_notation(polish)
@@ -2014,21 +2023,23 @@ class TestShape:
 
     @pytest.mark.parametrize(
         "case_no, replace_names",
-        enumerate(
-            [
-                [2, 3, 1, 5, 4],
-                [],
-                [6],
-                [1, 5, 7, 10],
-                [5, 3, 2],
-                [3, 8, 5, 4, 6, 2],
-                [1, 5],
-                [5],
-                [12],
-                [1, 6],
-                [2, 11, 12],
-                [13, 12],
-            ]
+        list(
+            enumerate(
+                [
+                    [2, 3, 1, 5, 4],
+                    [],
+                    [6],
+                    [1, 5, 7, 10],
+                    [5, 3, 2],
+                    [3, 8, 5, 4, 6, 2],
+                    [1, 5],
+                    [5],
+                    [12],
+                    [1, 6],
+                    [2, 11, 12],
+                    [13, 12],
+                ]
+            )
         ),
     )
     def test_replace_surf(self, geometry, case_no, replace_names):
@@ -2064,7 +2075,7 @@ class TestBody:
             assert body.options[k] == v
         assert body.material() == kwargs.get("MAT", None)
 
-    @pytest.mark.parametrize("case_no, polish", enumerate(TestShape.polish_cases))
+    @pytest.mark.parametrize("case_no, polish", list(enumerate(TestShape.polish_cases)))
     def test_create_polish(self, geometry, surfaces, case_no, polish):
         polish = [TestShape.filter_arg(a, surfaces) for a in polish]
         body = Body(polish)

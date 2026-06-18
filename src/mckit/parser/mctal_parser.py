@@ -24,7 +24,7 @@ def read_mctal(filename: str | Path, encoding="utf-8"):
     with filename.open(encoding=encoding) as f:
         text = f.read()
     flags = re.MULTILINE + re.IGNORECASE
-    header, *tally_texts = re.split("tally", text, flags=flags)
+    _header, *tally_texts = re.split("tally", text, flags=flags)
     tallies = {}
     for text in tally_texts:
         tally = parse_tally(text)
@@ -35,7 +35,7 @@ def read_mctal(filename: str | Path, encoding="utf-8"):
 def parse_tally(text):
     """Parses text of tally."""
     tally = {}
-    header_text, bin_text, val_text, tfc_text, comment = split_topics(text)
+    header_text, bin_text, val_text, _tfc_text, comment = split_topics(text)
 
     tally["comment"] = comment.strip()
     tally.update(parse_tally_header(header_text))

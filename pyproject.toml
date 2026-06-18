@@ -85,9 +85,8 @@ test = [
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
     "pytest-mock>=3.14.0",
-    "pytest-durations>=1.5.2",
-    "pytest-emoji>=0.2.0",
     "pytest-benchmark>=5.1.0",
+    "pytest-xdist>=3.8.0",
     { include-group = "coverage" },
     { include-group = "xdoctest" },
 ]
@@ -126,6 +125,7 @@ wrk
 '''
 python_functions = "test_*  profile_*"
 addopts = '''
+-n=logical
 -ra
 -q
 --tb=short
@@ -138,8 +138,6 @@ addopts = '''
 --benchmark-storage=.cache/benchmarks
 --benchmark-autosave
 --benchmark-group-by=name,fullname
---pytest-durations-min=1
---pytest-resultlog="pytest-result.log"
 '''
 doctest_optionflags = "ELLIPSIS NORMALIZE_WHITESPACE IGNORE_EXCEPTION_DETAIL ALLOW_UNICODE ALLOW_BYTES NUMBER"
 testpaths = ["tests", "src"]

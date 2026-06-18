@@ -51,7 +51,7 @@ def decompose(output, fill_descriptor_path, source, override, encoding):
     fill_descriptor = {
         "title": parse_result.title,
         "source": source.name,
-        "comment": model.comment if model.comment else "",
+        "comment": model.comment or "",
         "created": datetime.now(),
     }
     for c in model:
