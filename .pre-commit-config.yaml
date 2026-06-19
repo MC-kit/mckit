@@ -52,7 +52,6 @@ repos:
       - id: pretty-format-json
         args: [--autofix, --no-ensure-ascii, --no-sort-keys]
         exclude: data|\.ipynb$
-      - id: requirements-txt-fixer
 
 
   - repo: https://github.com/fredrikaverpil/creosote
@@ -61,14 +60,13 @@ repos:
       - id: creosote
 
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.11.21
+    rev: 0.11.15
     hooks:
       - id: uv-lock 
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.17
+    rev: v0.15.14
     hooks:
-      # linter
       - id: ruff-check
         exclude: ^notebooks|^extern
       # formatter 

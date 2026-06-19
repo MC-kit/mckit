@@ -106,6 +106,10 @@ docs = [
 docs_auto = ["sphinx-autobuild>=2024.10.3", { include-group = "docs" }]
 ruff = ["ruff>=0.12.3"]
 analyze = ["jupyterlab>=4.2.5", "jupytext>=1.16.4"]
+lint = [
+    "pylint>=4.0.6",
+    "pylint-per-file-ignores>=3.2.1",
+]
 
 [tool.pytest.ini_options]
 minversion = "8.4"
@@ -163,36 +167,33 @@ log_date_format = "%Y-%m-%d %H:%M:%S"
 quiet = true
 options = ""
 
+[tool.coverage]
 [tool.coverage.paths]
-source = ["src", ".nox/*/site-packages"]
-
-[tool.coverage.run]
-branch = true
-source = ["src"]
-omit = ["*_tab.py", "**/__init__.py", "tools/*.py"]
-
+source = [ "src" ]
 [tool.coverage.report]
+exclude_lines = [
+  # Don't complain about missing debug-only code:
+  "def __repr__",
+  "if __name__ == .__main__.:",
+  "if 0:",
+  "if TYPE_CHECKING:",
+  "if self.debug",
+  "pragma: no cover",
+  "raise AssertionError",
+  "raise NotImplementedError",
+]
+fail_under = 90                       # TODO dvp: increase limit to 100 with code maturing
+ignore_errors = true
+omit = [ "**/__init__.py", "**/types.py", "*_tab.py" ]
 show_missing = true
 skip_covered = true
-fail_under = 90                       # TODO dvp: increase limit to 100 with code maturing
-omit = ["*_tab.py", "**/__init__.py"]
-# Regexes for lines to exclude from consideration
-exclude_lines = [
-    # Have to re-enable the standard pragma
-    "pragma: no cover",
-    # Don't complain about missing debug-only code:
-    "def __repr__",
-    "if self.debug",
-    # Don't complain if tests don't hit defensive assertion code:
-    "raise AssertionError",
-    "raise NotImplementedError",
-    # Don't complain if non-runnable code isn't run:
-    "if 0:",
-    "if __name__ == .__main__.:",
-    "if TYPE_CHECKING:",
-]
-ignore_errors = true
 sort = "Cover"
+[tool.coverage.run]
+branch = true
+omit = [ "**/__init__.py", "*_tab.py", "tools/*.py" ]
+parallel = true
+source = [ "src" ]
+
 
 
 # MyPy config
