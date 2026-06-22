@@ -227,4 +227,4 @@ typeguard *args:
 # modules required to debug setup.py
 [group: 'debug-setup']
 @scbld:
-    uvpip install cmake scikit-build mkl-devel numpy ninja
+    uv pip install cmake scikit-build mkl-devel numpy ninja
