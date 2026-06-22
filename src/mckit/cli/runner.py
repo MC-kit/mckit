@@ -14,7 +14,6 @@ import mckit.version as meta
 from mckit.cli._logging import init_logger, logger
 from mckit.cli.commands import do_check, do_compose, do_decompose, do_split, do_transform
 from mckit.cli.commands.common import get_default_output_directory
-from mckit.utils import MCNP_ENCODING
 
 NAME = meta.__title__
 VERSION = meta.__version__
@@ -32,16 +31,23 @@ context = {}
 @click.option("--verbose/--no-verbose", default=False, help="Log everything")
 @click.option("--quiet/--no-quiet", default=False, help="Log only WARNINGS and above")
 @click.option("--logfile", default=None, help="File to log to")
+@click.option(
+    "--input-encoding",
+    default="utf8",
+    help="Input file encoding: utf8 for GEOUNED, cp1251 for SuperMC",
+)
 @click.version_option(VERSION, prog_name=NAME)
 def mckit(verbose: bool, quiet: bool, logfile: str, override: bool) -> None:
     # """MCKIT command line utility."""
     init_logger(logfile, quiet, verbose)
     #
+    # TODO dvp: add customized logger configuring from a configuration toml-file.
     # ensure that ctx.obj exists and is a dict (in case `cli()` is called
     # by means other than the `if` block below
     # obj = ctx.ensure_object(dict)
     # obj["DEBUG"] = debug
     context["OVERRIDE"] = override
+    context["ENCODING"] = input_encoding
 
 
 @mckit.command()
@@ -55,7 +61,7 @@ def mckit(verbose: bool, quiet: bool, logfile: str, override: bool) -> None:
 @click.argument("source", metavar="<source>", type=click.Path(exists=True), nargs=1, required=True)
 def decompose(output, fill_descriptor, source):
     """Separate an MCNP model to envelopes and filling universes."""
-    return do_decompose(output, fill_descriptor, source, context["OVERRIDE"])
+    return do_decompose(output, fill_descriptor, source, context["OVERRIDE"], context["ENCODING"])
 
 
 @mckit.command()
@@ -76,7 +82,7 @@ def compose(output, fill_descriptor, source):
         source=source,
         fill_descriptor=fill_descriptor,
     )
-    return do_compose(output, fill_descriptor, source, context["OVERRIDE"])
+    return do_compose(output, fill_descriptor, source, context["OVERRIDE"], context["ENCODING"])
 
 
 @mckit.command()
@@ -94,12 +100,12 @@ def split(output, source, separators):
     logger.info("Running mckit split")
     logger.debug("Working dir {}", Path().absolute())
     logger.info('Splitting "{source}" to directory "{output}"', source=source, output=output)
-    return do_split(output, source, context["OVERRIDE"], separators)
+    return do_split(output, source, context["OVERRIDE"], separators, context["ENCODING"])
 
 
 # noinspection PyCompatibility
 @contextmanager
-def resolve_output(output, exist_ok=False, encoding=MCNP_ENCODING):
+def resolve_output(output, exist_ok=False, encoding="utf8"):
     if output:
         output = Path(output)
         if exist_ok or not output.exists():
@@ -132,8 +138,8 @@ def resolve_output(output, exist_ok=False, encoding=MCNP_ENCODING):
     metavar="<output>",
     type=click.Path(exists=False),
     required=False,
-    default=MCNP_ENCODING,
-    help=f"Encoding to read parts (default:{MCNP_ENCODING})",
+    default="utf8",
+    help="Encoding to read parts (default: utf8)",
 )
 @click.option(
     "--output-encoding",
@@ -152,6 +158,8 @@ def concat(output, parts_encoding, output_encoding, parts):
     override = context["OVERRIDE"]
     with resolve_output(output, exist_ok=override, encoding=output_encoding) as out_fid:
         for f in map(Path, parts):
+            # TODO dvp: Add filtering of a part's text here. Implement as external scripts call.
+            #           Should be configurable
             print(f.read_text(encoding=parts_encoding), file=out_fid, end="")
 
 

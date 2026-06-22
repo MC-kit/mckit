@@ -27,6 +27,11 @@ export JUST_LOG := log
 @_default:
     just --list
 
+# show version
+[group('dev')]
+@version:
+    uv version
+
 # git push bypassing pixi-provided openssl libraries
 [group('dev')]
 @gp:
@@ -176,45 +181,45 @@ typeguard *args:
     @uv run --no-dev --group test --group typeguard pytest --typeguard-packages=src {{ args }}
 
 # ruff check and format
-[group('lint')]
+[group('style')]
 @ruff:
     ruff check --fix src tests
     ruff format src tests
 
 # Run pre-commit on all files
-[group('lint')]
+[group('style')]
 @pre-commit:
-    uv run --no-dev --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files
+    pre-commit run --show-diff-on-failure --color=always --all-files
 
 # Run mypy
-[group('lint')]
+[group('style')]
 @mypy:
-    uv run --no-dev --group mypy mypy src tests docs/source/conf.py
+    mypy src tests docs/source/conf.py
 
-[group('lint')]
+[group('style')]
 @pylint:
-    uv run --no-dev --group lint pylint --recursive=y --output-format colorized src tests
+    pylint --recursive=y --output-format colorized src tests
 
-[group('lint')]
+[group('style')]
 @pyright:
-    uv run --no-dev --group pyright pyright src tests
+    pyright src tests
 
 # Lint with ty
-[group('lint')]
+[group('style')]
 @ty:
-    uvx ty check 
+    ty check 
 
 # Check rst-texts
 [group('docs')]
 @rstcheck:
-    uv run --no-dev --group docs rstcheck --recursive *.rst docs
+    rstcheck --recursive *.rst docs
 
 # build documentation
 [group('docs')]
-@docs-build: rstcheck
-    uv run --no-dev --group docs sphinx-build docs/source docs/_build
+@docs-build: # rstcheck
+    sphinx-build docs/source docs/_build
 
 # browse and edit documentation with auto build
 [group('docs')]
 @docs:
-    uv run --no-dev --group docs --group docs sphinx-autobuild --open-browser docs/source docs/_build
+    sphinx-autobuild --open-browser docs/source docs/_build

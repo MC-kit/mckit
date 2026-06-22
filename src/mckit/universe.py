@@ -20,7 +20,6 @@ import numpy as np
 
 from click import progressbar
 
-from mckit.constants import MCNP_ENCODING
 from mckit.utils import filter_dict
 
 from .body import Body, Shape
@@ -677,7 +676,7 @@ class Universe:
     def save(
         self,
         filename: str | Path,
-        encoding: str = MCNP_ENCODING,
+        encoding: str = "utf8",
         check_clashes: bool = True,
     ):
         """Saves the universe into file."""

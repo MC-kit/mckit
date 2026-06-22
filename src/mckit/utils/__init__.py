@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from mckit.utils._io import (
-    MCNP_ENCODING,
     check_if_all_paths_exist,
     check_if_path_exists,
     make_dir,
@@ -33,7 +32,6 @@ from mckit.utils.tolerance import FLOAT_TOLERANCE
 __all__ = [
     "FLOAT_TOLERANCE",
     "MAX_DIGITS",
-    "MCNP_ENCODING",
     "TVisitor",
     "accept",
     "are_equal",

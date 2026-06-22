@@ -3,12 +3,6 @@ from __future__ import annotations
 from collections.abc import Generator
 from pathlib import Path
 
-MCNP_ENCODING = "Cp1251"
-"""The encoding used in SuperMC when creating MCNP models code.
-
-Some symbols are not Unicode.
-"""
-
 
 def make_dir(d: Path) -> Path:
     """Create directory."""

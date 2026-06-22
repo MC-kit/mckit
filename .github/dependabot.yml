@@ -1,55 +1,55 @@
+---
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
 version: 2
 
 updates:
+- package-ecosystem: github-actions
+  directory: /  # Location of package manifests
+  schedule:
+    interval: monthly
+  labels:
+    - "ci"
+    - "github_actions"
+    - "bot"
+  groups:   # open a single pull-request for all GitHub actions updates
+    github-actions:
+      patterns:
+      - '*'
+  open-pull-requests-limit: 10
+  target-branch: devel
+  cooldown:
+    default-days: 7
 
-  - package-ecosystem: pip
-    directory: "/"
-    schedule:
-      interval: monthly
-    labels:
-      - "dependencies"
-      - "bot"
-    open-pull-requests-limit: 10
-    target-branch: devel
+- package-ecosystem: uv
+  directory: /  # Location of package manifests
+  schedule:
+    interval: monthly
+  labels:
+    - "ci"
+    - "dependencies"
+    - "bot"
+  groups:
+    python-dependencies:
+      patterns:
+      - '*'
+  open-pull-requests-limit: 10
+  target-branch: devel
+  cooldown:
+    default-days: 7
 
-  - package-ecosystem: "github-actions"
-    # Workflow files stored in the default location of `.github/workflows`
-    directory: "/"
-    schedule:
-      interval: weekly
-      day: sunday
-    labels:
-      - "ci"
-      - "github_actions"
-      - "dependencies"
-      - "bot"
-    groups:
-      # open a single pull-request for all GitHub actions updates
-      github-actions:
-        patterns:
-        - '*'
-    open-pull-requests-limit: 10
-    target-branch: devel
-    cooldown:
-      default-days: 7
+- package-ecosystem: "gitsubmodule"
+  directory: "/"
+  schedule:
+    interval: monthly
+  labels:
+    - "kind/dependencies"
+    - "bot"
+  open-pull-requests-limit: 10
+  target-branch: devel
+  cooldown:
+    default-days: 7
 
-  - package-ecosystem: "gitsubmodule"
-    directory: "/"
-    schedule:
-      interval: monthly
-    labels:
-      - "dependencies"
-      - "bot"
-    open-pull-requests-limit: 10
-    target-branch: devel
-
-  - package-ecosystem: "uv"
-    directory: "/"
-    schedule:
-      interval: weekly
-      day: thursday
-    labels:
-      - "dependencies"
-      - "bot"
-    open-pull-requests-limit: 10
-    target-branch: devel

@@ -114,5 +114,3 @@ _skbuild
 
 # Visual studio
 .vs
-# pixi environments
-.pixi

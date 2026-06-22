@@ -22,10 +22,10 @@ jobs:
       matrix:
         # ubuntu-20.04 is required to build wheels for older OS (clusters...)
         os: [ubuntu-20.04, ubuntu-latest, windows-latest]
-        python-version: ['3.11', '3.12', '3.13']
+        python-version: ['3.11', '3.12', '3.13', '3.14']
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 1
           submodules: 'true'

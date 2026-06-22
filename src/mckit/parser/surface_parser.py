@@ -165,7 +165,7 @@ def parse(text: str, transformations: Index | None = None) -> Surface:
     else:
         assert isinstance(transformations, Index)
     text = drop_c_comments(text)
-    text, _, trailing_comments = extract_comments(text)
+    text, _comments, trailing_comments = extract_comments(text)
     lexer = Lexer()
     parser = Parser(transformations)
     result = parser.parse(lexer.tokenize(text))

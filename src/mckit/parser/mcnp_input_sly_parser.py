@@ -10,7 +10,6 @@ from itertools import repeat
 from pathlib import Path
 
 from mckit.card import Card
-from mckit.constants import MCNP_ENCODING
 from mckit.parser.cell_parser import Body
 from mckit.parser.cell_parser import parse as parse_cell
 from mckit.parser.common import (
@@ -52,10 +51,10 @@ class ParseResult:
         return self.sections.title
 
 
-def from_file(path: str | Path) -> ParseResult:
+def from_file(path: str | Path, encoding="utf8") -> ParseResult:
     if isinstance(path, str):
         path = Path(path)
-    with path.open("r", encoding=MCNP_ENCODING) as fid:
+    with path.open("r", encoding=encoding) as fid:
         return from_stream(fid)
 
 

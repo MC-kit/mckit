@@ -5,11 +5,12 @@ include(CMakePrintHelpers)
 # to make CMake happy, if not running under skbuild
 if(NOT DEFINED SKBUILD_PROJECT_NAME)
   set(SKBUILD_PROJECT_NAME mckit)
-  set(SKBUILD_PROJECT_VERSION 0.8.6) # TODO: add this version update to just
+  set(SKBUILD_PROJECT_VERSION 0.8.9) # TODO: add this version update to just
                                      # bump action
 endif()
 
-cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION SKBUIL_STATE)
+cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION,
+                      SKBUIL_STATE)
 project(
   ${SKBUILD_PROJECT_NAME}
   VERSION ${SKBUILD_PROJECT_VERSION}
@@ -46,8 +47,8 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     )
   endif()
 
-  # find_package(Git QUIET)
-  #
+  find_package(Git QUIET)
+
   # if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git") execute_process(
   # COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
   # WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} RESULT_VARIABLE

@@ -24,7 +24,7 @@ from mckit.utils import filter_dict
 from .common import save_mcnp
 
 
-def compose(output, fill_descriptor_path, source, override):
+def compose(output, fill_descriptor_path, source, override, encoding: str = "utf8"):
     logger.info("Loading model from {s}", s=source)
     parse_result: ParseResult = from_file(source)
     envelopes = parse_result.universe
@@ -35,7 +35,7 @@ def compose(output, fill_descriptor_path, source, override):
     with fill_descriptor_path.open("rb") as fid:
         fill_descriptor = tomllib.load(fid)
 
-    universes = load_universes(fill_descriptor, universes_dir)
+    universes = load_universes(fill_descriptor, universes_dir, encoding=encoding)
     named_transformations = load_named_transformations(fill_descriptor)
 
     comps = {}
@@ -83,11 +83,11 @@ def compose(output, fill_descriptor_path, source, override):
                 raise NotImplementedError(
                     f"Unexpected type of transformation parameter {type(transformation)}"
                 )
-    save_mcnp(envelopes, output, override)
+    save_mcnp(envelopes, output, override, encoding=encoding)
 
 
 def load_universes(
-    fill_descriptor, universes_dir
+    fill_descriptor, universes_dir, encoding: str
 ) -> dict[int, tuple[mk.Universe, int | list[float]]]:
     filler_path_map: dict[int, tuple[Path, mk.Universe]] = {}
     cell_filler_map: dict[int, tuple[mk.Universe, int | list[float]]] = {}
@@ -116,7 +116,7 @@ def load_universes(
                 if not load_path.exists():
                     raise FileNotFoundError(universe_path)
                 logger.info("Loading file {u}", u=load_path)
-                parse_result: ParseResult = from_file(load_path)
+                parse_result: ParseResult = from_file(load_path, encoding=encoding)
                 universe = parse_result.universe
                 universe.rename(name=universe_name)
                 filler_path_map[universe_name] = (universe_path, universe)
