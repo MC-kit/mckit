@@ -38,16 +38,6 @@ Issues = "https://github.com/MC-kit/mckit/issues"
 Repository = "https://github.com/MC-kit/mckit"
 
 [dependency-groups]
-# dev = [ { include-group = "style" }, { include-group = "test" } ]
-# test = [
-#   "pytest>=9",
-#   "pytest-benchmark>=5.2",
-#   "pytest-cov>=7.1",
-#   "pytest-durations>=1.6",
-#   "pytest-mock>=3.15",
-#   "pytest-xdist>=3.8.0,<4",
-#   "xdoctest>=1.3", "psutil>=7.2.2,<8",
-# ]
 docs = [
   "esbonio>=2",
   "rstcheck[sphinx,toml]>=6.2.5",
@@ -58,19 +48,6 @@ docs = [
 ]
 analyze = [ "jupyterlab>=4.5", "jupytext>=1.19" ]
 
-# lint = [ "pylint", "pylint-per-file-ignores" ]
-# mypy = [ "mypy>=1.2", "pep8-naming>=0.12.1", "types-setuptools>=80.9.0.20250529" ]
-# pre_commit = [ "pre-commit>=4.3" ]
-# pypi = [ "mkl-devel", "numpy", "repairwheel>=0.3", "scikit-build-core" ]
-# pyright = [ "pyright>=1.1.406" ]
-# ruff = [ "ruff>=0.0.259" ]
-# style = [
-#   { include-group = "lint" },
-#   { include-group = "mypy" },
-#   { include-group = "pre_commit" },
-#   { include-group = "pyright" },
-#   { include-group = "ruff" },
-# ]
 # pixi example: https://github.com/prefix-dev/pixi/blob/main/examples/pybind11/pyproject.toml
 [tool.scikit-build]
 build-dir = "build/{wheel_tag}"
@@ -125,13 +102,11 @@ tasks.pyright = "pyright src tests"
 tasks.ruff = { cmd = [ "&&", "ruff check --fix src tests", "ruff format src tests" ] }
 [tool.pixi.feature.style.dependencies]
 pylint = ">=4.0.6,<5"
-mypy = ">=1.2"
-# pep8-naming = ">=0.12.1"
-# types-setuptools = ">=80.9.0.20250529"
+mypy = ">=2.1.0"
 pre_commit = ">=4.3"
 pyright = ">=1.1.406"
-ruff = ">=0.0.259"
-ty = ">=0.0.49,<0.0.50"
+ruff = ">=0.15"
+ty = ">=0.0.54"
 [tool.pixi.feature.test.dependencies]
 pytest = ">=9.0.3,<10"
 pytest-cov = ">=7.1.0,<8"
@@ -146,9 +121,9 @@ test = "pytest"
 [tool.pixi.feature.typeguard]
 tasks.typeguard = "pytest --typeguard-packages=src"
 [tool.pixi.feature.typeguard.dependencies]
-typeguard = ">=4.5.2,<5"
+typeguard = ">=4.5"
 [tool.pixi.package]
-host-dependencies.mkl-devel = "*"
+host-depen2.1.0.0.0cies.mkl-devel = "*"
 host-dependencies.nlopt = "*"
 host-dependencies.numpy = "*"
 host-dependencies.scikit-build-core = ">=0.12"
@@ -176,7 +151,7 @@ no-build-isolation = [ "mckit" ]
 channels = [ "conda-forge" ]
 platforms = [ "linux-64", "win-64" ]
 # channels = ["https://prefix.dev/conda-forge"] - 2026-05-06 - timeout
-conda-pypi-map = {}  # fix: pixi failed to load conda-pypi map - timeout
+conda-pypi-map = false  # fix: pixi failed to load conda-pypi map - timeout
 requires-pixi = ">=0.70.2"
 preview = [ "pixi-build" ]
 
@@ -186,7 +161,7 @@ mckit = [ "scikit_build_core" ]
 [tool.mypy]
 cache_dir = ".cache/mypy"
 files = "src/**/*.py"
-python_version = "3.13"
+python_version = "3.14"
 # strict = true     # TODO dvp: uncomment this to get strict control
 follow_imports = "silent"
 # namespace_packages = true
@@ -245,16 +220,12 @@ module = [ "tomllib" ]
 source = [ "src" ]
 [tool.coverage.report]
 exclude_lines = [
-  # Don't complain about missing debug-only code:
   "def __repr__",
   "if __name__ == .__main__.:",
-  # Don't complain if non-runnable code isn't run:
   "if 0:",
   "if TYPE_CHECKING:",
   "if self.debug",
-  # Have to re-enable the standard pragma
   "pragma: no cover",
-  # Don't complain if tests don't hit defensive assertion code:
   "raise AssertionError",
   "raise NotImplementedError",
 ]
