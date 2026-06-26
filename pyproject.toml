@@ -4,7 +4,7 @@ requires = [ "numpy", "scikit-build-core>=0.12" ]
 
 [project]
 name = "mckit"
-version = "0.8.9"
+version = "0.9.0"
 description = "Tools to process MCNP models and results"
 readme = "README.rst"
 keywords = [ "mckit", "MCNP" ]
@@ -123,12 +123,12 @@ tasks.typeguard = "pytest --typeguard-packages=src"
 [tool.pixi.feature.typeguard.dependencies]
 typeguard = ">=4.5"
 [tool.pixi.package]
-host-depen2.1.0.0.0cies.mkl-devel = "*"
+host-dependencies.mkl-devel = "*"
 host-dependencies.nlopt = "*"
 host-dependencies.numpy = "*"
 host-dependencies.scikit-build-core = ">=0.12"
 name = "mckit"
-version = "0.8.6"
+version = "0.9.0"
 [tool.pixi.package.build-dependencies]
 scikit-build-core = ">=0.12.1"
 [tool.pixi.package.build.backend]
@@ -182,35 +182,35 @@ warn_return_any = true
 warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
-[[tool.mypy.overrides]]
-ignore_missing_imports = true
-module = [
-  "IPython.core.magic",
-  "IPython.core.magic_arguments",
-  "click",
-  "click.testing",
-  "cyclopts",
-  "dask.*",
-  "duckdb",
-  "eliot",
-  "eliot.*",
-  "loguru",
-  "mckit.*",                      # TODO (dvp, style): make everything typed including extension 'geometry',
-  "msgspec",
-  "multipledispatch",
-  "nox",
-  "numpy",
-  "numpy.testing",
-  "pandas",
-  "polars",
-  "pytest",
-  "rich.*",
-  "scipy.constants",
-  "scipy.sparse",
-  "tomli",
-  "tomllib",
-  "xdoctest",
-]
+# [[tool.mypy.overrides]]
+# ignore_missing_imports = true
+# module = [
+#   "IPython.core.magic",
+#   "IPython.core.magic_arguments",
+#   "click",
+#   "click.testing",
+#   "cyclopts",
+#   "dask.*",
+#   "duckdb",
+#   "eliot",
+#   "eliot.*",
+#   "loguru",
+#   "mckit.*",                      # TODO (dvp, style): make everything typed including extension 'geometry',
+#   "msgspec",
+#   "multipledispatch",
+#   "nox",
+#   "numpy",
+#   "numpy.testing",
+#   "pandas",
+#   "polars",
+#   "pytest",
+#   "rich.*",
+#   "scipy.constants",
+#   "scipy.sparse",
+#   "tomli",
+#   "tomllib",
+#   "xdoctest",
+# ]
 [[tool.mypy.overrides]]
 allow_redefinition = true
 disable_error_code = "no-redef"

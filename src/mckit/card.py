@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Iterable, cast
 
 from abc import ABC, abstractmethod
 from functools import reduce
@@ -91,3 +91,8 @@ class Card(ABC):
 
     def __eq__(self, other) -> bool:
         return self is other or self.options == other.options
+
+
+def map_names(cards: Iterable[Card]) -> Iterable[int]:
+    """Iterate over card names(numbers)."""
+    return (c.name() for c in cards)
