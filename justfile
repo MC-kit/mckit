@@ -55,7 +55,7 @@ export JUST_LOG := log
 # build conda package
 [group('dev')]
 @build:
-    pixi publish --target-dir .output
+    pixi publish --target-channel file://$(pwd)/.output
 
 # clean reproducible files
 [group('dev')]
@@ -66,16 +66,22 @@ export JUST_LOG := log
         ".cache"
         ".eggs"
         ".mypy_cache"
+        ".pixi"
         ".pytest_cache"
         ".ruff_cache"
         ".venv"
-        "__pycache__"
         "_build"
         "build"
         "cmake-build-debug"
         "dist"
         "docs/_build"
         "htmlcov"
+    )
+    for d in "${dirs_to_clean[@]}"; do
+       [ -d "$d" ] && echo "removing $d" && rm -fr "$d" 
+    done
+    dirs_to_clean=(
+        "__pycache__"
     )
     for d in "${dirs_to_clean[@]}"; do
         find . -type d -wholename "$d" -exec rm -rf {} +
@@ -85,12 +91,11 @@ export JUST_LOG := log
         "*.so.*"
         "*.dll"
         "*.dylib"
-        "setup.py"
     )
     for f in "${files_to_clean[@]}"; do
         find src/mckit -type f -name "$f" -exec rm -f {} +
     done
-    pixi clean
+    # pixi clean
 
 # install package
 [group('dev')]

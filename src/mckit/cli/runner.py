@@ -37,7 +37,7 @@ context = {}
     help="Input file encoding: utf8 for GEOUNED, cp1251 for SuperMC",
 )
 @click.version_option(VERSION, prog_name=NAME)
-def mckit(verbose: bool, quiet: bool, logfile: str, override: bool) -> None:
+def mckit(verbose: bool, quiet: bool, logfile: str, override: bool, input_encoding: str) -> None:
     # """MCKIT command line utility."""
     init_logger(logfile, quiet, verbose)
     #
@@ -146,8 +146,8 @@ def resolve_output(output, exist_ok=False, encoding="utf8"):
     metavar="<output>",
     type=click.Path(exists=False),
     required=False,
-    default=MCNP_ENCODING,
-    help=f"Encoding to write output (default:{MCNP_ENCODING})",
+    default="utf8",
+    help="Encoding to write output (default:utf8)",
 )
 @click.argument("parts", metavar="<part...>", type=click.Path(exists=True), nargs=-1, required=True)
 def concat(output, parts_encoding, output_encoding, parts):
