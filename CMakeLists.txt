@@ -107,6 +107,25 @@ find_package(NLopt REQUIRED)
 
 set(geometry_dir ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src/)
 
+# Fix MKL packaging bug: the issue is that libmkl_intel_thread.so lacks a
+# DT_NEEDED entry for libatomic.so.1.
+find_program(PATCHELF_EXECUTABLE patchelf)
+if(PATCHELF_EXECUTABLE)
+  set(MKL_LIB_PATH
+      "${CMAKE_SOURCE_DIR}/.pixi/envs/default/lib/libmkl_intel_thread.so.3")
+  execute_process(COMMAND ${PATCHELF_EXECUTABLE} --add-needed libatomic.so.1
+                          ${MKL_LIB_PATH} RESULT_VARIABLE PATCH_RESULT)
+  if(NOT PATCH_RESULT EQUAL 0)
+    message(WARNING "Failed to patch MKL library, but continuing...")
+  else()
+    message(STATUS "MKL library is patched...")
+  endif()
+else()
+  message(
+    WARNING
+      "patchelf not found. MKL atomic fix will not be applied automatically.")
+endif()
+
 set(geometry_sources
     ${geometry_dir}box.c ${geometry_dir}geometrymodule.c
     ${geometry_dir}rbtree.c ${geometry_dir}shape.c ${geometry_dir}surface.c)

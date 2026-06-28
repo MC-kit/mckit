@@ -11,7 +11,7 @@ import click
 
 import mckit.version as meta
 
-from mckit.cli._logging import init_logger, logger
+from mckit.cli import init_logger, logger
 from mckit.cli.commands import do_check, do_compose, do_decompose, do_split, do_transform
 from mckit.cli.commands.common import get_default_output_directory
 
@@ -26,7 +26,7 @@ context = {}
 # pylint: disable=missing-function-docstring
 
 
-@click.group(help=meta.__summary__)
+@click.group(help="MCKit CLI interface")
 @click.option("--override/--no-override", default=False)
 @click.option("--verbose/--no-verbose", default=False, help="Log everything")
 @click.option("--quiet/--no-quiet", default=False, help="Log only WARNINGS and above")

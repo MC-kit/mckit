@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterable, cast
+from typing import Any, override
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from functools import reduce
 from operator import xor
 
@@ -17,9 +18,10 @@ from .utils import make_hashable
 class Card(ABC):
     """Features, common for all cards."""
 
-    def __init__(self, **options):
+    def __init__(self, **options: Any) -> None:
         self.options: dict[str, Any] = options
 
+    @override
     def __str__(self):
         # TODO dvp: option `name` is printed twice,
         #           (second time as option)
@@ -39,7 +41,7 @@ class Card(ABC):
     @property
     def original(self) -> str | None:
         """Original text from an MCNP model."""
-        return cast(str | None, self.options.get("original", None))
+        return self.options.get("original")
 
     @property
     def has_comment_above(self) -> bool:
@@ -49,7 +51,7 @@ class Card(ABC):
     @property
     def comment_above(self) -> str | None:
         """Comment located above this card in an MCNP model."""
-        return cast(str | None, self.options.get("comment_above", None))
+        return self.options.get("comment_above")
 
     def name(
         self,
@@ -86,13 +88,25 @@ class Card(ABC):
         """Add a comment to this card."""
         self.options.setdefault("comment", []).extend(comment)
 
+    @override
     def __hash__(self) -> int:
         return reduce(xor, (hash(k) ^ hash(make_hashable(v)) for k, v in self.options.items()), 0)
 
-    def __eq__(self, other) -> bool:
-        return self is other or self.options == other.options
+    @override
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Card) and (self is other or self.options == other.options)
+
+
+def check_name_is_int(name: int | None) -> int:
+    """Check if a card  name is an integer."""
+    if name is None:
+        raise ValueError("name cannot be None")
+    return name
 
 
 def map_names(cards: Iterable[Card]) -> Iterable[int]:
     """Iterate over card names(numbers)."""
-    return (c.name() for c in cards)
+    return (check_name_is_int(c.name()) for c in cards)
+
+
+__all__ = ["Card", "check_name_is_int", "map_names"]

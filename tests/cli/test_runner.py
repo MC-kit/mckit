@@ -4,8 +4,8 @@ from io import StringIO
 
 import pytest
 
-from mckit.cli._logging import logger
-from mckit.cli.runner import VERSION, mckit, meta
+from mckit.cli import logger
+from mckit.cli.runner import VERSION, mckit
 
 
 def test_version_command(runner):
@@ -18,7 +18,6 @@ def test_help_command(runner):
     result = runner.invoke(mckit, args=["--help"], catch_exceptions=False)
     assert result.exit_code == 0, result.output
     assert "Usage: " in result.output
-    assert meta.__summary__ in result.output
 
 
 def test_fails_on_unknown_command(runner):

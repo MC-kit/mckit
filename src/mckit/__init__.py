@@ -12,10 +12,7 @@ from mckit.surface import Cone, Cylinder, GQuadratic, Plane, Sphere, Torus, crea
 from mckit.transformation import Transformation
 from mckit.universe import Universe
 from mckit.version import (
-    __author__,
     __copyright__,
-    __license__,
-    __summary__,
     __title__,
     __version__,
 )
@@ -39,12 +36,8 @@ __all__: list[str] = [
     "Torus",
     "Transformation",
     "Universe",
-    "__author__",
     "__copyright__",
-    "__license__",
-    "__summary__",
     "__title__",
-    "__version__",
     "__version__",
     "create_surface",
     "from_file",
