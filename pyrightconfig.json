@@ -1,0 +1,21 @@
+{
+  "venvPath": ".pixi/envs",
+  "venv": "default",
+  "typeCheckingMode": "basic",
+
+  "include": [
+    "src"
+  ],
+
+  "exclude": [
+    "**/data",
+  ],
+
+
+  "reportMissingImports": "error",
+  "reportMissingTypeStubs": false,
+
+  "pythonVersion": "3.14",
+  "pythonPlatform": "Linux"
+
+}

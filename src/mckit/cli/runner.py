@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import sys
 
 from contextlib import contextmanager
@@ -21,7 +23,7 @@ LOG_FILE_RETENTION = 3
 NO_LEVEL_BELOW = 30
 
 
-context = {}
+context: dict[str, Any] = {}
 
 # pylint: disable=missing-function-docstring
 
@@ -34,7 +36,7 @@ context = {}
 @click.option(
     "--input-encoding",
     default="utf8",
-    help="Input file encoding: utf8 for GEOUNED, cp1251 for SuperMC",
+    help="Input file encoding: utf8 for geouned, cp1251 for SuperMC",
 )
 @click.version_option(VERSION, prog_name=NAME)
 def mckit(verbose: bool, quiet: bool, logfile: str, override: bool, input_encoding: str) -> None:

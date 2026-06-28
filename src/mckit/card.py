@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any, override
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
 from functools import reduce
 from operator import xor
 
@@ -15,6 +14,7 @@ from .printer import print_card
 from .utils import make_hashable
 
 
+# noinspection PyPropertyDefinition
 class Card(ABC):
     """Features, common for all cards."""
 
@@ -61,7 +61,7 @@ class Card(ABC):
         """Returns card's name."""
         return self.options.get("name", None)
 
-    def rename(self, new_name) -> Card:
+    def rename(self, new_name: Name) -> Card:
         """Renames the card."""
         self.options["name"] = new_name
         self.drop_original()
@@ -96,17 +96,4 @@ class Card(ABC):
     def __eq__(self, other: object) -> bool:
         return isinstance(other, Card) and (self is other or self.options == other.options)
 
-
-def check_name_is_int(name: int | None) -> int:
-    """Check if a card  name is an integer."""
-    if name is None:
-        raise ValueError("name cannot be None")
-    return name
-
-
-def map_names(cards: Iterable[Card]) -> Iterable[int]:
-    """Iterate over card names(numbers)."""
-    return (check_name_is_int(c.name()) for c in cards)
-
-
-__all__ = ["Card", "check_name_is_int", "map_names"]
+__all__ = ["Card"]

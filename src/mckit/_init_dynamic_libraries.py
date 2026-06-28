@@ -84,7 +84,10 @@ def _preload_library(lib_name: str, max_version: int = MAX_SO_VERSION) -> None:
 def _init():
     if WIN:
         for _dir in SHARED_LIBRARY_DIRECTORIES:
-            os.add_dll_directory(str(_dir))
+            # pyrefly: ignore [missing-attribute]
+            os.add_dll_directory(str(_dir))  # pyright: ignore[reportAttributeAccessIssue]
+    else:
+        _preload_library("atomic")  # to fix MKL packaging bug
     _preload_library("mkl_rt")
     _preload_library(
         "nlopt"
