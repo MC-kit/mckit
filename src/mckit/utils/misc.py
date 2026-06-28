@@ -70,7 +70,7 @@ def get_decades(value: float) -> int:
     -------
         Number of decades.
     """
-    decimal_power = np.log10(abs(float(value))) if value != 0 else 0
+    decimal_power = np.log10(abs(value)) if value != 0 else 0
     decades = np.trunc(decimal_power)
     if decimal_power < 0:
         decades -= 1
@@ -157,7 +157,7 @@ def is_in(where, x) -> bool:
 
 @is_in.register
 def _(where: str, x) -> bool:
-    return x is where or x == where
+    return x is where or x == where or x in where
 
 
 @is_in.register
@@ -199,22 +199,26 @@ def make_hashable(x):
     raise TypeError(f"Don't know how to make {type(x).__name__} objects hashable")
 
 
-@make_hashable.register
+# pyrefly: ignore [no-matching-overload]
+@make_hashable.register  # pyright: ignore[reportCallIssue, reportArgumentType]
 def _(x: collections.abc.Hashable):
     return x
 
 
-@make_hashable.register
+# pyrefly: ignore [no-matching-overload]
+@make_hashable.register  # pyright: ignore[reportCallIssue, reportArgumentType]
 def _(x: str):
     return x
 
 
-@make_hashable.register
+# pyrefly: ignore [no-matching-overload]
+@make_hashable.register  # pyright: ignore[reportCallIssue, reportArgumentType]
 def _(x: collections.abc.Mapping) -> tuple:
     return tuple((k, make_hashable(v)) for k, v in x.items())
 
 
-@make_hashable.register
+# pyrefly: ignore [no-matching-overload]
+@make_hashable.register  # pyright: ignore[reportCallIssue, reportArgumentType]
 def _(x: collections.abc.Iterable) -> tuple:
     return tuple(map(make_hashable, x))
 
@@ -225,8 +229,11 @@ def compute_hash(*items) -> int:
     Note:
         Take care on the objects values are stable, while the hashes are in use.
     """
-    if len(items) > 1:
+    _len = len(items)
+    if _len > 1:
         return compute_hash(tuple(map(compute_hash, items)))
+    if _len == 0:
+        return 0
     return hash(make_hashable(items[0]))
 
 

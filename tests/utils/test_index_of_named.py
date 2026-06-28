@@ -4,8 +4,6 @@ from typing import NamedTuple
 
 import pytest
 
-import mckit.utils.named as nm
-
 from mckit.utils.indexes import (
     IndexOfNamed,
     NumberedItemDuplicateError,
@@ -13,6 +11,7 @@ from mckit.utils.indexes import (
     ignore_equal_objects_strategy,
     raise_on_duplicate_strategy,
 )
+from mckit.utils.named import Name
 
 
 class Something(NamedTuple):
@@ -61,7 +60,7 @@ def test_equal_duplicates(entities, expected):
 
 
 class Something2(NamedTuple):
-    name: nm.Name
+    name: Name | int
     value: int
 
 
@@ -81,7 +80,7 @@ def test_clashes_on_non_equal_items(entities):
 @pytest.mark.parametrize(
     "entities, expected, expected_collected",
     [
-        ([Something2(1, 1), Something2(1, 2)], {1: Something2(1, 2)}, {1: 2}),
+        ([Something2(1, 1), Something2(1, 2)], {1: Something2(Name(1), 2)}, {1: 2}),
         (
             [Something2(1, 1), Something2(1, 2), Something2(2, 3)],
             {1: Something2(1, 2), 2: Something2(2, 3)},

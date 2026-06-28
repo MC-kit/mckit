@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import NewType, Protocol, cast
+from typing import Any, NewType, Protocol, cast
 
 from collections.abc import Iterable
 
@@ -36,6 +36,6 @@ def check_name_is_int(name: int | None) -> int:
     return name
 
 
-def map_names(cards: Iterable[HasName]) -> Iterable[int]:
+def map_names(cards: Iterable[Any]) -> Iterable[int]:
     """Iterate over card names(numbers)."""
     return (check_name_is_int(c.name()) for c in cards)

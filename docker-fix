@@ -4,8 +4,15 @@
 docker run --rm -v $(pwd):/io quay.io/pypa/manylinux_2_28_x86_64 bash -c "
     # Navigate to the mounted directory
     cd /io
-    export LD_LIBRARY_PATH=.venv/lib
-    uv build
+
+    curl -fsSL https://pixi.sh/install.sh | bash
+    export PATH=~/.pixi/bin:$PATH
+    pixi global install gcc
+    pixi global install ninja
+    pixi install
+    export LD_LIBRARY_PATH=$(pwd)/.pixi/envs/default
+    export MKL_DIR=$(pwd)/.pixi/envs/lib/cmake/mkl
+    pixi run uv build --no-build-isolation
     # Repair the wheel: looks in dist/, outputs to wheelhouse/
     auditwheel repair dist/mckit-*linux_x86_64.whl
 "
