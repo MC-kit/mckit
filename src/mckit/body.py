@@ -20,6 +20,7 @@ import mckit.material as mm
 from mckit.box import GLOBAL_BOX, Box
 from mckit.card import Card
 from mckit.constants import MIN_BOX_VOLUME
+
 # pyrefly: ignore [missing-import]
 from mckit.geometry import Shape as _Shape  # pyright: ignore[reportMissingImports]
 from mckit.printer import CELL_OPTION_GROUPS, print_option

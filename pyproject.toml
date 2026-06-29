@@ -38,14 +38,6 @@ Issues = "https://github.com/MC-kit/mckit/issues"
 Repository = "https://github.com/MC-kit/mckit"
 
 [dependency-groups]
-docs = [
-  "esbonio>=2",
-  "rstcheck[sphinx,toml]>=6.2.5",
-  "sphinx>=9.1",
-  "sphinx-autobuild>=2025.8.25",
-  "sphinx-autodoc-typehints>=3.10",
-  "sphinx-togglebutton>=0.4",
-]
 analyze = [ "jupyterlab>=4.5", "jupytext>=1.19" ]
 
 # pixi example: https://github.com/prefix-dev/pixi/blob/main/examples/pybind11/pyproject.toml
@@ -95,6 +87,15 @@ cmake = ">=4"
 ninja = "*"
 scikit-build-core = ">=0.12"
 uv = ">=0.11.25,<0.12"
+[tool.pixi.feature.docs.dependencies]
+esbonio = ">=2"
+# rstcheck[sphinx,toml]>=6.2.5",
+sphinx = ">=9.1"
+sphinx-autobuild = ">=2025.8.25"
+sphinx-autodoc-typehints = ">=3.10"
+[tool.pixi.feature.docs.tasks]
+docs-build = "sphinx-build docs/source docs/build"
+docs = "  sphinx-autobuild --open-browser docs/source docs/_build"
 [tool.pixi.feature.style]
 tasks.mypy = "mypy src"
 tasks.pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"

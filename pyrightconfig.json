@@ -2,20 +2,17 @@
   "venvPath": ".pixi/envs",
   "venv": "default",
   "typeCheckingMode": "basic",
-
   "include": [
     "src"
   ],
-
   "exclude": [
     "**/data",
+    "**/parser",
+    "**/__pycache__",
+    "**/.*"
   ],
-
-
   "reportMissingImports": "error",
   "reportMissingTypeStubs": false,
-
   "pythonVersion": "3.14",
   "pythonPlatform": "Linux"
-
 }

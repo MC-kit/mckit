@@ -96,4 +96,5 @@ class Card(ABC):
     def __eq__(self, other: object) -> bool:
         return isinstance(other, Card) and (self is other or self.options == other.options)
 
+
 __all__ = ["Card"]
