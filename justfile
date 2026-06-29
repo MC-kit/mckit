@@ -112,7 +112,7 @@ export JUST_LOG := log
 
 # Check style includeing mypy and pylint and test
 [group('dev')]
-@check-full: check mypy pylint pyright
+@check-full: check ty basedpyright pylint
 
 # Bump project version  # TODO dvp: revise for pixi
 [group('dev')]
@@ -137,7 +137,7 @@ export JUST_LOG := log
 # show dependencies
 [group('dev')]
 @tree *args:
-    uv tree --outdated {{ args }}
+    pixi tree {{ args }}
 
 # run pyupgrade
 [group('dev')]
@@ -157,33 +157,41 @@ export JUST_LOG := log
 # test fast
 [group('test')]
 @test-fast *args:
-    pytest -m "not slow" {{ args }}
+    pixi run test-fast {{ args }}
+
+# test slow
+[group('test')]
+@test-slow *args:
+    pixi run test-slow {{ args }}
 
 # run all the tests
 [group('test')]
 @test *args:
-    pytest {{ args }}
+    pixi run test {{ args }}
 
 # run documentation tests
 [group('test')]
 @xdoctest *args:
-    uv run --no-dev --group test --group test xdoctest --silent -c all -m mckit {{ args }}
+    xdoctest --silent -c all -m mckit {{ args }}
 
 # create coverage data
 [group('test')]
 @coverage:
-    uv run --no-dev --group test pytest --cov --cov-report=term-missing:skip-covered
+    # uv run --no-dev --group test pytest --cov --cov-report=term-missing:skip-covered
+    pixi run coverage
 
 # coverage to html
 [group('test')]
 @coverage-html:
-    uv run --no-dev --group test pytest --cov --cov-report html:htmlcov
+    # uv run --no-dev --group test pytest --cov --cov-report html:htmlcov
+    pixi run coverage-html
     open htmlcov/index.html
 
 # check correct typing at runtime
 [group('test')]
 typeguard *args:
-    @uv run --no-dev --group test --group typeguard pytest --typeguard-packages=src {{ args }}
+    # @uv run --no-dev --group test --group typeguard pytest --typeguard-packages=src {{ args }}
+    pixi run typeguard {{ args }}
 
 # ruff check and format
 [group('style')]
@@ -207,7 +215,11 @@ typeguard *args:
 
 [group('style')]
 @pyright:
-    pyright src tests
+    pyright
+
+[group('style')]
+@basedpyright:
+    basedpyright
 
 # Lint with ty
 [group('style')]
@@ -222,9 +234,9 @@ typeguard *args:
 # build documentation
 [group('docs')]
 @docs-build: # rstcheck
-    sphinx-build docs/source docs/_build
+    pixi run docs-build
 
 # browse and edit documentation with auto build
 [group('docs')]
 @docs:
-    sphinx-autobuild --open-browser docs/source docs/_build
+   pixi run docs 

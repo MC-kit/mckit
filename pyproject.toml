@@ -68,7 +68,7 @@ tomli-w = "*"
 [tool.pixi.environments]
 analyze = { features = [ "analyze" ], solve-group = "default" }
 default = { features = [ "build", "test", "style" ], solve-group = "default" }
-docs = { features = [ "docs" ], solve-group = "default" }
+docs = { features = [ "build", "docs" ], solve-group = "default" }
 prod = { solve-group = "default" }
 py312 = { features = [ "py312", "test" ] }
 py313 = { features = [ "py313", "test" ] }
@@ -87,43 +87,54 @@ cmake = ">=4"
 ninja = "*"
 scikit-build-core = ">=0.12"
 uv = ">=0.11.25,<0.12"
+#[tool.pixi.feature.docs.tasks]
+#docs = {
+#  cmd="sphinx-autobuild --open-browser docs/source docs/_build",
+#  description="Preview the edited docs in a browser."
+#}
+#docs-build = {
+#  cmd="sphinx-build docs/source docs/build",
+#  description = "Build the docs in docs/build folder."
+#}
 [tool.pixi.feature.docs.dependencies]
 esbonio = ">=2"
 # rstcheck[sphinx,toml]>=6.2.5",
 sphinx = ">=9.1"
 sphinx-autobuild = ">=2025.8.25"
 sphinx-autodoc-typehints = ">=3.10"
-[tool.pixi.feature.docs.tasks]
-docs-build = "sphinx-build docs/source docs/build"
-docs = "  sphinx-autobuild --open-browser docs/source docs/_build"
-[tool.pixi.feature.style]
-tasks.mypy = "mypy src"
-tasks.pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
-tasks.pylint = "pylint --recursive=y src tests"
-tasks.pyright = "pyright src tests"
-tasks.ruff = { cmd = [ "&&", "ruff check --fix src tests", "ruff format src tests" ] }
+sphinx-click = ">=6.2.0"
+[tool.pixi.feature.style.tasks]
+mypy = "mypy src"
+pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
+pylint = "pylint --recursive=y src tests"
+pyright = "pyright"
+basedpyright = "basedpyright"
+ruff = { cmd = [ "ruff check --fix src tests", "ruff format src tests" ] }
 [tool.pixi.feature.style.dependencies]
 pylint = ">=4.0.6,<5"
 mypy = ">=2.1.0"
 pre_commit = ">=4.3"
 pyright = ">=1.1.406"
 ruff = ">=0.15"
-ty = ">=0.0.54"
-pyrefly = ">=1.1.1,<2"
-basedpyright = ">=1.39.8,<2"
+ty = ">=0.0.55"
+pyrefly = ">=1.1.1"
+basedpyright = ">=1.39.8"
 [tool.pixi.feature.test.dependencies]
-pytest = ">=9.0.3,<10"
-pytest-cov = ">=7.1.0,<8"
-pytest-benchmark = ">=5.2.3,<6"
-pytest-mock = ">=3.15.1,<4"
-pytest-xdist = ">=3.8.0,<4"
-psutil = ">=7.2.2,<8"
-xdoctest = ">=1.3.2,<2"
+pytest = ">=9.0.3"
+pytest-cov = ">=7.1.0"
+pytest-benchmark = ">=5.2.3"
+pytest-mock = ">=3.15.1"
+pytest-xdist = ">=3.8.0"
+psutil = ">=7.2.2"
+xdoctest = ">=1.3.2"
 [tool.pixi.feature.test.tasks]
-fast-test = "pytest -m 'not slow'"
-test = "pytest"
-[tool.pixi.feature.typeguard]
-tasks.typeguard = "pytest --typeguard-packages=src"
+test-fast = { cmd="pytest -m 'not slow'", description = "Run fast test"}
+test-slow = {  cmd="pytest -m 'slow'",  description = "Run slow test (if test-fast passed)" }
+test = {  cmd="pytest",  description = "Run all the tests."}
+coverage = {  cmd = "pytest --cov --cov-report=term-missing:skip-covered", description = "Run tests with coverage" }
+coverage-html = { cmd = "pytest --cov --cov-report html:htmlcov && open htmlcov/index.html",  description = "Run tests with coverage and open results in a browser"}
+[tool.pixi.feature.typeguard.tasks]
+typeguard = { cmd="pytest --typeguard-packages=src", description="Run dynamic type cheks on testing." }
 [tool.pixi.feature.typeguard.dependencies]
 typeguard = ">=4.5"
 [tool.pixi.package]

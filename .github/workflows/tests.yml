@@ -82,7 +82,7 @@ jobs:
 
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
-          pixi-version: v0.71.0
+          pixi-version: v0.71.1
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
 #          auth-host: prefix.dev
@@ -97,7 +97,7 @@ jobs:
 
       - name: 📦 Build documentation
         run: |
-          uv run sphinx-build docs/source docs/build
+          pixi run docs-build
 
   tests:
     name: "Python ${{ matrix.python-version }} on ${{ matrix.os }}"
@@ -106,10 +106,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        python-version: [ '3.11', '3.12', '3.13', '3.14' ]
+        python-version: [ '312', '313', '314' ]
         include: 
           - os: windows-latest
-            python-version: '3.13'  # Windows runner is too slow
+            python-version: '314'  # Windows runner is too slow
 
     steps:
 
@@ -119,21 +119,17 @@ jobs:
           fetch-depth: 1
           submodules: 'true'
 
-      - name: 📦 Install uv
-        uses: astral-sh/setup-uv@v7
+      - uses: prefix-dev/setup-pixi@v0.9.6
         with:
-          python-version: ${{ matrix.python-version }}
-          enable-cache: true
-          cache-dependency-glob: |
-            **/uv.lock
-            **/pyproject.toml      
-
-      - name: 🐍 Install the project
-        run: uv sync --all-extras --no-dev --group test
+          pixi-version: v0.71.1
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
+          environments: ${{ matrix.environment }}
 
       - name: ✅ Run tests
         run: |
-          uv run --group test pytest --cov --cov-report term-missing:skip-covered --cov-report xml
+          pixi shell -e ${{ matrix.environment }}
+          pytest --cov --cov-report term-missing:skip-covered --cov-report xml
 
       - name: 📤 Upload coverage report
         uses: codecov/codecov-action@v7
