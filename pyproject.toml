@@ -45,9 +45,9 @@ analyze = [ "jupyterlab>=4.5", "jupytext>=1.19" ]
 minimum-version = "build-system.requires"
 build-dir = "build/{wheel_tag}"
 [tool.scikit-build.build]
-verbose = false
+verbose = true
 [tool.scikit-build.cmake]
-build-type = "Debug"
+build-type = "Release"
 source-dir = "."
 [tool.scikit-build.logging]
 level = "INFO"
@@ -73,31 +73,22 @@ prod = { solve-group = "default" }
 py312 = { features = [ "build", "py312", "test" ] }
 py313 = { features = [ "build", "py313", "test" ] }
 py314 = { features = [ "build", "py314", "test" ] }
-pypi = { features = [ "pypi" ], solve-group = "default" }
+publish314 = { features = [ "build", "py314"], solve-group = "default"}
+#pypi = { features = [ "pypi" ], solve-group = "default" }
 typeguard = { features = [ "typeguard", "test" ], solve-group = "default" }
 [tool.pixi.feature]
 py312.dependencies.python = "3.12.*"
 py313.dependencies.python = "3.13.*"
-py314.dependencies.python = "3.14.*"
-pypi.tasks.pypi_build = "pixi run uv build --no-build-isolation"
-pypi.tasks.repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
+py314.dependencies.python = "==3.14.6"
+#pypi.tasks.pypi_build = "pixi run uv build --no-build-isolation"
+#pypi.tasks.repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
 [tool.pixi.feature.build.dependencies]
 # Explicitly add build tools for faster resolution
 cmake = ">=4"
 ninja = "*"
 scikit-build-core = ">=0.12"
-uv = ">=0.11.25,<0.12"
+#uv = ">=0.11.25,<0.12"
 pysocks = ">=1.7.1,<2"
-
-# [tool.pixi.feature.docs.tasks]
-# docs = {
-#  cmd="sphinx-autobuild --open-browser docs/source docs/_build",
-#  description="Preview the edited docs in a browser."
-# }
-# docs-build = {
-#  cmd="sphinx-build docs/source docs/build",
-#  description = "Build the docs in docs/build folder."
-# }
 [tool.pixi.feature.docs.dependencies]
 esbonio = ">=2"
 # rstcheck[sphinx,toml]>=6.2.5",
@@ -105,6 +96,9 @@ sphinx = ">=9.1"
 sphinx-autobuild = ">=2025.8.25"
 sphinx-autodoc-typehints = ">=3.10"
 sphinx-click = ">=6.2.0"
+[tool.pixi.feature.docs.tasks]
+docs = { cmd="sphinx-autobuild --open-browser docs/source docs/_build",  description="Preview the edited docs in a browser." }
+docs-build = { cmd="sphinx-build docs/source docs/build",  description = "Build the docs in docs/build folder." }
 [tool.pixi.feature.style.dependencies]
 pylint = ">=4.0.6,<5"
 mypy = ">=2.1.0"
@@ -148,10 +142,12 @@ name = "mckit"
 version = "0.9.0"
 [tool.pixi.package.build-dependencies]
 scikit-build-core = ">=0.12.1"
+python="==3.14.6"  # no freethreaded
 [tool.pixi.package.build.backend]
 name = "pixi-build-python"
 version = "*"
 [tool.pixi.package.run-dependencies]
+python="==3.14.6"  # no freethreaded
 click = ">=8.3"
 loguru = ">=0.7"
 mkl-devel = ">=2026"
@@ -172,8 +168,11 @@ conda-pypi-map = false  # fix: pixi failed to load conda-pypi map - timeout
 requires-pixi = ">=0.70.2"
 preview = [ "pixi-build" ]
 
-[tool.uv.extra-build-dependencies]
-mckit = [ "scikit_build_core" ]
+[tool.pixi.tasks]
+publish314 = { cmd = "pixi publish -vvv --target-channel .output-3.14", default-environment = "publish314", description = "Publish for python-3.14" }
+
+#[tool.uv.extra-build-dependencies]
+#mckit = [ "scikit_build_core" ]
 
 [tool.mypy]
 files = "src/**/*.py"
@@ -200,35 +199,6 @@ cache_dir = ".cache/mypy"
 warn_unused_configs = true
 show_error_codes = true
 
-# [[tool.mypy.overrides]]
-# ignore_missing_imports = true
-# module = [
-#   "IPython.core.magic",
-#   "IPython.core.magic_arguments",
-#   "click",
-#   "click.testing",
-#   "cyclopts",
-#   "dask.*",
-#   "duckdb",
-#   "eliot",
-#   "eliot.*",
-#   "loguru",
-#   "mckit.*",                      # TODO (dvp, style): make everything typed including extension 'geometry',
-#   "msgspec",
-#   "multipledispatch",
-#   "nox",
-#   "numpy",
-#   "numpy.testing",
-#   "pandas",
-#   "polars",
-#   "pytest",
-#   "rich.*",
-#   "scipy.constants",
-#   "scipy.sparse",
-#   "tomli",
-#   "tomllib",
-#   "xdoctest",
-# ]
 [[tool.mypy.overrides]]
 module = [ "tomllib" ]
 allow_redefinition = true

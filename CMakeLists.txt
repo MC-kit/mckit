@@ -5,7 +5,7 @@ include(CMakePrintHelpers)
 # to make CMake happy, if not running under skbuild
 if(NOT DEFINED SKBUILD_PROJECT_NAME)
   set(SKBUILD_PROJECT_NAME mckit)
-  set(SKBUILD_PROJECT_VERSION 0.8.9) # TODO: add this version update to just
+  set(SKBUILD_PROJECT_VERSION 0.9.0) # TODO: add this version update to just
                                      # bump action
 endif()
 
@@ -75,7 +75,10 @@ if(WIN32)
   set(Python_FIND_VIRTUALENV FIRST)
 endif()
 
-find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
+# find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
+find_package(Python 3.14.6 EXACT COMPONENTS Interpreter Development.Module NumPy)
+execute_process(COMMAND ${Python_EXECUTABLE} -c "import sys; print(sys.version)" RESULT_VARIABLE _PYTHON_VERSION)
+cmake_print_variables(PythonEnv_ROOT _PYTHON_VERSION)
 
 # if(NOT DEFINED PythonEnv_ROOT) execute_process( COMMAND ${Python_EXECUTABLE}
 # -c "import sys; print(sys.prefix)" WORKING_DIRECTORY
