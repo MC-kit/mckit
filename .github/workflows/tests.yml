@@ -44,7 +44,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DEFAULT_PYTHON: "3.13"
+  DEFAULT_PYTHON: "3.14"
   UV_LINK_MODE: "copy"
 
 jobs:
@@ -53,6 +53,8 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       !contains(github.event.head_commit.message, '[skip_ci]')
+    env:
+      no_proxy: "pypi.org,files.pythonhosted.org,github.com,api.github.com"  # to avoid SOCKS issue on python3.14
     steps:
       - name: ✅ Check out the repository
         uses: actions/checkout@v6
@@ -65,7 +67,6 @@ jobs:
 #          auth-host: prefix.dev
 #          auth-token: ${{ secrets.PREFIX_DEV_TOKEN }}
 
-      
       - name: Run pre commit checks
         run: |
           pixi run pre-commit
@@ -85,6 +86,7 @@ jobs:
           pixi-version: v0.71.1
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
+          environments: docs
 #          auth-host: prefix.dev
 #          auth-token: ${{ secrets.PREFIX_DEV_TOKEN }}
 #          cache-dependency-glob: |
@@ -106,10 +108,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        python-version: [ '312', '313', '314' ]
+        environment: [ 'py312', 'py313', 'py314' ]
         include: 
           - os: windows-latest
-            python-version: '314'  # Windows runner is too slow
+            environment: 'py313'  # Windows runner is too slow
 
     steps:
 
