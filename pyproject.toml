@@ -73,13 +73,13 @@ prod = { solve-group = "default" }
 py312 = { features = [ "build", "py312", "test" ] }
 py313 = { features = [ "build", "py313", "test" ] }
 py314 = { features = [ "build", "py314", "test" ] }
-publish314 = { features = [ "build", "py314"], solve-group = "default"}
+publish314 = { features = [ "build", "py314", "publish314"], solve-group = "default"}
 #pypi = { features = [ "pypi" ], solve-group = "default" }
 typeguard = { features = [ "typeguard", "test" ], solve-group = "default" }
 [tool.pixi.feature]
 py312.dependencies.python = "3.12.*"
 py313.dependencies.python = "3.13.*"
-py314.dependencies.python = "==3.14.6"
+py314.dependencies.python = "3.14.*"
 #pypi.tasks.pypi_build = "pixi run uv build --no-build-isolation"
 #pypi.tasks.repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
 [tool.pixi.feature.build.dependencies]
@@ -133,6 +133,8 @@ coverage-html = { cmd = "pytest --cov --cov-report html:htmlcov && open htmlcov/
 typeguard = ">=4.5"
 [tool.pixi.feature.typeguard.tasks]
 typeguard = { cmd = "pytest --typeguard-packages=src", description = "Run dynamic type cheks on testing." }
+[tool.pixi.feature.publish314.tasks]
+publish314 = { cmd = "pixi publish -vvv --target-channel .output-3.14", description = "Publish for python-3.14" }
 [tool.pixi.package]
 host-dependencies.mkl-devel = ">=2026"
 host-dependencies.nlopt = "*"
@@ -142,20 +144,20 @@ name = "mckit"
 version = "0.9.0"
 [tool.pixi.package.build-dependencies]
 scikit-build-core = ">=0.12.1"
-python="==3.14.6"  # no freethreaded
+#python="==3.14.6"  # no freethreaded
 [tool.pixi.package.build.backend]
 name = "pixi-build-python"
 version = "*"
-[tool.pixi.package.run-dependencies]
-python="==3.14.6"  # no freethreaded
-click = ">=8.3"
-loguru = ">=0.7"
-mkl-devel = ">=2026"
-nlopt = "*"
-numpy = "*"
-ply = ">=3.11"
-sly = ">=0.5"
-tomli-w = ">=1.2"
+#[tool.pixi.package.run-dependencies]
+#python="==3.14.6"  # no freethreaded
+#click = ">=8.3"
+#loguru = ">=0.7"
+#mkl-devel = ">=2026"
+#nlopt = "*"
+#numpy = "*"
+#ply = ">=3.11"
+#sly = ">=0.5"
+#tomli-w = ">=1.2"
 [tool.pixi.pypi-dependencies]
 mckit = { path = ".", editable = true }
 [tool.pixi.pypi-options]
@@ -167,9 +169,6 @@ platforms = [ "linux-64", "win-64" ]
 conda-pypi-map = false  # fix: pixi failed to load conda-pypi map - timeout
 requires-pixi = ">=0.70.2"
 preview = [ "pixi-build" ]
-
-[tool.pixi.tasks]
-publish314 = { cmd = "pixi publish -vvv --target-channel .output-3.14", default-environment = "publish314", description = "Publish for python-3.14" }
 
 #[tool.uv.extra-build-dependencies]
 #mckit = [ "scikit_build_core" ]
