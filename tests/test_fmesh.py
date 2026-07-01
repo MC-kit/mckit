@@ -361,8 +361,9 @@ parser_test_data = path_resolver("tests")
 
 class TestFMesh:
     @pytest.fixture
-    def tallies(self):
-        file_name = parser_test_data("parser_test_data/fmesh.m")
+    def tallies(self, data):
+        file_name = data / "parser/fmesh.m"
+        assert file_name.exists()
         return read_meshtal(file_name)
 
     @pytest.mark.parametrize(

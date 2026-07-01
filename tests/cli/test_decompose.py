@@ -59,12 +59,12 @@ def test_not_existing_mcnp_file(runner):
     assert "Path 'not-existing.imcnp' does not exist" in result.output
 
 
-@pytest.mark.parametrize("source, expected", [("parser_test_data/parser1.txt", "envelopes.i")])
-def test_when_there_are_no_universes(runner, source, expected):
-    source = data_filename_resolver(source)
+@pytest.mark.parametrize("source, expected", [("parser/parser1.txt", "envelopes.i")])
+def test_when_there_are_no_universes(runner, source, expected, data):
+    source = data / source
     with runner.isolated_filesystem():
         result = runner.invoke(
-            mckit, args=["decompose", "-o", "universes", source], catch_exceptions=False
+            mckit, args=["decompose", "-o", "universes", str(source)], catch_exceptions=False
         )
         assert result.exit_code == 0, "Should success without universes"
         assert Path("universes/envelopes.i").exists(), (

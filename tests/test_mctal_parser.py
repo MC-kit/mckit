@@ -9,15 +9,11 @@ from mckit.utils import path_resolver
 data_path_resolver = path_resolver("tests")
 
 
-def file_resolver(x):
-    return str(data_path_resolver(x))
-
-
 @pytest.mark.parametrize(
     "mctal_file, expected",
     [
         (
-            "parser_test_data/mctal.t",
+            "parser/mctal.t",
             {
                 4: {
                     "name": 4,
@@ -681,8 +677,8 @@ def file_resolver(x):
         )
     ],
 )
-def test_mctal_parser(mctal_file, expected):
-    mctal_file = file_resolver(mctal_file)
+def test_mctal_parser(mctal_file, expected, data):
+    mctal_file = data / mctal_file
     tallies = read_mctal(mctal_file)
     assert tallies.keys() == expected.keys()
     for name, tally in tallies.items():

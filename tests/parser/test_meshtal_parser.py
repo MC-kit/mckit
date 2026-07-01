@@ -13,7 +13,7 @@ file_resolver = path_resolver("tests")
     "mesh_file, expected",
     [
         (
-            "parser_test_data/fmesh.m",
+            "parser/fmesh.m",
             {
                 "date": "05/24/1812:21:45",
                 "histories": 10000000.00,
@@ -2202,7 +2202,7 @@ file_resolver = path_resolver("tests")
             },
         ),
         (
-            "parser_test_data/d1s_mesh.m",
+            "parser/d1s_mesh.m",
             {
                 "date": "12/17/1814:06:18",
                 "histories": 766606920.00,
@@ -4042,7 +4042,7 @@ file_resolver = path_resolver("tests")
             },
         ),
         (
-            "parser_test_data/fmesh3.m",
+            "parser/fmesh3.m",
             {
                 "date": "05/24/1812:21:45",
                 "histories": 10000000.00,
@@ -4756,7 +4756,7 @@ file_resolver = path_resolver("tests")
             },
         ),
         (
-            "parser_test_data/fmesh2.m",
+            "parser/fmesh2.m",
             {
                 "date": "05/24/1812:21:45",
                 "histories": 10000000.00,
@@ -5340,8 +5340,8 @@ file_resolver = path_resolver("tests")
         ),
     ],
 )
-def test_meshtal_parser(mesh_file, expected):
-    mesh_file = file_resolver(mesh_file)
+def test_meshtal_parser(mesh_file, expected, data):
+    mesh_file = data / mesh_file
     with mesh_file.open() as f:
         text = f.read() + "\n"
     meshtal_lexer.begin("INITIAL")

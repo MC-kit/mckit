@@ -3,9 +3,11 @@ from __future__ import annotations
 import textwrap
 
 from copy import deepcopy
+from pathlib import Path
 
 import numpy as np
 import pytest
+# from dill.pointers import parent
 
 from mckit.body import Body, Card, Shape
 from mckit.box import Box
@@ -20,13 +22,10 @@ from mckit.universe import (
     collect_transformations,
     surface_selector,
 )
-from mckit.utils._resource import path_resolver
 
-data_path_resolver = path_resolver("tests")
-
-
-def data_filename_resolver(x):
-    return str(data_path_resolver(x))
+HERE = Path(__file__).parent
+TEST_DATA = HERE / "data"
+UNIVERSE_TEST_DATA = TEST_DATA / "universe"
 
 
 TStatItem = dict[int, list[int] | set[Universe]]  # TODO dvp: cool but isn't this too much freedom?
@@ -36,18 +35,20 @@ TStat = dict[str, TStatItem]
 @pytest.fixture(scope="module")
 def universe():
     cases = {
-        1: "universe_test_data/universe1.i",
-        2: "universe_test_data/universe2.i",
-        3: "universe_test_data/universe3.i",
-        4: "universe_test_data/universe4.i",
-        5: "universe_test_data/universe5.i",
-        1002: "universe_test_data/universe1002.i",
-        1012: "universe_test_data/universe1012.i",
-        1022: "universe_test_data/universe1022.i",
+        1: "universe1.i",
+        2: "universe2.i",
+        3: "universe3.i",
+        4: "universe4.i",
+        5: "universe5.i",
+        1002: "universe1002.i",
+        1012: "universe1012.i",
+        1022: "universe1022.i",
     }
 
     def _universe(case: int) -> Universe:
-        result: ParseResult = from_file(data_filename_resolver(cases[case]))
+        path = UNIVERSE_TEST_DATA / cases[case]
+        assert path.is_file(), f"Cannot find test data {path}"
+        result: ParseResult = from_file(path)
         return result.universe
 
     return _universe

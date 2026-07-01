@@ -1,24 +1,34 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 # noinspection PyPackageRequirements
 import pytest
 
 
+HERE = Path(__file__).parent
+DATA = HERE / "data"
+
+
+@pytest.fixture(scope="session")
+def data() -> Path:
+    """Get Path to tests/data directory.
+
+    Returns
+    -------
+    Path to tests/data directory
+    """
+    return DATA
+
 @pytest.fixture
-def cd_tmpdir(tmpdir):
+def cd_tmpdir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Temporarily switch to temp directory.
 
-    Args:
-        tmpdir: pytest fixture for temp directory
-
-    Yields
+    Returns
     ------
-        None
+    Path: current (temporal) directory
     """
-    old_dir = tmpdir.chdir()
-    try:
-        yield
-    finally:
-        os.chdir(old_dir)
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
+
