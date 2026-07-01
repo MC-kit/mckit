@@ -102,7 +102,7 @@ jobs:
           pixi run docs-build
 
   tests:
-    name: "Python ${{ matrix.python-version }} on ${{ matrix.os }}"
+    name: "${{ matrix.environment }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
