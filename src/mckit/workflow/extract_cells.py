@@ -6,6 +6,7 @@ from typing import cast
 
 from collections.abc import Callable, Container, Iterable
 from itertools import tee
+from pathlib import Path
 
 from mckit import Body, Universe
 from mckit.parser import from_file
@@ -53,7 +54,7 @@ def filter_by_surface_numbers(surface_numbers_to_select: Container[int]) -> Body
 
 
 def extract_cells_from_file(
-    model_path: str, predicate: BodyPredicate, *, add_surface_sharing_cells: bool = True
+    model_path: str | Path, predicate: BodyPredicate, *, add_surface_sharing_cells: bool = True
 ) -> set[Body]:
     """Extract cells from a model matching to a predicate.
 
@@ -129,6 +130,6 @@ def make_universe(cells: Iterable[Body]) -> Universe:
     return Universe(
         sorted(
             cells,
-            key=cast(Callable[[Body], int], default_name_key),
+            key=cast(Callable[[Body], int], cast(object, default_name_key)),
         )
     )
