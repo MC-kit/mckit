@@ -45,9 +45,9 @@ concurrency:
 
 env:
   DEFAULT_PYTHON: "3.14"
-  UV_LINK_MODE: "copy"
-  MKLROOT: "$GITHUB_WORKSPACE/.pixi/envs/default"
-  LD_LIBRARY_PATH: "$GITHUB_WORKSPACE/.pixi/envs/default/lib"
+  MKLROOT: "${{ github.workspace }}/.pixi/envs/default"
+  MKL_INCLUDE_PATH: "${{ github.workspace }}/.pixi/envs/default/include"
+  LD_LIBRARY_PATH: "${{ github.workspace }}/.pixi/envs/default/lib"
   no_proxy: "pypi.org,files.pythonhosted.org,github.com,api.github.com"  # to avoid SOCKS issue on python3.14
 
 
@@ -82,7 +82,6 @@ jobs:
         with:
           fetch-depth: 1
           submodules: 'true'
-
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
           pixi-version: v0.71.1
@@ -98,6 +97,10 @@ jobs:
 #      - name: 🐍 Install the project
 #        run: |
 #          pixi install
+        env:
+          MKLROOT: "${{ github.workspace }}/.pixi/envs/docs"
+          MKL_INCLUDE_PATH: "${{ github.workspace }}/.pixi/envs/docs/include"
+          LD_LIBRARY_PATH: "${{ github.workspace }}/.pixi/envs/docs/lib"
 
       - name: 📦 Build documentation
         run: |
@@ -114,6 +117,10 @@ jobs:
         include: 
           - os: windows-latest
             environment: 'py313'  # Windows runner is too slow
+    env:
+      MKLROOT: "${{ github.workspace }}/.pixi/envs/${{ matrix.environment }}"
+      MKL_INCLUDE_PATH: "${{ github.workspace }}/.pixi/envs/${{ matrix.environment }}/include"
+      LD_LIBRARY_PATH: "${{ github.workspace }}/.pixi/envs/${{ matrix.environment }}/lib"
 
     steps:
 
