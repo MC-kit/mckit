@@ -138,7 +138,7 @@ jobs:
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
           environments: ${{ matrix.environment }}
-#          activate-environment: true
+          activate-environment: true
 
       - name: ✅ Run tests
         run: |

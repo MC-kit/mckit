@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "scikit_build_core.build"
-requires = [ "numpy", "scikit-build-core>=0.12" ]
+requires = [ "cmake", "numpy", "scikit-build-core>=0.12" ]
 
 [project]
 name = "mckit"
@@ -171,6 +171,10 @@ platforms = [ "linux-64", "win-64" ]
 conda-pypi-map = false  # fix: pixi failed to load conda-pypi map - timeout
 requires-pixi = ">=0.70.2"
 preview = [ "pixi-build" ]
+
+[tool.uv]
+# Отключает изоляцию только для текущего проекта при разработке
+no-build-isolation-package = [ "mckit" ]
 
 # [tool.uv.extra-build-dependencies]
 # mckit = [ "scikit_build_core" ]

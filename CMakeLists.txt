@@ -2,15 +2,49 @@ cmake_minimum_required(VERSION 3.19)
 
 include(CMakePrintHelpers)
 
-# to make CMake happy, if not running under skbuild
-if(NOT DEFINED SKBUILD_PROJECT_NAME)
-  set(SKBUILD_PROJECT_NAME mckit)
-  set(SKBUILD_PROJECT_VERSION 0.9.0) # TODO: add this version update to just
-                                     # bump action
+message(STATUS "cmake: ${CMAKE_COMMAND}")
+cmake_path(GET CMAKE_COMMAND PARENT_PATH MCKIT_ENV_BIN_DIR)
+message(STATUS "bin dir: ${MCKIT_ENV_BIN_DIR}")
+cmake_path(GET MCKIT_ENV_BIN_DIR PARENT_PATH MCKIT_PIXI_ENV_ROOT)
+if(NOT DEFINED MCKIT_PIXI_ENV_ROOT)
+  # Резервный вариант: относительный путь, если запускается локально
+  set(MCKIT_PIXI_ENV_ROOT "${CMAKE_SOURCE_DIR}/.pixi/envs/default")
 endif()
 
-cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION,
-                      SKBUIL_STATE)
+# Устанавливаем пути в зависимости от ОС
+if(WIN32)
+  # На Windows пакеты conda/pixi лежат в поддиректории Library
+  set(MKL_ROOT_DIR "${MCKIT_PIXI_ENV_ROOT}/Library")
+  set(MKL_INCLUDE_SEARCH_PATH "${MCKIT_PIXI_ENV_ROOT}/Library/include")
+  # Добавляем Library в префикс поиска
+  list(APPEND CMAKE_PREFIX_PATH "${MCKIT_PIXI_ENV_ROOT}/Library")
+else()
+  # На Linux пути стандартные (корень окружения)
+  set(MKL_ROOT_DIR "${MCKIT_PIXI_ENV_ROOT}")
+  set(MKL_INCLUDE_SEARCH_PATH "${MCKIT_PIXI_ENV_ROOT}/include")
+  list(APPEND CMAKE_PREFIX_PATH "${MCKIT_PIXI_ENV_ROOT}")
+endif()
+
+# Явно указываем переменные, которые ищет MKLConfig.cmake
+set(MKL_INCLUDE_DIR
+    "${MKL_INCLUDE_SEARCH_PATH}"
+    CACHE PATH "Path to MKL headers")
+set(ENV{MKLROOT} "${MKL_ROOT_DIR}")
+set(ENV{MKL_INCLUDE_DIR} "${MKL_INCLUDE_SEARCH_PATH}")
+
+# Опционально: выводим пути для отладки
+message(STATUS "MKL Root: ${MKL_ROOT_DIR}")
+message(STATUS "MKL Include: ${MKL_INCLUDE_DIR}")
+message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+
+# to make CMake happy, if not running under skbuild
+if(NOT DEFINED SKBUILD_PROJECT_NAME AND DEFINED ENV{PIXI_PROJECT_VERSION})
+  set(SKBUILD_PROJECT_NAME mckit)
+  set(SKBUILD_PROJECT_VERSION $ENV{PIXI_PROJECT_VERSION})
+endif()
+
+cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION SKBUIL_STATE)
+
 project(
   ${SKBUILD_PROJECT_NAME}
   VERSION ${SKBUILD_PROJECT_VERSION}
@@ -81,21 +115,6 @@ execute_process(COMMAND ${Python_EXECUTABLE} -c "import sys; print(sys.version)"
                 RESULT_VARIABLE _PYTHON_VERSION)
 cmake_print_variables(PythonEnv_ROOT _PYTHON_VERSION)
 
-# if(NOT DEFINED PythonEnv_ROOT) execute_process( COMMAND ${Python_EXECUTABLE}
-# -c "import sys; print(sys.prefix)" WORKING_DIRECTORY
-# ${CMAKE_CURRENT_SOURCE_DIR} RESULT_VARIABLE Python_ROOT_FOUND OUTPUT_VARIABLE
-# PythonEnv_ROOT OUTPUT_STRIP_TRAILING_WHITESPACE) if(NOT Python_ROOT_FOUND
-# STREQUAL "0") message(FATAL_ERROR "Cannot find python environment") endif()
-# endif()
-
-if(NOT DEFINED ENV{MCKIT_SRC})
-  set(ENV{MCKIT_SRC} ${CMAKE_SOURCE_DIR})
-endif()
-
-list(APPEND CMAKE_PREFIX_PATH $ENV{MCKIT_SRC}/.pixi/envs/default/lib/cmake)
-
-cmake_print_variables(CMAKE_MODULE_PATH CMAKE_PREFIX_PATH)
-
 # add_subdirectory(extern)
 
 # if(NOT WIN32) message("Creating symlinks in environment ${PythonEnv_ROOT}")
@@ -111,23 +130,24 @@ find_package(NLopt REQUIRED)
 
 set(geometry_dir ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src/)
 
-# Fix MKL packaging bug: the issue is that libmkl_intel_thread.so lacks a
-# DT_NEEDED entry for libatomic.so.1.
-find_program(PATCHELF_EXECUTABLE patchelf)
-if(PATCHELF_EXECUTABLE)
-  set(MKL_LIB_PATH
-      "${CMAKE_SOURCE_DIR}/.pixi/envs/default/lib/libmkl_intel_thread.so.3")
-  execute_process(COMMAND ${PATCHELF_EXECUTABLE} --add-needed libatomic.so.1
-                          ${MKL_LIB_PATH} RESULT_VARIABLE PATCH_RESULT)
-  if(NOT PATCH_RESULT EQUAL 0)
-    message(WARNING "Failed to patch MKL library, but continuing...")
+if(NOT Win32)
+  # Fix MKL packaging bug: the issue is that libmkl_intel_thread.so lacks a
+  # DT_NEEDED entry for libatomic.so.1.
+  find_program(PATCHELF_EXECUTABLE patchelf)
+  if(PATCHELF_EXECUTABLE)
+    set(MKL_LIB_PATH "${MCKIT_PIXI_ENV_ROOT}/lib/libmkl_intel_thread.so.3")
+    execute_process(COMMAND ${PATCHELF_EXECUTABLE} --add-needed libatomic.so.1
+                            ${MKL_LIB_PATH} RESULT_VARIABLE PATCH_RESULT)
+    if(NOT PATCH_RESULT EQUAL 0)
+      message(WARNING "Failed to patch MKL library, but continuing...")
+    else()
+      message(STATUS "MKL library is patched...")
+    endif()
   else()
-    message(STATUS "MKL library is patched...")
+    message(
+      WARNING
+        "patchelf not found. MKL atomic fix will not be applied automatically.")
   endif()
-else()
-  message(
-    WARNING
-      "patchelf not found. MKL atomic fix will not be applied automatically.")
 endif()
 
 set(geometry_sources
