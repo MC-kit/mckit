@@ -75,9 +75,8 @@ if(WIN32)
   set(Python_FIND_VIRTUALENV FIRST)
 endif()
 
-# find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
-find_package(Python 3.14.6 EXACT COMPONENTS Interpreter Development.Module
-                                            NumPy)
+find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
+
 execute_process(COMMAND ${Python_EXECUTABLE} -c "import sys; print(sys.version)"
                 RESULT_VARIABLE _PYTHON_VERSION)
 cmake_print_variables(PythonEnv_ROOT _PYTHON_VERSION)
