@@ -8,7 +8,7 @@ import operator
 import sys
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
 from functools import reduce
 from io import StringIO
@@ -20,7 +20,6 @@ import numpy as np
 from attr import attrib, attrs
 from click import progressbar
 
-from mckit.constants import MCNP_ENCODING
 from mckit.utils import filter_dict
 
 from .body import Body, Shape
@@ -669,7 +668,7 @@ class Universe:
     def save(
         self,
         filename: str | Path,
-        encoding: str = MCNP_ENCODING,
+        encoding: str = "utf8",
         check_clashes: bool = True,
     ):
         """Saves the universe into file."""
@@ -776,7 +775,7 @@ class Universe:
 
         self._cells = new_cells
 
-    def test_points(self, points: npt.ArrayLike[float]) -> npt.NDArray[int]:
+    def test_points(self, points: npt.ArrayLike[float]) -> npt.NDArray[Any]:
         """Finds cell to which each point belongs to.
 
         Args:
@@ -930,7 +929,11 @@ def collect_transformations(universe: Universe, recursive=True) -> set[Transform
         return aggregator
 
     @contextmanager
-    def visit_universe(u: Universe) -> set[Transformation]:
+    def visit_universe(
+        u: Universe,
+    ) -> Generator[
+        tuple[Callable[[set[Transformation], Body], set[Transformation]], set[Transformation]]
+    ]:
         if isinstance(u, Universe):
             yield at_body, set()
             # TODO dvp:  set() is not a valid choice as aggregator considering
@@ -990,7 +993,7 @@ def transformations_to_universe_mapper(universe: Universe) -> IU:
 
 
 def is_shared_between_universes(item: tuple[Name, dict[Name, int]]) -> bool:
-    entity, universes_counts = item
+    _entity, universes_counts = item
     return len(universes_counts.keys()) > 1
 
 

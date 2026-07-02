@@ -10,7 +10,6 @@ import pytest
 
 from mckit import Shape, Universe
 from mckit.box import Box
-from mckit.constants import MCNP_ENCODING
 from mckit.parser import from_text
 from mckit.utils import path_resolver
 
@@ -20,7 +19,7 @@ if TYPE_CHECKING:
 
 data = path_resolver("benchmarks")
 with ZipFile(data("data/4M.zip")) as data_archive:
-    clite_text = data_archive.read("clite.i").decode(encoding=MCNP_ENCODING)
+    clite_text = data_archive.read("clite.i").decode(encoding="utf8")
 clite_model = from_text(clite_text).universe
 
 

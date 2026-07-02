@@ -7,7 +7,7 @@ import pytest
 from mckit.cli.commands.common import get_default_output_directory
 from mckit.cli.runner import mckit
 from mckit.parser.mcnp_section_parser import is_comment
-from mckit.utils import MCNP_ENCODING, path_resolver
+from mckit.utils import path_resolver
 
 data_path_resolver = path_resolver("tests")
 
@@ -99,7 +99,7 @@ def test_when_separator_files_are_required(runner, source, expected):
         expected = expected.split()
         for e in expected:
             assert (out / e).exists()
-        text = (out / "cells_start.txt").read_text(encoding=MCNP_ENCODING)
+        text = (out / "cells_start.txt").read_text(encoding="cp1251")
         assert is_comment(text), "Should be MCNP comment text"
 
 

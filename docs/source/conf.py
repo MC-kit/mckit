@@ -20,7 +20,7 @@ sys.path.insert(0, str(pkg_path))
 
 from typing import Dict, List
 
-import mckit
+# import mckit
 
 # -- Project information -----------------------------------------------------
 
@@ -35,9 +35,11 @@ author = "Roman Rodionov"
 # built documents.
 #
 # The short X.Y version.
-version = mckit.__version__.rsplit(".", maxsplit=1)[0]
+# version = mckit.__version__.rsplit(".", maxsplit=1)[0]
+version="0.8.7"
 # The full version, including alpha/beta/rc tags.
-release = mckit.__version__
+# release = mckit.__version__
+release = version
 
 
 # -- General configuration ---------------------------------------------------

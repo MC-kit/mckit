@@ -245,7 +245,7 @@ int box_check_intersection(const Box *box1, const Box *box2)
 
     nlopt_add_inequality_mconstraint(opt, 6, box_ieqcons, (void *)box1, NULL);
     nlopt_set_stopval(opt, 0);
-    nlopt_set_maxeval(opt, 1000); // TODO: consider passing this parameter.
+    nlopt_set_maxeval(opt, 1000); // TODO @rrn: consider passing this parameter.
 
     cblas_dcopy(NDIM, box1->center, 1, x, 1);
     opt_result = nlopt_optimize(opt, x, &opt_val);

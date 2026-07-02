@@ -575,14 +575,14 @@ class TestPlane:
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
     ]
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_close(self, i1: int, s1: Plane, i2: int, s2: Plane) -> None:
         result = s1.is_close_to(s2)
         assert result == bool(self.eq_matrix[i1][i2])
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_hash(self, i1, s1, i2, s2):
         if self.eq_matrix[i1][i2]:
             assert hash(s1.round()) == hash(s2.round())
@@ -595,28 +595,30 @@ class TestPlane:
 
     @pytest.mark.parametrize(
         "surface, answer",
-        zip(
-            surfs,
-            [
-                "1 PX 5",
-                "1 PX 5",
-                "1 PX 5",
-                "1 PX 5.00000000001",
-                "2 PY 5",
-                "2 PY 5",
-                "2 PY 5",
-                "2 PY 5.00000000001",
-                "3 PZ 5",
-                "3 PZ 5",
-                "3 PZ 5",
-                "3 PZ 5.00000000001",
-                "4 PX 5",
-                "4 PY 5",
-                "4 PZ 5",
-                "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
-                "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
-            ],
-            strict=False,
+        list(
+            zip(
+                surfs,
+                [
+                    "1 PX 5",
+                    "1 PX 5",
+                    "1 PX 5",
+                    "1 PX 5.00000000001",
+                    "2 PY 5",
+                    "2 PY 5",
+                    "2 PY 5",
+                    "2 PY 5.00000000001",
+                    "3 PZ 5",
+                    "3 PZ 5",
+                    "3 PZ 5",
+                    "3 PZ 5.00000000001",
+                    "4 PX 5",
+                    "4 PY 5",
+                    "4 PZ 5",
+                    "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
+                    "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
+                ],
+                strict=False,
+            )
         ),
     )
     def test_mcnp_pretty_repr(self, surface, answer):
@@ -629,28 +631,30 @@ class TestPlane:
 
     @pytest.mark.parametrize(
         "surface, answer",
-        zip(
-            surfs,
-            [
-                "1 PX 5",
-                "1 PX 5",
-                "1 PX 5",
-                "1 PX 5.00000000001",
-                "2 PY 5",
-                "2 PY 5",
-                "2 PY 5",
-                "2 PY 5.00000000001",
-                "3 PZ 5",
-                "3 PZ 5",
-                "3 PZ 5",
-                "3 PZ 5.00000000001",
-                "4 PX 5",
-                "4 PY 5",
-                "4 PZ 5",
-                "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
-                "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
-            ],
-            strict=False,
+        list(
+            zip(
+                surfs,
+                [
+                    "1 PX 5",
+                    "1 PX 5",
+                    "1 PX 5",
+                    "1 PX 5.00000000001",
+                    "2 PY 5",
+                    "2 PY 5",
+                    "2 PY 5",
+                    "2 PY 5.00000000001",
+                    "3 PZ 5",
+                    "3 PZ 5",
+                    "3 PZ 5",
+                    "3 PZ 5.00000000001",
+                    "4 PX 5",
+                    "4 PY 5",
+                    "4 PZ 5",
+                    "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
+                    "5 P 0.707106781187 0.707106781187 0 -2.828427124746",
+                ],
+                strict=False,
+            )
         ),
     )
     def test_mcnp_repr(self, surface, answer):
@@ -797,8 +801,8 @@ class TestSphere:
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
     ]
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_round_equality(self, i1, s1, i2, s2):
         s1, s2 = s1.round(), s2.round()
         if self.eq_matrix[i1][i2]:
@@ -806,36 +810,38 @@ class TestSphere:
         else:
             assert s1 != s2
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_hash(self, i1, s1, i2, s2):
         if self.eq_matrix[i1][i2]:
             assert hash(s1.round()) == hash(s2.round())
 
     @pytest.mark.parametrize(
         "surface, answer",
-        zip(
-            surfs,
-            [
-                "1 SO 1",
-                "1 SO 1",
-                "1 SO 2",
-                "2 SX 5 4",
-                "2 SX 5 4",
-                "2 SX 5 4",
-                "2 SY 5 4",
-                "2 SY 5 4",
-                "2 SY 5 4",
-                "2 SZ 5 4",
-                "2 SZ 5 4",
-                "2 SZ 5 4",
-                "3 SX 5 4",
-                "3 SY 5 4",
-                "3 SZ 5 4",
-                "4 S 4.3 8.2 -1.4 3.5",
-                "4 S 4.3 8.2 -1.4 3.5",
-            ],
-            strict=False,
+        list(
+            zip(
+                surfs,
+                [
+                    "1 SO 1",
+                    "1 SO 1",
+                    "1 SO 2",
+                    "2 SX 5 4",
+                    "2 SX 5 4",
+                    "2 SX 5 4",
+                    "2 SY 5 4",
+                    "2 SY 5 4",
+                    "2 SY 5 4",
+                    "2 SZ 5 4",
+                    "2 SZ 5 4",
+                    "2 SZ 5 4",
+                    "3 SX 5 4",
+                    "3 SY 5 4",
+                    "3 SZ 5 4",
+                    "4 S 4.3 8.2 -1.4 3.5",
+                    "4 S 4.3 8.2 -1.4 3.5",
+                ],
+                strict=False,
+            ),
         ),
     )
     def test_mcnp_pretty_repr(self, surface, answer):
@@ -848,28 +854,30 @@ class TestSphere:
 
     @pytest.mark.parametrize(
         "surface, answer",
-        zip(
-            surfs,
-            [
-                "1 SO 1",
-                "1 SO 1",
-                "1 SO 2",
-                "2 SX 5 4",
-                "2 SX 5 4",
-                "2 SX 5 4",
-                "2 SY 5 4",
-                "2 SY 5 4",
-                "2 SY 5 4",
-                "2 SZ 5 4",
-                "2 SZ 5 4",
-                "2 SZ 5 4",
-                "3 SX 5 4",
-                "3 SY 5 4",
-                "3 SZ 5 4",
-                "4 S 4.3 8.2 -1.4 3.5",
-                "4 S 4.3 8.2 -1.4 3.5",
-            ],
-            strict=False,
+        list(
+            zip(
+                surfs,
+                [
+                    "1 SO 1",
+                    "1 SO 1",
+                    "1 SO 2",
+                    "2 SX 5 4",
+                    "2 SX 5 4",
+                    "2 SX 5 4",
+                    "2 SY 5 4",
+                    "2 SY 5 4",
+                    "2 SY 5 4",
+                    "2 SZ 5 4",
+                    "2 SZ 5 4",
+                    "2 SZ 5 4",
+                    "3 SX 5 4",
+                    "3 SY 5 4",
+                    "3 SZ 5 4",
+                    "4 S 4.3 8.2 -1.4 3.5",
+                    "4 S 4.3 8.2 -1.4 3.5",
+                ],
+                strict=False,
+            ),
         ),
     )
     def test_mcnp_repr(self, surface, answer):
@@ -1030,44 +1038,46 @@ class TestCylinder:
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1],
     ]
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_round_equality(self, i1, s1, i2, s2):
         s1, s2 = s1.round(), s2.round()
         result = s1 == s2
         assert result == bool(self.eq_matrix[i1][i2])
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_hash(self, i1, s1, i2, s2):
         if self.eq_matrix[i1][i2]:
             assert hash(s1.round()) == hash(s2.round())
 
     @pytest.mark.parametrize(
         "surface, answer",
-        zip(
-            surfs,
-            [
-                "1 CX 1",
-                "1 CX 1",
-                "1 CY 1",
-                "1 CY 1",
-                "1 CZ 1",
-                "1 CZ 1",
-                "2 C/X 1 -2 3",
-                "2 C/X 1 -2 3",
-                "2 C/Y 1 -2 3",
-                "2 C/Y 1 -2 3",
-                "2 C/Z 1 -2 3",
-                "2 C/Z 1 -2 3",
-                "3 C/X 1 -2 3",
-                "3 C/X 1 -2 3",
-                "3 C/Y 1 -2 3",
-                "3 C/Y 1 -2 3",
-                "3 C/Z 1 -2 3",
-                "3 C/Z 1 -2 3",
-            ],
-            strict=False,
+        list(
+            zip(
+                surfs,
+                [
+                    "1 CX 1",
+                    "1 CX 1",
+                    "1 CY 1",
+                    "1 CY 1",
+                    "1 CZ 1",
+                    "1 CZ 1",
+                    "2 C/X 1 -2 3",
+                    "2 C/X 1 -2 3",
+                    "2 C/Y 1 -2 3",
+                    "2 C/Y 1 -2 3",
+                    "2 C/Z 1 -2 3",
+                    "2 C/Z 1 -2 3",
+                    "3 C/X 1 -2 3",
+                    "3 C/X 1 -2 3",
+                    "3 C/Y 1 -2 3",
+                    "3 C/Y 1 -2 3",
+                    "3 C/Z 1 -2 3",
+                    "3 C/Z 1 -2 3",
+                ],
+                strict=False,
+            ),
         ),
     )
     def test_mcnp_prety_repr(self, surface, answer):
@@ -1076,29 +1086,31 @@ class TestCylinder:
 
     @pytest.mark.parametrize(
         "surface, answer",
-        zip(
-            surfs,
-            [
-                "1 CX 1",
-                "1 CX 1",
-                "1 CY 1",
-                "1 CY 1",
-                "1 CZ 1",
-                "1 CZ 1",
-                "2 C/X 1 -2 3",
-                "2 C/X 1 -2 3",
-                "2 C/Y 1 -2 3",
-                "2 C/Y 1 -2 3",
-                "2 C/Z 1 -2 3",
-                "2 C/Z 1 -2 3",
-                "3 C/X 1 -2 3",
-                "3 C/X 1 -2 3",
-                "3 C/Y 1 -2 3",
-                "3 C/Y 1 -2 3",
-                "3 C/Z 1 -2 3",
-                "3 C/Z 1 -2 3",
-            ],
-            strict=False,
+        list(
+            zip(
+                surfs,
+                [
+                    "1 CX 1",
+                    "1 CX 1",
+                    "1 CY 1",
+                    "1 CY 1",
+                    "1 CZ 1",
+                    "1 CZ 1",
+                    "2 C/X 1 -2 3",
+                    "2 C/X 1 -2 3",
+                    "2 C/Y 1 -2 3",
+                    "2 C/Y 1 -2 3",
+                    "2 C/Z 1 -2 3",
+                    "2 C/Z 1 -2 3",
+                    "3 C/X 1 -2 3",
+                    "3 C/X 1 -2 3",
+                    "3 C/Y 1 -2 3",
+                    "3 C/Y 1 -2 3",
+                    "3 C/Z 1 -2 3",
+                    "3 C/Z 1 -2 3",
+                ],
+                strict=False,
+            ),
         ),
     )
     def test_mcnp_repr(self, surface, answer):
@@ -2405,8 +2417,8 @@ class TestCone:
         ],
     ]
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_round_equality(self, i1, s1, i2, s2):
         if i1 < i2:
             s1, s2 = s1.round(), s2.round()
@@ -2417,8 +2429,8 @@ class TestCone:
                 assert s1 != s2, f"Rounded surfaces {i1} and {i2}, should not be equal "
                 assert s2 != s1, "Inequality result shouldn't depend on order"
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_round_hash(self, i1, s1, i2, s2):
         if i1 < i2:
             s1, s2 = s1.round(), s2.round()
@@ -2433,41 +2445,43 @@ class TestCone:
 
     @pytest.mark.parametrize(
         "surface, answer",
-        zip(
-            surfs,
-            [
-                "1 KX 4 0.25",
-                "1 KX 4 0.25",
-                "1 KY 4 0.25",
-                "1 KY 4 0.25",
-                "1 KZ 4 0.25",
-                "1 KZ 4 0.25",
-                "2 K/X 3 2 -4 0.25",
-                "2 K/X 3 2 -4 0.25",
-                "2 K/Y 3 2 -4 0.25",
-                "2 K/Y 3 2 -4 0.25",
-                "2 K/Z 3 2 -4 0.25",
-                "2 K/Z 3 2 -4 0.25",
-                "3 K/X 3 2 -4 0.25",
-                "3 K/Y 3 2 -4 0.25",
-                "3 K/Z 3 2 -4 0.25",
-                "4 K/X 3 2 -4 0.25",
-                "4 K/Y 3 2 -4 0.25",
-                "4 K/Z 3 2 -4 0.25",
-                "5 K/X 3 2 -4 0.25 1",
-                "5 K/X 3 2 -4 0.25 1",
-                "5 K/Y 3 2 -4 0.25 1",
-                "5 K/Y 3 2 -4 0.25 1",
-                "5 K/Z 3 2 -4 0.25 1",
-                "5 K/Z 3 2 -4 0.25 1",
-                "6 K/X 3 2 -4 0.25 1",
-                "6 K/Y 3 2 -4 0.25 1",
-                "6 K/Z 3 2 -4 0.25 1",
-                "7 K/X 3 2 -4 0.25 -1",
-                "7 K/Y 3 2 -4 0.25 -1",
-                "7 K/Z 3 2 -4 0.25 -1",
-            ],
-            strict=False,
+        list(
+            zip(
+                surfs,
+                [
+                    "1 KX 4 0.25",
+                    "1 KX 4 0.25",
+                    "1 KY 4 0.25",
+                    "1 KY 4 0.25",
+                    "1 KZ 4 0.25",
+                    "1 KZ 4 0.25",
+                    "2 K/X 3 2 -4 0.25",
+                    "2 K/X 3 2 -4 0.25",
+                    "2 K/Y 3 2 -4 0.25",
+                    "2 K/Y 3 2 -4 0.25",
+                    "2 K/Z 3 2 -4 0.25",
+                    "2 K/Z 3 2 -4 0.25",
+                    "3 K/X 3 2 -4 0.25",
+                    "3 K/Y 3 2 -4 0.25",
+                    "3 K/Z 3 2 -4 0.25",
+                    "4 K/X 3 2 -4 0.25",
+                    "4 K/Y 3 2 -4 0.25",
+                    "4 K/Z 3 2 -4 0.25",
+                    "5 K/X 3 2 -4 0.25 1",
+                    "5 K/X 3 2 -4 0.25 1",
+                    "5 K/Y 3 2 -4 0.25 1",
+                    "5 K/Y 3 2 -4 0.25 1",
+                    "5 K/Z 3 2 -4 0.25 1",
+                    "5 K/Z 3 2 -4 0.25 1",
+                    "6 K/X 3 2 -4 0.25 1",
+                    "6 K/Y 3 2 -4 0.25 1",
+                    "6 K/Z 3 2 -4 0.25 1",
+                    "7 K/X 3 2 -4 0.25 -1",
+                    "7 K/Y 3 2 -4 0.25 -1",
+                    "7 K/Z 3 2 -4 0.25 -1",
+                ],
+                strict=False,
+            ),
         ),
     )
     def test_mcnp_pretty_repr(self, surface, answer):
@@ -2479,41 +2493,43 @@ class TestCone:
 
     @pytest.mark.parametrize(
         "surface, answer",
-        zip(
-            surfs,
-            [
-                "1 KX 4 0.25",
-                "1 KX 4 0.25",
-                "1 KY 4 0.25",
-                "1 KY 4 0.25",
-                "1 KZ 4 0.25",
-                "1 KZ 4 0.25",
-                "2 K/X 3 2 -4 0.25",
-                "2 K/X 3 2 -4 0.25",
-                "2 K/Y 3 2 -4 0.25",
-                "2 K/Y 3 2 -4 0.25",
-                "2 K/Z 3 2 -4 0.25",
-                "2 K/Z 3 2 -4 0.25",
-                "3 K/X 3 2 -4 0.25",
-                "3 K/Y 3 2 -4 0.25",
-                "3 K/Z 3 2 -4 0.25",
-                "4 K/X 3 2 -4 0.25",
-                "4 K/Y 3 2 -4 0.25",
-                "4 K/Z 3 2 -4 0.25",
-                "5 K/X 3 2 -4 0.25 1",
-                "5 K/X 3 2 -4 0.25 1",
-                "5 K/Y 3 2 -4 0.25 1",
-                "5 K/Y 3 2 -4 0.25 1",
-                "5 K/Z 3 2 -4 0.25 1",
-                "5 K/Z 3 2 -4 0.25 1",
-                "6 K/X 3 2 -4 0.25 1",
-                "6 K/Y 3 2 -4 0.25 1",
-                "6 K/Z 3 2 -4 0.25 1",
-                "7 K/X 3 2 -4 0.25 -1",
-                "7 K/Y 3 2 -4 0.25 -1",
-                "7 K/Z 3 2 -4 0.25 -1",
-            ],
-            strict=False,
+        list(
+            zip(
+                surfs,
+                [
+                    "1 KX 4 0.25",
+                    "1 KX 4 0.25",
+                    "1 KY 4 0.25",
+                    "1 KY 4 0.25",
+                    "1 KZ 4 0.25",
+                    "1 KZ 4 0.25",
+                    "2 K/X 3 2 -4 0.25",
+                    "2 K/X 3 2 -4 0.25",
+                    "2 K/Y 3 2 -4 0.25",
+                    "2 K/Y 3 2 -4 0.25",
+                    "2 K/Z 3 2 -4 0.25",
+                    "2 K/Z 3 2 -4 0.25",
+                    "3 K/X 3 2 -4 0.25",
+                    "3 K/Y 3 2 -4 0.25",
+                    "3 K/Z 3 2 -4 0.25",
+                    "4 K/X 3 2 -4 0.25",
+                    "4 K/Y 3 2 -4 0.25",
+                    "4 K/Z 3 2 -4 0.25",
+                    "5 K/X 3 2 -4 0.25 1",
+                    "5 K/X 3 2 -4 0.25 1",
+                    "5 K/Y 3 2 -4 0.25 1",
+                    "5 K/Y 3 2 -4 0.25 1",
+                    "5 K/Z 3 2 -4 0.25 1",
+                    "5 K/Z 3 2 -4 0.25 1",
+                    "6 K/X 3 2 -4 0.25 1",
+                    "6 K/Y 3 2 -4 0.25 1",
+                    "6 K/Z 3 2 -4 0.25 1",
+                    "7 K/X 3 2 -4 0.25 -1",
+                    "7 K/Y 3 2 -4 0.25 -1",
+                    "7 K/Z 3 2 -4 0.25 -1",
+                ],
+                strict=False,
+            ),
         ),
     )
     def test_mcnp_repr(self, surface, answer):
@@ -2711,8 +2727,8 @@ class TestTorus:
         [0, 0, 0, 0, 0, 0, 1, 1, 1],
     ]
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_round_equality(self, i1, s1, i2, s2):
         if i1 < i2:
             s1, s2 = s1.round(), s2.round()
@@ -2721,8 +2737,8 @@ class TestTorus:
             else:
                 assert s1 != s2
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_hash(self, i1, s1, i2, s2):
         if self.eq_matrix[i1][i2]:
             s1, s2 = s1.round(), s2.round()
@@ -2730,20 +2746,22 @@ class TestTorus:
 
     @pytest.mark.parametrize(
         "surface, answer",
-        zip(
-            surfs,
-            [
-                "1 TX 1 2 3 4 2 1",
-                "1 TX 1 2 3 4 2 1",
-                "1 TX 1 2 3 4 2 1",
-                "2 TY 1 2 3 4 2 1",
-                "2 TY 1 2 3 4 2 1",
-                "2 TY 1 2 3 4 2 1",
-                "3 TZ 1 2 3 4 2 1",
-                "3 TZ 1 2 3 4 2 1",
-                "3 TZ 1 2 3 4 2 1",
-            ],
-            strict=False,
+        list(
+            zip(
+                surfs,
+                [
+                    "1 TX 1 2 3 4 2 1",
+                    "1 TX 1 2 3 4 2 1",
+                    "1 TX 1 2 3 4 2 1",
+                    "2 TY 1 2 3 4 2 1",
+                    "2 TY 1 2 3 4 2 1",
+                    "2 TY 1 2 3 4 2 1",
+                    "3 TZ 1 2 3 4 2 1",
+                    "3 TZ 1 2 3 4 2 1",
+                    "3 TZ 1 2 3 4 2 1",
+                ],
+                strict=False,
+            ),
         ),
     )
     def test_mcnp_round_repr(self, surface, answer):
@@ -2752,20 +2770,22 @@ class TestTorus:
 
     @pytest.mark.parametrize(
         "surface, answer",
-        zip(
-            surfs,
-            [
-                "1 TX 1 2 3 4 2 1",
-                "1 TX 1 2 3 4 2 1",
-                "1 TX 1 2 3 4 2 1",
-                "2 TY 1 2 3 4 2 1",
-                "2 TY 1 2 3 4 2 1",
-                "2 TY 1 2 3 4 2 1",
-                "3 TZ 1 2 3 4 2 1",
-                "3 TZ 1 2 3 4 2 1",
-                "3 TZ 1 2 3 4 2 1",
-            ],
-            strict=False,
+        list(
+            zip(
+                surfs,
+                [
+                    "1 TX 1 2 3 4 2 1",
+                    "1 TX 1 2 3 4 2 1",
+                    "1 TX 1 2 3 4 2 1",
+                    "2 TY 1 2 3 4 2 1",
+                    "2 TY 1 2 3 4 2 1",
+                    "2 TY 1 2 3 4 2 1",
+                    "3 TZ 1 2 3 4 2 1",
+                    "3 TZ 1 2 3 4 2 1",
+                    "3 TZ 1 2 3 4 2 1",
+                ],
+                strict=False,
+            ),
         ),
     )
     def test_mcnp_repr(self, surface, answer):
@@ -2911,8 +2931,8 @@ class TestGQuadratic:
         [0, 0, 0, 1, 0, 1],
     ]
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_round_equality(self, i1, s1, i2, s2):
         s1, s2 = s1.round(), s2.round()
         if self.eq_matrix[i1][i2]:
@@ -2920,8 +2940,8 @@ class TestGQuadratic:
         else:
             assert s1 != s2
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_hash(self, i1, s1, i2, s2):
         if self.eq_matrix[i1][i2]:
             s1, s2 = s1.round(), s2.round()
@@ -2929,17 +2949,19 @@ class TestGQuadratic:
 
     @pytest.mark.parametrize(
         "surface, answer",
-        zip(
-            surfs,
-            [
-                "1 GQ 1 1 1 0 0 0 -2 -2 -2 3",
-                "1 GQ 1 1 1 0 0 0 -2 -2 -2 3",
-                "1 GQ -1 -1 -1 0 0 0 2 2 2 -3",
-                "2 GQ 1 2 3 0.5 0.8 0.6 1 2 3 -4",
-                "2 GQ -1 -2 -3 -0.5 -0.8 -0.6 -1 -2 -3 4",
-                "2 GQ 1 2 3 0.5 0.8 0.6 1 2 3 -4",
-            ],
-            strict=False,
+        list(
+            zip(
+                surfs,
+                [
+                    "1 GQ 1 1 1 0 0 0 -2 -2 -2 3",
+                    "1 GQ 1 1 1 0 0 0 -2 -2 -2 3",
+                    "1 GQ -1 -1 -1 0 0 0 2 2 2 -3",
+                    "2 GQ 1 2 3 0.5 0.8 0.6 1 2 3 -4",
+                    "2 GQ -1 -2 -3 -0.5 -0.8 -0.6 -1 -2 -3 4",
+                    "2 GQ 1 2 3 0.5 0.8 0.6 1 2 3 -4",
+                ],
+                strict=False,
+            ),
         ),
     )
     def test_mcnp_pretty_repr(self, surface, answer):
@@ -3069,31 +3091,33 @@ class TestBOX:
         [0, 0, 0, 0, 0, 1],
     ]
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_eq(self, i1, s1, i2, s2):
         result = s1 == s2
         assert result == bool(self.eq_matrix[i1][i2])
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_hash(self, i1, s1, i2, s2):
         if self.eq_matrix[i1][i2]:
             assert hash(s1) == hash(s2)
 
     @pytest.mark.parametrize(
         "surface, answer",
-        zip(
-            surfs,
-            [
-                "1 BOX -1 -2 -3 2 0 0 0 4 0 0 0 6 ",
-                "1 BOX -1 -2 -3 2 0 0 0 4 0 0 0 6 ",
-                "2 BOX 1 2 3 -2 0 0 0 -4 0 0 0 -6 ",
-                "1 BOX -2 -2 -3 3 0 0 0 4 0 0 0 6 ",
-                "1 BOX -2 -2 -3 3 0 0 0 4 0 0 0 6 ",
-                "2 BOX 1 2 3 -3 0 0 0 -4 0 0 0 -6 ",
-            ],
-            strict=False,
+        list(
+            zip(
+                surfs,
+                [
+                    "1 BOX -1 -2 -3 2 0 0 0 4 0 0 0 6 ",
+                    "1 BOX -1 -2 -3 2 0 0 0 4 0 0 0 6 ",
+                    "2 BOX 1 2 3 -2 0 0 0 -4 0 0 0 -6 ",
+                    "1 BOX -2 -2 -3 3 0 0 0 4 0 0 0 6 ",
+                    "1 BOX -2 -2 -3 3 0 0 0 4 0 0 0 6 ",
+                    "2 BOX 1 2 3 -3 0 0 0 -4 0 0 0 -6 ",
+                ],
+                strict=False,
+            ),
         ),
     )
     def test_mcnp_repr(self, surface, answer):
@@ -3249,31 +3273,33 @@ class TestRCC:
         [0, 0, 0, 0, 0, 1],
     ]
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_eq(self, i1, s1, i2, s2):
         result = s1 == s2
         assert result == bool(self.eq_matrix[i1][i2])
 
-    @pytest.mark.parametrize("i1, s1", enumerate(surfs))
-    @pytest.mark.parametrize("i2, s2", enumerate(surfs))
+    @pytest.mark.parametrize("i1, s1", list(enumerate(surfs)))
+    @pytest.mark.parametrize("i2, s2", list(enumerate(surfs)))
     def test_hash(self, i1, s1, i2, s2):
         if self.eq_matrix[i1][i2]:
             assert hash(s1) == hash(s2)
 
     @pytest.mark.parametrize(
         "surface, answer",
-        zip(
-            surfs,
-            [
-                "1 RCC -1 1 -2 2 0 0 4 ",
-                "1 RCC -1 1 -2 2 0 0 4 ",
-                "2 RCC -1 2 -2 2 0 0 4 ",
-                "1 RCC 1 2 -2 -2 0 0 4 ",
-                "1 RCC -1 1 -2 2 0 0 3 ",
-                "2 RCC 1 1 -2 -2 0 0 3 ",
-            ],
-            strict=False,
+        list(
+            zip(
+                surfs,
+                [
+                    "1 RCC -1 1 -2 2 0 0 4 ",
+                    "1 RCC -1 1 -2 2 0 0 4 ",
+                    "2 RCC -1 2 -2 2 0 0 4 ",
+                    "1 RCC 1 2 -2 -2 0 0 4 ",
+                    "1 RCC -1 1 -2 2 0 0 3 ",
+                    "2 RCC 1 1 -2 -2 0 0 3 ",
+                ],
+                strict=False,
+            )
         ),
     )
     def test_mcnp_repr(self, surface, answer):
