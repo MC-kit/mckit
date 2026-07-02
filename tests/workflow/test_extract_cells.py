@@ -17,8 +17,9 @@ from mckit.workflow import (
 def universe_test_data(data: Path) -> Path:
     return data / "universe"
 
+
 @pytest.mark.parametrize("universe,select,expected", [("universe1.i", [1], [1, 3])])
-def test_extract_by_cell_numbers(universe, select, expected, universe_test_data:Path) -> None:
+def test_extract_by_cell_numbers(universe, select, expected, universe_test_data: Path) -> None:
     path = universe_test_data / universe
     assert path.exists(), f"Cannot find path {path}"
     actual = extract_cells_from_file(path, filter_by_cell_numbers(select))

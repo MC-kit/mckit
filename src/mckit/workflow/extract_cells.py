@@ -107,7 +107,8 @@ def extract_cells(
 
         def _select_adjacent_cells(_c: Body) -> bool:
             return _c.name() not in selected_cells and any(
-                cast(int,s.name()) in selected_surfaces for s in _c.shape.get_surfaces()  # ty:ignore[unresolved-attribute]
+                cast(int, s.name()) in selected_surfaces
+                for s in _c.shape.get_surfaces()  # ty:ignore[unresolved-attribute]
             )
 
         selected_cells.update(filter(_select_adjacent_cells, it2))
