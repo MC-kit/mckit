@@ -94,7 +94,7 @@ endif()
 
 list(APPEND CMAKE_PREFIX_PATH $ENV{MCKIT_SRC}/.pixi/envs/default/lib/cmake)
 
-cmake_print_variables(CMAKE_MODULE_PATH, CMAKE_PREFIX_PATH)
+cmake_print_variables(CMAKE_MODULE_PATH CMAKE_PREFIX_PATH)
 
 # add_subdirectory(extern)
 
