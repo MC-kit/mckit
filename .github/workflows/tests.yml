@@ -44,7 +44,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DEFAULT_PYTHON: "3.14"
   MKLROOT: "${{ github.workspace }}/.pixi/envs/default"
   MKL_INCLUDE_PATH: "${{ github.workspace }}/.pixi/envs/default/include"
   LD_LIBRARY_PATH: "${{ github.workspace }}/.pixi/envs/default/lib"
@@ -63,7 +62,7 @@ jobs:
 
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
-          pixi-version: v0.71.0
+          pixi-version: v0.72. 0
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
 #          auth-host: prefix.dev
@@ -84,7 +83,7 @@ jobs:
           submodules: 'true'
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
-          pixi-version: v0.71.1
+          pixi-version: v0.72.0
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
           environments: docs
@@ -132,7 +131,7 @@ jobs:
 
       - uses: prefix-dev/setup-pixi@v0.9.6
         with:
-          pixi-version: v0.71.1
+          pixi-version: v0.72.0
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
           environments: ${{ matrix.environment }}
