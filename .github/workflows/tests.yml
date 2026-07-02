@@ -46,6 +46,10 @@ concurrency:
 env:
   DEFAULT_PYTHON: "3.14"
   UV_LINK_MODE: "copy"
+  MKLROOT: "$GITHUB_WORKSPACE/.pixi/envs/default"
+  LD_LIBRARY_PATH: "$GITHUB_WORKSPACE/.pixi/envs/default/lib"
+  no_proxy: "pypi.org,files.pythonhosted.org,github.com,api.github.com"  # to avoid SOCKS issue on python3.14
+
 
 jobs:
 
@@ -53,8 +57,6 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       !contains(github.event.head_commit.message, '[skip_ci]')
-    env:
-      no_proxy: "pypi.org,files.pythonhosted.org,github.com,api.github.com"  # to avoid SOCKS issue on python3.14
     steps:
       - name: ✅ Check out the repository
         uses: actions/checkout@v6
@@ -93,9 +95,9 @@ jobs:
 #            **/uv.lock
 #            **/pyproject.toml
 
-      - name: 🐍 Install the project
-        run: |
-          pixi install
+#      - name: 🐍 Install the project
+#        run: |
+#          pixi install
 
       - name: 📦 Build documentation
         run: |
