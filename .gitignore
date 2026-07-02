@@ -1,3 +1,6 @@
+# Ignore "hidded" files and directoies
+.*
+
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -9,7 +12,6 @@ __pycache__/
 *.so.*
 
 # Distribution / packaging
-.Python
 build/
 develop-eggs/
 downloads/
@@ -38,14 +40,8 @@ pip-delete-this-directory.txt
 
 # Unit test / coverage reports
 htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
 coverage.xml
 *.cover
-.hypothesis/
-.pytest_cache/
 
 
 # PLY generated tables
@@ -61,38 +57,12 @@ docs/_build/
 # PyBuilder
 target/
 
-# Jupyter Notebook
-.ipynb_checkpoints
-
 
 # mkdocs documentation
 /site
 
-# mypy
-.mypy_cache/
-
-#JetBrains
-.idea/
-
-.cache/
 **/parser.out
 **/parsetab.py
-
-#VSCode settings
-.vscode
-
-# Local environment files for dotenv
-.env
-
-#Local virtual environments
-.venv
-.nox
-
-# pyenv and poetry
-.python-version
-setup.py
-# The poetry config file poetry.toml is specific for each developer's environment
-poetry.toml
 
 
 dist/
@@ -100,11 +70,8 @@ wrk/
 setup-generated.py
 poetry_setup_kwargs.txt
 
-!.github
-
 # benchmark resuls
 *uncommited-changes.json
-.benchmarks
 
 #cmake work folders
 cmake-build-debug
