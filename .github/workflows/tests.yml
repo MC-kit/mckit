@@ -139,7 +139,7 @@ jobs:
 
       - name: ✅ Run tests
         run: |
-          pytest --cov --cov-report term-missing:skip-covered --cov-report xml
+          pixi run coverage-xml
 
       - name: 📤 Upload coverage report
         uses: codecov/codecov-action@v7

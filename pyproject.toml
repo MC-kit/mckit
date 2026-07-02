@@ -131,6 +131,7 @@ test-slow = { cmd = "pytest -m 'slow'", description = "Run slow test (if test-fa
 test = { cmd = "pytest", description = "Run all the tests." }
 coverage = { cmd = "pytest --cov --cov-report=term-missing:skip-covered", description = "Run tests with coverage" }
 coverage-html = { cmd = "pytest --cov --cov-report html:htmlcov && open htmlcov/index.html", description = "Run tests with coverage and open results in a browser" }
+coverage-xml = { cmd = "pytest --cov --cov-report=term-missing:skip-covered --cov-report xml", description = "Run tests with coverage to upload to codecov" }
 [tool.pixi.feature.typeguard.dependencies]
 typeguard = ">=4.5"
 [tool.pixi.feature.typeguard.tasks]
