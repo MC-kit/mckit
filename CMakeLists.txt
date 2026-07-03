@@ -95,7 +95,7 @@ if(WIN32)
     set(MKL_ROOT_DIR "${MCKIT_PIXI_ENV_ROOT}/Library")
     set(MKL_INCLUDE_SEARCH_PATH "${MCKIT_PIXI_ENV_ROOT}/Library/include")
     # Добавляем Library в префикс поиска
-    list(APPEND CMAKE_PREFIX_PATH "${MCKIT_PIXI_ENV_ROOT}/Library")
+    list(APPEND CMAKE_PREFIX_PATH "${MCKIT_PIXI_ENV_ROOT}/Library/lib")
 else()
     # На Linux пути стандартные (корень окружения)
     set(MKL_ROOT_DIR "${MCKIT_PIXI_ENV_ROOT}")
