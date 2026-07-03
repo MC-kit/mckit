@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 HERE = Path(__file__).parent
-DATA = HERE / "data"
+DATA = (HERE / "data").absolute()
 
 
 @pytest.fixture(scope="session")

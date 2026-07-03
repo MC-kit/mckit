@@ -15,6 +15,25 @@ from mckit.utils.named import default_name_key, map_names
 BodyPredicate = Callable[[Body], bool]
 
 
+def filter_by_cell_number(cell_number: int) -> BodyPredicate:
+    """Create filter to extract a cell with the given cell number.
+
+    Parameters
+    ----------
+    cell_number
+        cell number to select
+
+    Returns
+    -------
+        predicate to use in :func:`~mckit.workflow.extract_cells`
+    """
+
+    def _call(c: Body) -> bool:
+        return cast(int, c.name()) == cell_number
+
+    return _call
+
+
 def filter_by_cell_numbers(cell_numbers_to_select: Container[int]) -> BodyPredicate:
     """Create filter to extract cells with given numbers.
 
@@ -25,11 +44,30 @@ def filter_by_cell_numbers(cell_numbers_to_select: Container[int]) -> BodyPredic
 
     Returns
     -------
-        predicate to use in :meth:`~mckit.workflow.extract_cells`
+        predicate to use in :func`~mckit.workflow.extract_cells`
     """
 
     def _call(c: Body) -> bool:
         return cast(int, c.name()) in cell_numbers_to_select
+
+    return _call
+
+
+def filter_by_surface_number(surface_number: int) -> BodyPredicate:
+    """Create filter to extract cells having a surfaces with the given number.
+
+    Parameters
+    ----------
+    surface_numbers
+        collection of numbers to select
+
+    Returns
+    -------
+        predicate to use in :func:`~mckit.workflow.extract_cells.extract_cells`
+    """
+
+    def _call(c: Body) -> bool:
+        return any(n == surface_number for n in map_names(c.shape.get_surfaces()))  # ty:ignore[unresolved-attribute]
 
     return _call
 

@@ -5,9 +5,6 @@ from typing import NamedTuple
 import pytest
 
 from mckit.parser.mcnp_input_sly_parser import ParseResult, from_file, from_text
-from mckit.utils import path_resolver
-
-file_resolver = path_resolver("tests.parser")
 
 
 class TExpected(NamedTuple):
@@ -287,8 +284,8 @@ def test_parser_basic_functionality(text: str, expected: TExpected):
         ),
     ],
 )
-def test_mcnp_parser(parse_file, expected):
-    parse_file = file_resolver(parse_file)
+def test_mcnp_parser(parse_file, expected, data):
+    parse_file = data / "parser" / parse_file
     result: ParseResult = from_file(parse_file)
     assert expected["title"] == result.sections.title
     # TODO dvp: organize correct comparison of result with expected data

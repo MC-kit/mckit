@@ -15,7 +15,8 @@ from mckit.fmesh import CylMesh, RectMesh
 from mckit.material import Material
 from mckit.surface import create_surface
 from mckit.transformation import Transformation
-from mckit.utils._resource import path_resolver
+
+# from mckit.utils._resource import path_resolver
 
 transforms = [
     None,
@@ -354,9 +355,6 @@ class TestRectMesh:
             np.testing.assert_array_almost_equal(x, expected["x"])
             np.testing.assert_array_almost_equal(y, expected["y"])
 
-
-parser_test_data = path_resolver("tests")
-# dvp: On Linux access to package should be organized with resource name resolver.
 
 
 class TestFMesh:

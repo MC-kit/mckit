@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from mckit.utils._resource import path_resolver
+from mckit.utils import path_resolver
 
 THIS_FILENAME = Path(__file__).name
 
@@ -13,7 +13,7 @@ THIS_FILENAME = Path(__file__).name
 @pytest.mark.parametrize(
     "package,resource,expected",
     [
-        ("tests", "cli/data/simple_cubes.mcnp", "/cli/data/simple_cubes.mcnp"),
+        ("tests", "data/cli/simple_cubes.mcnp", "data/cli/simple_cubes.mcnp"),
     ],
 )
 def test_path_resolver(package, resource, expected) -> None:

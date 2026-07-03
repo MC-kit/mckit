@@ -28,5 +28,5 @@ def clite_text(data) -> str:
     -------
         Loaded text of a C-lite model.
     """
-    with ZipFile(data("data/4M.zip")) as data_archive:
+    with ZipFile(data("4M.zip")) as data_archive:
         return data_archive.read("clite.i").decode(encoding="utf8")

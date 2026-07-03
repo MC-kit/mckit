@@ -4,9 +4,10 @@ import numpy as np
 import pytest
 
 from mckit.parser.mctal_parser import read_mctal
-from mckit.utils import path_resolver
 
-data_path_resolver = path_resolver("tests")
+# from mckit.utils import path_resolver
+#
+# data_path_resolver = path_resolver("tests")
 
 
 @pytest.mark.parametrize(
