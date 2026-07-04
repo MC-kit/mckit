@@ -16,7 +16,17 @@ from .transformation_index import (
     TransformationNotFoundError,
     TransformationStrictIndex,
 )
-from .utils import FLOAT, INTEGER, RE_C_COMMENT, RE_EMPTY_LINE, RE_EOL_COMMENT, RE_LINE, ParseError
+from .utils import (
+    FLOAT,
+    INTEGER,
+    RE_C_COMMENT,
+    RE_EMPTY_LINE,
+    RE_EOL_COMMENT,
+    RE_LINE,
+    ParseError,
+    extract_integer,
+    extract_optioall_integer,
+)
 
 __all__ = [
     "FLOAT",
@@ -44,4 +54,6 @@ __all__ = [
     "TransformationDummyIndex",
     "TransformationNotFoundError",
     "TransformationStrictIndex",
+    "extract_integer",
+    "extract_optioall_integer",
 ]

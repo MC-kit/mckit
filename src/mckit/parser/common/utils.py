@@ -14,7 +14,7 @@ RE_LINE = re.compile(LINE)
 FLOAT = r"[+-]?((\d+\.?\d*)|(\.\d+))(?:[ed][-+]?\d+)?"
 INTEGER = r"\d+"
 RE_EMPTY_LINE = re.compile(r"\s*")
-
+INTEGER_SELECT = re.compile(r"(\d+)")
 
 def ensure_lower(text: str):
     if not text.islower():
@@ -95,3 +95,47 @@ def internalize(word: str, words: Iterable[str]) -> tuple[str, bool]:
         if w == word:
             return w, True
     return word, False
+
+
+
+def extract_optioall_integer(text: str, pos: int = 0):
+    """Extract integer from given `text.
+
+    Parameters
+    ----------
+    text
+        ... to search the integer.
+    pos
+        ... position to start search from
+
+    Returns
+    -------
+    Found integer, if found, else None.
+
+    """
+    match = INTEGER_SELECT.match(text, pos=pos)
+    return int(match.group(1)) if match else None
+
+def extract_integer(text: str, pos: int = 0)-> int:
+    """Extract integer from given `text.
+
+    Parameters
+    ----------
+    text
+    ... to search the integer.
+    pos
+    ... position to start search from
+
+    Returns
+    -------
+    Found integer.
+
+    Raises
+    ------
+    ValueError: if integer not found.
+    """
+
+    result = extract_optioall_integer(text, pos)
+    if result is None:
+        raise ParseError("Could not parse integer.")
+    return result

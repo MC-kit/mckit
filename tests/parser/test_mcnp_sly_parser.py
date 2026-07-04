@@ -43,7 +43,7 @@ def test_parser_basic_functionality(text: str, expected: TExpected):
     "parse_file, expected",
     [
         (
-            "data/parser1.txt",
+            "parser1.txt",
             {
                 "title": "mcnp parsing test file",
                 "cells": {
@@ -109,7 +109,7 @@ def test_parser_basic_functionality(text: str, expected: TExpected):
             },
         ),
         (
-            "data/parser2.txt",
+            "parser2.txt",
             {
                 "title": "mcnp parsing test file 2",
                 "cells": {

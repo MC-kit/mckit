@@ -19,6 +19,7 @@ from mckit.parser.common import (
     ParseError,
     SurfaceStrictIndex,
     TransformationStrictIndex,
+    extract_integer,
 )
 from mckit.parser.material_parser import Composition
 from mckit.parser.material_parser import parse as parse_composition
@@ -29,6 +30,7 @@ from mckit.parser.transformation_parser import parse as parse_transformation
 from mckit.universe import Universe, produce_universes
 from mckit.utils.indexes import Index
 
+from .common.utils import extract_integer
 from .mcnp_section_parser import Card as TextCard
 from .mcnp_section_parser import InputSections, Kind, distribute_cards, parse_sections_text
 
@@ -156,10 +158,6 @@ def parse_surfaces(text_cards: Iterable[TextCard], transformations: Index) -> li
     return list(parse_section(text_cards, Kind.SURFACE, parser))
 
 
-def extract_number(text_card: TextCard):
-    return int(text_card.text.split(maxsplit=1)[0])
-
-
 class MissedCellsError(RuntimeError):
     def __init__(self, missed_cells: list[int]):
         self.missed_cells = missed_cells
@@ -167,8 +165,8 @@ class MissedCellsError(RuntimeError):
         super().__init__(msg)
 
     @classmethod
-    def from_text_cards(cls, missed_cells: Iterable[TextCard]):
-        missed_cells_numbers: list[int] = list(map(extract_number, missed_cells))
+    def from_text_cards(cls, missed_cells: list[TextCard]):
+        missed_cells_numbers = [extract_integer(x.text) for x in missed_cells]
         return cls(missed_cells_numbers)
 
 

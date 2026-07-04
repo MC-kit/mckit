@@ -133,9 +133,9 @@ class TestDistribution:
         values = [Distribution(1, [1, 2], [1]), [1, 2, 3]]
         probs = [0.5, 0.5]
         with pytest.raises(TypeError):
-            Distribution("RAD", values, probs)
+            Distribution("RAD", values, probs)  # pyright: ignore[reportArgumentType]
         with pytest.raises(TypeError):
-            Distribution("RAD", values[::-1], probs)
+            Distribution("RAD", values[::-1], probs)  # pyright: ignore[reportArgumentType]
 
 
 @pytest.mark.parametrize(
