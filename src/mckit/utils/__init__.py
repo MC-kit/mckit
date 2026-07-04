@@ -8,7 +8,6 @@ from mckit.utils._io import (
     make_dir,
     make_dirs,
 )
-
 from mckit.utils._resource import path_resolver
 from mckit.utils.accept import TVisitor, accept, on_unknown_acceptor
 from mckit.utils.misc import (

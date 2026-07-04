@@ -37,9 +37,6 @@ Homepage = "https://github.com/MC-kit/mckit"
 Issues = "https://github.com/MC-kit/mckit/issues"
 Repository = "https://github.com/MC-kit/mckit"
 
-[dependency-groups]
-analyze = [ "jupyterlab>=4.5", "jupytext>=1.19" ]
-
 # pixi example: https://github.com/prefix-dev/pixi/blob/main/examples/pybind11/pyproject.toml
 [tool.scikit-build]
 minimum-version = "build-system.requires"
@@ -66,7 +63,7 @@ python = "*"
 sly = "*"
 tomli-w = "*"
 [tool.pixi.environments]
-analyze = { features = [ "analyze" ], solve-group = "default" }
+analyze = { features = [ "analyze", "build", "py314" ], solve-group = "default" }
 default = { features = [ "build", "test", "style" ], solve-group = "default" }
 docs = { features = [ "build", "docs" ], solve-group = "default" }
 prod = { solve-group = "default" }
@@ -82,6 +79,8 @@ py313.dependencies.python = "3.13.*"
 py314.dependencies.python = "3.14.*"
 # pypi.tasks.pypi_build = "pixi run uv build --no-build-isolation"
 # pypi.tasks.repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
+[tool.pixi.feature.analyze.dependencies] 
+marimo = ">=0.23.13"
 [tool.pixi.feature.build.dependencies]
 # Explicitly add build tools for faster resolution
 cmake = ">=4"

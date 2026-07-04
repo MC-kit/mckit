@@ -89,6 +89,7 @@ def cell_selector(cell_names: int | Iterable[int]) -> Callable[[Body], list[Body
             return []
 
     else:
+        # TODO @dvp: no need to create set here, caller can provide better container with fast search
         cell_names = set(cell_names)
 
         def selector(cell: Body) -> list[Body]:
@@ -112,6 +113,8 @@ def surface_selector(surface_names):
     selector : func
         Selector function
     """
+    # TODO @dvp: use == int instead of set creation
+    # TODO @dvp: duplicates code in workflows.extract_cells
     surface_names = {surface_names} if isinstance(surface_names, int) else set(surface_names)
 
     def selector(cell):
@@ -470,6 +473,9 @@ class Universe:
         -------
             Universe bounding box.
         """
+        # TODO @dvp: очень неэффективное решение, незачем запоминать
+        #            все boxes, достаточно вычислить lo- и up-corners
+        # TODO @dvp: make the cycle parallel
         boxes = []
         for c in self._cells:
             if skip_graveyard_cells and c.is_graveyard:

@@ -9,7 +9,7 @@ from mckit.material import AVOGADRO, Composition, Element, Material
 from mckit.parser import ParseResult, from_file, from_stream, from_text, read_meshtal
 from mckit.parser.mctal_parser import read_mctal
 from mckit.surface import Cone, Cylinder, GQuadratic, Plane, Sphere, Torus, create_surface
-from mckit.transformation import Transformation
+from mckit.transformation import Transformation, calc_z_rotation
 from mckit.universe import Universe
 from mckit.version import (
     __copyright__,
@@ -39,6 +39,7 @@ __all__: list[str] = [
     "__copyright__",
     "__title__",
     "__version__",
+    "calc_z_rotation",
     "create_surface",
     "from_file",
     "from_stream",
