@@ -29,29 +29,40 @@ from mckit.utils.misc import (
 )
 from mckit.utils.tolerance import FLOAT_TOLERANCE
 
+from ._path import find_git_root_dir, has_subdir, search_path_upward
+from .named import HasName, Name, check_name_is_int, default_name_key, map_names
+
 __all__ = [
     "FLOAT_TOLERANCE",
     "MAX_DIGITS",
+    "HasName",
+    "Name",
     "TVisitor",
     "accept",
     "are_equal",
     "check_if_all_paths_exist",
     "check_if_path_exists",
+    "check_name_is_int",
     "compute_hash",
     "deepcopy",
+    "default_name_key",
     "filter_dict",
+    "find_git_root_dir",
     "get_decades",
+    "has_subdir",
     "is_in",
     "is_sorted",
     "make_dir",
     "make_dirs",
     "make_hashable",
+    "map_names",
     "mids",
     "on_unknown_acceptor",
     "path_resolver",
     "prettify_float",
     "round_array",
     "round_scalar",
+    "search_path_upward",
     "significant_array",
     "significant_digits",
 ]

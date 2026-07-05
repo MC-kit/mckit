@@ -33,9 +33,10 @@ if TYPE_CHECKING:
 
     from collections.abc import Iterable, Iterator
 
-    import numpy.typing as npt
-
     from mckit import Universe
+    from mckit.types import NPIntArray
+
+    ShapeOperationCode = Literal["I", "U", "E", "R", "S", "C"]
 
 
 __all__ = ["GLOBAL_BOX", "Body", "Card", "Shape", "TGeometry", "TGeometry", "simplify"]
@@ -50,12 +51,13 @@ class Shape(_Shape):
     Note:
         Shape is immutable object.
 
-    Attrs:
-        opc (str):
+    Paratmeters
+    -----------
+        opc
             Operation code. It may be different from opc passed in __init__.
-        invert_opc (str):
+        invert_opc
             Operation code, complement to the opc.
-        args (Tuple[Shape|Surface...]):
+        args
             A tuple of shape's arguments.
 
     Methods
@@ -99,18 +101,23 @@ class Shape(_Shape):
         "C": ~hash("S"),
     }
 
-    def __init__(self, _opc: str, *_args: Shape | Surface | Body) -> None:
+    def __init__(self, _opc: ShapeOperationCode, *_args: Shape | Surface | Body) -> None:
         """Initialize Shape object.
 
-        Args:
-            _opc:  Operation code. Denotes operation to be applied. Possible values:
+        Paramters
+        ---------
+            _opc
+                Operation code. Denotes operation to be applied.
+                Possible values:
                 'I' - for intersection;
                 'U' - for union;
                 'C' - for complement;
                 'S' - (same) no operation;
                 'E' - empty set - no space occupied;
                 'R' - whole space.
-            _args:  Geometry elements. It can be either Shape or Surface instances. But
+            _args
+                Geometry elements.
+                It can be either Shape or Surface instances. But
                 no arguments must be specified for 'E' or 'R' opc. Only one argument
                 must present for 'C' or 'S' opc values.
         """
@@ -356,7 +363,7 @@ class Shape(_Shape):
         return list(_scan())
 
     @staticmethod
-    def _find_groups(result: npt.NDArray) -> list[int]:
+    def _find_groups(result: NPIntArray) -> list[NPIntArray]:
         groups = [result[i, :] for i in range(result.shape[0])]
         while True:
             index = len(groups) - 1
@@ -528,10 +535,10 @@ class Shape(_Shape):
 
 if TYPE_CHECKING:
     TOperation = NewType("TOperation", str)
-    TGeometry = NewType("TGeometry", list[Surface | TOperation] | Shape | "Body")
+    TGeometry = list[Surface | TOperation | Shape | "Body" | str]
 
 
-def _clean_args(opc: str, *_args: Shape | Surface | Body) -> tuple[str, list[Shape]]:
+def _clean_args(opc: ShapeOperationCode, *_args: Shape | Surface | Body) -> tuple[str, list[Shape]]:
     """Clean input arguments.
 
     If arg is a Body, extracts its shape.
@@ -544,46 +551,48 @@ def _clean_args(opc: str, *_args: Shape | Surface | Body) -> tuple[str, list[Sha
     -------
     opc and args simplified and args being converted to Shape
     """
-    args = [a.shape if isinstance(a, Body) else a for a in _args]
-    _verify_opc(opc, *args)
+    shapes_or_surfaces = [a.shape if isinstance(a, Body) else a for a in _args]
+    _verify_opc(opc, *shapes_or_surfaces)
     if opc in {"I", "U"}:  # intersect or union
-        args = [Shape("S", a) if isinstance(a, Surface) else a for a in args]
-    if len(args) > 1:
+        shapes = [Shape("S", a) if isinstance(a, Surface) else a for a in shapes_or_surfaces]
+    else:
+        shapes = cast(list[Shape], shapes_or_surfaces)
+    if len(shapes) > 1:
         # Extend arguments
         i = 0
-        while i < len(args):
-            if args[i].opc == opc:
-                a = args.pop(i)
-                args.extend(a.args)
+        while i < len(shapes):
+            if shapes[i].opc == opc:
+                a = shapes.pop(i)
+                shapes.extend(a.args)
             else:
                 i += 1
 
         i = 0
-        while i < len(args):
-            a = args[i]
+        while i < len(shapes):
+            a = shapes[i]
             if (a.opc == "E" and opc == "I") or (a.opc == "R" and opc == "U"):
                 return a.opc, []
             if (a.opc == "E" and opc == "U") or (a.opc == "R" and opc == "I"):
-                args.pop(i)
+                shapes.pop(i)
                 continue
-            for b in args[i + 1 :]:
+            for b in shapes[i + 1 :]:
                 if a.is_complement(b):
                     if opc == "I":
                         return "E", []
                     return "R", []
             i += 1
         # TODO dvp: make args unique: args = list(set(args))
-        args.sort(key=hash)
-        if len(args) == 0:
+        shapes.sort(key=hash)
+        if len(shapes) == 0:
             opc = "E" if opc == "U" else "R"
-    if len(args) == 1 and isinstance(args[0], Shape):
+    if len(shapes) == 1 and isinstance(shapes[0], Shape):
         if opc in {"S", "I", "U"}:
-            return args[0].opc, args[0].args
+            return shapes[0].opc, shapes[0].args
         if opc == "C":
-            item = args[0].complement()
+            item = shapes[0].complement()
             return item.opc, item.args
 
-    return opc, args
+    return opc, shapes
 
 
 def _verify_opc(opc, *args):
@@ -641,15 +650,25 @@ class Body(Card):
     def __iter__(self):
         return iter(self._shape)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return Card.__hash__(self) ^ hash(self._shape)
 
-    def __eq__(self, other):
-        return Card.__eq__(self, other) and self._shape == other._shape
+    def __eq__(self, other) -> bool:
+        return isinstance(other, Body) and Card.__eq__(self, other) and self._shape == other._shape
 
     @property
-    def transformation(self):
-        return self.options.get("TRCL", None)
+    def transformation(self) -> Transformation | None:
+        return self.options.get("TRCL")
+
+    @property
+    def is_empty(self) -> bool:
+        """Check if the body is empty.
+
+        Returns
+        -------
+            True, if this body is empty, False otherwise.
+        """
+        return self._shape.is_empty()
 
     @property
     def is_graveyard(self) -> bool:
@@ -662,7 +681,7 @@ class Body(Card):
         True, if all cell is of zero importance for all the kinds of particles, otherwise - False
         """
         # noinspection PyTypeChecker
-        return all(self.importance(c) == 0.0 for c in "NPE")
+        return all(self.importance(cast(Literal["N", "P", "E"], c)) == 0.0 for c in ["N", "P", "E"])
 
     def importance(self, particle: Literal["N", "P", "E"] = "N") -> float:
         """Retrieve importance of a cell for a particle kind.

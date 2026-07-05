@@ -26,7 +26,7 @@ def default_name_key(x: HasName) -> Name:
     x
         card with name
     """
-    return cast(Name, x.name())
+    return cast(Name, check_name_is_int(x.name()))
 
 
 def check_name_is_int(name: int | None) -> int:

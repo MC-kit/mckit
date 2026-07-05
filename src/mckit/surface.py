@@ -642,8 +642,10 @@ class Plane(Surface, _Plane):
     def __init__(
         self, normal: npt.NDArray[np.float64], offset: float, **options: dict[str, Any]
     ) -> None:
-        tr: Transformation | None = options.pop("transform", None)
+        tr = options.pop("transform", None)
         if tr:
+            if not isinstance(tr, Transformation):
+                raise TypeError
             v, k = tr.apply2plane(normal, offset)
         else:
             v = np.asarray(normal, dtype=float)
@@ -687,6 +689,25 @@ class Plane(Surface, _Plane):
             New copy of self
         """
         instance = Plane.__new__(Plane, self._v, self._k)
+        instance._k_digits = self._k_digits
+        instance._v_digits = self._v_digits
+        options = filter_dict(self.options)
+        Surface.__init__(instance, **options)
+        _Plane.__init__(instance, self._v, self._k)
+        return instance
+
+    def complement(self) -> Plane:
+        """Create a complement of self.
+
+        Skips Plane.__init__ (directly calls _Plane.__init__) to avoid time-consuming
+        significant digits computation.
+
+        Returns
+        -------
+            New complement of self
+        """
+        # TODO @dvp: add tests
+        instance = Plane.__new__(Plane, -self._v, -self._k)
         instance._k_digits = self._k_digits
         instance._v_digits = self._v_digits
         options = filter_dict(self.options)

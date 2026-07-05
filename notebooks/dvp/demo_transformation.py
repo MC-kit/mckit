@@ -39,35 +39,9 @@ def _():
 
 @app.cell
 def _():
-    from mckit import Transformation
+    from mckit import Transformation, calc_z_rotation
 
-    return (Transformation,)
-
-
-@app.cell
-def _(np):
-    def calc_z_rotation(theta: float):
-        """Compute matirix for rotation around z-axis.
-
-        Parameters
-        ----------
-        theta
-            rotation angle, radians
-
-        Returns
-        -------
-            numpy presentation of the rotation matrix
-        """
-        return np.array(
-            [
-                [np.cos(theta), -np.sin(theta), 0],
-                [np.sin(theta), np.cos(theta), 0],
-                [0,             0,             1],
-            ],
-            dtype=np.float64
-        )
-
-    return (calc_z_rotation,)
+    return Transformation, calc_z_rotation
 
 
 @app.cell
@@ -136,27 +110,71 @@ def _():
 def _(calc_z_rotation, np, theta):
     r_theta = calc_z_rotation(theta*np.pi/180)
     r_theta
+    return (r_theta,)
+
+
+@app.cell
+def _(Transformation, r_theta):
+    tr_theta = Transformation(rotation=r_theta)
+    return (tr_theta,)
+
+
+@app.cell
+def _(print_transformation, tr_theta):
+    print_transformation(tr_theta)
     return
 
 
 @app.cell
-def _(Transformation, calc_z_rotation, np, print_transformation):
-    print_transformation(Transformation(rotation=calc_z_rotation(11.25*np.pi/180.0)))
+def _():
+    from mckit import Plane
+    p = Plane([0, 1, 0], 0)
+    p
+    return (p,)
+
+
+@app.cell
+def _(p, tr_theta):
+    p1 = p.transform(tr_theta).apply_transformation()
+    p1
+    return (p1,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ... clockwise
+    """)
     return
 
 
 @app.cell
-def _(calc_z_rotation, np):
-    def print_xy_basis(angle):
-        t = calc_z_rotation(angle*np.pi/180)
-        print(*("{:.7g}".format(t) for t in t.ravel()[:-3]))
-
-    return (print_xy_basis,)
+def _(Transformation, p, r_theta):
+    p2 = p.transform(Transformation(rotation=r_theta.T)).apply_transformation()
+    p2
+    return (p2,)
 
 
 @app.cell
-def _(print_xy_basis):
-    print_xy_basis(22.5 + 11.25)
+def _(np):
+    point = np.array([1, 0, 0], dtype=np.float64)
+    return (point,)
+
+
+@app.cell
+def _(p1, point):
+    p1.test_points(point).item()
+    return
+
+
+@app.cell
+def _(p2, point):
+    p2.test_points(point).item()
+    return
+
+
+@app.cell
+def _():
     return
 
 

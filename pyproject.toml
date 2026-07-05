@@ -4,7 +4,7 @@ requires = [ "cmake", "numpy", "scikit-build-core>=0.12" ]
 
 [project]
 name = "mckit"
-version = "0.9.1"
+version = "0.9.1-dev1"
 description = "Tools to process MCNP models and results"
 readme = "README.rst"
 keywords = [ "mckit", "MCNP" ]
@@ -141,7 +141,7 @@ host-dependencies.nlopt = "*"
 host-dependencies.numpy = "*"
 host-dependencies.scikit-build-core = ">=0.12"
 name = "mckit"
-version = "0.9.1"
+version = "0.9.1-dev1"
 [tool.pixi.package.build-dependencies]
 scikit-build-core = ">=0.12.1"
 # python = "==3.14.6"  # no freethreaded
