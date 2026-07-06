@@ -29,7 +29,7 @@ from mckit.transformation import Transformation
 from mckit.utils import filter_dict
 
 if TYPE_CHECKING:
-    from typing import ClassVar, Literal, NewType
+    from typing import ClassVar, Literal
 
     from collections.abc import Iterable, Iterator
 
@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from mckit.types import NPIntArray
 
     ShapeOperationCode = Literal["I", "U", "E", "R", "S", "C"]
+    TGeometry = list[Surface | ShapeOperationCode | "Shape" | "Body"] | "Body" | "Shape"
 
 
 __all__ = ["GLOBAL_BOX", "Body", "Card", "Shape", "TGeometry", "TGeometry", "simplify"]
@@ -51,8 +52,8 @@ class Shape(_Shape):
     Note:
         Shape is immutable object.
 
-    Paratmeters
-    -----------
+    Parameters
+    ----------
         opc
             Operation code. It may be different from opc passed in __init__.
         invert_opc
@@ -104,8 +105,8 @@ class Shape(_Shape):
     def __init__(self, _opc: ShapeOperationCode, *_args: Shape | Surface | Body) -> None:
         """Initialize Shape object.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
             _opc
                 Operation code. Denotes operation to be applied.
                 Possible values:
@@ -506,7 +507,7 @@ class Shape(_Shape):
         return self
 
     @staticmethod
-    def from_polish_notation(polish: list[Surface | Shape | str]) -> Shape:
+    def from_polish_notation(polish: TGeometry) -> Shape:
         """Creates Shape instance from reversed Polish notation.
 
         Parameters
@@ -520,6 +521,8 @@ class Shape(_Shape):
         """
         operands = []
         for op in polish:
+            if isinstance(op, Body):
+                op = op.shape
             if isinstance(op, Surface):
                 operands.append(Shape("S", op))
             elif isinstance(op, Shape):
@@ -531,11 +534,6 @@ class Shape(_Shape):
                 arg2 = operands.pop()
                 operands.append(Shape(op, arg1, arg2))
         return operands.pop()
-
-
-if TYPE_CHECKING:
-    TOperation = NewType("TOperation", str)
-    TGeometry = list[Surface | TOperation | Shape | "Body" | str]
 
 
 def _clean_args(opc: ShapeOperationCode, *_args: Shape | Surface | Body) -> tuple[str, list[Shape]]:
@@ -850,7 +848,8 @@ class Body(Card):
         a list of cells from filling universe bounded by cell being filled is
         returned.
 
-        Args:
+        Parameters
+        ----------:
             universe:
                 Universe which cells fill this one. If None, universe from 'FILL'
                 option will be used. If no such universe, the cell itself will be
