@@ -520,7 +520,8 @@ class Shape(_Shape):
             The geometry represented by Shape instance.
         """
         operands = []
-        for op in polish:
+        for _op in polish:
+            op = _op
             if isinstance(op, Body):
                 op = op.shape
             if isinstance(op, Surface):
@@ -849,6 +850,7 @@ class Body(Card):
         returned.
 
         Parameters
+        ----------
         ----------:
             universe:
                 Universe which cells fill this one. If None, universe from 'FILL'

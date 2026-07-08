@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import heapq as hq
+
+from pathlib import Path
 from zipfile import ZipFile
 
 import pytest
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
 HERE = Path(__file__).parent
 data = HERE / "data"
 
-with ZipFile( data / "4M.zip") as data_archive:
+with ZipFile(data / "4M.zip") as data_archive:
     clite_text = data_archive.read("clite.i").decode(encoding="utf8")
 
 clite_model = from_text(clite_text).universe
@@ -32,9 +33,11 @@ def sample_by_complexity(model: Universe, size=10) -> list[tuple[int, Body]]:
 
     complex_cells = sorted(hq.nlargest(size, model, key=_key), key=_key)
 
-    return [(_key(cell), cell)  for cell in complex_cells]
+    return [(_key(cell), cell) for cell in complex_cells]
+
 
 sampled_by_complexity = sample_by_complexity(clite_model)
+
 
 @pytest.mark.parametrize("complexity, cell", sampled_by_complexity)
 def test_bounding_box(benchmark, complexity, cell) -> None:

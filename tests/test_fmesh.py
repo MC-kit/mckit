@@ -356,7 +356,6 @@ class TestRectMesh:
             np.testing.assert_array_almost_equal(y, expected["y"])
 
 
-
 class TestFMesh:
     @pytest.fixture
     def tallies(self, data):

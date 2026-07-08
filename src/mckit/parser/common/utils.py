@@ -16,6 +16,7 @@ INTEGER = r"\d+"
 RE_EMPTY_LINE = re.compile(r"\s*")
 INTEGER_SELECT = re.compile(r"(\d+)")
 
+
 def ensure_lower(text: str):
     if not text.islower():
         return text.lower()
@@ -97,7 +98,6 @@ def internalize(word: str, words: Iterable[str]) -> tuple[str, bool]:
     return word, False
 
 
-
 def extract_optioall_integer(text: str, pos: int = 0):
     """Extract integer from given `text.
 
@@ -116,7 +116,8 @@ def extract_optioall_integer(text: str, pos: int = 0):
     match = INTEGER_SELECT.match(text, pos=pos)
     return int(match.group(1)) if match else None
 
-def extract_integer(text: str, pos: int = 0)-> int:
+
+def extract_integer(text: str, pos: int = 0) -> int:
     """Extract integer from given `text.
 
     Parameters
