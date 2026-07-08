@@ -74,7 +74,9 @@ if(WIN32)
   set(Python_FIND_VIRTUALENV FIRST)
 endif()
 
-find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
+find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy ${SKBUILD_SABI_COMPONENT})
+
+set(Python_SOABI ${SKBUILD_SOABI})
 
 execute_process(COMMAND ${Python_EXECUTABLE} "--version"
                 RESULT_VARIABLE _PYTHON_VERSION)
