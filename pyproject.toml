@@ -51,6 +51,7 @@ level = "INFO"
 [tool.scikit-build.wheel]
 # Установка py-api активирует Stable ABI, если версия ниже текущей
 # py-api = "cp312"  # scikit-build ignores this SABI request on building
+#  and builds cp314.cp314t geometry
 # TODO: for freethreaded try cp314.cp314t
 # py-api = "cp312.cp312t" # tries to build cp312.abi3.abi3t, 
   # but fails on numpy internal structures in npy_2_compat.h, 
