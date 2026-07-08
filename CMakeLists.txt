@@ -83,11 +83,6 @@ find_package(
     ${SKBUILD_SABI_COMPONENT} USE_SABI ${SKBUILD_SABI_VERSION}
 )
 
-# Обработка специфичных флагов для abi3t (free-threaded)
-if(Py_TARGET_ABI3T)
-    target_compile_definitions(_core PRIVATE Py_TARGET_ABI3T=0x030f0000)
-endif()
-
 # set(Python_SOABI ${SKBUILD_SOABI})
 
 execute_process(COMMAND ${Python_EXECUTABLE} "--version"
@@ -177,6 +172,10 @@ if(WIN32)
   target_link_libraries(geometry PUBLIC Python::Module)
 else()
   target_link_libraries(geometry PUBLIC pthread m dl)
+endif()
+# Обработка специфичных флагов для abi3t (free-threaded)
+if(Py_TARGET_ABI3T)
+    target_compile_definitions(geometry PRIVATE Py_TARGET_ABI3T=0x030f0000)
 endif()
 
 # install(TARGETS nlopt DESTINATION ${SKBUILD_PROJECT_NAME})
