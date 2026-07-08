@@ -49,6 +49,8 @@ source-dir = "."
 [tool.scikit-build.logging]
 level = "INFO"
 [tool.scikit-build.wheel]
+# Установка py-api активирует Stable ABI, если версия ниже текущей
+py-api = "cp312"  # for freethreaded try cp314.cp314t
 packages = [ "src/mckit" ]
 exclude = [ "**/__pycache__", "**/*.pyc" ]
 
@@ -59,7 +61,7 @@ mkl-devel = ">=2026.0.0,<2027"
 nlopt = ">=2.9"
 numpy = ">=2.4"
 ply = "*"
-python = "*"
+python = ">=3.12"
 sly = "*"
 tomli-w = "*"
 [tool.pixi.environments]
@@ -74,9 +76,9 @@ publish314 = { features = [ "build", "py314", "publish314" ], solve-group = "def
 # pypi = { features = [ "pypi" ], solve-group = "default" }
 typeguard = { features = [ "typeguard", "test" ], solve-group = "default" }
 [tool.pixi.feature]
-py312.dependencies.python = "3.12.*"
-py313.dependencies.python = "3.13.*"
-py314.dependencies.python = "3.14.*"
+py312.dependencies.python = "==3.12.13"
+py313.dependencies.python = "==3.13.14"
+py314.dependencies.python = "==3.14.6"
 # pypi.tasks.pypi_build = "pixi run uv build --no-build-isolation"
 # pypi.tasks.repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
 [tool.pixi.feature.analyze.dependencies]
