@@ -176,11 +176,19 @@ endif()
 # Обработка специфичных флагов для abi3t (free-threaded)
 if(Py_TARGET_ABI3T)
     target_compile_definitions(geometry PRIVATE Py_TARGET_ABI3T=0x030f0000)
-endif()
+endif() 
 
+# fix rpath https://scikit-build-core.readthedocs.io/en/latest/guide/dynamic_link.html
+if(APPLE) 
+  set(origin_token "@loader_path")
+else()
+  set(origin_token "$ORIGIN")
+endif()
+set_property(TARGET geometry PROPERTY INSTALL_RPATH
+  "${origin_token}/../../.."
+)
 # install(TARGETS nlopt DESTINATION ${SKBUILD_PROJECT_NAME})
 install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
-
 # copy libraries to the source tree for editable installation install(TARGETS
 # nlopt DESTINATION $ENV{MCKIT_SRC}/src/mckit) install(TARGETS geometry
 # DESTINATION $ENV{MCKIT_SRC}/src/mckit) install(TARGETS geometry DESTINATION

@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "scikit_build_core.build"
-requires = [ "cmake", "numpy", "scikit-build-core>=0.12" ]
+requires = [ "numpy", "scikit-build-core>=0.12" ]
 
 [project]
 name = "mckit"
@@ -90,8 +90,8 @@ py314.dependencies.python = "3.14.*"
 marimo = ">=0.23.13"
 [tool.pixi.feature.build.dependencies]
 # Explicitly add build tools for faster resolution
-cmake = ">=4"
-ninja = "*"
+# cmake = ">=4"
+# ninja = "*"
 scikit-build-core = ">=0.12"
 # uv = ">=0.11.25,<0.12"
 pysocks = ">=1.7.1,<2"
