@@ -69,6 +69,7 @@ export JUST_LOG := log
         ".pixi"
         ".pytest_cache"
         ".ruff_cache"
+        ".sk-build"
         ".venv"
         "_build"
         "build"
