@@ -74,9 +74,11 @@ if(WIN32)
   set(Python_FIND_VIRTUALENV FIRST)
 endif()
 
-find_package(
-  Python COMPONENTS Interpreter Development.Module NumPy
-                    ${SKBUILD_SABI_COMPONENT} USE_SABI ${SKBUILD_SABI_VERSION})
+find_package( Python COMPONENTS Interpreter Development.Module NumPy )
+
+# find_package(
+#   Python COMPONENTS Interpreter Development.Module NumPy
+#                     ${SKBUILD_SABI_COMPONENT} USE_SABI ${SKBUILD_SABI_VERSION})
 
 # set(Python_SOABI ${SKBUILD_SOABI})
 

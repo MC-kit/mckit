@@ -66,6 +66,8 @@ export JUST_LOG := log
         ".cache"
         ".eggs"
         ".mypy_cache"
+        ".output"
+        ".output-py314"
         ".pixi"
         ".pytest_cache"
         ".ruff_cache"
