@@ -32,7 +32,6 @@ from .common.utils import extract_integer
 from .mcnp_section_parser import Card as TextCard
 from .mcnp_section_parser import InputSections, Kind, distribute_cards, parse_sections_text
 
-
 _T = TypeVar("_T")
 
 

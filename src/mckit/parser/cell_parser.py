@@ -15,7 +15,6 @@ from mckit.parser.common import (
     TransformationStrictIndex,
 )
 from mckit.parser.common import Lexer as LexerBase
-from mckit.parser.common.utils import ensure_upper
 from mckit.surface import Surface
 from mckit.transformation import Transformation
 from mckit.utils import filter_dict
