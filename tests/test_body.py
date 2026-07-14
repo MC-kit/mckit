@@ -2293,5 +2293,3 @@ class TestBody:
         new_results = new_body.shape.test_points(points2)
         # TODO: Check testing of FILL without 'transform' case
         np.testing.assert_array_equal(results, new_results)
-
-

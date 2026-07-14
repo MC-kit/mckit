@@ -138,10 +138,15 @@ def pretty_float(value: float, frac_digits: int | None = None) -> str:
 
 
 CELL_OPTIONS = {
-    "IMPN", "IMPP", "IMPE", "VOL",  # Importance options
+    "IMPN",
+    "IMPP",
+    "IMPE",
+    "VOL",  # Importance options
     "TRCL",  # Transformation options
-    "U", "FILL",  # Universe and fill options
-    "FCLN", "FCLP", # Force collision
+    "U",
+    "FILL",  # Universe and fill options
+    "FCLN",
+    "FCLP",  # Force collision
     "PMT",
     "TMP",
 }

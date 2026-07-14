@@ -347,7 +347,7 @@ class Parser(sly.Parser):
     #
     @_('FCL ":" particle float')
     def fcl_attribute(self, p):
-        return {"FCL" + pu.ensure_upper(p.particle) : p.float}
+        return {"FCL" + pu.ensure_upper(p.particle): p.float}
 
     @_("float_list float")
     def float_list(self, p):

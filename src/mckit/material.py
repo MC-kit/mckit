@@ -169,12 +169,9 @@ class Composition(Card):
         return words
 
     def __getitem__(self, item: int | str | Element) -> float:
-        # return self.options[key]
-        # TODO @dvp: inconsistent with __contains__, replace with:
         if not isinstance(item, Element):
             item = Element(item)
         return self._composition[item]
-        Used in tests
 
     def __iter__(self) -> Iterator[tuple[Element, float]]:
         return iter(self._composition.items())

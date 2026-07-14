@@ -35,6 +35,7 @@ from .mcnp_section_parser import InputSections, Kind, distribute_cards, parse_se
 
 _T = TypeVar("_T")
 
+
 @dataclass
 class ParseResult:
     universe: Universe

@@ -75,19 +75,15 @@ if(WIN32)
 endif()
 
 find_package(
-  Python 
-  COMPONENTS
-    Interpreter 
-    Development.Module
-    NumPy
-    ${SKBUILD_SABI_COMPONENT} USE_SABI ${SKBUILD_SABI_VERSION}
-)
+  Python COMPONENTS Interpreter Development.Module NumPy
+                    ${SKBUILD_SABI_COMPONENT} USE_SABI ${SKBUILD_SABI_VERSION})
 
 # set(Python_SOABI ${SKBUILD_SOABI})
 
 execute_process(COMMAND ${Python_EXECUTABLE} "--version"
                 RESULT_VARIABLE _PYTHON_VERSION)
-cmake_print_variables(Python_EXECUTABLE _PYTHON_VERSION SKBUILD_SOABI Python_SOABI)
+cmake_print_variables(Python_EXECUTABLE _PYTHON_VERSION SKBUILD_SOABI
+                      Python_SOABI)
 
 cmake_path(GET Python_EXECUTABLE PARENT_PATH MCKIT_ENV_BIN_DIR)
 message(STATUS "bin dir: ${MCKIT_ENV_BIN_DIR}")
@@ -175,18 +171,17 @@ else()
 endif()
 # Обработка специфичных флагов для abi3t (free-threaded)
 if(Py_TARGET_ABI3T)
-    target_compile_definitions(geometry PRIVATE Py_TARGET_ABI3T=0x030f0000)
-endif() 
+  target_compile_definitions(geometry PRIVATE Py_TARGET_ABI3T=0x030f0000)
+endif()
 
-# fix rpath https://scikit-build-core.readthedocs.io/en/latest/guide/dynamic_link.html
-if(APPLE) 
+# fix rpath
+# https://scikit-build-core.readthedocs.io/en/latest/guide/dynamic_link.html
+if(APPLE)
   set(origin_token "@loader_path")
 else()
   set(origin_token "$ORIGIN")
 endif()
-set_property(TARGET geometry PROPERTY INSTALL_RPATH
-  "${origin_token}/../../.."
-)
+set_property(TARGET geometry PROPERTY INSTALL_RPATH "${origin_token}/../../..")
 # install(TARGETS nlopt DESTINATION ${SKBUILD_PROJECT_NAME})
 install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
 # copy libraries to the source tree for editable installation install(TARGETS
