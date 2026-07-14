@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TextIO
+from typing import TextIO, TypeVar
 
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from itertools import repeat
 from pathlib import Path
 
-from mckit.card import Card
 from mckit.parser.cell_parser import Body
 from mckit.parser.cell_parser import parse as parse_cell
 from mckit.parser.common import (
@@ -19,7 +18,6 @@ from mckit.parser.common import (
     ParseError,
     SurfaceStrictIndex,
     TransformationStrictIndex,
-    extract_integer,
 )
 from mckit.parser.material_parser import Composition
 from mckit.parser.material_parser import parse as parse_composition
@@ -34,6 +32,8 @@ from .common.utils import extract_integer
 from .mcnp_section_parser import Card as TextCard
 from .mcnp_section_parser import InputSections, Kind, distribute_cards, parse_sections_text
 
+
+_T = TypeVar("_T")
 
 @dataclass
 class ParseResult:
@@ -127,8 +127,8 @@ def join_comments(text_cards: Iterable[TextCard]):
 
 
 def parse_section(
-    text_cards: Iterable[TextCard], expected_kind: Kind, parser: Callable[[str], Card]
-) -> Iterator[Card]:
+    text_cards: Iterable[TextCard], expected_kind: Kind, parser: Callable[[str], _T]
+) -> Iterator[_T]:
     text_cards_with_comments = join_comments(text_cards)
 
     for text_card, comment in text_cards_with_comments:

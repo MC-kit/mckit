@@ -15,12 +15,13 @@ from mckit.parser.common import (
     TransformationStrictIndex,
 )
 from mckit.parser.common import Lexer as LexerBase
+from mckit.parser.common.utils import ensure_upper
 from mckit.surface import Surface
 from mckit.transformation import Transformation
 from mckit.utils import filter_dict
 from mckit.utils.indexes import Index
 
-CELL_WORDS = {"U", "MAT", "LAT", "TMP", "RHO", "VOL", "PMT"}
+CELL_WORDS = {"U", "MAT", "LAT", "TMP", "RHO", "VOL", "PMT", "FCL"}
 
 
 def intern_cell_word(word: str):
@@ -40,6 +41,7 @@ class Lexer(LexerBase):
     literals: ClassVar = {":", "(", ")", "*", "#"}
     ignore = "[ \t,=]"
     tokens: ClassVar = {
+        FCL,
         INT_ATTR,
         IMP,
         FLOAT_ATTR,
@@ -54,9 +56,10 @@ class Lexer(LexerBase):
         P,
         E,
     }
-    INT_ATTR = "U|MAT|LAT|PMT"
+    INT_ATTR = "U|MAT|LAT|PMT|PMT1"
     IMP = "IMP"
-    FLOAT_ATTR = "TMP|RHO|VOL"
+    FCL = "FCL"
+    FLOAT_ATTR = "TMP|RHO|VOL|PMT2"
     TRCL = "TRCL"
     FILL = "FILL"
     LIKE = "LIKE"
@@ -236,6 +239,7 @@ class Parser(sly.Parser):
         return p[0]
 
     @_(
+        "fcl_attribute",
         "fill_attribute",
         "trcl_attribute",
         "imp_attribute",
@@ -335,6 +339,15 @@ class Parser(sly.Parser):
             while len(p.float_list) < number_of_particles:
                 p.float_list.append(p.float_list[-1])
         return {"IMP" + k.upper(): v for k, v in zip(p.particle_list, p.float_list, strict=False)}
+
+    #
+    #  FCL card: Forced Collision
+    #  See MCNP 6.3.1 Theory.. , 5.12.9, p.566
+    #  Example: FCL:N=0.5
+    #
+    @_('FCL ":" particle float')
+    def fcl_attribute(self, p):
+        return {"FCL" + pu.ensure_upper(p.particle) : p.float}
 
     @_("float_list float")
     def float_list(self, p):

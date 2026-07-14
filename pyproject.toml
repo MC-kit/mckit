@@ -4,7 +4,7 @@ requires = [ "numpy", "scikit-build-core>=0.12" ]
 
 [project]
 name = "mckit"
-version = "0.9.1.2"
+version = "0.9.2"
 description = "Tools to process MCNP models and results"
 readme = "README.rst"
 keywords = [ "mckit", "MCNP" ]
@@ -81,9 +81,9 @@ publish314 = { features = [ "build", "py314", "publish314" ], solve-group = "def
 # pypi = { features = [ "pypi" ], solve-group = "default" }
 typeguard = { features = [ "typeguard", "test" ], solve-group = "default" }
 [tool.pixi.feature]
-py312.dependencies.python = "3.12.*"
-py313.dependencies.python = "3.13.*"
-py314.dependencies.python = "3.14.*"
+py312.dependencies.python = "==3.12.13"
+py313.dependencies.python = "==3.13.14"
+py314.dependencies.python = "==3.14.6"
 # pypi.tasks.pypi_build = "pixi run uv build --no-build-isolation"
 # pypi.tasks.repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
 [tool.pixi.feature.analyze.dependencies]
@@ -148,10 +148,10 @@ host-dependencies.nlopt = "*"
 host-dependencies.numpy = "*"
 host-dependencies.scikit-build-core = ">=0.12"
 name = "mckit"
-version = "0.9.1.2"
+version = "0.9.2"
 [tool.pixi.package.build-dependencies]
 scikit-build-core = ">=0.12.2"
-# python = "==3.14.6"  # no freethreaded
+python = "==3.14.6"  # no freethreaded
 [tool.pixi.package.build.backend]
 name = "pixi-build-python"
 version = "*"

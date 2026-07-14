@@ -121,6 +121,7 @@ def test_parser_with_materials(text, expected, surfaces, compositions):
         ("1 0 1 IMP:n=1.0", create_cell(1, [1], IMPN=1.0), [1]),
         ("1 0 1 vol 1.0", create_cell(1, [1], VOL=1.0), [1]),
         ("1 0 1 U=200 PMT=0", create_cell(1, [1], U=200, PMT=0), [1]),
+        ("1 0 1 U=200 FCL:N=1", create_cell(1, [1], U=200, FCLN=1), [1]),
     ],
 )
 def test_parser_with_attributes(text, expected, surfaces):

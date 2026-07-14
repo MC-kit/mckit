@@ -115,5 +115,13 @@ def test_composition_parser(text, expected):
     assert result.options == expected.options
 
 
+
+def test_material_with_ampersand(data):
+    inp = data / "parser/material-with-ampersands.txt"
+    actual = mp.parse(inp.read_text(encoding="utf8"))
+    assert isinstance(actual, Composition), "Parser should create instance of Composition"
+    assert actual.name() == 8902
+    assert len(actual) == 34
+
 if __name__ == "__main__":
     pytest.main()

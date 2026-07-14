@@ -156,6 +156,9 @@ class Composition(Card):
     def __hash__(self) -> int:
         return reduce(xor, map(hash, self._composition.keys()))
 
+    def __len__(self) -> int:
+        return len(self._composition.keys())
+
     def mcnp_words(self, pretty: bool = False) -> list[str]:
         words = [f"M{self.name()} "]
         for elem, frac in self._composition.items():
@@ -165,8 +168,13 @@ class Composition(Card):
             words.append("\n")
         return words
 
-    def __getitem__(self, key: str) -> Any:
-        return self.options[key]
+    def __getitem__(self, item: int | str | Element) -> float:
+        # return self.options[key]
+        # TODO @dvp: inconsistent with __contains__, replace with:
+        if not isinstance(item, Element):
+            item = Element(item)
+        return self._composition[item]
+        Used in tests
 
     def __iter__(self) -> Iterator[tuple[Element, float]]:
         return iter(self._composition.items())
@@ -348,27 +356,39 @@ def mixture_by_volume(
 
 
 class Material:
-    """Represents material.
+    """Represents material - association Body -> Composition, with specfic density.
 
-    If only one of `weight` or `atomic` parameters is specified, then the Material
-    there's no need to normalize it.
+    If only one of `weight` or `atomic` parameters is specified, then
+    there's no need to normalize the Material.
 
-    Args:
-        atomic: Atomic fractions. New composition will be created.
-        weight: Weight fractions of isotopes. In this case, density or concentration must present.
-        composition: Composition instance. If it is specified, then this composition will be
+    Parameters
+    ----------
+        atomic
+            Atomic fractions. New composition will be created.
+        weight
+            Weight fractions of isotopes. In this case, density or concentration must present.
+        composition
+            Composition instance. If it is specified, then this composition will be
             used. Neither atomic nor weight must be present.
-        density: Density of the material (g/cc). It is incompatible with concentration
+        density
+            Density of the material (g/cc). It is incompatible with concentration
             parameter.
-        concentration: Sets the atomic concentration (1 / cc). It is incompatible with density
+        concentration
+            Sets the atomic concentration (1 / cc). It is incompatible with density
             parameter.
-        options:  Extra options.
+        options
+            Extra options.
 
-    Properties:
-        density: Density of the material [g/cc].
-        concentration: Concentration of the material [atoms/cc].
-        composition: Material's composition.
-        molar_mass: Material's molar mass [g/mol].
+    Properties
+    ----------
+        density
+            Density of the material [g/cc].
+        concentration
+            Concentration of the material [atoms/cc].
+        composition
+            Material's composition.
+        molar_mass
+            Material's molar mass [g/mol].
     """
 
     # Relative density tolerance. Relative difference in densities when materials

@@ -1487,7 +1487,7 @@ class TestComposition:
         comp = compositions[case_no]
         assert comp.name() == name
         for key, value in expected_kw.items():
-            assert comp[key] == value
+            assert comp.options[key] == value
 
     @pytest.mark.parametrize(
         "mix_components, ans_index",

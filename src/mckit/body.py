@@ -23,7 +23,7 @@ from mckit.constants import MIN_BOX_VOLUME
 
 # pyrefly: ignore [missing-import]
 from mckit.geometry import Shape as _Shape  # pyright: ignore[reportMissingImports]
-from mckit.printer import CELL_OPTION_GROUPS, print_option
+from mckit.printer import CELL_OPTIONS, print_option
 from mckit.surface import Surface
 from mckit.transformation import Transformation
 from mckit.utils import filter_dict
@@ -706,8 +706,8 @@ class Body(Card):
             return my.has_equivalent_cells(their)
         return result
 
-    # TODO dvp: the method is used for printing, we'd better introduce virtual method print(self, out: TextIO)?
-    # TODO dvp: in that case we could just return original text if available
+    # TODO @dvp: the method is used for printing, we'd better introduce virtual method print(self, out: TextIO)?
+    # TODO @dvp: in that case we could just return original text if available
     def mcnp_words(self, pretty=False) -> list[str]:
         words = [str(self.name()), " "]
         if "MAT" in self.options:
@@ -733,12 +733,11 @@ class Body(Card):
         For __str__ method.
         """
         text = []
-        for opt_group in CELL_OPTION_GROUPS:
-            for key in opt_group:
-                if key in self.options:
-                    text.extend(print_option(key, self.options[key]))
-                    text.append(" ")
-            text.append("\n")
+        for key in CELL_OPTIONS:
+            if key in self.options:
+                text.extend(print_option(key, self.options[key]))
+                text.append(" ")
+        text.append("\n")
         return text
 
     @property
