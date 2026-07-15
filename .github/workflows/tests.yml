@@ -115,7 +115,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        environment: [ 'py312', 'py313', 'py314' ]
+        environment: [ 'py312', 'py313' ]  # TODO @dvp: add py314+ when ready for freethread
         include: 
           - os: windows-latest
             environment: 'py313'  # Windows runner is too slow
