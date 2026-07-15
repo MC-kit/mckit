@@ -9,6 +9,8 @@ description = "Tools to process MCNP models and results"
 readme = "README.rst"
 keywords = [ "mckit", "MCNP" ]
 license = "MIT"
+# TODO @dvp: if python 3.14 is allowed, then pixi uses its freethreaded version, mckit (or numpy?) is not ready for that
+#            implement testing environment and code changes for 3.14+-freethreaded
 requires-python = ">=3.12,<3.14"
 classifiers = [
   "Development Status :: 4 - Beta",
