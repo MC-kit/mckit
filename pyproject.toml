@@ -219,6 +219,12 @@ module = [ "tomllib" ]
 allow_redefinition = true
 disable_error_code = "no-redef"
 
+[tool.pyright]
+pythonVersion = "3.13"
+venv = "default"
+venvPath = ".pixi/envs"
+exclude = [ "**/__pycache__", ".pixi/**", ".pytest_cache/**" ]
+
 [tool.coverage.paths]
 source = [ "src" ]
 [tool.coverage.report]
