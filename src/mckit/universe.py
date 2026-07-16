@@ -1,7 +1,9 @@
 """Classes and methods to work with MCNP universe."""
 
 from __future__ import annotations
+from multiprocessing import Value
 
+from mckit.utils.named import Name
 from typing import TYPE_CHECKING, Any, Literal, SupportsIndex, cast
 
 import operator
@@ -569,14 +571,14 @@ class Universe:
         -------
             A set of all the universes.
         """
-        universes = {self}
+        universes = {cast("Universe", self)}
         for c in self:
             if "FILL" in c.options:
                 u = c.options["FILL"]["universe"]
                 universes.update(u.get_universes())
         return universes
 
-    def name(self) -> Name:
+    def name(self) -> Name | None:
         """Gets numeric name of the universe."""
         return self._name
 
@@ -630,23 +632,29 @@ class Universe:
 
     def rename(
         self,
-        start_cell: int | None = None,
-        start_surf: int | None = None,
-        start_mat: int | None = None,
-        start_tr: int | None = None,
-        name: int | None = None,
+        start_cell: Name | None = None,
+        start_surf: Name | None = None,
+        start_mat: Name | None = None,
+        start_tr: Name | None = None,
+        name: Name | None = None,
     ) -> None:
         """Renames all entities contained in the universe.
 
         All new names are sequential starting from the specified name.
         If an argument is None, then names of corresponding entities are leaved untouched.
 
-        Args:
-            start_cell: Starting name for cells. Default: None.
-            start_surf: Starting name for surfaces. Default: None.
-            start_mat:  Starting name for materials. Default: None.
-            start_tr:   Starting name for transformations. Default: None.
-            name:  Name for the universe. Default: None.
+        Parameters
+        ----------
+        start_cell
+            Starting name for cells. Default: None.
+        start_surf
+            Starting name for surfaces. Default: None.
+        start_mat
+            Starting name for materials. Default: None.
+        start_tr
+            Starting name for transformations. Default: None.
+        name
+            Name for the universe. Default: None.
         """
         # TODO dvp: implement transformations renaming
         assert start_tr is None, "Transformation renaming is not implemented yet"
@@ -658,12 +666,18 @@ class Universe:
             self._verbose_name = None
             for c in self:
                 c.options = filter_dict(c.options, "original")
-        if start_cell:
+        if start_cell is not None:
+            t: int = start_cell
             for c in self:
-                c.rename(start_cell)
-                start_cell += 1
+                c.rename(cast(Name, t))
+                # TODO @dvp: add check, if there's no filling subuniverses in the cells
+                #            if, there are fills, then what to do with cells in them?
+                #            what if filling universe occurs multiple times?
+                t += 1
         if start_surf:
             surfs = self.get_surfaces()
+            # TODO @dvp: using set and sorted change the order of surfaces, do we need this?
+            #            may be we need just scan the surfaces
             for s in sorted(surfs, key=Card.name):
                 s.rename(start_surf)
                 start_surf += 1
@@ -708,6 +722,7 @@ class Universe:
             surfaces.extend(sorted(u.get_surfaces(), key=Card.name))
             materials.extend(sorted(u.get_compositions(True), key=Card.name))
         cards = [self.verbose_name]
+        # TODO @dvp: output comment here prepending each line with "c ", if not present already
         cards.extend(map(Card.mcnp_repr, cells))
         cards.append("")
         cards.extend(map(Card.mcnp_repr, surfaces))
@@ -846,6 +861,16 @@ class Universe:
     def verbose_name(self) -> str:
         """Gets verbose name of the universe."""
         return str(self.name()) if self._verbose_name is None else self._verbose_name
+
+    @verbose_name.setter
+    def verbose_name(self, value: str):
+        if "\n" in value:
+            msg = f"Cannot use multiple lines as a universe verbose name. Got: {value}"
+            raise ValueError(msg)
+        if len(value) > 80:
+            msg = f"Too long universe verbose name. Got: {value}"
+            raise ValueError(msg)
+        self._verbose_name = value
 
     @property
     def comment(self):

@@ -13,6 +13,6 @@
   ],
   "reportMissingImports": "error",
   "reportMissingTypeStubs": false,
-  "pythonVersion": "3.14",
+  "pythonVersion": "3.13",
   "pythonPlatform": "Linux"
 }
