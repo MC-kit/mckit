@@ -2,12 +2,6 @@
 
 from __future__ import annotations
 
-from mckit.utils._io import (
-    check_if_all_paths_exist,
-    check_if_path_exists,
-    make_dir,
-    make_dirs,
-)
 from mckit.utils._resource import path_resolver
 from mckit.utils.accept import TVisitor, accept, on_unknown_acceptor
 from mckit.utils.misc import (
@@ -29,7 +23,8 @@ from mckit.utils.misc import (
 )
 from mckit.utils.tolerance import FLOAT_TOLERANCE
 
-from ._path import find_git_root_dir, has_subdir, search_path_upward
+from ._path import find_git_root_dir, has_subdir, search_path_upward, make_dir, make_dirs, check_if_path_exists, \
+    check_if_all_paths_exist
 from .named import HasName, Name, check_name_is_int, default_name_key, map_names
 
 __all__ = [
