@@ -1,6 +1,9 @@
 # Ignore "hidded" files and directoies
 .*
 
+### Marimo state files
+__marimo__/
+
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -67,8 +70,6 @@ target/
 
 dist/
 wrk/
-setup-generated.py
-poetry_setup_kwargs.txt
 
 # benchmark resuls
 *uncommited-changes.json
@@ -76,8 +77,6 @@ poetry_setup_kwargs.txt
 #cmake work folders
 cmake-build-debug
 
-#scibuild work folders
-_skbuild
 
 # Visual studio
 .vs
