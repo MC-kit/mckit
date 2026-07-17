@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from pathlib import Path
-from typing import Generator
+
 
 def scan_dirs_up(start_from: Path) -> Generator[Path]:
     while start_from != start_from.parent:
         yield start_from
         start_from = start_from.parent
+
 
 def search_path_upward(
     predicate: Callable[[Path], bool], *, start: Path | None = None
@@ -31,6 +32,7 @@ def search_path_upward(
         if predicate(path):
             return path
     return None
+
 
 def has_subdir(subdirectory: str) -> Callable[[Path], bool]:
     """Create predicate to check if a path has given `subdirectory`.
@@ -60,17 +62,20 @@ def find_git_root_dir() -> Path | None:
     """
     return search_path_upward(has_subdir(".git"))
 
+
 def mkpath(path: str | Path) -> Path:
     if not isinstance(path, Path):
         path = Path(path)
     return path
 
-def check_file(path: str | Path, *, follow_symlinks: bool=True) -> Path:
+
+def check_file(path: str | Path, *, follow_symlinks: bool = True) -> Path:
     path = mkpath(path)
     if not path.is_file(follow_symlinks=follow_symlinks):
         msg = f"Not a file: {path}"
         raise ValueError(msg)
     return path
+
 
 def check_files(*files: str | Path) -> Generator[Path]:
     return (check_file(path) for path in files)
@@ -112,13 +117,15 @@ def make_dirs(*dirs: str | Path) -> Generator[Path]:
     return (make_dir(f) for f in dirs)
 
 
-def check_if_path_exists(p: Path, *, follow_symlinks: bool=True) -> Path:
+def check_if_path_exists(p: Path, *, follow_symlinks: bool = True) -> Path:
     if p.exists(follow_symlinks=follow_symlinks):
         return p
     raise FileNotFoundError(f'Path "{p}" does not exist')
 
-def check_if_all_paths_exist(*paths: Path, follow_symlinks: bool=True) -> Generator[Path]:
+
+def check_if_all_paths_exist(*paths: Path, follow_symlinks: bool = True) -> Generator[Path]:
     return (check_if_path_exists(x, follow_symlinks=follow_symlinks) for x in paths)
+
 
 def check_dir(path: Path) -> Path:
     if not path.is_dir():
@@ -129,6 +136,7 @@ def check_dir(path: Path) -> Path:
 
 def check_dirs(*dirs: Path) -> Generator[Path]:
     return (check_dir(path) for path in dirs)
+
 
 def join_dirs(root_dir: Path, *subdirectories: str) -> Generator[Path]:
     """Form names of directories under the given root dir.
@@ -144,7 +152,7 @@ def join_dirs(root_dir: Path, *subdirectories: str) -> Generator[Path]:
         what to join
 
     Returns
-    ------
+    -------
     Generator for Joined path to subdirectories
     """
     return (root_dir / sub for sub in subdirectories)

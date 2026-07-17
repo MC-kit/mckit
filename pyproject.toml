@@ -185,9 +185,9 @@ requires-pixi = ">=0.70.2"
 preview = [ "pixi-build" ]
 
 [tool.uv]
+
 # [tool.uv.extra-build-dependencies]
 # mckit = [ "scikit_build_core" ]
-
 [tool.mypy]
 files = "src/**/*.py"
 exclude = """  (?x)(

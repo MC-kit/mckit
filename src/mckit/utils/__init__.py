@@ -23,8 +23,15 @@ from mckit.utils.misc import (
 )
 from mckit.utils.tolerance import FLOAT_TOLERANCE
 
-from ._path import find_git_root_dir, has_subdir, search_path_upward, make_dir, make_dirs, check_if_path_exists, \
-    check_if_all_paths_exist
+from ._path import (
+    check_if_all_paths_exist,
+    check_if_path_exists,
+    find_git_root_dir,
+    has_subdir,
+    make_dir,
+    make_dirs,
+    search_path_upward,
+)
 from .named import HasName, Name, check_name_is_int, default_name_key, map_names
 
 __all__ = [

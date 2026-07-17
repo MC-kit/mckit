@@ -1,9 +1,7 @@
 """Classes and methods to work with MCNP universe."""
 
 from __future__ import annotations
-from multiprocessing import Value
 
-from mckit.utils.named import Name
 from typing import TYPE_CHECKING, Any, Literal, SupportsIndex, cast
 
 import operator
@@ -23,6 +21,7 @@ import numpy as np
 from click import progressbar
 
 from mckit.utils import filter_dict
+from mckit.utils.named import Name
 
 from .body import Body, Shape
 from .box import GLOBAL_BOX, Box

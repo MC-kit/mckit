@@ -4,7 +4,13 @@ from pathlib import Path
 
 import pytest
 
-from mckit.utils import find_git_root_dir, search_path_upward, make_dirs, check_if_all_paths_exist, check_if_path_exists
+from mckit.utils import (
+    check_if_all_paths_exist,
+    check_if_path_exists,
+    find_git_root_dir,
+    make_dirs,
+    search_path_upward,
+)
 
 
 def test_find_git_root():
