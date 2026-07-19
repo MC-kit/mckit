@@ -21,7 +21,7 @@ INNER_LINE = "-" * 40
 
 
 def print_text(
-    text: str, output_dir: Path, section_file_name: str, override: bool, encoding: str = "utf8"
+    text: str | None, output_dir: Path, section_file_name: str, override: bool, encoding: str = "utf8"
 ) -> None:
     if text:
         out = output_dir / section_file_name
@@ -30,7 +30,7 @@ def print_text(
 
 
 def print_cards(
-    cards: Iterable[sp.Card],
+    cards: Iterable[sp.Card] | None,
     output_dir: Path,
     section_file_name: str,
     override: bool,

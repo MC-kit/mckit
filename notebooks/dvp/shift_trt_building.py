@@ -21,12 +21,12 @@ def _():
 
 
 @app.cell
-def _(HOST, mo):
+def _(HOST, WRK_DIR, mo):
     mo.md(f"""
-        - Python: {sys.version}, at {sys.prefix}
-        - host: {HOST}
-        - cwd: {Path.cwd()}
-    """).callout()
+    - Python: {sys.version}, at {sys.prefix}
+    - host: {HOST}
+    - cwd: {WRK_DIR}
+    """)
     return
 
 
@@ -39,33 +39,28 @@ def _():
 
 @app.cell
 def _():
-    from nb_common.config_utils import HOST, check_file
+    from nb_common.config_utils import HOST, check_file, check_dir
 
-    return HOST, check_file
-
-
-@app.cell
-def _(mc):
-    ROOT = mc.utils.find_git_root_dir()
-    return (ROOT,)
+    return HOST, check_dir, check_file
 
 
 @app.cell
-def _(ROOT):
-    VERSION="0.1.1"
-    OUT=ROOT / f".wrk/{Path(__file__).stem}/{VERSION}"
-    return (OUT,)
+def _(check_dir):
+    VERSION="1.2.3"
+    WRK_DIR = check_dir("/home/dvp/dev/mcnp/trt-hall/model/1.2-walls-split")
+    OUT= WRK_DIR / f"{VERSION}-shifted"
+    return OUT, WRK_DIR
 
 
 @app.cell
-def _(OUT, mc):
-    mc.utils._path.make_dir(OUT)
+def _(OUT):
+    OUT.mkdir(parents=True, exist_ok=True)
     return
 
 
 @app.cell
-def _(check_file):
-    INPUT_PATH = check_file("/home/dvp/dev/mcnp/trt-hall/model/1.2-walls-split/1.2.1/hall.i")
+def _(WRK_DIR, check_file):
+    INPUT_PATH = check_file(WRK_DIR / "1.2.1/hall.i")
     return (INPUT_PATH,)
 
 
@@ -93,12 +88,6 @@ def _(mo):
 def _(building_info):
     surface33 = building_info.surfaces_index[33]
     return (surface33,)
-
-
-@app.cell
-def _(surface33):
-    surface33
-    return
 
 
 @app.cell
@@ -178,8 +167,39 @@ def _(building_shifted):
 
 
 @app.cell
-def _(OUT, building_shifted):
-    building_shifted.save(OUT / "hall_shifted.mcnp")
+def _(OUT):
+    out_path = Path(OUT, "hall_shifted.mcnp")
+    return (out_path,)
+
+
+@app.cell
+def _(building_shifted, out_path):
+    building_shifted.save(out_path)
+    return
+
+
+@app.cell
+def _():
+    from mckit.cli.commands import do_split
+
+    return (do_split,)
+
+
+@app.cell
+def _(OUT, do_split, out_path):
+    split_dir = OUT / "hall_shifted.split"
+    split_dir.mkdir(parents=True, exist_ok=True)
+    do_split(
+        split_dir,
+        out_path,
+        override = True,
+        separators = True
+    )
+    return
+
+
+@app.cell
+def _():
     return
 
 
