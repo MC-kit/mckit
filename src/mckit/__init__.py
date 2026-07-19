@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from mckit._init_dynamic_libraries import MACOS, WIN
 from mckit.body import Body, Shape
+from mckit.box import GLOBAL_BOX, Box
 from mckit.fmesh import FMesh
 from mckit.material import AVOGADRO, Composition, Element, Material
 from mckit.parser import ParseResult, from_file, from_stream, from_text, read_meshtal
@@ -19,9 +20,11 @@ from mckit.version import (
 
 __all__: list[str] = [
     "AVOGADRO",
+    "GLOBAL_BOX",
     "MACOS",
     "WIN",
     "Body",
+    "Box",
     "Composition",
     "Cone",
     "Cylinder",
