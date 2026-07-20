@@ -1,0 +1,14 @@
+project-includes = ["src"]
+project-excludes = [
+    "**/data",
+    "**/parser",
+    "**/__pycache__",
+    "**/.*",
+]
+python-platform = "linux"
+python-version = "3.13.0"
+infer-with-first-use = false
+
+[errors]
+untyped-import = "ignore"
+missing-import = "error"
