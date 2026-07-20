@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.14"
+__generated_with = "0.23.9"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -40,6 +40,7 @@ def _(mo):
 
     - 16160 - graveyard_in
     - 16161 - graveyard
+    - ячейки "Autromatic Generated Void Cell" (с этим комменатарием) - проверить не налезают ли они на floor
     """)
     return
 
