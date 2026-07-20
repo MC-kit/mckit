@@ -90,7 +90,8 @@ class Card(ABC):
 
     @override
     def __hash__(self) -> int:
-        return reduce(xor, (hash(k) ^ hash(make_hashable(v)) for k, v in self.options.items()), 0)
+        _n = self.name()
+        return _n if _n is not None else 0
 
     @override
     def __eq__(self, other: object) -> bool:

@@ -696,24 +696,24 @@ class Plane(Surface, _Plane):
         _Plane.__init__(instance, self._v, self._k)
         return instance
 
-    def complement(self) -> Plane:
-        """Create a complement of self.
+    # def complement(self) -> Plane:
+    #     """Create a complement of self.
 
-        Skips Plane.__init__ (directly calls _Plane.__init__) to avoid time-consuming
-        significant digits computation.
+    #     Skips Plane.__init__ (directly calls _Plane.__init__) to avoid time-consuming
+    #     significant digits computation.
 
-        Returns
-        -------
-            New complement of self
-        """
-        # TODO @dvp: add tests
-        instance = Plane.__new__(Plane, -self._v, -self._k)
-        instance._k_digits = self._k_digits
-        instance._v_digits = self._v_digits
-        options = filter_dict(self.options)
-        Surface.__init__(instance, **options)
-        _Plane.__init__(instance, self._v, self._k)
-        return instance
+    #     Returns
+    #     -------
+    #         New complement of self
+    #     """
+    #     # TODO @dvp: add tests
+    #     instance = Plane.__new__(Plane, -self._v, -self._k)
+    #     instance._k_digits = self._k_digits
+    #     instance._v_digits = self._v_digits
+    #     options = filter_dict(self.options)
+    #     Surface.__init__(instance, **options)
+    #     # _Plane.__init__(instance, self._v, self._k)
+    #     return instance
 
     def apply_transformation(self) -> Plane:
         tr = self.transformation
