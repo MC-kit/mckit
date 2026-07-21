@@ -153,14 +153,11 @@ def extract_cells(
     -------
         Set of the selected cells (Body objects)
     """
-
     if add_surface_sharing_cells:
         selected_cells = list(filter(predicate, cells))
         yield from selected_cells
         selected_cells_names = set(map_names(selected_cells))
-        selected_surfaces: set[int] = {
-            name for name in chain(*(map_names(c.shape.scan_surfaces()) for c in selected_cells))
-        }
+        selected_surfaces: set[int] = set(chain(*(map_names(c.shape.scan_surfaces()) for c in selected_cells)))
 
 
         def _select_adjacent_cells(_c: Body) -> bool:
