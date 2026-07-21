@@ -5,7 +5,6 @@ from __future__ import annotations
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Literal, SupportsIndex, cast, Generator
 
-import operator
 import sys
 
 from collections import defaultdict
@@ -25,7 +24,6 @@ from mckit.utils import filter_dict
 
 from .body import Body, Shape
 from .box import GLOBAL_BOX, Box
-from .card import Card
 from .material import Composition, Material
 from .surface import Plane, Surface
 from .transformation import Transformation
@@ -597,25 +595,25 @@ class Universe:
         universes = self.get_universes()
         universe_to_cell_name_map = {u: list(map_names(u)) for u in universes}
         universe_to_surface_name_map = {
-            u: list(map(Card.name, u.get_surfaces())) for u in universes
+            u: list(map_names(u.get_surfaces())) for u in universes  # use get_surfaces() for unique names
         }
         mats: dict[Universe|None, list[int]] = {None: list(map_names(self._common_materials))}
         for u in universes:
             mats[u] = list(map_names(u.get_compositions().difference(self._common_materials)))
-        univs = {u: [u.name()] for u in universes}
-        cstat = Universe._produce_stat(universe_to_cell_name_map)
+        universe_to_name_dummy = {u: [u.name()] for u in universes}
+        cell_stat = Universe._produce_stat(universe_to_cell_name_map)
         stat = {}
-        if cstat:
-            stat["cell"] = cstat
-        sstat = Universe._produce_stat(universe_to_surface_name_map)
-        if sstat:
-            stat["surf"] = sstat
-        mstat = Universe._produce_stat(mats)
-        if mstat:
-            stat["material"] = mstat
-        ustat = Universe._produce_stat(univs)
-        if ustat:
-            stat["universe"] = ustat
+        if cell_stat:
+            stat["cell"] = cell_stat
+        surface_stat = Universe._produce_stat(universe_to_surface_name_map)
+        if surface_stat:
+            stat["surf"] = surface_stat
+        materials_stat = Universe._produce_stat(mats)
+        if materials_stat:
+            stat["material"] = materials_stat
+        universe_stat = Universe._produce_stat(universe_to_name_dummy)
+        if universe_stat:
+            stat["universe"] = universe_stat
         # TODO dvp: handle transformations here
         return stat
 
@@ -659,7 +657,7 @@ class Universe:
         start_tr
             Starting name for transformations. Default: None.
         name
-            Name for the universe. Default: None.
+            ... for the universe. Default: None.
         """
         # TODO dvp: implement transformations renaming
         assert start_tr is None, "Transformation renaming is not implemented yet"
@@ -781,7 +779,7 @@ class Universe:
         Parameters
         ----------
         box
-            Box, from which simplification process starts. Default: GLOBAL_BOX.
+            ... from which simplification process starts. Default: GLOBAL_BOX.
         min_volume
             Minimal volume of the box, when splitting process terminates.
         split_disjoint
@@ -794,13 +792,13 @@ class Universe:
 
             def fmt_fun(x):
                 return f"Simplifying cell #{x.name() if x else x}"
-            # TODO @dvp: bad desing, use dependency injection instead direct dependency to click.progressbar
-            uiter = progressbar(self, item_show_func=fmt_fun).__enter__()
+            # TODO @dvp: bad design, use dependency injection instead direct dependency to click.progressbar
+            universe_iterator = progressbar(self, item_show_func=fmt_fun).__enter__()
         else:
-            uiter = self
+            universe_iterator = self
 
-        for c in uiter:
-            cs = c.simplify(box=box, min_volume=min_volume)
+        for c in universe_iterator:
+            cs = c.simplify(box=box, split_disjoint=split_disjoint, min_volume=min_volume)
             if not cs.shape.is_empty():
                 new_cells.append(cs)
 
@@ -830,14 +828,14 @@ class Universe:
             result[test == +1] = i
         return result
 
-    def transform(self, tr: Transformation) -> Universe:
-        """Applies transformation tr to this universe.
+    def transform(self, transformation: Transformation) -> Universe:
+        """Applies transformation to this universe.
 
         Returns
         -------
              a new universe with applied transformation.
         """
-        new_cells = [c.transform(tr).apply_transformation() for c in self]
+        new_cells = [c.transform(transformation).apply_transformation() for c in self]
         return Universe(
             new_cells,
             name=self._name,
@@ -897,7 +895,7 @@ def produce_universes(cells: Iterable[Body]) -> Universe:
     Parameters
     ----------
     cells
-        Cells to process.
+        ... to process.
 
     Returns
     -------

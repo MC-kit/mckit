@@ -1,9 +1,13 @@
 Simple universe
 c cells
 1 1 -3.5    -1  imp:n=1
+    $ sphere
 2 2 -1.0    2 -3 -4  imp:n=1
+    $ cylinder
 3 0        -5 1 (-2:3:4) imp:n=1
+    $ graveyard_in
 4 0         5   imp:n=0
+    $ graveyard
 
 c surfaces
 1 SO 2  
