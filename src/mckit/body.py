@@ -45,6 +45,9 @@ __all__ = ["GLOBAL_BOX", "Body", "Card", "Shape", "TGeometry", "TGeometry", "sim
 _LOG = getLogger(__name__)
 
 
+# Shape and Body are defined in a single module because of tight coupling.
+# It is not possible to separate them due to unavoidable cyclic dependency.
+
 # noinspection PyProtectedMember
 class Shape(_Shape):
     """Shape class.
@@ -140,12 +143,13 @@ class Shape(_Shape):
     def __repr__(self):
         return f"Shape({self.opc}, {self.args})"
 
-    def _get_words(self, parent_opc: str | None = None) -> list[str]:
+    def get_words(self, parent_opc: ShapeOperationCode | None = None) -> list[str]:
         """Gets list of words that describe the shape.
 
-        Args:
-            parent_opc:  Operation code of parent shape.
-                         It is needed for proper use of parenthesis.
+        Parameters
+        ----------
+        parent_opc
+            Operation code of parent shape. It is needed for proper use of parenthesis.
 
         Returns
         -------
@@ -167,12 +171,14 @@ class Shape(_Shape):
             if need_parentheses:
                 words.append("(")
             for a in args[:-1]:
-                words.extend(a._get_words(self.opc))
+                words.extend(a.get_words(self.opc))
                 words.append(sep)
-            words.extend(args[-1]._get_words(self.opc))
+            words.extend(args[-1].get_words(self.opc))
             if need_parentheses:
                 words.append(")")
         return words
+
+    _get_words = get_words  # old name was private
 
     def __eq__(self, other) -> bool:  # noqa: PLR0911
         if self is other:
@@ -328,15 +334,18 @@ class Shape(_Shape):
 
     def get_surfaces(self) -> set[Surface]:
         """Gets all the surfaces that describe the shape."""
+        return set(self.scan_surfaces())
+
+    def scan_surfaces(self) -> Generator[Surface]:
+        """Iterate over all the surfaces that describe the shape."""
         args = self.args
-        if len(args) == 1:
-            return {args[0]}
-        if len(args) > 1:
-            result: set[Surface] = set()
+        _len = len(args)
+        if _len == 1:
+            yield args[0]
+        elif _len > 1:
             for a in args:
-                result = result.union(a.get_surfaces())
-            return result
-        return set()
+                yield from a.scan_surfaces()
+
 
     def is_empty(self) -> bool:
         """Check, if the shape is empty."""
@@ -605,9 +614,6 @@ def _verify_opc(opc, *args):
         raise ValueError("Operands are expected.")
 
 
-# noinspection PyProtectedMember
-
-
 class Body(Card):
     """Represents MCNP cell.
 
@@ -657,7 +663,13 @@ class Body(Card):
         return isinstance(other, Body) and Card.__eq__(self, other) and self._shape == other._shape
 
     @property
+    def shape(self) -> Shape:
+        """Get this cell geometry specification."""
+        return self._shape
+
+    @property
     def transformation(self) -> Transformation | None:
+        """Get this cell transformation."""
         return self.options.get("TRCL")
 
     @property
@@ -666,7 +678,7 @@ class Body(Card):
 
         Returns
         -------
-            True, if this body is empty, False otherwise.
+        True, if this body is empty, False otherwise.
         """
         return self._shape.is_empty()
 
@@ -698,7 +710,7 @@ class Body(Card):
         return self.options.get(f"IMP{particle}", 0.0)
 
     def is_equivalent_to(self, other):
-        result = self._shape == other._shape
+        result = self.shape == other.shape
         if result and "FILL" in self.options:
             if "FILL" not in other.options:
                 return False
@@ -719,7 +731,7 @@ class Body(Card):
         else:
             words.append("0")
             words.append(" ")
-        words.extend(self._shape._get_words())
+        words.extend(self._shape.get_words())
         words.append("\n")
         # insert options printing
         words.extend(self._options_list())
@@ -740,11 +752,6 @@ class Body(Card):
                 text.append(" ")
         text.append("\n")
         return text
-
-    @property
-    def shape(self) -> Shape:
-        """Gets body's shape."""
-        return self._shape
 
     def material(self) -> mm.Material | None:
         """Gets body's Material.

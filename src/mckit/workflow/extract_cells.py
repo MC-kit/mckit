@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import cast, Generator
 
 from collections.abc import Callable, Container, Iterable
-from itertools import tee
+from itertools import chain
 from pathlib import Path
 
 from mckit import Body, Universe
@@ -58,8 +58,8 @@ def filter_by_surface_number(surface_number: int) -> BodyPredicate:
 
     Parameters
     ----------
-    surface_numbers
-        collection of numbers to select
+    surface_number
+        the number to select
 
     Returns
     -------
@@ -67,7 +67,7 @@ def filter_by_surface_number(surface_number: int) -> BodyPredicate:
     """
 
     def _call(c: Body) -> bool:
-        return any(n == surface_number for n in map_names(c.shape.get_surfaces()))  # ty:ignore[unresolved-attribute]
+        return any(n == surface_number for n in map_names(c.shape.scan_surfaces()))  # ty:ignore[unresolved-attribute]
 
     return _call
 
@@ -86,14 +86,33 @@ def filter_by_surface_numbers(surface_numbers_to_select: Container[int]) -> Body
     """
 
     def _call(c: Body) -> bool:
-        return any(n in surface_numbers_to_select for n in map_names(c.shape.get_surfaces()))  # ty:ignore[unresolved-attribute]
+        return any(n in surface_numbers_to_select for n in map_names(c.shape.scan_surfaces()))  # ty:ignore[unresolved-attribute]
 
     return _call
 
+def filter_by_comment(text: str) -> BodyPredicate:
+    """Select cells containing the text in trailing comment.
+
+    Parameters
+    ----------
+    text
+        what to search in the cell's comment
+
+    Returns
+    -------
+    if the cell has comment, and it contains the text
+
+    """
+    def _call(cell: Body)->bool:
+        comment = cell.options.get("comment")
+        if not comment:
+            return False
+        return any(lambda x: text in x and (print(text, "in", x) or True) for x in comment)
+    return _call
 
 def extract_cells_from_file(
     model_path: str | Path, predicate: BodyPredicate, *, add_surface_sharing_cells: bool = True
-) -> set[Body]:
+) -> Generator[Body]:
     """Extract cells from a model matching to a predicate.
 
     Parameters
@@ -110,12 +129,12 @@ def extract_cells_from_file(
         Set of the selected cells (Body objects)
     """
     universe = from_file(model_path).universe
-    return extract_cells(universe, predicate, add_surface_sharing_cells=add_surface_sharing_cells)
+    yield from extract_cells(universe, predicate, add_surface_sharing_cells=add_surface_sharing_cells)
 
 
 def extract_cells(
     cells: Iterable[Body], predicate: BodyPredicate, *, add_surface_sharing_cells: bool = True
-) -> set[Body]:
+) -> Generator[Body]:
     """Extract cells matching to `predicate` along with sharing surfaces cells.
 
     By "sharing surfaces" cells we mean cells sharing some surfaces with
@@ -134,28 +153,30 @@ def extract_cells(
     -------
         Set of the selected cells (Body objects)
     """
-    it1, it2 = tee(cells)
-    selected_cells = set(filter(predicate, it1))
 
     if add_surface_sharing_cells:
-        selected_surfaces: set[int] = set()
+        selected_cells = list(filter(predicate, cells))
+        yield from selected_cells
+        selected_cells_names = set(map_names(selected_cells))
+        selected_surfaces: set[int] = {
+            name for name in chain(*(map_names(c.shape.scan_surfaces()) for c in selected_cells))
+        }
 
-        for c in selected_cells:
-            selected_surfaces.update(map_names(c.shape.get_surfaces()))  # ty:ignore[unresolved-attribute]
 
         def _select_adjacent_cells(_c: Body) -> bool:
-            return _c.name() not in selected_cells and any(
+            return _c.name() not in selected_cells_names and any(
                 cast(int, s.name()) in selected_surfaces
-                for s in _c.shape.get_surfaces()  # ty:ignore[unresolved-attribute]
+                for s in _c.shape.scan_surfaces()
             )
 
-        selected_cells.update(filter(_select_adjacent_cells, it2))
+        yield from filter(_select_adjacent_cells, cells)
+    else:
+        yield from filter(predicate, cells)
 
-    return selected_cells
 
 
 def make_universe(cells: Iterable[Body]) -> Universe:
-    """Create a Universe instance from collection of cells.
+    """Create a Universe instance from iterable collection of cells.
 
     Parameters
     ----------
