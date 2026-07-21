@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 import os
 
@@ -29,7 +29,7 @@ from mckit.transformation import Transformation
 from mckit.utils import filter_dict
 
 if TYPE_CHECKING:
-    from typing import ClassVar, Literal
+    from typing import Any, ClassVar
 
     from collections.abc import Iterable, Iterator
 
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from mckit.types import NPIntArray
 
     ShapeOperationCode = Literal["I", "U", "E", "R", "S", "C"]
-    TGeometry = list[Surface | ShapeOperationCode | "Shape" | "Body"] | "Body" | "Shape"
+    type TGeometry = list[Surface | ShapeOperationCode | Shape | Body] | Body | Shape
 
 
 __all__ = ["GLOBAL_BOX", "Body", "Card", "Shape", "TGeometry", "TGeometry", "simplify"]
@@ -497,10 +497,11 @@ class Shape(_Shape):
         -------
             New Shape object obtained by replacing certain surfaces.
         """
+        # TODO @dvp: dict[Surface, ...] is inefficient (hash is expensive), change to dict[Name, ...] mapping
         if self.opc in {"C", "S"}:  # complement or 'no operation'
             arg = self.args[0]
-            surf = replace_dict.get(arg, arg)
-            return Shape(self.opc, surf)
+            surf = replace_dict.get(arg)
+            return Shape(self.opc, surf or arg)
         if self.opc in {"I", "U"}:  # intersection or union
             args = [arg.replace_surfaces(replace_dict) for arg in self.args]
             return Shape(self.opc, *args)
@@ -850,19 +851,18 @@ class Body(Card):
 
         Parameters
         ----------
-        ----------:
-            universe:
-                Universe which cells fill this one. If None, universe from 'FILL'
-                option will be used. If no such universe, the cell itself will be
-                returned. Default: None.
-            recurrent:
-                If filler universe also contains cells with fill option, they will
-                be also filled. Default: False.
-            simplify:
-                If True, all cells obtained will be simplified.
-            **kwargs: dict
-                Keyword parameters for simplify method if simplify is True.
-                Default: all False.
+        universe:
+            Universe which cells fill this one. If None, universe from 'FILL'
+            option will be used. If no such universe, the cell itself will be
+            returned. Default: None.
+        recurrent:
+            If filler universe also contains cells with fill option, they will
+            be also filled. Default: False.
+        simplify:
+            If True, all cells obtained will be simplified.
+        **kwargs: dict
+            Keyword parameters for simplify method if simplify is True.
+            Default: all False.
 
         Returns
         -------
@@ -876,6 +876,7 @@ class Body(Card):
                     universe = universe.transform(tr)
             else:
                 return [self]
+        # TODO @dvp: fix the following: universe.fill is not implemented
         if recurrent:
             universe = universe.fill(recurrent=True, simplify=simplify, **kwargs)
         cells = []
