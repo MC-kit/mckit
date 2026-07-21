@@ -40,7 +40,7 @@ def _(mo):
 
     - 16160 - graveyard_in
     - 16161 - graveyard
-    - ячейки "Autromatic Generated Void Cell" (с этим комменатарием) - проверить не налезают ли они на floor
+    - ячейки "Automatic Generated Void Cell" (с этим комменатарием) - проверить не налезают ли они на floor
     """)
     return
 
@@ -163,18 +163,6 @@ def _(tokamak_graveyard_in):
 
 
 @app.cell
-def _(tokamak_info):
-    tokamak_16159 = tokamak_info.cells_index[16159]
-    return (tokamak_16159,)
-
-
-@app.cell
-def _(tokamak_16159):
-    tokamak_16159.options["comment"]
-    return
-
-
-@app.cell
 def _(hall_cell, tokamak_graveyard_in):
     intersect_graveyard_in = hall_cell.intersection(tokamak_graveyard_in)
     return (intersect_graveyard_in,)
@@ -187,8 +175,16 @@ def _(intersect_graveyard_in):
 
 
 @app.cell
-def _(intersect_graveyard_in, mc):
-    intersect_graveyard_in_simplified = intersect_graveyard_in.simplify(mc.box.Box([0,10,0], 10000,10000,10000), min_volume=1)
+def _(mc):
+    def simplify(cell: mc.Body) -> mc.Body:
+        return cell.simplify(box = mc.box.Box(center=[0,10,0], wx=10000,wy=10000,wz=10000), min_volume=1)
+
+    return (simplify,)
+
+
+@app.cell
+def _(intersect_graveyard_in, simplify):
+    intersect_graveyard_in_simplified = simplify(intersect_graveyard_in)
     return (intersect_graveyard_in_simplified,)
 
 
@@ -212,25 +208,105 @@ def _(intersect_graveyard_in_simplified):
 
 @app.cell
 def _(intersect_graveyard_in, mc):
-    graveyard_in_universe = mc.Universe([intersect_graveyard_in])
-    return (graveyard_in_universe,)
+    hall_graveyard_in_intersection_universe = mc.Universe([intersect_graveyard_in])
+    return (hall_graveyard_in_intersection_universe,)
 
 
 @app.cell
 def _(intersect_graveyard_in_simplified, mc):
-    graveyard_in_universe_simplified = mc.Universe([intersect_graveyard_in_simplified])
-    return (graveyard_in_universe_simplified,)
+    hall_graveyard_in_intersectin_simplified_universe = mc.Universe([intersect_graveyard_in_simplified])
+    return (hall_graveyard_in_intersectin_simplified_universe,)
 
 
 @app.cell
-def _(graveyard_in_universe):
-    graveyard_in_universe.save("/home/dvp/dev/mcnp/trt/wrk/models/2025/5.4.1/graveyard-in.i")
+def _(hall_graveyard_in_intersection_universe):
+    hall_graveyard_in_intersection_universe.save("/home/dvp/dev/mcnp/trt/wrk/models/2025/5.4.1/hall-graveyard-in-intersection.i")
     return
 
 
 @app.cell
-def _(graveyard_in_universe_simplified):
-    graveyard_in_universe_simplified.save("/home/dvp/dev/mcnp/trt/wrk/models/2025/5.4.1/graveyard-in-simplified.i")
+def _(hall_graveyard_in_intersectin_simplified_universe):
+    hall_graveyard_in_intersectin_simplified_universe.save("/home/dvp/dev/mcnp/trt/wrk/models/2025/5.4.1/hall-graveyard-in-intersection-simplified.i")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Проверить "generated void cells"
+    """)
+    return
+
+
+@app.cell
+def _(mc):
+    def contains_comment(cell: mc.Body, text: str)->bool:
+        comment = cell.options.get("comment")
+        if not comment:
+            return False
+        return any(lambda x: text in x and (print(text, "in", x) or True) for x in comment)
+    
+
+    return (contains_comment,)
+
+
+@app.cell
+def _(contains_comment, mc):
+    def select_generated_voids_predicate(cell: mc.Body) -> bool:
+        return contains_comment(cell, "Automatic Generated Void Cell")
+    
+
+    return (select_generated_voids_predicate,)
+
+
+@app.cell
+def _(select_generated_voids_predicate, tokamak):
+    from mckit.workflow import extract_cells
+
+    generated_voids = extract_cells(tokamak, select_generated_voids_predicate, add_surface_sharing_cells=False)
+
+    return
+
+
+@app.cell
+def _(select_generated_voids_predicate, tokamak):
+    generated_voids2 = [x for x in tokamak if select_generated_voids_predicate(x)]
+    return (generated_voids2,)
+
+
+@app.cell
+def _(generated_voids2, tokamak):
+    len(generated_voids2), len(tokamak)
+    return
+
+
+@app.cell
+def _(generated_voids2):
+    "\n".join(generated_voids2[0].options["comment"])
+    return
+
+
+@app.cell
+def _(generated_voids2, select_generated_voids_predicate):
+    select_generated_voids_predicate(generated_voids2[0])
+    return
+
+
+@app.cell
+def _(contains_comment, generated_voids2):
+    contains_comment(generated_voids2[0], "Automatic Generated Void Cell")
+    return
+
+
+@app.cell
+def _(tokamak_info):
+    tokamak_16159 = tokamak_info.cells_index[16159]
+    return (tokamak_16159,)
+
+
+@app.cell
+def _(tokamak_16159):
+    tokamak_16159.options["comment"]
     return
 
 

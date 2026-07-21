@@ -26,15 +26,15 @@ def scan_dirs_up(start_from: Path) -> Iterable[Path]:
 def mkpath(path: str | Path) -> Path:
     if not isinstance(path, Path):
         path = Path(path)
-    return path
+    return path.expanduser().absolute()
 
 
 def check_file(path: str | Path) -> Path:
-    path = mkpath(path)
-    if not path.is_file():
+    _path = mkpath(path)
+    if not _path.is_file():
         msg = f"Not a file: {path}"
         raise ValueError(msg)
-    return path
+    return _path
 
 
 def check_files(*files: str | Path) -> Iterable[Path]:
@@ -43,11 +43,11 @@ def check_files(*files: str | Path) -> Iterable[Path]:
 
 
 def check_dir(path: str | Path) -> Path:
-    path = mkpath(path)
-    if not path.is_dir():
+    _path = mkpath(path)
+    if not _path.is_dir():
         msg = f"Not a dir: {path}"
         raise ValueError(msg)
-    return path
+    return _path
 
 
 def check_dirs(*dirs: Path) -> Iterable[Path]:

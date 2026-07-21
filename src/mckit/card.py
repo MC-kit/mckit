@@ -5,13 +5,10 @@ from __future__ import annotations
 from typing import Any, override
 
 from abc import ABC, abstractmethod
-from functools import reduce
-from operator import xor
 
 from mckit.utils.named import Name
 
 from .printer import print_card
-from .utils import make_hashable
 
 
 # noinspection PyPropertyDefinition
