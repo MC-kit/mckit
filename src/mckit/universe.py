@@ -739,10 +739,7 @@ class Universe:
                 raise NameClashError(out.getvalue())
 
         transformations_set = collect_transformations(self)
-        if transformations_set:
-            transformations = sorted(transformations_set, key=_key)
-        else:
-            transformations = None
+        transformations = sorted(transformations_set, key=_key) if transformations_set else None
         universes = self.get_universes()
         cells: list[Body] = []
         surfaces: list[Surface] = []

@@ -80,7 +80,7 @@ def test_clashes_on_non_equal_items(entities):
 @pytest.mark.parametrize(
     "entities, expected, expected_collected",
     [
-        ([Something2(1, 1), Something2(1, 2)], {1: Something2(cast(Name,1), 2)}, {1: 2}),
+        ([Something2(1, 1), Something2(1, 2)], {1: Something2(cast(Name, 1), 2)}, {1: 2}),
         (
             [Something2(1, 1), Something2(1, 2), Something2(2, 3)],
             {1: Something2(1, 2), 2: Something2(2, 3)},
