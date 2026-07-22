@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-from itertools import chain
-from typing import TYPE_CHECKING, Any, Literal, SupportsIndex, cast, Generator
+from typing import TYPE_CHECKING, Any, Literal, SupportsIndex, cast
 
 import sys
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Container
+from collections.abc import Callable, Container, Generator, Iterable
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import reduce
 from io import StringIO
+from itertools import chain
 from logging import getLogger
 from pathlib import Path
 
@@ -30,7 +30,7 @@ from .transformation import Transformation
 from .utils import accept, on_unknown_acceptor
 
 if TYPE_CHECKING:
-    import numpy.typing as npt
+    from .types import NPFloat64Array, NPInt32Array
 
 __all__ = [
     "NameClashError",
@@ -45,7 +45,7 @@ __all__ = [
 from .utils.indexes import IndexOfNamed, StatisticsCollector
 from .utils.named import Name, default_name_key, map_names
 
-ZERO_NAME = Name(0)
+ZERO_NAME = cast(Name, 0)
 
 _LOG = getLogger("mckit.universe")
 
@@ -56,7 +56,7 @@ Replaceable = Surface | Composition
 class NameClashError(ValueError):
     """Exception to present information on name clashes over universes."""
 
-    def __init__(self, clashes: str | dict[str, dict[int, set[Universe]]]) -> None:
+    def __init__(self, clashes: str | dict[str, dict[Name, set[Universe]]]) -> None:
         if isinstance(clashes, str):
             ValueError.__init__(self, clashes)
         else:
@@ -111,15 +111,24 @@ def surface_selector(surface_names: int | Container[int]) -> Callable[[Body], li
     -------
     Selector function
     """
-
     if isinstance(surface_names, int):
+
         def selector(cell: Body) -> list[Surface]:
             surfs = cell.shape.scan_surfaces()
             return [s for s in surfs if s.name() == surface_names]
-    else:
+    elif isinstance(surface_names, Container):
+
         def selector(cell: Body) -> list[Surface]:
             surfs = cell.shape.scan_surfaces()
-            return [s for s in surfs if s.name() in surface_names]
+            return [
+                s
+                for s in surfs
+                # pyrefly: ignore[not-iterable]
+                if cast(Name, s.name()) in surface_names  # ty: ignore unsupported-operator
+            ]
+    else:
+        msg = f"Invalid type of surface_names parameter: {type(surface_names)}"  # type: ignore[unreachable]
+        raise TypeError(msg)
 
     return selector
 
@@ -201,7 +210,7 @@ class Universe:
         self._verbose_name = verbose_name
         self._cells: list[Body] = []
         if common_materials is None:
-            common_materials: set[Composition] = set()
+            common_materials = set()
         self._common_materials = common_materials
 
         self.add_cells(cells, name_rule=name_rule)
@@ -251,9 +260,9 @@ class Universe:
         surf_replace = {s: s for s in surfs}
         comps = self._common_materials.union(self.get_compositions())
         comp_replace = {c: c for c in comps}
-        cell_names: set[int] = {default_name_key(c) for c in self}
-        surf_names: set[int] = {default_name_key(s) for s in surfs}
-        comp_names: set[int] = {default_name_key(c) for c in comps}
+        cell_names: set[Name] = {default_name_key(c) for c in self}
+        surf_names: set[Name] = {default_name_key(s) for s in surfs}
+        comp_names: set[Name] = {default_name_key(c) for c in comps}
 
         for cell in cells:
             if cell.shape.is_empty():
@@ -265,8 +274,15 @@ class Universe:
             mat = new_cell.material()
 
             if mat:
-                new_comp = Universe._update_replace_dict(
-                    mat.composition, comp_replace, comp_names, name_rule, "Material"
+                new_comp = cast(
+                    Composition,
+                    Universe._update_replace_dict(
+                        mat.composition,
+                        cast(dict[Replaceable, Replaceable], comp_replace),
+                        comp_names,
+                        name_rule,
+                        "Material",
+                    ),
                 )
                 new_cell.options["MAT"] = Material(composition=new_comp, density=mat.density)
 
@@ -278,7 +294,7 @@ class Universe:
                 new_name = max(cell_names, default=0) + 1
                 new_cell.rename(cast(Name, new_name))
 
-            cell_names.add(new_cell.name())
+            cell_names.add(cast(Name, new_cell.name()))
             new_cell.options["U"] = self
             self._cells.append(new_cell)
 
@@ -315,11 +331,11 @@ class Universe:
     def _get_cell_replaced_shape(
         cell: Body,
         surf_replace: dict[Surface, Surface],
-        surf_names: set[int],
+        surf_names: set[Name],
         name_rule: Literal["keep", "new", "clash"],
     ) -> Shape:
         cell_surfs = cell.shape.get_surfaces()
-        replace_dict = {}
+        replace_dict: dict[Surface, Surface] = {}
         for s in cell_surfs:
             if isinstance(s, Plane):
                 rev_s = s.reverse()  #  Plane(-s._v, -s._k)
@@ -328,8 +344,15 @@ class Universe:
                     rev_s = surf_replace[rev_s]
                     replace_dict[s] = Shape("C", rev_s)
                     continue
-            replace_dict[s] = Universe._update_replace_dict(
-                s, surf_replace, surf_names, name_rule, "Surface"
+            replace_dict[s] = cast(
+                Surface,
+                Universe._update_replace_dict(
+                    s,
+                    cast(dict[Replaceable, Replaceable], surf_replace),
+                    surf_names,
+                    name_rule,
+                    "Surface",
+                ),
             )
         return cell.shape.replace_surfaces(replace_dict)
 
@@ -337,7 +360,7 @@ class Universe:
     def _update_replace_dict(
         entity: Replaceable,
         replace: dict[Replaceable, Replaceable],
-        names: set[int],
+        names: set[Name],
         rule: Literal["keep", "new", "clash"],
         err_desc: str,
     ) -> Replaceable:
@@ -361,12 +384,12 @@ class Universe:
             new_entity.rename(cast(Name, new_name))
 
         replace[new_entity] = new_entity
-        names.add(new_entity.name())
+        names.add(cast(Name, new_entity.name()))
 
         return new_entity
 
     @staticmethod
-    def _fill_check(predicate):
+    def _fill_check(predicate: Callable[[Body], bool]) -> Callable[[Body], bool]:
         def _predicate(cell):
             fill = cell.options.get("FILL", None)
             if fill:
@@ -392,8 +415,8 @@ class Universe:
 
     def apply_fill(
         self,
-        cell: Body | int = None,
-        universe: Universe | int = None,
+        cell: Body | int | None = None,
+        universe: Universe | int | None = None,
         predicate: Callable[[Body], bool] | None = None,
     ) -> None:
         """Applies fill operations to all or selected cells or universes.
@@ -412,28 +435,31 @@ class Universe:
                 Function that accepts Body instance and return True, if this cell
                 must be filled.
         """
-        if not cell and not universe and not predicate:
+        if predicate is None:
+            if cell is not None:
+                if isinstance(cell, Body):
+                    cell = cell.name()
 
-            def predicate(_c):
-                return True
+                def _predicate(_c: Body, /) -> bool:
+                    return _c.name() == cell
+            elif universe is not None:
+                if isinstance(universe, Universe):
+                    universe = universe.name()
 
-        elif cell:
+                def _predicate(_c: Body, /) -> bool:
+                    return cast(int, _c.options["FILL"]["universe"].name()) == universe
+            else:
 
-            def predicate(_c):
-                return _c.name() == cell
+                def _predicate(_c: Body, /) -> bool:
+                    return True
+        else:
+            _predicate = predicate
 
-        elif universe:
-            if isinstance(universe, Universe):
-                universe = universe.name()
-
-            def predicate(_c):
-                return _c.options["FILL"]["universe"].name() == universe
-
-        predicate = self._fill_check(predicate)
+        _predicate = self._fill_check(_predicate)  # ty: ignore conflicting-declarations
         extra_cells = []
         del_indices = []
         for i, c in enumerate(self):
-            if predicate(c):
+            if _predicate(c):
                 extra_cells.extend(c.fill())
                 del_indices.append(i)
         for i in reversed(del_indices):
@@ -537,7 +563,7 @@ class Universe:
             Default: False - return surfaces of this universe only.
 
         Yields
-        -------
+        ------
         Surfaces, that belong to the universe.
         """
         for c in self:
@@ -574,7 +600,7 @@ class Universe:
         -------
             A set of all the universes.
         """
-        universes = {cast("Universe", self)}
+        universes: set[Universe] = {self}
         for c in self:
             if "FILL" in c.options:
                 u = c.options["FILL"]["universe"]
@@ -583,9 +609,9 @@ class Universe:
 
     def name(self) -> Name:
         """Gets numeric name of the universe."""
-        return cast(Name, self._name)
+        return self._name
 
-    def name_clashes(self) -> dict[str, dict[int, set[Universe]]]:
+    def name_clashes(self) -> dict[str, dict[Name, set[Universe]]]:
         """Checks, if there is name clashes.
 
         Returns
@@ -593,13 +619,19 @@ class Universe:
             Description of found clashes. If no clashes - the dictionary is empty.
         """
         universes = self.get_universes()
-        universe_to_cell_name_map = {u: list(map_names(u)) for u in universes}
+        universe_to_cell_name_map = {u: cast(list[Name], list(map_names(u))) for u in universes}
         universe_to_surface_name_map = {
-            u: list(map_names(u.get_surfaces())) for u in universes  # use get_surfaces() for unique names
+            u: cast(list[Name], list(map_names(u.get_surfaces())))
+            for u in universes  # use get_surfaces() for unique names
         }
-        mats: dict[Universe|None, list[int]] = {None: list(map_names(self._common_materials))}
+        # noinspection PyTypeChecker
+        mats: dict[Universe | None, list[Name]] = {
+            None: cast(list[Name], list(map_names(self._common_materials)))
+        }
         for u in universes:
-            mats[u] = list(map_names(u.get_compositions().difference(self._common_materials)))
+            mats[u] = cast(
+                list[Name], list(map_names(u.get_compositions().difference(self._common_materials)))
+            )
         universe_to_name_dummy = {u: [u.name()] for u in universes}
         cell_stat = Universe._produce_stat(universe_to_cell_name_map)
         stat = {}
@@ -608,38 +640,30 @@ class Universe:
         surface_stat = Universe._produce_stat(universe_to_surface_name_map)
         if surface_stat:
             stat["surf"] = surface_stat
-        materials_stat = Universe._produce_stat(mats)
+        materials_stat = Universe._produce_stat(cast(dict[Universe, list[Name]], mats))
         if materials_stat:
             stat["material"] = materials_stat
         universe_stat = Universe._produce_stat(universe_to_name_dummy)
         if universe_stat:
             stat["universe"] = universe_stat
-        # TODO dvp: handle transformations here
+        # TODO @dvp: handle transformations here
         return stat
 
     @staticmethod
-    def _produce_stat(names: dict[Universe, Iterable[int]]) -> dict[int, set[Universe]]:
+    def _produce_stat(names: dict[Universe, list[Name]]) -> dict[Name, set[Universe]]:
         stat = defaultdict(list)
         for u, u_names in names.items():
             for name in u_names:
                 stat[name].append(u)
-        return Universe._clean_stat_dict(stat)
-
-    @staticmethod
-    def _clean_stat_dict(stat) -> dict[int, set[Universe]]:
-        new_stat = {}
-        for k, v in stat.items():
-            if len(v) > 1:
-                new_stat[k] = set(v)
-        return new_stat
+        return {k: set(v) for k, v in stat.items() if len(v) > 1}
 
     def rename(
         self,
-        start_cell: Name | None = None,
-        start_surf: Name | None = None,
-        start_mat: Name | None = None,
-        start_tr: Name | None = None,
-        name: Name | None = None,
+        start_cell: int | None = None,
+        start_surf: int | None = None,
+        start_mat: int | None = None,
+        start_tr: int | None = None,
+        name: int | None = None,
     ) -> None:
         """Renames all entities contained in the universe.
 
@@ -665,7 +689,7 @@ class Universe:
             if name < 0:
                 msg = f"Universe name {name} < 0"
                 raise ValueError(msg)
-            self._name = name
+            self._name = cast(Name, name)
             self._verbose_name = None
             for c in self:
                 c.options = filter_dict(c.options, "original")
@@ -677,18 +701,18 @@ class Universe:
                 #            if, there are fills, then what to do with cells in them?
                 #            what if filling universe occurs multiple times?
                 t += 1
-        if start_surf:
+        if start_surf is not None:
             surfs = self.get_surfaces()
             # TODO @dvp: using set and sorted change the order of surfaces, do we need this?
             #            may be we need just scan the surfaces
-            for s in sorted(surfs, key=default_name_key):
-                s.rename(start_surf)
+            for s in sorted(surfs, key=_key):
+                s.rename(cast(Name, start_surf))
                 start_surf += 1
-        if start_mat:
+        if start_mat is not None:
             mats = self.get_compositions()
-            for m in sorted(mats, key=default_name_key):
+            for m in sorted(mats, key=_key):
                 if m not in self._common_materials:
-                    m.rename(start_mat)
+                    m.rename(cast(Name, start_mat))
                     start_mat += 1
 
     def check_clashes(self) -> None:
@@ -705,6 +729,7 @@ class Universe:
         """Saves the universe into file."""
         # NOTE dvp: Don't try to resolve names here, the object shouldn't change on save() function.
         # self.check_clashes()
+
         if check_clashes:
             analyser = UniverseAnalyser(self)
             if not analyser.we_are_all_clear():
@@ -713,17 +738,20 @@ class Universe:
                 analyser.print_duplicates_map(stream=out)
                 raise NameClashError(out.getvalue())
 
-        transformations = collect_transformations(self)
-        if transformations:
-            transformations = sorted(transformations, key=default_name_key)
+        transformations_set = collect_transformations(self)
+        if transformations_set:
+            transformations = sorted(transformations_set, key=_key)
+        else:
+            transformations = None
         universes = self.get_universes()
-        cells = []
-        surfaces = []
-        materials = cast( list[Composition], sorted(self._common_materials, key=default_name_key))
-        for u in sorted(universes, key=default_name_key):
-            cells.extend(sorted(u, key=default_name_key))
-            surfaces.extend(sorted(u.get_surfaces(), key=default_name_key))
-            materials.extend(sorted(u.get_compositions(True), key=default_name_key))
+        cells: list[Body] = []
+        surfaces: list[Surface] = []
+        materials = sorted(self._common_materials, key=_key)
+
+        for u in sorted(universes, key=_key):
+            cells.extend(sorted(u, key=lambda x: cast(Name, x.name())))
+            surfaces.extend(sorted(u.get_surfaces(), key=_key))
+            materials.extend(sorted(u.get_compositions(True), key=_key))
         cards: list[str] = [self.verbose_name]
         # TODO @dvp: output comment here prepending each line with "c ", if not present already
         cards.extend(x.mcnp_repr() for x in cells)
@@ -740,7 +768,7 @@ class Universe:
         with filename.open(mode="w", encoding=encoding) as f:
             f.write("\n".join(cards))
 
-    def select(self, selector:Callable[[Body],list[Body|Surface]], inner: bool=False):
+    def select(self, selector: Callable[[Body], list[Body | Surface]], inner: bool = False):
         """Selects specified entities.
 
         Parameters
@@ -771,7 +799,13 @@ class Universe:
                     items.append(item)
         return items
 
-    def simplify(self, box: Box=GLOBAL_BOX, min_volume: float = 1.0, split_disjoint: bool=False, verbose: bool=True) -> None:
+    def simplify(
+        self,
+        box: Box = GLOBAL_BOX,
+        min_volume: float = 1.0,
+        split_disjoint: bool = False,
+        verbose: bool = True,
+    ) -> None:
         """Simplifies all cells of the universe.
 
         Modifies current universe.
@@ -792,8 +826,11 @@ class Universe:
 
             def fmt_fun(x):
                 return f"Simplifying cell #{x.name() if x else x}"
+
             # TODO @dvp: bad design, use dependency injection instead direct dependency to click.progressbar
-            universe_iterator = progressbar(self, item_show_func=fmt_fun).__enter__()
+            universe_iterator: Iterable[Body] = progressbar(
+                self, item_show_func=fmt_fun
+            ).__enter__()
         else:
             universe_iterator = self
 
@@ -807,7 +844,7 @@ class Universe:
 
         self._cells = new_cells
 
-    def test_points(self, points: npt.ArrayLike[float]) -> npt.NDArray[int]:
+    def test_points(self, points: NPFloat64Array) -> NPInt32Array:
         """Finds cell to which each point belongs to.
 
         Parameters
@@ -822,7 +859,7 @@ class Universe:
         Its length equals to the number of points.
         """
         points = np.asarray(points, dtype=float)
-        result = np.empty(points.size // 3, dtype=int)
+        result = np.zeros(points.size // 3, dtype=np.int32)
         for i, c in enumerate(self._cells):
             test = c.shape.test_points(points)
             result[test == +1] = i
@@ -911,13 +948,13 @@ def produce_universes(cells: Iterable[Body]) -> Universe:
             new_group = _UniverseCellsGroup(universe=Universe([], universe_no), cells=[c])
             groups[universe_no] = new_group
     for c in cells:
-        fill: dict[str, Any] = c.options.get("FILL")
+        fill: dict[str, Any] | None = c.options.get("FILL")
         if fill is not None:
             fill_universe_no = fill["universe"]
             fill["universe"] = groups[fill_universe_no].universe
     for group in groups.values():
         group.universe.add_cells(group.cells, name_rule="keep")
-    top_universe = groups[Name(0)].universe
+    top_universe = groups[ZERO_NAME].universe
     top_universe.set_common_materials(top_universe.find_common_materials())
     return top_universe
 
@@ -928,7 +965,9 @@ def collect_transformations(universe: Universe, recursive: bool = True) -> set[T
         if transformation and transformation.name():
             aggregator.add(transformation)
 
-    def at_surface(aggregator: set[Transformation], s: Surface | Shape | Body):
+    def at_surface(
+        aggregator: set[Transformation], s: Surface | Shape | Body
+    ) -> set[Transformation]:
         if isinstance(s, Surface):
             add_surface_transformation(aggregator, s)
         elif isinstance(s, Shape):
@@ -939,13 +978,17 @@ def collect_transformations(universe: Universe, recursive: bool = True) -> set[T
         return aggregator
 
     @contextmanager
-    def visit_shape(s: Surface | Body | Shape):
+    def visit_shape(
+        s: Surface | Body | Shape,
+    ) -> Generator[
+        tuple[Callable[[set[Transformation], Surface], set[Transformation]], set[Transformation]]
+    ]:
         if isinstance(s, Surface | Body | Shape):
             yield at_surface, set()
         else:
-            on_unknown_acceptor(s)
+            on_unknown_acceptor(s)  # type: ignore[unreachable]
 
-    def at_shape(aggregator: set[Transformation], s: Surface | Body | Shape):
+    def at_shape(aggregator: set[Transformation], s: Surface | Body | Shape) -> set[Transformation]:
         if isinstance(s, Surface):
             add_surface_transformation(aggregator, s)
             return aggregator
@@ -957,7 +1000,7 @@ def collect_transformations(universe: Universe, recursive: bool = True) -> set[T
         if isinstance(b, Body):
             yield at_shape, set()
         else:
-            on_unknown_acceptor(b)
+            on_unknown_acceptor(b)  # type: ignore[unreachable]
 
     def at_body(aggregator: set[Transformation], b: Body) -> set[Transformation]:
         body_transformation = b.transformation
@@ -975,15 +1018,19 @@ def collect_transformations(universe: Universe, recursive: bool = True) -> set[T
         return aggregator
 
     @contextmanager
-    def visit_universe(u: Universe) -> Generator[tuple[Callable[[set[Transformation], Body], set[Transformation]], set[Transformation]]]:
+    def visit_universe(
+        u: Universe,
+    ) -> Generator[
+        tuple[Callable[[set[Transformation], Body], set[Transformation]], set[Transformation]]
+    ]:
         if isinstance(u, Universe):
             yield at_body, set()
             # TODO dvp:  set() is not a valid choice as aggregator considering
             #        cases when names differ but transformations are equal by values
         else:
-            on_unknown_acceptor(u)
+            on_unknown_acceptor(u)  # type: ignore[unreachable]
 
-    return accept(universe, visit_universe)
+    return cast(set[Transformation], accept(universe, visit_universe))
 
 
 # TODO dvp: it's possible to generalize visiting introducing class Visitor
@@ -1059,22 +1106,22 @@ def collect_shared_entities(
 
 
 class UniverseAnalyser:
-    def __init__(self, universe: Universe):
+    def __init__(self, universe: Universe) -> None:
         self.universe = universe
         universes = self.universe.get_universes()
-        self.universe_duplicates = StatisticsCollector(ignore_equal=True)
+        self.universe_duplicates: StatisticsCollector = StatisticsCollector(ignore_equal=True)
         self.universes_index = IndexOfNamed.from_iterable(
             universes,
             on_duplicate=self.universe_duplicates,
         )
-        self.cell_duplicates = StatisticsCollector()
-        cells: list[Body] = [c for c in chain(*universes)]
+        self.cell_duplicates: StatisticsCollector = StatisticsCollector()
+        cells: list[Body] = list(chain(*universes))
         self.cell_index = IndexOfNamed[Name, Body].from_iterable(
             cells,
             on_duplicate=self.cell_duplicates,
         )
         self.cell_to_universe_map = collect_shared_entities(cells_to_universe_mapper, universes)
-        self.surface_duplicates = StatisticsCollector(ignore_equal=True)
+        self.surface_duplicates: StatisticsCollector = StatisticsCollector(ignore_equal=True)
         self.surface_index = IndexOfNamed[Name, Surface].from_iterable(
             universe.get_surfaces_list(inner=True),
             on_duplicate=self.surface_duplicates,
@@ -1082,7 +1129,7 @@ class UniverseAnalyser:
         self.surface_to_universe_map = collect_shared_entities(
             surfaces_to_universe_mapper, universes
         )
-        self.composition_duplicates = StatisticsCollector(ignore_equal=True)
+        self.composition_duplicates: StatisticsCollector = StatisticsCollector(ignore_equal=True)
         self.composition_index = IndexOfNamed[Name, Composition].from_iterable(
             universe.get_compositions(),
             on_duplicate=self.composition_duplicates,
@@ -1090,7 +1137,7 @@ class UniverseAnalyser:
         self.compositions_to_universe_map = collect_shared_entities(
             compositions_to_universe_mapper, universes
         )
-        self.transformation_duplicates = StatisticsCollector(ignore_equal=True)
+        self.transformation_duplicates: StatisticsCollector = StatisticsCollector(ignore_equal=True)
         self.transformation_index = IndexOfNamed[Name, Transformation].from_iterable(
             collect_transformations(universe, recursive=True),
             on_duplicate=self.transformation_duplicates,
@@ -1110,7 +1157,12 @@ class UniverseAnalyser:
 
     def duplicates_maps(
         self,
-    ) -> tuple[dict[Name, dict[Name, int]], dict[Name, dict[Name, int]], dict[Name, dict[Name, int]], dict[Name, dict[Name, int]]]:
+    ) -> tuple[
+        dict[Name, dict[Name, int]],
+        dict[Name, dict[Name, int]],
+        dict[Name, dict[Name, int]],
+        dict[Name, dict[Name, int]],
+    ]:
         return (
             self.cell_to_universe_map,
             self.surface_to_universe_map,
@@ -1144,3 +1196,7 @@ class UniverseAnalyser:
             ),
             None,
         )
+
+
+def _key(c: Body | Surface | Composition | Universe | Transformation) -> Name:
+    return cast(Name, c.name())

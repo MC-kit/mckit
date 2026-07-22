@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
-from typing import Any, override
+from typing import TYPE_CHECKING, override
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 
 from mckit.utils.named import Name
 
 from .printer import print_card
+from .utils import match_comment
+
+if TYPE_CHECKING:
+    from typing import Any
+
+    import re
 
 
 # noinspection PyPropertyDefinition
@@ -16,6 +23,10 @@ class Card(ABC):
     """Features, common for all cards."""
 
     def __init__(self, **options: Any) -> None:
+        # TODO @dvp: rename self.options to self._options to make this attribute private
+        #            make sure that other modules don't access options directly
+        #            at least for name, comment and so on
+        #            then convert options to separate explicit attributes
         self.options: dict[str, Any] = options
 
     @override
@@ -69,8 +80,15 @@ class Card(ABC):
         """Gets a list of card words."""
 
     def mcnp_repr(self, pretty: bool = False) -> str:
-        """Gets str representation of the card."""
-        # TODO dvp: try to use original texts, if available - this will preserve comments
+        """Get string representation of the card.
+
+        Parameters
+        ----------
+        pretty
+            print float number in human-readable format
+        """
+        # TODO @dvp: try to use original texts, if available - this will preserve comments
+        # TODO @dvp: remove `pretty`, instead use formats for numbers from geouned, to avoid precision loss
         return print_card(self.mcnp_words(pretty))
 
     def drop_original(self) -> None:
@@ -93,6 +111,23 @@ class Card(ABC):
     @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, Card) and (self is other or self.options == other.options)
+
+    def match_comment(self, predicate: str | re.Pattern | Callable[[str], bool]) -> bool:
+        """Check if this cell trailing comment matches `predicate`.
+
+        Parameters
+        ----------
+        predicate
+            what to search for in the comments (string, pattern or callable)
+
+        Returns
+        -------
+        Does predicate match one of the  comment lines?
+        """
+        comment = self.options.get("comment")
+        if comment is None:
+            return False
+        return match_comment(comment, predicate)
 
 
 __all__ = ["Card"]

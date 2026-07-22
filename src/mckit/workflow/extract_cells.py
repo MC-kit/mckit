@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from typing import cast, Generator
+from typing import TYPE_CHECKING, cast
 
-from collections.abc import Callable, Container, Iterable
+import re
+
+from collections.abc import Callable
 from itertools import chain
 from pathlib import Path
 
@@ -12,7 +14,10 @@ from mckit import Body, Universe
 from mckit.parser import from_file
 from mckit.utils.named import default_name_key, map_names
 
-BodyPredicate = Callable[[Body], bool]
+if TYPE_CHECKING:
+    from collections.abc import Container, Iterable, Iterator
+
+    BodyPredicate = Callable[[Body], bool]
 
 
 def filter_by_cell_number(cell_number: int) -> BodyPredicate:
@@ -67,7 +72,7 @@ def filter_by_surface_number(surface_number: int) -> BodyPredicate:
     """
 
     def _call(c: Body) -> bool:
-        return any(n == surface_number for n in map_names(c.shape.scan_surfaces()))  # ty:ignore[unresolved-attribute]
+        return any(n == surface_number for n in map_names(c.shape.scan_surfaces()))
 
     return _call
 
@@ -86,33 +91,80 @@ def filter_by_surface_numbers(surface_numbers_to_select: Container[int]) -> Body
     """
 
     def _call(c: Body) -> bool:
-        return any(n in surface_numbers_to_select for n in map_names(c.shape.scan_surfaces()))  # ty:ignore[unresolved-attribute]
+        return any(n in surface_numbers_to_select for n in map_names(c.shape.scan_surfaces()))
 
     return _call
 
-def filter_by_comment(text: str) -> BodyPredicate:
+
+def filter_by_comment(predicate: str | re.Pattern | Callable[[str], bool]) -> BodyPredicate:
     """Select cells containing the text in trailing comment.
 
     Parameters
     ----------
-    text
+    predicate
         what to search in the cell's comment
 
     Returns
     -------
-    if the cell has comment, and it contains the text
+    Function searching predicate in a cell comment
 
     """
-    def _call(cell: Body)->bool:
-        comment = cell.options.get("comment")
-        if not comment:
-            return False
-        return any(lambda x: text in x and (print(text, "in", x) or True) for x in comment)
+
+    def _call(cell: Body) -> bool:
+        """Search predicate in comment.
+
+        Parameters
+        ----------
+        cell
+            to check
+
+        Returns
+        -------
+        if the cell comment matches predicate
+        """
+        return cell.match_comment(predicate)
+
     return _call
 
-def extract_cells_from_file(
-    model_path: str | Path, predicate: BodyPredicate, *, add_surface_sharing_cells: bool = True
-) -> Generator[Body]:
+
+def filter_by_shared_surfaces(selected_cells: Iterable[Body]) -> BodyPredicate:
+    """Select cells containing the text in trailing comment.
+
+    Parameters
+    ----------
+    selected_cells
+        preliminary selected
+
+    Returns
+    -------
+    Function checking if a cell uses any surfaces as selected cells
+
+    """
+    selected_cells_names: set[int] = set(map_names(selected_cells))
+    selected_surfaces: set[int] = set(
+        chain(*(map_names(c.shape.scan_surfaces()) for c in selected_cells))
+    )
+
+    def _call(cell: Body) -> bool:
+        """Check if the cell uses surfaces from selected cells.
+
+        Parameters
+        ----------
+        cell
+            to check
+
+        Returns
+        -------
+        if there are shared surfaces with surfaces used in preliminary selected cells.
+        """
+        return cell.name() not in selected_cells_names and any(
+            cast(int, s.name()) in selected_surfaces for s in cell.shape.scan_surfaces()
+        )
+
+    return _call
+
+
+def extract_cells_from_file(model_path: str | Path, predicate: BodyPredicate) -> Iterable[Body]:
     """Extract cells from a model matching to a predicate.
 
     Parameters
@@ -121,20 +173,16 @@ def extract_cells_from_file(
         Path to the model file
     predicate
         Method to filter bodies
-    add_surface_sharing_cells
-        Whether to add surface sharing cells
 
     Returns
     -------
-        Set of the selected cells (Body objects)
+    Iterable over the selected cells (Body objects)
     """
     universe = from_file(model_path).universe
-    yield from extract_cells(universe, predicate, add_surface_sharing_cells=add_surface_sharing_cells)
+    return extract_cells(universe, predicate)
 
 
-def extract_cells(
-    cells: Iterable[Body], predicate: BodyPredicate, *, add_surface_sharing_cells: bool = True
-) -> Generator[Body]:
+def extract_cells(cells: Iterable[Body], predicate: BodyPredicate) -> Iterator[Body]:
     """Extract cells matching to `predicate` along with sharing surfaces cells.
 
     By "sharing surfaces" cells we mean cells sharing some surfaces with
@@ -146,30 +194,12 @@ def extract_cells(
         collection of Body objects to extract from
     predicate
         method to check a Body object
-    add_surface_sharing_cells
-        Whether to add surface sharing cells
 
     Returns
     -------
-        Set of the selected cells (Body objects)
+    Iterator over the selected cells (Body objects)
     """
-    if add_surface_sharing_cells:
-        selected_cells = list(filter(predicate, cells))
-        yield from selected_cells
-        selected_cells_names = set(map_names(selected_cells))
-        selected_surfaces: set[int] = set(chain(*(map_names(c.shape.scan_surfaces()) for c in selected_cells)))
-
-
-        def _select_adjacent_cells(_c: Body) -> bool:
-            return _c.name() not in selected_cells_names and any(
-                cast(int, s.name()) in selected_surfaces
-                for s in _c.shape.scan_surfaces()
-            )
-
-        yield from filter(_select_adjacent_cells, cells)
-    else:
-        yield from filter(predicate, cells)
-
+    return filter(predicate, cells)
 
 
 def make_universe(cells: Iterable[Body]) -> Universe:

@@ -29,7 +29,7 @@ from mckit.transformation import Transformation
 from mckit.utils import filter_dict
 
 if TYPE_CHECKING:
-    from typing import Any, ClassVar
+    from typing import ClassVar
 
     from collections.abc import Iterable, Iterator
 
@@ -47,6 +47,7 @@ _LOG = getLogger(__name__)
 
 # Shape and Body are defined in a single module because of tight coupling.
 # It is not possible to separate them due to unavoidable cyclic dependency.
+
 
 # noinspection PyProtectedMember
 class Shape(_Shape):
@@ -345,7 +346,6 @@ class Shape(_Shape):
         elif _len > 1:
             for a in args:
                 yield from a.scan_surfaces()
-
 
     def is_empty(self) -> bool:
         """Check, if the shape is empty."""
@@ -758,11 +758,17 @@ class Body(Card):
 
         Returns
         -------
-            The material, if present, otherwise None
+        The material, if present, otherwise None
+
+        Raises
+        ------
+        ValueError: if type of material object is not Material
         """
-        composition = self.options.get("MAT", None)
-        assert composition is None or isinstance(composition, mm.Material)
-        return composition
+        composition = self.options.get("MAT")
+        if composition is None or isinstance(composition, mm.Material):
+            return composition
+        msg = f"Unexpected type of composition: {type(composition)}"
+        raise ValueError(msg)
 
     def intersection(self, other) -> Body:
         """Gets an intersection if this cell with the other.
@@ -845,9 +851,12 @@ class Body(Card):
     def fill(
         self,
         universe: Universe | None = None,
+        *,
         recurrent: bool = False,
         simplify: bool = False,
-        **kwargs: dict[str, Any],
+        split_disjoint: bool = False,
+        min_volume: float = MIN_BOX_VOLUME,
+        trim_size: int = 1,
     ) -> list[Body]:
         """Fills this cell by filling universe.
 
@@ -867,9 +876,12 @@ class Body(Card):
             be also filled. Default: False.
         simplify:
             If True, all cells obtained will be simplified.
-        **kwargs: dict
-            Keyword parameters for simplify method if simplify is True.
-            Default: all False.
+        split_disjoint
+            for simplify
+        min_volume
+            for simplify
+        trim_size
+            for simplify
 
         Returns
         -------
@@ -885,7 +897,13 @@ class Body(Card):
                 return [self]
         # TODO @dvp: fix the following: universe.fill is not implemented
         if recurrent:
-            universe = universe.fill(recurrent=True, simplify=simplify, **kwargs)
+            universe = universe.fill(
+                recurrent=True,
+                simplify=simplify,
+                split_disjoint=split_disjoint,
+                min_volume=min_volume,
+                trim_size=trim_size,
+            )
         cells = []
         for c in universe:
             new_cell = c.intersection(self)  # because properties like MAT, etc
@@ -893,7 +911,9 @@ class Body(Card):
             if "U" in self.options:
                 new_cell.options["U"] = self.options["U"]  # except universe.
             if simplify:
-                new_cell = new_cell.simplify(**kwargs)
+                new_cell = new_cell.simplify(
+                    split_disjoint=split_disjoint, min_volume=min_volume, trim_size=trim_size
+                )
             cells.append(new_cell)
         return cells
 

@@ -13,7 +13,7 @@ Name = NewType("Name", int)
 class HasName(Protocol):
     """Something with name() method."""
 
-    def name(self) -> int | Name: ...
+    def name(self) -> int | Name | None: ...
 
 
 def default_name_key(x: HasName) -> Name:

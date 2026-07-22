@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from mckit.utils._resource import path_resolver
+from mckit.utils._text import match_comment
 from mckit.utils.accept import TVisitor, accept, on_unknown_acceptor
 from mckit.utils.misc import (
     MAX_DIGITS,
@@ -69,6 +70,7 @@ __all__ = [
     "make_dirs",
     "make_hashable",
     "map_names",
+    "match_comment",
     "mids",
     "on_unknown_acceptor",
     "path_resolver",
