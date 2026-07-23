@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from abc import abstractmethod
 from collections.abc import Callable
@@ -10,16 +10,10 @@ from collections.abc import Callable
 # noinspection PyPackageRequirements
 import numpy as np
 
-# noinspection PyPackageRequirements
-import numpy.typing as npt
-
-from numpy._typing import NDArray
-
 import mckit
 
 from mckit.box import GLOBAL_BOX
 
-# fmt:off
 # noinspection PyUnresolvedReferences,PyPackageRequirements
 from mckit.geometry import BOX as _BOX
 from mckit.geometry import EX, EY, EZ, ORIGIN
@@ -46,7 +40,9 @@ from .utils import (
 )
 from .utils.tolerance import DEFAULT_TOLERANCE_ESTIMATOR, FLOAT_TOLERANCE, MaybeClose
 
-# fmt:on
+if TYPE_CHECKING:
+    from numpy.typing import ArrayLike
+
 
 
 # noinspection PyUnresolvedReferences,PyPackageRequirements
@@ -68,19 +64,21 @@ __all__ = [
 ]
 
 
-VectorLike = npt.NDArray
-
 
 # noinspection PyPep8Naming
 def create_surface(kind: str, *_params: float, **options) -> Surface | None:
-    """Creates new surface.
+    """Create new surface.
 
-    Args:
-        kind: Surface kind designator. See MCNP manual.
-        _params: List of surface parameters.
-        options: Dictionary of surface's options.
-                In particular, transform  - transformation instance
-                to be applied to the surface being created.
+    Parameters
+    ----------
+    kind
+        Surface kind designator. See MCNP manual.
+    _params
+        List of surface parameters.
+    options
+        Dictionary of surface's options.
+        In particular, transform  - transformation instance
+        to be applied to the surface being created.
 
     Returns
     -------
@@ -107,8 +105,15 @@ def create_surface(kind: str, *_params: float, **options) -> Surface | None:
         return surface
 
     # ---------- Axis-symmetric surface defined by points ------
+    if axis is None:
+        msg = f"Cannot define axis for surface {kind}"
+        raise ValueError(msg)
+
+    # TODO @dvp: test and document the following code
+    # TODO @dvp: define use cases in MCNP manual and tests
+    # TODO @dvp: why kind is not used in the following code?
     if len(params) == 2:
-        return Plane(axis, -params[0], **options)
+        return Plane(axis, -params[0], **options)  # TODO @dvp: check what is params[1] here?
     if len(params) == 4:
         # TODO: Use special classes instead of GQ
         h1, r1, h2, r2 = params
@@ -184,7 +189,7 @@ def _create_rpp(options, params) -> BOX:
     return BOX(center, dir_x, dir_y, dir_z, **options)
 
 
-def _create_torus(axis, options, params) -> Torus:
+def _create_torus(axis: ArrayLike, options: dict[str, Any], params: list[float]) -> Torus:
     x0, y0, z0, R, a, b = params
     return Torus([x0, y0, z0], axis, R, a, b, **options)
 
@@ -640,16 +645,15 @@ class Plane(Surface, _Plane):
     """
 
     def __init__(
-        self, normal: npt.NDArray[np.float64], offset: float, **options: dict[str, Any]
+        self, normal: npt.ArrayLike, offset: float, **options: dict[str, Any]
     ) -> None:
+        v = np.asarray(normal, dtype=np.float64)
+        k = offset
         tr = options.pop("transform", None)
         if tr:
             if not isinstance(tr, Transformation):
                 raise TypeError
-            v, k = tr.apply2plane(normal, offset)
-        else:
-            v = np.asarray(normal, dtype=float)
-            k = offset
+            v, k = tr.apply2plane(v, k)
         v, is_ort = internalize_ort(v)
         if not is_ort:
             length = np.linalg.norm(v)
@@ -695,25 +699,6 @@ class Plane(Surface, _Plane):
         Surface.__init__(instance, **options)
         _Plane.__init__(instance, self._v, self._k)
         return instance
-
-    # def complement(self) -> Plane:
-    #     """Create a complement of self.
-
-    #     Skips Plane.__init__ (directly calls _Plane.__init__) to avoid time-consuming
-    #     significant digits computation.
-
-    #     Returns
-    #     -------
-    #         New complement of self
-    #     """
-    #     # TODO @dvp: add tests
-    #     instance = Plane.__new__(Plane, -self._v, -self._k)
-    #     instance._k_digits = self._k_digits
-    #     instance._v_digits = self._v_digits
-    #     options = filter_dict(self.options)
-    #     Surface.__init__(instance, **options)
-    #     # _Plane.__init__(instance, self._v, self._k)
-    #     return instance
 
     def apply_transformation(self) -> Plane:
         tr = self.transformation
@@ -971,18 +956,19 @@ class Cylinder(Surface, _Cylinder):
 
     def __init__(
         self,
-        pt: npt.NDArray[float],
-        axis: npt.NDArray[float],
+        pt: ArrayLike,
+        axis: ArrayLike,
         radius: float,
         **options: dict[str, Any],
     ) -> None:
-        tr: Transformation | None = options.pop("transform", None)
+        pt = np.asarray(pt, dtype=np.float64)
+        axis = np.asarray(axis, dtype=np.float64)
+        tr = options.pop("transform", None)
         if tr:
+            if not isinstance(tr, Transformation):
+                raise TypeError()
             pt = tr.apply2point(pt)
             axis = tr.apply2vector(axis)
-        else:
-            pt = np.asarray(pt, dtype=float)
-            axis = np.asarray(axis, dtype=float)
         axis /= np.linalg.norm(axis)
         max_dir = np.argmax(np.abs(axis))
         if axis[max_dir] < 0:
@@ -1009,10 +995,10 @@ class Cylinder(Surface, _Cylinder):
         _Cylinder.__init__(instance, self._pt, self._axis, self._radius)
         return instance
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Cylinder({self._pt}, {self._axis}, {self._radius}, {self.options or ''})"
 
-    def __hash__(self):
+    def __hash__(self)-> int:
         result = hash(self._get_radius())
         for c in self._get_pt():
             result ^= hash(c)
@@ -1167,8 +1153,8 @@ class Cone(Surface, _Cone):
 
     def __init__(
         self,
-        apex: npt.NDArray[float],
-        axis: npt.NDArray[float],
+        apex: npt.NDArray[np.float64],
+        axis: npt.NDArray[np.float64],
         t2: float,
         sheet: int = 0,
         **options,
@@ -1325,7 +1311,7 @@ class Cone(Surface, _Cone):
             v = np.zeros(3)
             k = 0
             m, v, k = Transformation(translation=self._apex).apply2gq(m, v, k)
-            return GQuadratic(m, v, k, **self.options).mcnp_repr()
+            return GQuadratic(m, v, k, **self.options).mcnp_words()
         words.append(" ")
         v = self._t2
         p = self._t2_digits
@@ -1368,13 +1354,12 @@ class GQuadratic(Surface, _GQuadratic):
                              created. Transformation instance.
     """
 
-    def __init__(self, m, v, k, **options):
+    def __init__(self, m: ArrayLike, v: ArrayLike, k: float, **options):
+        m = np.asarray(m, dtype=np.float64)
+        v = np.asarray(v, dtype=np.float64)
         tr: Transformation | None = options.pop("transform", None)
         if tr:
             m, v, k = tr.apply2gq(m, v, k)
-        else:
-            m = np.asarray(m, dtype=float)
-            v = np.asarray(v, dtype=float)
         eigenvalues = np.linalg.eigvalsh(m)
         factor = 1.0 / np.max(np.abs(eigenvalues))
         self._m_digits = significant_array(
@@ -1508,14 +1493,13 @@ class Torus(Surface, _Torus):
                              created. Transformation instance.
     """
 
-    def __init__(self, center, axis, r, a, b, **options):
+    def __init__(self, center: ArrayLike, axis: ArrayLike, r: float, a: float, b: float, **options) -> None:
+        center = np.asarray(center, dtype=float)
+        axis = np.asarray(axis, dtype=float)
         tr: Transformation | None = options.pop("transform", None)
         if tr:
             center = tr.apply2point(center)
             axis = tr.apply2vector(axis)
-        else:
-            center = np.asarray(center, dtype=float)
-            axis = np.asarray(axis, dtype=float)
         axis /= np.linalg.norm(axis)
         maxdir = np.argmax(np.abs(axis))
         if axis[maxdir] < 0:
