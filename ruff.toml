@@ -2,6 +2,7 @@ target-version = "py312"
 line-length = 100
 src = [ "src", "tests" ]
 exclude = [
+  "*.egg-info",
   ".cache",
   ".direnv",
   ".eggs",

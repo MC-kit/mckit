@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TextIO, TypeVar
+from typing import TextIO
 
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from itertools import repeat
 from pathlib import Path
 
+from mckit.card import Card
 from mckit.parser.cell_parser import Body
 from mckit.parser.cell_parser import parse as parse_cell
 from mckit.parser.common import (
@@ -31,9 +32,6 @@ from mckit.utils.indexes import Index
 from .common.utils import extract_integer
 from .mcnp_section_parser import Card as TextCard
 from .mcnp_section_parser import InputSections, Kind, distribute_cards, parse_sections_text
-from ..card import Card
-
-_T = TypeVar("_T")
 
 
 @dataclass

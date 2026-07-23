@@ -24,7 +24,7 @@ repos:
     rev: "v6.0.0"
     hooks:
       - id: check-added-large-files
-        exclude: uv.lock
+        exclude: pixi.lock
       - id: check-ast
         exclude: notebooks
       - id: check-case-conflict
@@ -34,8 +34,7 @@ repos:
       - id: check-merge-conflict
         exclude: \.rst$
       - id: check-shebang-scripts-are-executable
-        exclude: notebooks  # jupytext creates python scripts with shebangs but without permissions
-      - id: check-symlinks
+      # - id: check-symlinks
       - id: check-toml
       - id: check-yaml
       - id: debug-statements
@@ -92,6 +91,12 @@ repos:
       - id: shellcheck
         args: [ --external-sources ]
         stages: [ manual ]
+
+  # Check pre-commit config
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
 
 
   # CMake formatting

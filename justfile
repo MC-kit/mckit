@@ -16,12 +16,10 @@ alias t := test
 alias c := check
 set dotenv-load
 
-default_python := "3.14"
+default_python := "3.13"
 TITLE := `uv version`
 VERSION := `uv version --short`
-
 log := "warn"
-
 export JUST_LOG := log
 
 @_default:
@@ -31,11 +29,6 @@ export JUST_LOG := log
 [group('dev')]
 @version:
     uv version
-
-# git push bypassing pixi-provided openssl libraries
-[group('dev')]
-@gp:
-    LD_LIBRARY_PATH="" git push
 
 # create venv, if not exists
 [group('dev')]
@@ -99,6 +92,9 @@ export JUST_LOG := log
         find src/mckit -type f -name "$f" -exec rm -f {} +
     done
     # pixi clean
+    coverage erase
+    #pyreverse files
+    find . -type f -name "*.puml" -delete
 
 # install package
 [group('dev')]
@@ -115,7 +111,7 @@ export JUST_LOG := log
 
 # Check style includeing mypy and pylint and test
 [group('dev')]
-@check-full: check ty basedpyright pylint
+@check-full: check ty basedpyright pyrefly pylint
 
 # Bump project version  # TODO dvp: revise for pixi
 [group('dev')]
@@ -180,7 +176,6 @@ export JUST_LOG := log
 # create coverage data
 [group('test')]
 @coverage:
-    # uv run --no-dev --group test pytest --cov --cov-report=term-missing:skip-covered
     pixi run coverage
 
 # coverage to html
@@ -220,14 +215,28 @@ typeguard *args:
 @pyright:
     pyright
 
-[group('style')]
-@basedpyright:
-    basedpyright
-
 # Lint with ty
 [group('style')]
 @ty:
     ty check 
+
+[group('style')]
+@basedpyright:
+    basedpyright
+
+[group('style')]
+@pyrefly *args="check":
+    pyrefly {{ args }}
+
+# Draw UML diagrams
+[group('style')]
+@pyreverse:
+    pyreverse --project mckit --colorized --output puml --output-directory .pyreverse --ignore data --source-roots src/**/*.py
+
+# Find code duplicates
+[group('style')]
+@symilar:
+    uv run --no-dev --group lint symilar src/**/*.py
 
 # Check rst-texts
 [group('docs')]

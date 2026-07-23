@@ -44,7 +44,6 @@ if TYPE_CHECKING:
     from numpy.typing import ArrayLike
 
 
-
 # noinspection PyUnresolvedReferences,PyPackageRequirements
 __all__ = [
     "BOX",
@@ -62,7 +61,6 @@ __all__ = [
     "Torus",
     "create_surface",
 ]
-
 
 
 # noinspection PyPep8Naming
@@ -644,9 +642,7 @@ class Plane(Surface, _Plane):
                   transform = transformation to be applied to this plane.
     """
 
-    def __init__(
-        self, normal: npt.ArrayLike, offset: float, **options: dict[str, Any]
-    ) -> None:
+    def __init__(self, normal: npt.ArrayLike, offset: float, **options: dict[str, Any]) -> None:
         v = np.asarray(normal, dtype=np.float64)
         k = offset
         tr = options.pop("transform", None)
@@ -966,7 +962,7 @@ class Cylinder(Surface, _Cylinder):
         tr = options.pop("transform", None)
         if tr:
             if not isinstance(tr, Transformation):
-                raise TypeError()
+                raise TypeError
             pt = tr.apply2point(pt)
             axis = tr.apply2vector(axis)
         axis /= np.linalg.norm(axis)
@@ -998,7 +994,7 @@ class Cylinder(Surface, _Cylinder):
     def __repr__(self) -> str:
         return f"Cylinder({self._pt}, {self._axis}, {self._radius}, {self.options or ''})"
 
-    def __hash__(self)-> int:
+    def __hash__(self) -> int:
         result = hash(self._get_radius())
         for c in self._get_pt():
             result ^= hash(c)
@@ -1493,7 +1489,9 @@ class Torus(Surface, _Torus):
                              created. Transformation instance.
     """
 
-    def __init__(self, center: ArrayLike, axis: ArrayLike, r: float, a: float, b: float, **options) -> None:
+    def __init__(
+        self, center: ArrayLike, axis: ArrayLike, r: float, a: float, b: float, **options
+    ) -> None:
         center = np.asarray(center, dtype=float)
         axis = np.asarray(axis, dtype=float)
         tr: Transformation | None = options.pop("transform", None)

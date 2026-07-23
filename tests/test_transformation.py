@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 from mckit.geometry import ORIGIN
-
 from mckit.transformation import IDENTITY_ROTATION, Transformation
 
 

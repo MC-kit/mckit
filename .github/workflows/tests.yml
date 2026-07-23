@@ -59,7 +59,7 @@ jobs:
       !contains(github.event.head_commit.message, '[skip_ci]')
     steps:
       - name: ✅ Check out the repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - uses: prefix-dev/setup-pixi@v0.10.0
         with:
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: ✅ Check out the repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 1
           submodules: 'true'
@@ -127,7 +127,7 @@ jobs:
     steps:
 
       - name: ✅ Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 1
           submodules: 'true'

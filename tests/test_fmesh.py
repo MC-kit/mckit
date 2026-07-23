@@ -7,11 +7,10 @@ from itertools import product
 import numpy as np
 import pytest
 
-from mckit.geometry import EX, EY, EZ
-
 from mckit import read_meshtal
 from mckit.body import Body
 from mckit.fmesh import CylMesh, RectMesh
+from mckit.geometry import EX, EY, EZ
 from mckit.material import Material
 from mckit.surface import create_surface
 from mckit.transformation import Transformation

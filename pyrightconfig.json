@@ -13,10 +13,10 @@
   ],
   "extraPaths": [
     ".pixi/envs/default/lib/python3.13/site-packages/mckit/geometry.cpython-3.13-x86_64-linux-gnu.so"
-  ]
+  ],
   "reportMissingImports": "error",
   "reportMissingTypeStubs": false,
   "pythonVersion": "3.13",
-  "pythonPlatform": "Linux"
-  "useLibraryCodeForTypes": true 
+  "pythonPlatform": "Linux",
+  "useLibraryCodeForTypes": true
 }

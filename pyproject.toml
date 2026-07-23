@@ -232,7 +232,7 @@ exclude_lines = [
 ]
 fail_under = 90  # TODO dvp: increase limit to 100 with code maturing
 ignore_errors = true
-omit = [ "**/__init__.py", "*_tab.py" ]
+omit = [ "**/__init__.py", "**/types.py", "*_tab.py" ]
 show_missing = true
 skip_covered = true
 sort = "Cover"
