@@ -20,8 +20,6 @@ import numpy as np
 
 from click import progressbar
 
-from mckit.utils import filter_dict
-
 from .body import Body, Shape
 from .box import GLOBAL_BOX, Box
 from .material import Composition, Material
@@ -334,9 +332,8 @@ class Universe:
         surf_names: set[Name],
         name_rule: Literal["keep", "new", "clash"],
     ) -> Shape:
-        cell_surfs = cell.shape.get_surfaces()
         replace_dict: dict[Surface, Surface] = {}
-        for s in cell_surfs:
+        for s in cell.shape.scan_surfaces():
             if isinstance(s, Plane):
                 rev_s = s.reverse()  #  Plane(-s._v, -s._k)
                 if rev_s in surf_replace:
@@ -692,7 +689,7 @@ class Universe:
             self._name = cast(Name, name)
             self._verbose_name = None
             for c in self:
-                c.options = filter_dict(c.options, "original")
+                c.drop_original()
         if start_cell is not None:
             t: int = start_cell
             for c in self:

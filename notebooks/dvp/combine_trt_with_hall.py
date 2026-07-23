@@ -9,6 +9,9 @@ with app.setup:
 
     from pathlib import Path
 
+    import mckit as mc
+    import mckit.workflow as mcw
+
     HOST = os.uname().nodename
 
 
@@ -58,26 +61,20 @@ def _(mo):
         - Python: {sys.version}, at {sys.prefix}
         - host: {HOST}
         - cwd: {Path.cwd()}
+        - mckit: {mc.__version__}
     """).callout()
     return
 
 
 @app.cell
 def _():
-    import mckit as mc
-
-    return (mc,)
-
-
-@app.cell
-def _(mc):
     ROOT = mc.utils.find_git_root_dir()
     return
 
 
 @app.cell
 def _():
-    VERSION="0.1.1"
+    VERSION = "0.1.1"
     # OUT=ROOT / f".wrk/{Path(__file__).stem}/{VERSION}"
     return
 
@@ -90,7 +87,7 @@ def _():
 
 
 @app.cell
-def _(INPUT_PATH, mc):
+def _(INPUT_PATH):
     hall_info = mc.from_file(INPUT_PATH)
     return (hall_info,)
 
@@ -133,7 +130,7 @@ def _():
 
 
 @app.cell
-def _(mc, tokamak_input_path):
+def _(tokamak_input_path):
     tokamak_info = mc.from_file(tokamak_input_path)
     return (tokamak_info,)
 
@@ -146,6 +143,12 @@ def _(tokamak_info):
 
 @app.cell
 def _(tokamak):
+    tokamak.rename(start_cell=100, start_surf=100)
+    return
+
+
+@app.cell
+def _(tokamak):
     len(tokamak)
     return
 
@@ -154,6 +157,28 @@ def _(tokamak):
 def _(tokamak_info):
     tokamak_graveyard_in = tokamak_info.cells_index[16160]
     return (tokamak_graveyard_in,)
+
+
+@app.cell
+def _(hall_info):
+    max_hall_cell_number = max(hall_info.cells_index.keys())
+    max_hall_cell_number
+    return
+
+
+@app.cell
+def _(hall_info):
+    max_hall_surf_number = max(hall_info.surfaces_index.keys())
+    max_hall_surf_number
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Номер ячеек и поверхностей установки сдвинем на 100.
+    """)
+    return
 
 
 @app.cell
@@ -174,22 +199,19 @@ def _(intersect_graveyard_in):
     return
 
 
-@app.cell
-def _(mc):
-    def simplify(cell: mc.Body) -> mc.Body:
-        return cell.simplify(box = mc.box.Box(center=[0,10,0], wx=10000,wy=10000,wz=10000), min_volume=1)
-
-    return (simplify,)
+@app.function
+def simplify(cell: mc.Body) -> mc.Body:
+    return cell.simplify(box=mc.box.Box(center=[0, 10, 0], wx=10000, wy=10000, wz=10000), min_volume=1)
 
 
 @app.cell
-def _(intersect_graveyard_in, simplify):
+def _(intersect_graveyard_in):
     intersect_graveyard_in_simplified = simplify(intersect_graveyard_in)
     return (intersect_graveyard_in_simplified,)
 
 
 @app.cell
-def _(mc):
+def _():
     mc.box.GLOBAL_BOX
     return
 
@@ -207,129 +229,149 @@ def _(intersect_graveyard_in_simplified):
 
 
 @app.cell
-def _(intersect_graveyard_in, mc):
+def _(intersect_graveyard_in):
     hall_graveyard_in_intersection_universe = mc.Universe([intersect_graveyard_in])
     return (hall_graveyard_in_intersection_universe,)
 
 
 @app.cell
-def _(intersect_graveyard_in_simplified, mc):
+def _(intersect_graveyard_in_simplified):
     hall_graveyard_in_intersectin_simplified_universe = mc.Universe([intersect_graveyard_in_simplified])
     return (hall_graveyard_in_intersectin_simplified_universe,)
 
 
 @app.cell
 def _(hall_graveyard_in_intersection_universe):
-    hall_graveyard_in_intersection_universe.save("/home/dvp/dev/mcnp/trt/wrk/models/2025/5.4.1/hall-graveyard-in-intersection.i")
+    hall_graveyard_in_intersection_universe.save(
+        "/home/dvp/dev/mcnp/trt/wrk/models/2025/5.4.1/hall-graveyard-in-intersection.i"
+    )
     return
 
 
 @app.cell
 def _(hall_graveyard_in_intersectin_simplified_universe):
-    hall_graveyard_in_intersectin_simplified_universe.save("/home/dvp/dev/mcnp/trt/wrk/models/2025/5.4.1/hall-graveyard-in-intersection-simplified.i")
+    hall_graveyard_in_intersectin_simplified_universe.save(
+        "/home/dvp/dev/mcnp/trt/wrk/models/2025/5.4.1/hall-graveyard-in-intersection-simplified.i"
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Проверить "generated void cells"
+    ## Проверить и скорректировать "generated void cells"
     """)
     return
 
 
 @app.cell
-def _(mc):
-    def contains_comment(cell: mc.Body, text: str)->bool:
-        comment = cell.options.get("comment")
-        if not comment:
-            return False
-        return any(lambda x: text in x and (print(text, "in", x) or True) for x in comment)
-
-
-    return (contains_comment,)
+def _(tokamak):
+    generated_voids = list(mcw.extract_cells(tokamak, mcw.filter_by_comment("Automatic Generated Void Cell")))
+    return (generated_voids,)
 
 
 @app.cell
-def _(contains_comment, mc):
-    def select_generated_voids_predicate(cell: mc.Body) -> bool:
-        return contains_comment(cell, "Automatic Generated Void Cell")
-
-
-    return (select_generated_voids_predicate,)
-
-
-@app.cell
-def _(select_generated_voids_predicate, tokamak):
-    from mckit.workflow import extract_cells
-
-    generated_voids = extract_cells(tokamak, select_generated_voids_predicate, add_surface_sharing_cells=False)
+def _(generated_voids, mo, tokamak):
+    mo.md(f"""
+    {len(generated_voids)=}, {len(tokamak)=}
+    """)
     return
 
 
 @app.cell
-def _(select_generated_voids_predicate, tokamak):
-    generated_voids2 = [x for x in tokamak if select_generated_voids_predicate(x)]
-    return (generated_voids2,)
+def _(generated_voids):
+    "\n".join(generated_voids[0].options["comment"])
+    return
 
 
-@app.cell
-def _(generated_voids2, tokamak):
-    len(generated_voids2), len(tokamak)
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Проверим, не налезают ли generated voids на блок пола в здании
+    """)
     return
 
 
 @app.cell
-def _(generated_voids2):
-    "\n".join(generated_voids2[0].options["comment"])
+def _(hall_info):
+    floor_top_surface = hall_info.surfaces_index[33]
+    floor_top_surface.mcnp_repr()
+    return (floor_top_surface,)
+
+
+@app.cell
+def _(floor_top_surface):
+    hall_space = mc.Shape("S", floor_top_surface)
+    hall_space.get_words()
+    return (hall_space,)
+
+
+@app.cell
+def _(hall_space):
+    under_floor_space = hall_space.complement()
+    under_floor_space.get_words()
+    return (under_floor_space,)
+
+
+@app.cell
+def _(under_floor_space):
+    under_floor_space.test_points([[0, 0, -583.5062459+1], [0, 0, -583.5062460], [0, 0, -583.5062459-1]])
     return
 
 
 @app.cell
-def _(generated_voids2, select_generated_voids_predicate):
-    select_generated_voids_predicate(generated_voids2[0])
+def _(generated_voids, hall_space, mo, under_floor_space):
+    def _():
+        corrected_voids = []
+        intersected_names = []
+        with mo.status.progress_bar(
+            total=len(generated_voids),
+            title="Проверяем есть ли персечения 'generated_voids' c полом зала",
+            show_eta=True,
+            show_rate=True,
+        ) as bar:
+            for c in generated_voids:
+                x = c.intersection(under_floor_space)
+                x = simplify(x)
+                if x.is_empty:
+                    bar.update(subtitle=f"✅ {x.name()} - clear")
+                    corrected_voids.append(c)  # add not intersecting cell as is
+                else:
+                    _n = x.name()
+                    bar.update(subtitle=f"❌ {_n} - intersects")
+                    intersected_names.append(_n)
+                    y = simplify(c.intersection(hall_space))
+                    if not y.is_empty:
+                        corrected_voids.append(y)
+
+        return intersected_names, corrected_voids
+
+    intersected_names, corrected_voids = _()
+
+
+    return corrected_voids, intersected_names
+
+
+@app.cell
+def _(corrected_voids, generated_voids, intersected_names, mo):
+    mo.md(f"{len(generated_voids)=}, {len(intersected_names)=}, {len(corrected_voids)=}")
     return
 
 
 @app.cell
-def _(contains_comment, generated_voids2):
-    contains_comment(generated_voids2[0], "Automatic Generated Void Cell")
+def _(intersected_names):
+    min(intersected_names), max(intersected_names)
     return
 
 
 @app.cell
-def _(tokamak_info):
-    tokamak_16159 = tokamak_info.cells_index[16159]
-    return (tokamak_16159,)
-
-
-@app.cell
-def _(tokamak_16159):
-    tokamak_16159.options["comment"]
+def _(generated_voids):
+    min(x.name() for x in generated_voids), max(x.name() for x in generated_voids)
     return
 
 
-@app.cell
-def _(floor_cell, tokamak_16159):
-    check_16159 = floor_cell.intersection(tokamak_16159)
-    return (check_16159,)
-
-
-@app.cell
-def _(check_16159):
-    check_16159.shape.complexity()
-    return
-
-
-@app.cell
-def _(check_16159, mc):
-    check_16159_simplified =check_16159.simplify(mc.box.Box([0,10,0], 10000,10000,10000), min_volume=1)
-    return (check_16159_simplified,)
-
-
-@app.cell
-def _(check_16159_simplified):
-    check_16159_simplified.is_empty
+@app.cell(hide_code=True)
+def _():
     return
 
 

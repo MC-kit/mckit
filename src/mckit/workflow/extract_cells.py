@@ -163,6 +163,55 @@ def filter_by_shared_surfaces(selected_cells: Iterable[Body]) -> BodyPredicate:
 
     return _call
 
+def filter_not(predicate: BodyPredicate) -> BodyPredicate:
+    """Compose negation to the predicate.
+
+    Parameters
+    ----------
+    predicate
+        what to negate
+
+    Returns
+    -------
+    Negative to given predicate.
+    """
+    def _call(cell: Body)->bool:
+        return not predicate(cell)
+    return _call
+
+def filter_or(*predicates: BodyPredicate) -> BodyPredicate:
+    """Compose "OR" expression from given predicates.
+
+    Parameters
+    ----------
+    predicates
+        to form expression
+
+    Returns
+    -------
+    "OR" expression of the predicates
+    """
+    def _call(cell: Body)->bool:
+        return any(p(cell) for p in predicates)
+    return _call
+
+def filter_and(*predicates: BodyPredicate) -> BodyPredicate:
+    """Compose "AND" expression from given predicates.
+
+    Parameters
+    ----------
+    predicates
+        to form expression
+
+    Returns
+    -------
+    "AND" expression of the predicates
+    """
+
+    def _call(cell: Body)->bool:
+        return all(p(cell) for p in predicates)
+    return _call
+
 
 def extract_cells_from_file(model_path: str | Path, predicate: BodyPredicate) -> Iterable[Body]:
     """Extract cells from a model matching to a predicate.
