@@ -111,7 +111,6 @@ docs = { cmd = "sphinx-autobuild --open-browser docs/source docs/_build", descri
 docs-build = { cmd = "sphinx-build docs/source docs/build", description = "Build the docs in docs/build folder." }
 [tool.pixi.feature.publish313.tasks]
 publish313 = { cmd = "pixi publish -vvv --target-channel .output-3.13", description = "Publish for python-3.13" }
-
 # [tool.pixi.feature.publish314.tasks]
 # publish314 = { cmd = "pixi publish -vvv --target-channel .output-3.14", description = "Publish for python-3.14" }
 [tool.pixi.feature.style.dependencies]
@@ -161,7 +160,6 @@ scikit-build-core = ">=0.12.2"
 [tool.pixi.package.build.backend]
 name = "pixi-build-python"
 version = "*"
-
 # [tool.pixi.package.run-dependencies]
 # python="==3.14.6"  # no freethreaded
 # click = ">=8.3"
