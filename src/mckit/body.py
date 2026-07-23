@@ -130,6 +130,7 @@ class Shape(_Shape):
         _Shape.__init__(self, opc, *args)
         self._calculate_hash(opc, *args)
 
+    # TODO @dvp: remove this method (it's logically wrong), check usage in accept/visit
     def __iter__(self):
         return iter(self.args)
 

@@ -9,6 +9,8 @@ with app.setup:
 
     from pathlib import Path
 
+    import numpy as np
+
     import mckit as mc
     import mckit.workflow as mcw
 
@@ -95,7 +97,7 @@ def _(INPUT_PATH):
 @app.cell
 def _(hall_info):
     hall = hall_info.universe
-    return
+    return (hall,)
 
 
 @app.cell
@@ -199,21 +201,10 @@ def _(intersect_graveyard_in):
     return
 
 
-@app.function
-def simplify(cell: mc.Body) -> mc.Body:
-    return cell.simplify(box=mc.box.Box(center=[0, 10, 0], wx=10000, wy=10000, wz=10000), min_volume=1)
-
-
 @app.cell
 def _(intersect_graveyard_in):
     intersect_graveyard_in_simplified = simplify(intersect_graveyard_in)
     return (intersect_graveyard_in_simplified,)
-
-
-@app.cell
-def _():
-    mc.box.GLOBAL_BOX
-    return
 
 
 @app.cell
@@ -320,8 +311,20 @@ def _(under_floor_space):
 
 
 @app.cell
-def _(generated_voids, hall_space, mo, under_floor_space):
-    def _():
+def _(tokamak_input_path):
+    path_to_save_intersected = tokamak_input_path.parent / "intersected-voids.csv"
+    return (path_to_save_intersected,)
+
+
+@app.cell
+def _(
+    generated_voids,
+    hall_space,
+    mo,
+    path_to_save_intersected,
+    under_floor_space,
+):
+    def correct_generated_voids_intersecting_with_floor():
         corrected_voids = []
         intersected_names = []
         with mo.status.progress_bar(
@@ -330,31 +333,60 @@ def _(generated_voids, hall_space, mo, under_floor_space):
             show_eta=True,
             show_rate=True,
         ) as bar:
+            if path_to_save_intersected.exists():
+                prev_intersected_names = np.loadtxt(path_to_save_intersected, dtype=np.int32)
+                known_intersection = set(prev_intersected_names)
+            else:
+                known_intersection = None
             for c in generated_voids:
-                x = c.intersection(under_floor_space)
-                x = simplify(x)
-                if x.is_empty:
-                    bar.update(subtitle=f"✅ {x.name()} - clear")
+                _name = c.name()
+                if known_intersection and _name not in known_intersection:
                     corrected_voids.append(c)  # add not intersecting cell as is
+                    bar.update(subtitle=f"✅ {_name} - skipped")
                 else:
-                    _n = x.name()
-                    bar.update(subtitle=f"❌ {_n} - intersects")
-                    intersected_names.append(_n)
-                    y = simplify(c.intersection(hall_space))
-                    if not y.is_empty:
-                        corrected_voids.append(y)
+                    x = c.intersection(under_floor_space)
+                    x = simplify(x)
+                    if x.is_empty:
+                        bar.update(subtitle=f"✅ {_name} - clear")
+                        corrected_voids.append(c)  # add not intersecting cell as is
+                    else:
+                        bar.update(subtitle=f"❌ {_name} - intersects")
+                        intersected_names.append(_name)
+                        y = simplify(c.intersection(hall_space))
+                        if not y.is_empty:
+                            corrected_voids.append(y)
 
-        return intersected_names, corrected_voids
+            if known_intersection and not known_intersection == set(intersected_names):
+                msg = f"Known intersection file is obsolete, remove {path_to_save_intersected} and rerun"
+                raise EnvironmentError(msg)
+            return intersected_names, corrected_voids
 
-    intersected_names, corrected_voids = _()
 
+
+    return (correct_generated_voids_intersecting_with_floor,)
+
+
+@app.cell
+def _(
+    correct_generated_voids_intersecting_with_floor,
+    path_to_save_intersected,
+):
+    intersected_names, corrected_voids = correct_generated_voids_intersecting_with_floor()
+    np.savetxt(path_to_save_intersected, intersected_names, fmt="%d")
 
     return corrected_voids, intersected_names
 
 
 @app.cell
 def _(corrected_voids, generated_voids, intersected_names, mo):
-    mo.md(f"{len(generated_voids)=}, {len(intersected_names)=}, {len(corrected_voids)=}")
+    mo.md(f"""
+    {len(generated_voids)=}, {len(intersected_names)=}, {len(corrected_voids)=}
+    """)
+    return
+
+
+@app.cell
+def _():
     return
 
 
@@ -373,6 +405,88 @@ def _(generated_voids):
 @app.cell(hide_code=True)
 def _():
     return
+
+
+@app.cell
+def _():
+    select_tokamak_components = mcw.filter_not(mcw.filter_or(
+        mcw.filter_by_comment("Automatic Generated Void Cell"),
+        mcw.filter_by_comment("Graveyard")
+    ))
+    return (select_tokamak_components,)
+
+
+@app.cell
+def _(
+    corrected_voids,
+    hall,
+    intersect_graveyard_in_simplified,
+    select_tokamak_components,
+    tokamak,
+):
+    from itertools import chain
+
+    new_cells = list(chain(
+        (c if c.name() != 15  else intersect_graveyard_in_simplified for c in hall),
+        mcw.extract_cells(tokamak,select_tokamak_components),
+        corrected_voids
+    ))
+    return (new_cells,)
+
+
+@app.cell
+def _(new_cells):
+    len(new_cells)
+    return
+
+
+@app.cell
+def _(new_cells):
+    new_cells
+    return
+
+
+@app.cell
+def _(hall, tokamak):
+    materials = hall.get_compositions() | tokamak.get_compositions()
+    return (materials,)
+
+
+@app.cell
+def _(materials, new_cells):
+    new_universe = mc.Universe(new_cells, name_rule="clash", common_materials=materials)
+    return (new_universe,)
+
+
+@app.cell
+def _(tokamak_input_path):
+    path_to_save_combined_universe = tokamak_input_path.parent / "hall+trt-5.4.1.i"
+    return (path_to_save_combined_universe,)
+
+
+@app.cell
+def _(new_universe, path_to_save_combined_universe):
+    new_universe.save(path_to_save_combined_universe)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Utils
+    """)
+    return
+
+
+@app.cell
+def _():
+    mc.box.GLOBAL_BOX
+    return
+
+
+@app.function
+def simplify(cell: mc.Body) -> mc.Body:
+    return cell.simplify(box=mc.box.Box(center=[0, 10, 0], wx=10000, wy=10000, wz=10000), min_volume=1)
 
 
 @app.cell

@@ -1,13 +1,16 @@
-import geometry
-
 from .types import NPFloatArray
 
-EX: NPFloatArray
-EY: NPFloatArray
-EZ: NPFloatArray
-GLOBAL_BOX: geometry.Box
-MIN_VOLUME: float
-ORIGIN: NPFloatArray
+class Box: ...
+
+class Surface:
+    ...
+
+class Shape:
+    opc: str
+    args: Shape | list[Shape] | None
+    def __init__(self, _opc: str, *_args: Shape | Surface) -> None:
+        ...
+
 
 class BOX: ...
 class RCC: ...
@@ -49,3 +52,10 @@ class Torus:
     def __init__(
         self, center: NPFloatArray, axis: NPFloatArray, r: float, a: float, b: float
     ) -> None: ...
+
+EX: NPFloatArray
+EY: NPFloatArray
+EZ: NPFloatArray
+GLOBAL_BOX: Box
+MIN_VOLUME: float
+ORIGIN: NPFloatArray
