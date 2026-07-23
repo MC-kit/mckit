@@ -231,12 +231,13 @@ typeguard *args:
 # Draw UML diagrams
 [group('style')]
 @pyreverse:
-    pyreverse --project mckit --colorized --output puml --output-directory .pyreverse --ignore data --source-roots src/**/*.py
+    # pyreverse --verbose --project mckit --colorized --output puml --output-directory ./.pyreverse --ignore data --source-roots src/**/*.py
+    pyreverse --verbose --project mckit --colorized --output puml --ignore data --source-roots src/**/*.py
 
 # Find code duplicates
 [group('style')]
 @symilar:
-    uv run --no-dev --group lint symilar src/**/*.py
+    symilar src/**/*.py
 
 # Check rst-texts
 [group('docs')]

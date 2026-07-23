@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.9"
+__generated_with = "0.23.14"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -77,7 +77,7 @@ def _(mc):
 
 @app.cell
 def _():
-    VERSION="0.1.0"
+    VERSION="0.1.1"
     # OUT=ROOT / f".wrk/{Path(__file__).stem}/{VERSION}"
     return
 
@@ -245,7 +245,7 @@ def _(mc):
         if not comment:
             return False
         return any(lambda x: text in x and (print(text, "in", x) or True) for x in comment)
-    
+
 
     return (contains_comment,)
 
@@ -254,7 +254,7 @@ def _(mc):
 def _(contains_comment, mc):
     def select_generated_voids_predicate(cell: mc.Body) -> bool:
         return contains_comment(cell, "Automatic Generated Void Cell")
-    
+
 
     return (select_generated_voids_predicate,)
 
@@ -264,7 +264,6 @@ def _(select_generated_voids_predicate, tokamak):
     from mckit.workflow import extract_cells
 
     generated_voids = extract_cells(tokamak, select_generated_voids_predicate, add_surface_sharing_cells=False)
-
     return
 
 
