@@ -75,7 +75,7 @@ tomli-w = "*"
 analyze = { features = [ "analyze", "build", "py313" ] }
 default = { features = [ "build", "test", "style" ], solve-group = "default" }
 docs = { features = [ "build", "docs" ], solve-group = "default" }
-prod = { features=[ "build" ], solve-group = "default" }
+prod = { features = [ "build" ], solve-group = "default" }
 py312 = { features = [ "build", "py312", "test" ] }
 py313 = { features = [ "build", "py313", "test" ], solve-group = "default" }
 # py314 = { features = [ "build", "py314", "test" ] }
@@ -256,4 +256,3 @@ venvs = [ ".pixi/envs/analyze", ".pixi/envs/default", ".pixi/envs/docs" ]
 [tool.rstcheck]
 ignore_messages = '(Unknown directive type "(todo.*|automodule)".$)'
 report_level = "ERROR"
-

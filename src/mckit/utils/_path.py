@@ -101,6 +101,7 @@ def make_dir(d: str | Path, *, parents=True, exist_ok=True) -> Path:
     p.mkdir(parents=parents, exist_ok=exist_ok)
     return p
 
+mkdir = make_dir
 
 def make_dirs(*dirs: str | Path) -> Generator[Path]:
     """Create dirs, if not exist.
@@ -116,6 +117,7 @@ def make_dirs(*dirs: str | Path) -> Generator[Path]:
     """
     return (make_dir(f) for f in dirs)
 
+mkdirs = make_dirs
 
 def check_if_path_exists(p: Path, *, follow_symlinks: bool = True) -> Path:
     if p.exists(follow_symlinks=follow_symlinks):
