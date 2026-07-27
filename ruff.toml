@@ -41,6 +41,7 @@ ignore = [
   "ARG",
   "C901",   # too complex - ...
   "COM812",
+  "CPY001", # Missing copyright notice at top of file
   "D100",   # Missing docstring in public module
   "D101",   # Missing docstring in public class
   "D102",   # Missing docstring in public method
@@ -70,12 +71,11 @@ ignore = [
   "N806",   # Variable `D` in function should be lowercase
 
   "PLE1205", # logging-too-many-args - we use loguru with '{' style of placeholders
-
   "PLR0912", # Too many branches (15 > 12)
   "PLR0913", # Too many arguments to function call (6 > 5)
   "PLR0915", # Too many statements (65 > 50)
+  "PLR0917", # Too many positional arguments 
   "PLR2004", # magic number - don't want to declare 0.0 as constant
-  #    "PLR5501", # Consider using `elif` instead of `else` then `if` to remove one indentation level
 
   "PT019",  # Fixture `_bin` without value is injected as parameter (false positive?)
   "RUF009", # attrib() - remove attrs
