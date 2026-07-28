@@ -63,76 +63,17 @@ jobs:
 
       - uses: prefix-dev/setup-pixi@v0.10.0
         with:
-          pixi-version: v0.72.0
+          pixi-version: v0.74.0
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
 #          auth-host: prefix.dev
 #          auth-token: ${{ secrets.PREFIX_DEV_TOKEN }}
           activate-environment: true
 
-      - name: Run pre commit checks
+      - name: 📦 Run pre commit checks
         run: |
           pixi run pre-commit
 
-  
-<<<<<<< HEAD
-||||||| 79c914d
-  # typing:
-  #   runs-on: ubuntu-latest
-  #   if: |
-  #     !contains(github.event.head_commit.message, '[skip_ci]')
-  #   steps:
-  #     - name: ✅ Check out the repository
-  #       uses: actions/checkout@v5
-
-  #     - name: 📦 Install uv
-  #       uses: astral-sh/setup-uv@v6
-  #       with:
-  #         python-version: ${{ env.DEFAULT_PYTHON }}
-  #         enable-cache: true
-  #         cache-dependency-glob: |
-  #           **/uv.lock
-  #           **/pyproject.toml      
-
-  #     - name: 🐍 Install the project
-  #       run: |
-  #         uv sync --all-extras --no-dev --group mypy
-  #         uv pip list
-
-  #     # - name: 📦 Run mypy static type checks
-  #     #  run: |
-  #     #    uv run mypy src docs/source/conf.py
-
-
-=======
-  # typing:
-  #   runs-on: ubuntu-latest
-  #   if: |
-  #     !contains(github.event.head_commit.message, '[skip_ci]')
-  #   steps:
-  #     - name: ✅ Check out the repository
-  #       uses: actions/checkout@v7
-
-  #     - name: 📦 Install uv
-  #       uses: astral-sh/setup-uv@v6
-  #       with:
-  #         python-version: ${{ env.DEFAULT_PYTHON }}
-  #         enable-cache: true
-  #         cache-dependency-glob: |
-  #           **/uv.lock
-  #           **/pyproject.toml      
-
-  #     - name: 🐍 Install the project
-  #       run: |
-  #         uv sync --all-extras --no-dev --group mypy
-  #         uv pip list
-
-  #     # - name: 📦 Run mypy static type checks
-  #     #  run: |
-  #     #    uv run mypy src docs/source/conf.py
-
-
->>>>>>> origin/dependabot/github_actions/devel/actions/stale-11
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -143,7 +84,7 @@ jobs:
           submodules: 'true'
       - uses: prefix-dev/setup-pixi@v0.10.0
         with:
-          pixi-version: v0.72.0
+          pixi-version: v0.74.0
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
           environments: docs
@@ -192,7 +133,7 @@ jobs:
 
       - uses: prefix-dev/setup-pixi@v0.10.0
         with:
-          pixi-version: v0.72.0
+          pixi-version: v0.74.0
           cache: true
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
           environments: ${{ matrix.environment }}
