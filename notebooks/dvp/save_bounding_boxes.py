@@ -104,6 +104,78 @@ def _(csv, sum):
     return
 
 
+@app.cell(hide_code=True)
+def _(conn, csv, mo):
+    _df = mo.sql(
+        f"""
+        select csv.path, REPLACE(csv.path, 'Конструкция1/', '/trt-5.4/') as fixed_path from csv limit 5
+        """,
+        engine=conn
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(conn, csv, mo):
+    _df = mo.sql(
+        f"""
+        with check_eq as (
+            select
+            	sq.cells.cell as cell,
+                cells.path as geouned,
+                REGEXP_REPLACE(REPLACE(csv.path, 'Конструкция1/', '/trt-5.4/'), '/[^/]*$', '') as mapstp
+        	from sq.cells, csv
+        	where sq.cells.cell = csv.offset
+        )
+        select
+        	check_eq.*,
+        	STARTS_WITH(geouned, mapstp) as eq,
+            LENGTH(geouned),
+            LENGTH(mapstp),
+            SUBSTR(geouned,1, LENGTH(mapstp))
+        from 
+        	check_eq
+        where not eq
+        limit 10
+        """,
+        engine=conn
+    )
+    return
+
+
+@app.cell
+def _():
+    "/trt-5.4/1A_521_514_СИСТЕМА_ЭЛЕКТРОМАГНИТНАЯ[m-steel]/CS_TRT-2023_V3[m-steel]/Iz_modul_Ring_CS_SS_TRT-2023_V3-1/Iz_modul-ring2_SS_CS_TRT-2023_V32/Component51"[:-1] == \
+    "/trt-5.4/1A_521_514_СИСТЕМА_ЭЛЕКТРОМАГНИТНАЯ[m-steel]/CS_TRT-2023_V3[m-steel]/Iz_modul_Ring_CS_SS_TRT-2023_V3-1/Iz_modul-ring2_SS_CS_TRT-2023_V3/Component5"
+    # ----------------------------------------^
+
+    return
+
+
+@app.cell
+def _():
+    "/trt-5.4/1A_521_514_СИСТЕМА_ЭЛЕКТРОМАГНИТНАЯ[m-steel]/CS_TRT-2023_V3[m-steel]/Iz_modul_Ring_CS_SS_TRT-2023_V3-1/Iz_modul-ring2_SS_CS_TRT-2023_V3/Component51"[:-1] == \
+    "/trt-5.4/1A_521_514_СИСТЕМА_ЭЛЕКТРОМАГНИТНАЯ[m-steel]/CS_TRT-2023_V3[m-steel]/Iz_modul_Ring_CS_SS_TRT-2023_V3-1/Iz_modul-ring2_SS_CS_TRT-2023_V3/Component5"
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    geouned зачем то добавил 2: "..._v3**2**/Component...".
+
+    extract-info ничего не меняет в пути в STP файле - там этой двойки нет, как в STP
+
+    Вместо полного пути для провязки таблиц из extract-info 'csv' и summary 'cells'
+    """)
+    return
+
+
+@app.cell
+def _():
+    return
+
+
 @app.cell
 def _(conn):
     conn.execute(
@@ -112,7 +184,7 @@ def _(conn):
             select
                 starts_with(
                     cells.path, 
-                    REGEXP_REPLACE(csv.path, '/.*$', '')
+                    REGEXP_REPLACE(REPLACE(csv.path, 'Конструкция1/', '/trt-5.4/'), '/[^/]*$', '')
                 ) as ok
             from sq.cells, csv
             where sq.cells.cell = csv.offset
