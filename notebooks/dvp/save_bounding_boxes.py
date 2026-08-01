@@ -19,8 +19,8 @@ with app.setup:
     import mckit.workflow as mcw
 
     HOST = os.uname().nodename
-    VERSION = "0.2.0"
-    MODEL_DIR = mut.check_dir(mut.mkpath("~/dev/mcnp/trt/wrk/models/2025/5.4.1").expanduser())
+    VERSION = "0.2.1"
+    MODEL_DIR = mut.check_dir(mut.mkpath("~/dev/mcnp/trt/wrk/models/2025/5.4.3").expanduser())
 
 
 @app.cell(hide_code=True)
@@ -28,7 +28,7 @@ def _(mo):
     mo.md(r"""
     # Перенос данных по bounding box csv->slite
 
-    Есть файл trt-5.4-component-volumes.csv содержащий данные по ячейкам, включая объем, границы bounding box, путь в STP файле.
+    Есть файл trt-5.4.3-component-volumes.csv содержащий данные по ячейкам, включая объем, границы bounding box, путь в STP файле.
     Есть база данных trt-5.4.sqlite, в которой есть таблица 'cells' с аналогичными полями. В CSV путь получен из STP c помощью скрипта extract-info прогоном в SpaceClaim. Файл sqlite создан mapstp командой summary2sqlite. Эта команда переносит информацию из summary файла, созданного geouned при генерации модели. Путь в summary отличается от пути найденного extract_info: в конце вместо имени тела, geouned вставляет номер. Видимо, это связано с возможной декомпозицией тела в момент генерации модели.
 
     Нужно проверить, есть ли однозначное соответствие между путями в summary и extract_info csv. Если можно такое соответствие установить, то:
@@ -58,13 +58,13 @@ def _(mo):
 
 @app.cell
 def _():
-    sql_path = mut.check_file(MODEL_DIR / "trt-5.4.sqlite")
+    sql_path = mut.check_file(MODEL_DIR / "trt-5.4.3.sqlite")
     return (sql_path,)
 
 
 @app.cell
 def _():
-    csv_path = mut.check_file(MODEL_DIR / "trt-5.4-component-volumes.csv")
+    csv_path = mut.check_file(MODEL_DIR / "trt-5.4.3-component-volumes.csv")
     return (csv_path,)
 
 
@@ -108,7 +108,7 @@ def _(csv, sum):
 def _(conn, csv, mo):
     _df = mo.sql(
         f"""
-        select csv.path, REPLACE(csv.path, 'Конструкция1/', '/trt-5.4/') as fixed_path from csv limit 5
+        select csv.path, REPLACE(csv.path, 'Конструкция1/', '/trt-5.4.3/') as fixed_path from csv limit 5
         """,
         engine=conn
     )
@@ -117,13 +117,13 @@ def _(conn, csv, mo):
 
 @app.cell(hide_code=True)
 def _(conn, csv, mo):
-    _df = mo.sql(
+    df = mo.sql(
         f"""
         with check_eq as (
             select
             	sq.cells.cell as cell,
                 cells.path as geouned,
-                REGEXP_REPLACE(REPLACE(csv.path, 'Конструкция1/', '/trt-5.4/'), '/[^/]*$', '') as mapstp
+                REGEXP_REPLACE(REPLACE(csv.path, 'Конструкция1/', '/trt-5.4.3/'), '/[^/]*$', '') as mapstp
         	from sq.cells, csv
         	where sq.cells.cell = csv.offset
         )
@@ -140,6 +140,43 @@ def _(conn, csv, mo):
         """,
         engine=conn
     )
+    return (df,)
+
+
+@app.cell
+def _(df):
+    geuned_str, mapstp_str = (x.item() for x in df[0].select("geouned", "mapstp"))
+    return geuned_str, mapstp_str
+
+
+@app.cell
+def _():
+    import difflib
+
+    return (difflib,)
+
+
+@app.cell
+def _(difflib, geuned_str, mapstp_str):
+    differ = difflib.Differ()
+    diff = list(differ.compare(geuned_str, mapstp_str))
+    first_diff = None
+    for i, s in enumerate(diff):
+        if s[0] in "-+":
+            print(i, ":", s)
+            if first_diff is None:
+                first_diff = i
+    return (first_diff,)
+
+
+@app.cell
+def _(first_diff, geuned_str, mapstp_str, mo):
+    mo.md(f"""\
+    geouned: {geuned_str[first_diff-5:]}
+    mapstp : {mapstp_str[first_diff-5:]}
+
+             {"-"*4+"^"}
+    """)
     return
 
 
@@ -148,14 +185,6 @@ def _():
     "/trt-5.4/1A_521_514_СИСТЕМА_ЭЛЕКТРОМАГНИТНАЯ[m-steel]/CS_TRT-2023_V3[m-steel]/Iz_modul_Ring_CS_SS_TRT-2023_V3-1/Iz_modul-ring2_SS_CS_TRT-2023_V32/Component51"[:-1] == \
     "/trt-5.4/1A_521_514_СИСТЕМА_ЭЛЕКТРОМАГНИТНАЯ[m-steel]/CS_TRT-2023_V3[m-steel]/Iz_modul_Ring_CS_SS_TRT-2023_V3-1/Iz_modul-ring2_SS_CS_TRT-2023_V3/Component5"
     # ----------------------------------------^
-
-    return
-
-
-@app.cell
-def _():
-    "/trt-5.4/1A_521_514_СИСТЕМА_ЭЛЕКТРОМАГНИТНАЯ[m-steel]/CS_TRT-2023_V3[m-steel]/Iz_modul_Ring_CS_SS_TRT-2023_V3-1/Iz_modul-ring2_SS_CS_TRT-2023_V3/Component51"[:-1] == \
-    "/trt-5.4/1A_521_514_СИСТЕМА_ЭЛЕКТРОМАГНИТНАЯ[m-steel]/CS_TRT-2023_V3[m-steel]/Iz_modul_Ring_CS_SS_TRT-2023_V3-1/Iz_modul-ring2_SS_CS_TRT-2023_V3/Component5"
     return
 
 
@@ -172,11 +201,6 @@ def _(mo):
 
 
 @app.cell
-def _():
-    return
-
-
-@app.cell
 def _(conn):
     conn.execute(
         """
@@ -184,7 +208,7 @@ def _(conn):
             select
                 starts_with(
                     cells.path, 
-                    REGEXP_REPLACE(REPLACE(csv.path, 'Конструкция1/', '/trt-5.4/'), '/[^/]*$', '')
+                    REGEXP_REPLACE(REPLACE(csv.path, 'Конструкция1/', '/trt-5.4.3/'), '/[^/]*$', '')
                 ) as ok
             from sq.cells, csv
             where sq.cells.cell = csv.offset
@@ -198,7 +222,7 @@ def _(conn):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Начала путей совпадают для каждой ячейки.
+    Начала путей не совпадают.
 
     Проверим совпадение объемов.
     """)
