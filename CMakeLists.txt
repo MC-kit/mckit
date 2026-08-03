@@ -48,15 +48,25 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
   find_package(Git QUIET)
 
-  # if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git") execute_process(
-  # COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-  # WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} RESULT_VARIABLE
-  # GIT_SUBMOD_RESULT) if(NOT GIT_SUBMOD_RESULT EQUAL "0") message( FATAL_ERROR
-  # "git submodule update --init --recursive failed with ${GIT_SUBMOD_RESULT},
-  # please checkout submodules" ) endif() endif() if(NOT EXISTS
-  # "${PROJECT_SOURCE_DIR}/extern/nlopt/CMakeLists.txt") message( FATAL_ERROR
-  # "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed.
-  # Please update submodules and try again." ) endif()
+  if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git") 
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} 
+      RESULT_VARIABLE GIT_SUBMOD_RESULT
+    ) 
+    if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+      message( FATAL_ERROR
+        "git submodule update --init --recursive failed with ${GIT_SUBMOD_RESULT},
+        please checkout submodules" 
+      )
+    endif()
+  endif() 
+  if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/nlopt/CMakeLists.txt")
+    message( FATAL_ERROR
+      "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed.
+      Please update submodules and try again." 
+    )
+  endif()
 
   # Set C++ standard
   set(CMAKE_CXX_STANDARD 20)
@@ -121,7 +131,7 @@ message(STATUS "MKL Root: ${MKL_ROOT_DIR}")
 message(STATUS "MKL Include: ${MKL_INCLUDE_DIR}")
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 
-# add_subdirectory(extern)
+add_subdirectory(extern)
 
 # if(NOT WIN32) message("Creating symlinks in environment ${PythonEnv_ROOT}")
 # execute_process( COMMAND ${Python_EXECUTABLE} create_mkl_symlinks.py
@@ -132,9 +142,7 @@ message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 # ${PythonEnv_ROOT}) endif()
 
 find_package(MKL REQUIRED)
-find_package(NLopt REQUIRED)
-
-set(geometry_dir ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src/)
+# find_package(NLopt REQUIRED)
 
 if(NOT Win32)
   # Fix MKL packaging bug: the issue is that libmkl_intel_thread.so lacks a
@@ -156,6 +164,8 @@ if(NOT Win32)
   endif()
 endif()
 
+set(geometry_dir ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src/)
+
 set(geometry_sources
     ${geometry_dir}box.c ${geometry_dir}geometrymodule.c
     ${geometry_dir}rbtree.c ${geometry_dir}shape.c ${geometry_dir}surface.c)
@@ -164,7 +174,7 @@ python_add_library(geometry MODULE ${geometry_sources} WITH_SOABI)
 target_include_directories(
   geometry PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src MKL::MKL
                   ${Python_NumPy_INCLUDE_DIRS})
-target_link_libraries(geometry PUBLIC NLopt::nlopt MKL::MKL)
+target_link_libraries(geometry PUBLIC nlopt MKL::MKL)
 if(WIN32)
   target_link_libraries(geometry PUBLIC Python::Module)
 else()

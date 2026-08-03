@@ -89,9 +89,6 @@ def _init():
     else:
         _preload_library("atomic")  # to fix MKL packaging bug
     _preload_library("mkl_rt")
-    _preload_library(
-        "nlopt"
-    )  # otherwise: ImportError: libnlopt.so.0: cannot open shared object fileg
 
 
 # _init()
