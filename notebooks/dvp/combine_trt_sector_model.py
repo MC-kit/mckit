@@ -230,8 +230,7 @@ def _(mo, s45_universe, space_in_sector, space_out_of_sector):
                 #     break
                 if cell.name() == 1880:  # graveyard
                     assert cell.is_graveyard
-                    new_cells.add(cell)
-                    continue
+                    break  # no more cells after graveyard
                 out_intersection = cell.intersection(space_out_of_sector)
                 out_simplified = out_intersection.simplify(min_volume=1)
                 if out_simplified.is_empty:
