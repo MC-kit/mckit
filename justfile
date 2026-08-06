@@ -12,7 +12,7 @@ set windows-shell := ["pwsh.exe", "-NoProfile", "-NonInteractive", "-ExecutionPo
 # We don't want to install any dev dependencies by default.
 # export UV_NO_DEV := "true"
 
-alias t := test
+alias t := test-fast
 alias c := check
 set dotenv-load
 

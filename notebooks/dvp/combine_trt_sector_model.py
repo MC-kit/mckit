@@ -72,30 +72,78 @@ def _(s45_info):
     return (s45_universe,)
 
 
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    Попутно разбираемся с потерянными частицами
-    """)
-    return
+@app.cell
+def _(s45_universe):
+    graveyard_cell = s45_universe[-1]
+    return (graveyard_cell,)
 
 
 @app.cell
 def _(s45_universe):
-    cells_with_surf = list(mut.map_names(mcw.extract_cells(s45_universe, mcw.filter_by_surface_number(4))))
-    cells_with_surf
+    len(s45_universe)
     return
 
 
 @app.cell
-def _(s45_info):
-    surf_graveyard = s45_info.surfaces_index[3719]
-    return (surf_graveyard,)
+def _(graveyard_cell):
+    graveyard_name = graveyard_cell.name()
+    graveyard_name
+    return (graveyard_name,)
 
 
 @app.cell
-def _(surf_graveyard):
-    surf_graveyard.mcnp_repr()
+def _(graveyard_cell):
+    graveyard_box = graveyard_cell.shape.complement().bounding_box()
+    return (graveyard_box,)
+
+
+@app.cell
+def _(graveyard_box):
+    graveyard_box.bounds
+    return
+
+
+@app.cell
+def _(graveyard_box, mo):
+    mo.md(f"global box volume: {graveyard_box.volume:.2g}")
+    return
+
+
+@app.cell
+def _(graveyard_box):
+    min_volume = graveyard_box.volume * 1e-9
+    min_volume
+    return (min_volume,)
+
+
+@app.cell
+def _(graveyard_cell):
+    graveyard_surf = next(graveyard_cell.shape.scan_surfaces())
+    return (graveyard_surf,)
+
+
+@app.cell
+def _(graveyard_surf):
+    graveyard_surf
+    return
+
+
+@app.cell
+def _(graveyard_surf):
+    graveyard_surf.mcnp_repr()
+    return
+
+
+@app.cell
+def _(graveyard_surf):
+    graveyard_surf_name = graveyard_surf.name()
+    graveyard_surf_name
+    return (graveyard_surf_name,)
+
+
+@app.cell
+def _(graveyard_surf, graveyard_surf_name, s45_info):
+    graveyard_surf == s45_info.surfaces_index[graveyard_surf_name]
     return
 
 
@@ -141,27 +189,21 @@ def _(mo):
     Ячейки внутри сектора должны быть ограничены поверхностями -3 и +4.
     Если ячейка изначально не пересекается с этими поверхностями, то оставляем ее как есть.
     Если ячейка полностью выходят за пространство сектора, то убираем ее.
-    Все убранные ячейки и заменяем на -3719 (3 : -4).
+    Все убранные ячейки заменяем на sector_gravyard_in - пространство между выбранным сектором и graveyard. Спецификация: -3719 (3 : -4).
     И оставляем сам graveyard.
     """)
     return
 
 
 @app.cell
-def _(surf_3, surf_4, surf_graveyard):
+def _(graveyard_cell, surf_3, surf_4):
     half_space_3 = mc.Shape("C", surf_3)  # -3 C - complement
     half_space_4 = mc.Shape("S", surf_4)  # +4 S - same (identity)
-    graveyard = mc.Shape("S", surf_graveyard)
+    graveyard = graveyard_cell.shape
     graveyard_complement = graveyard.complement()
     sector = mc.Shape("I", half_space_3, half_space_4, graveyard_complement)
     space_in_sector = mc.Shape("I", half_space_3, half_space_4)
-    return (
-        graveyard_complement,
-        half_space_3,
-        half_space_4,
-        sector,
-        space_in_sector,
-    )
+    return graveyard_complement, half_space_3, half_space_4, space_in_sector
 
 
 @app.function
@@ -170,8 +212,8 @@ def shape_str(c: mc.Shape):
 
 
 @app.cell
-def _(sector):
-    shape_str(sector)
+def _(space_in_sector):
+    shape_str(space_in_sector)
     return
 
 
@@ -211,7 +253,15 @@ def _(sector_gravyard_in):
 
 
 @app.cell
-def _(mo, s45_universe, space_in_sector, space_out_of_sector):
+def _(
+    graveyard_box,
+    graveyard_name,
+    min_volume,
+    mo,
+    s45_universe,
+    space_in_sector,
+    space_out_of_sector,
+):
     def _():
         new_cells = []
         # max_check = 0
@@ -219,8 +269,8 @@ def _(mo, s45_universe, space_in_sector, space_out_of_sector):
         omitted = []
         intersected = []
         with mo.status.progress_bar(
-            total=len(s45_universe),
-            title="Buidling sector cells",
+            total=len(s45_universe)-1, # processing all the cells but graveyard
+            title="Вычисляем ячейки модели",
             show_eta=True,
             show_rate=True,
         ) as bar:
@@ -228,24 +278,31 @@ def _(mo, s45_universe, space_in_sector, space_out_of_sector):
                 # max_check += 1
                 # if max_check > 100:
                 #     break
-                if cell.name() == 1880:  # graveyard
+                if cell.name() == graveyard_name:  # graveyard
                     assert cell.is_graveyard
                     break  # no more cells after graveyard
                 out_intersection = cell.intersection(space_out_of_sector)
-                out_simplified = out_intersection.simplify(min_volume=1)
+                out_simplified = out_intersection.simplify(
+                    box=graveyard_box, 
+                    min_volume=min_volume
+                )
                 if out_simplified.is_empty:
                     new_cells.append(cell)  # to find cells relly needing intersection with space_in_sector
                     as_is.append(cell.name())
                 else:
                     in_intersection = cell.intersection(space_in_sector)
-                    in_simpified = in_intersection.simplify(min_volume=1)
+                    in_simpified = in_intersection.simplify(
+                        box=graveyard_box, 
+                        min_volume=min_volume
+                    )
                     if in_simpified.is_empty:
-                        print("Cell ", cell.name(), " is out of sector and omitted")
                         omitted.append(cell.name())
                     else:
                         new_cells.append(in_simpified)
                         intersected.append(cell.name())
-                bar.update(subtitle=f"as_is: {len(as_is)}, omitted: {len(omitted)}, intersected: {len(intersected)}")
+                bar.update(
+                    subtitle=f"as_is: {len(as_is)}, omitted: {len(omitted)}, intersected: {len(intersected)}"
+                )
         return new_cells, as_is, omitted, intersected
 
     new_cells, as_is, omitted, intersected = _()
@@ -254,7 +311,69 @@ def _(mo, s45_universe, space_in_sector, space_out_of_sector):
 
 @app.cell
 def _(new_cells):
-    list(mut.map_names(new_cells))
+    new_cells[-1]
+    return
+
+
+@app.cell
+def _(new_cells):
+    new_cells_len = len(list(mut.map_names(new_cells)))
+    new_cells_len
+    return
+
+
+@app.cell
+def _(new_cells):
+    max_used_name = max(x.name() for x in new_cells)
+    max_used_name
+    return (max_used_name,)
+
+
+@app.cell
+def _(graveyard_name, max_used_name):
+    if max_used_name+1 < graveyard_name:
+        sector_gravyard_in_name = max_used_name + 1
+    else:
+        sector_gravyard_in_name = graveyard_name + 1
+    return (sector_gravyard_in_name,)
+
+
+@app.cell
+def _(sector_gravyard_in_name):
+    sector_gravyard_in_name
+    return
+
+
+@app.cell
+def _(graveyard_cell, new_cells, sector_gravyard_in, sector_gravyard_in_name):
+    universe_cells = new_cells + [
+        mc.Body(
+            sector_gravyard_in, 
+            name=sector_gravyard_in_name,
+            VOL=1.0,
+            IMPN=1.0,
+            IMPP=1.0
+        ), 
+        graveyard_cell,
+    ]
+    return (universe_cells,)
+
+
+@app.cell
+def _(universe_cells):
+    sector_universe = mc.Universe(universe_cells)
+    return (sector_universe,)
+
+
+@app.cell
+def _():
+    sector_universe_path = MODEL_DIR / "s45-computed-1.i"
+    return (sector_universe_path,)
+
+
+@app.cell
+def _(sector_universe, sector_universe_path):
+    sector_universe.save(sector_universe_path)
     return
 
 

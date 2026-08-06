@@ -4,5 +4,7 @@ set(NLOPT_JAVA OFF)
 set(NLOPT_MATLAB OFF)
 set(NLOPT_OCTAVE OFF)
 set(NLOPT_SWIG OFF)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
+set(BUILD_SHARED_LIBS
+    OFF
+    CACHE BOOL "Build static libraries" FORCE)
 add_subdirectory(nlopt)
