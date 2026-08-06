@@ -63,37 +63,200 @@ def _():
 @app.cell
 def _(INPUT_PATH):
     s45_info = mc.from_file(INPUT_PATH)
+    return (s45_info,)
+
+
+@app.cell
+def _(s45_info):
+    s45_universe = s45_info.universe
+    return (s45_universe,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Попутно разбираемся с потерянными частицами
+    """)
     return
 
 
 @app.cell
-def _(hall_info):
-    khall_cell = hall_info.cells_index[30015]
+def _(s45_universe):
+    cells_with_surf = list(mut.map_names(mcw.extract_cells(s45_universe, mcw.filter_by_surface_number(4))))
+    cells_with_surf
     return
 
 
 @app.cell
-def _(hall_cell):
-    hall_cell.options
+def _(s45_info):
+    surf_graveyard = s45_info.surfaces_index[3719]
+    return (surf_graveyard,)
+
+
+@app.cell
+def _(surf_graveyard):
+    surf_graveyard.mcnp_repr()
     return
 
 
 @app.cell
-def _(hall_info):
-    floor_cell = hall_info.cells_index[30014]
-    return (floor_cell,)
+def _(s45_info):
+    surf_3 = s45_info.surfaces_index[3]
+    return (surf_3,)
 
 
 @app.cell
-def _(floor_cell):
-    floor_cell.options
+def _(surf_3):
+    surf_3.mcnp_repr()
+    return
+
+
+@app.cell
+def _(s45_info):
+    surf_4 = s45_info.surfaces_index[4]
+    return (surf_4,)
+
+
+@app.cell
+def _(surf_4):
+    surf_4.mcnp_repr()
     return
 
 
 @app.cell
 def _():
-    tokamak_input_path = mut.check_file(MODEL_DIR / "trt-5.4.0.i")
-    return (tokamak_input_path,)
+    point = [1, 0, 0]
+    return (point,)
+
+
+@app.cell
+def _(point, surf_3, surf_4):
+    {x.name(): x.test_points(point)[0] for x in (surf_3, surf_4)}
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Ячейки внутри сектора должны быть ограничены поверхностями -3 и +4.
+    Если ячейка изначально не пересекается с этими поверхностями, то оставляем ее как есть.
+    Если ячейка полностью выходят за пространство сектора, то убираем ее.
+    Все убранные ячейки и заменяем на -3719 (3 : -4).
+    И оставляем сам graveyard.
+    """)
+    return
+
+
+@app.cell
+def _(surf_3, surf_4, surf_graveyard):
+    half_space_3 = mc.Shape("C", surf_3)  # -3 C - complement
+    half_space_4 = mc.Shape("S", surf_4)  # +4 S - same (identity)
+    graveyard = mc.Shape("S", surf_graveyard)
+    graveyard_complement = graveyard.complement()
+    sector = mc.Shape("I", half_space_3, half_space_4, graveyard_complement)
+    space_in_sector = mc.Shape("I", half_space_3, half_space_4)
+    return (
+        graveyard_complement,
+        half_space_3,
+        half_space_4,
+        sector,
+        space_in_sector,
+    )
+
+
+@app.function
+def shape_str(c: mc.Shape):
+    return "".join(c.get_words())
+
+
+@app.cell
+def _(sector):
+    shape_str(sector)
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _(half_space_3, half_space_4):
+    half_space_3_complement, half_space_4_complement = (x.complement() for x in (half_space_3, half_space_4))
+    return half_space_3_complement, half_space_4_complement
+
+
+@app.cell
+def _(graveyard_complement, half_space_3_complement, half_space_4_complement):
+    sector_gravyard_in = graveyard_complement.intersection(half_space_3_complement.union(half_space_4_complement))
+    return (sector_gravyard_in,)
+
+
+@app.cell
+def _(half_space_3_complement, half_space_4_complement):
+    space_out_of_sector = half_space_3_complement.union(half_space_4_complement)
+    return (space_out_of_sector,)
+
+
+@app.cell
+def _(space_out_of_sector):
+    shape_str(space_out_of_sector)
+    return
+
+
+@app.cell
+def _(sector_gravyard_in):
+    shape_str(sector_gravyard_in)
+    return
+
+
+@app.cell
+def _(mo, s45_universe, space_in_sector, space_out_of_sector):
+    def _():
+        new_cells = []
+        # max_check = 0
+        as_is = []
+        omitted = []
+        intersected = []
+        with mo.status.progress_bar(
+            total=len(s45_universe),
+            title="Buidling sector cells",
+            show_eta=True,
+            show_rate=True,
+        ) as bar:
+            for cell in s45_universe:
+                # max_check += 1
+                # if max_check > 100:
+                #     break
+                if cell.name() == 1880:  # graveyard
+                    assert cell.is_graveyard
+                    new_cells.add(cell)
+                    continue
+                out_intersection = cell.intersection(space_out_of_sector)
+                out_simplified = out_intersection.simplify(min_volume=1)
+                if out_simplified.is_empty:
+                    new_cells.append(cell)  # to find cells relly needing intersection with space_in_sector
+                    as_is.append(cell.name())
+                else:
+                    in_intersection = cell.intersection(space_in_sector)
+                    in_simpified = in_intersection.simplify(min_volume=1)
+                    if in_simpified.is_empty:
+                        print("Cell ", cell.name(), " is out of sector and omitted")
+                        omitted.append(cell.name())
+                    else:
+                        new_cells.append(in_simpified)
+                        intersected.append(cell.name())
+                bar.update(subtitle=f"as_is:{len(as_is)}, omitted: {len(omitted)}, intersected: {len(intersected)}")
+        return new_cells, as_is, omitted, intersected
+
+    new_cells, as_is, omitted, intersected = _()
+    return (new_cells,)
+
+
+@app.cell
+def _(new_cells):
+    list(mut.map_names(new_cells))
+    return
 
 
 @app.cell
@@ -107,13 +270,7 @@ def _():
 def _(do_split):
     def split_model(split_dir: Path, model_path: Path) -> None:
         split_dir.mkdir(parents=True, exist_ok=True)
-        do_split(
-            split_dir,
-            model_path,
-            override = True,
-            separators = True
-        )
-
+        do_split(split_dir, model_path, override=True, separators=True)
 
     return (split_model,)
 
@@ -142,8 +299,9 @@ def _(SPLIT_DIR):
         text = cells_part_path.read_text()
         idx = text.find("\n9016")
         assert idx > 0
-        path_a.write_text(text[:idx+1])  # leava \n in the "installation" part
-        path_b.write_text(text[idx+1:])
+        path_a.write_text(text[: idx + 1])  # leava \n in the "installation" part
+        path_b.write_text(text[idx + 1 :])
+
     _()
     return
 
@@ -228,17 +386,13 @@ def _(intersect_graveyard_in_simplified):
 
 @app.cell
 def _(hall_graveyard_in_intersection_universe):
-    hall_graveyard_in_intersection_universe.save(
-        MODEL_DIR / "hall-graveyard-in-intersection.i"
-    )
+    hall_graveyard_in_intersection_universe.save(MODEL_DIR / "hall-graveyard-in-intersection.i")
     return
 
 
 @app.cell
 def _(hall_graveyard_in_intersectin_simplified_universe):
-    hall_graveyard_in_intersectin_simplified_universe.save(
-        MODEL_DIR / "hall-graveyard-in-intersection-simplified.i"
-    )
+    hall_graveyard_in_intersectin_simplified_universe.save(MODEL_DIR / "hall-graveyard-in-intersection-simplified.i")
     return
 
 
@@ -257,13 +411,12 @@ def generated_void(x):
 
 @app.cell
 def _(tokamak):
-    generated_voids_without_comment = list(mcw.extract_cells(
-        tokamak,
-        mcw.filter_and(
-            generated_void, 
-            mcw.filter_not(mcw.filter_by_comment("Automatic Generated Void Cell"))
+    generated_voids_without_comment = list(
+        mcw.extract_cells(
+            tokamak,
+            mcw.filter_and(generated_void, mcw.filter_not(mcw.filter_by_comment("Automatic Generated Void Cell"))),
         )
-    ))
+    )
     len(generated_voids_without_comment)
     return (generated_voids_without_comment,)
 
@@ -331,7 +484,7 @@ def _(hall_space):
 
 @app.cell
 def _(under_floor_space):
-    under_floor_space.test_points([[0, 0, -583.5062459+1], [0, 0, -583.5062460], [0, 0, -583.5062459-1]])
+    under_floor_space.test_points([[0, 0, -583.5062459 + 1], [0, 0, -583.5062460], [0, 0, -583.5062459 - 1]])
     return
 
 
@@ -387,8 +540,6 @@ def _(
                 raise EnvironmentError(msg)
             return intersected_names, corrected_voids
 
-
-
     return (correct_generated_voids_intersecting_with_floor,)
 
 
@@ -427,6 +578,7 @@ def _(corrected_voids, corrected_voids_path):
                     print("       $ corrected for hall integration", file=fid)
                 else:
                     print(original, file=fid)
+
     _()
     return
 
@@ -448,8 +600,6 @@ def _(generated_voids, hall_space, mo):
                     corrected_voids.append(y)
                 bar.update()
         return corrected_voids
-
-
 
     return (correct_all_voids_without_simplification,)
 
@@ -473,6 +623,7 @@ def _(corrected_all_voids, corrected_all_voids_path):
             print("c generated voids intersected with a space above hall", file=fid)
             for c in corrected_all_voids:
                 print(c.mcnp_repr(), file=fid)
+
     _()
     return
 
