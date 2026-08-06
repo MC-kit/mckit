@@ -246,7 +246,7 @@ def _(mo, s45_universe, space_in_sector, space_out_of_sector):
                     else:
                         new_cells.append(in_simpified)
                         intersected.append(cell.name())
-                bar.update(subtitle=f"as_is:{len(as_is)}, omitted: {len(omitted)}, intersected: {len(intersected)}")
+                bar.update(subtitle=f"as_is: {len(as_is)}, omitted: {len(omitted)}, intersected: {len(intersected)}")
         return new_cells, as_is, omitted, intersected
 
     new_cells, as_is, omitted, intersected = _()
