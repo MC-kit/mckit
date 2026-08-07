@@ -1,34 +1,32 @@
 import marimo
 
-__generated_with = "0.23.9"
+__generated_with = "0.23.16"
 app = marimo.App()
 
 with app.setup:
     # Initialization code that runs before all other cells
-    from typing import TYPE_CHECKING, Sequence
+    from typing import Sequence
 
     import sys
     from pathlib import Path
 
     import mckit as mc
+    import mckit.workflow as mwf
+    import mckit.utils as mut
 
-
-    from mckit import Universe
+    from mckit import Universe, Box, Body, Shape
     from mckit.cli import init_logger, logger
-    from mckit.workflow import filter_by_cell_number, extract_cells, make_universe
 
-    if TYPE_CHECKING:
-        from mckit import Body
-
-    __version__ = "0.1.1"
-    OUTPUT_PREFIX = Path(f"50-assets/20-output/{__version__}")
+    __version__ = "0.2.0"
+    MODEL_DIR = mut.check_dir(mut.mkpath("~/dev/dsf/lp14/").expanduser())
+    OUTPUT_PREFIX = mut.mkdir(MODEL_DIR / f"50-assets/20-output/{__version__}")
     OUTPUT_PREFIX.mkdir(parents=True, exist_ok=True)
 
     def out_name(fname: str) -> Path:
         return OUTPUT_PREFIX / fname
 
     def extract_suspicious_universe(tokamak_complex, suspicious_cell: int) -> Universe:
-        cells = extract_cells(tokamak_complex, filter_by_cell_number(suspicious_cell))
+        cells = mwf.extract_cells(tokamak_complex, mwf.filter_by_cell_number(suspicious_cell))
         return make_universe(cells)
 
     def save_suspicious_universe(universe: Universe, suspicious_cell: int) -> None:
@@ -49,7 +47,6 @@ with app.setup:
     logger.info("Output files will be saved in {}", OUTPUT_PREFIX)
 
 
-
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
@@ -60,14 +57,7 @@ def _(mo):
 
 @app.cell
 def _():
-    import marimo as mo
-
-    return (mo,)
-
-
-@app.cell
-def _():
-    tokamak_complex_path = "20251013101844_input.i"
+    tokamak_complex_path = mut.check_file(MODEL_DIR / "20251013101844_input.i")
     _path = Path(tokamak_complex_path)
     logger.info("Tokamak complex model file: {}", _path.absolute())
     logger.info("            ... model size: {}", _path.stat().st_size)
@@ -76,7 +66,6 @@ def _():
 
 @app.cell
 def _(tokamak_complex_path):
-
     tokamak_complex_info = mc.from_file(tokamak_complex_path, encoding="cp1251")
     return (tokamak_complex_info,)
 
@@ -91,8 +80,55 @@ def _(tokamak_complex_info):
 
 @app.cell
 def _(mo):
-    mo.md(f"Reading rate: {239727 / (32):.0f} cell/min")
+    mo.md(f"""
+    Reading rate: {239727 / (36):.0f} cell/min
+    """)
     return
+
+
+@app.cell
+def _():
+    global_box = Box.from_bounds(850, 3000, 210, 2330,-1010, 10)
+    return (global_box,)
+
+
+@app.cell
+def _(global_box):
+    global_box.bounds
+    return
+
+
+@app.cell
+def _(global_box, mo):
+    global_box_volume = global_box.volume
+    mo.md(f"{global_box_volume:.2g}")
+    return (global_box_volume,)
+
+
+@app.cell
+def _():
+    min_volume_ratio = 1e-9
+    return (min_volume_ratio,)
+
+
+@app.cell
+def _(global_box_volume, min_volume_ratio):
+    min_volume = global_box_volume * min_volume_ratio
+    return (min_volume,)
+
+
+@app.cell
+def _(min_volume):
+    min_volume
+    return
+
+
+@app.cell
+def _(global_box, min_volume):
+    def simplify(cell: Body) -> Body:
+        return cell.simplify(box = global_box, min_volume=min_volume)
+
+    return (simplify,)
 
 
 @app.cell
@@ -109,7 +145,7 @@ def _(tokamak_complex):
 
 @app.cell
 def _():
-    segment_path = "segment.i"
+    segment_path = mut.check_file(MODEL_DIR / "segment.i")
     logger.info("Segment model: {}", Path(segment_path).absolute())
     return (segment_path,)
 
@@ -134,32 +170,43 @@ def _(port_box_info):
 
 
 @app.cell
-def _(mo, port_cell):
+def _():
+    import time
+
+    return (time,)
+
+
+@app.cell
+def _(mo, port_cell, simplify, time):
     def extract_intersecting_cells(cells: Sequence[Body]) -> list[Body]:
         _new_cells = []
 
-        total_appended = 0
-        total_skipped = 0
+        appended = []
+        skipped = []
         with mo.status.progress_bar(
             total=len(cells), title="Intersecting cells"
         ) as bar:
+            start_time = time.time()
             for bc in cells:
-                c_int = bc.intersection(port_cell).simplify(min_volume=1e1)
+                c_int = simplify(bc.intersection(port_cell))
                 if c_int.shape.is_empty():
-                    total_skipped += 1
+                    skipped.append(bc.name())
                     subtitle = (
-                        f"{c_int.name()} - skipped, {total_skipped=}, {total_appended=}"
+                        f"{c_int.name()} - skipped, total skipped: {len(skipped)}, total_appended: {len(appended)}"
                     )
                 else:
                     _new_cells.append(c_int)
-                    total_appended += 1
-                    subtitle = f"{c_int.name()} - appended, {total_skipped=}, {total_appended=}"
+                    appended.append(c_int.name())
+                    subtitle = (
+                        f"{c_int.name()} - appended, total skipped: {len(skipped)}, total appended: {len(appended)}"
+                    )
                 bar.update(subtitle=subtitle)
             bar.update(
                 title="Intersection complete",
-                subtitle=f"{total_skipped=}, {total_appended=}",
+                subtitle=f"skipped: {len(skipped)},, appended: {len(appended)}",
             )
-        return _new_cells
+            elapsed_time = time.time() - start_time
+        return _new_cells, appended, skipped, elapsed_time
 
 
     return (extract_intersecting_cells,)
@@ -168,21 +215,42 @@ def _(mo, port_cell):
 @app.cell
 def _(extract_intersecting_cells, tokamak_complex):
 
-    new_cells = extract_intersecting_cells(tokamak_complex)  # ty:ignore[invalid-argument-type]
-    return (new_cells,)
+    new_cells, appended, skipped, elapsed_time = extract_intersecting_cells(tokamak_complex)  # ty:ignore[invalid-argument-type]
+    return appended, elapsed_time, new_cells, skipped
 
 
 @app.cell
-def _(new_cells):
-
+def _(appended, elapsed_time, new_cells, skipped):
+    logger.info("Elapsed {}", elapsed_time)
+    logger.info("skipped: {}, appended: {}", len(skipped), len(appended))
     logger.info("Cells remaining after extraction {}", len(new_cells))
+
     return
 
 
 @app.cell
-def _(new_cells):
+def _():
+    name_for_graveyard =1_000_000
+    name_for_graveyard
+    return (name_for_graveyard,)
 
-    new_u = make_universe(new_cells)  # , name_rule = "clash")
+
+@app.cell
+def _(name_for_graveyard, port_cell):
+    graveyard = Body(
+        port_cell.shape.complement(),
+        name = name_for_graveyard,
+        VOL=1.0,
+        IMPN=0.0,
+        IMPP=0.0,
+        comment = ["Graveyard"]
+    )
+    return (graveyard,)
+
+
+@app.cell
+def _(graveyard, new_cells):
+    new_u = Universe(new_cells + [graveyard])
 
     # flat_model = new_u.apply_fill()
     # new_u.rename(start_cell=0, start_surf=0, start_mat=0, name=0)
@@ -260,6 +328,13 @@ def _():
 
     # mo.image(_(), width=1500)
     return
+
+
+@app.cell
+def _():
+    import marimo as mo
+
+    return (mo,)
 
 
 @app.cell
