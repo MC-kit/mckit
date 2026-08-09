@@ -30,6 +30,20 @@ export JUST_LOG := log
 @version:
     uv version
 
+# reason for the following git commands:
+# on old system SSH used by git conflicsts with SSH provided by pixi
+# in local environment
+
+#git pull
+[group('devb')]
+@gl *args:
+  LD_LIBRARY_PATH="" git pull {{ args }}
+
+#git push
+[group('devb')]
+@gp *args:
+  LD_LIBRARY_PATH="" git push {{ args }}
+
 # create venv, if not exists
 [group('dev')]
 @venv:
