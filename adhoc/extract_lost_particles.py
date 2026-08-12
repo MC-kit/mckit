@@ -5,7 +5,7 @@ Subsequent runs are collected incrementally.
 
 if no lost particles found, just logs this
 
-Otherwise analyzes the database and creates CSV tables:
+Otherwise, analyzes the database and creates CSV tables:
     - "lp-coordinates.csv":
         cell_fail, surface, cell_in, x, y, z, u, v, w, out_file, lp_no, hist_no
     - "lp-cell-fails-count.csv":
@@ -25,23 +25,22 @@ import re
 import sqlite3 as sq
 import sys
 
-from collections.abc import Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 __appname__ = "extract_lost_particles"
-__version__ = "0.2.3"
+__version__ = "0.3.0"
+
+from sqlite3 import Cursor
 
 DESCRIPTION_START_RE = re.compile(r"^1\s+lost particle no.\s*(?P<lp_no>(\d+|\*\*\*))")
 HISTORY_NO_RE = re.compile(r"history no.\s+(?P<hist_no>\d+)$")
-
+NPS_COLL_CTME_RE = re.compile(r"^ dump no\..*nps =\s+(?P<nps>\d+)\s+coll =\s+(?P<coll>\d+)\s+ctm =\s+(?P<ctme>\d+(\.\d+)?)")
 
 LOG = logging.getLogger(__name__)
 
-
-# noinspection SqlDialectInspection,SqlNoDataSourceInspection
 def setup_db(con: sq.Cursor) -> None:
-    """Setup data base."""
+    """Setup database."""
     con.executescript(
         """
         drop table if exists lost_particles;
@@ -59,35 +58,60 @@ def setup_db(con: sq.Cursor) -> None:
             hist_no integer not null,
             out_file text not null
         );
+        drop table if exists nps_coll_ctme;
+        create table nps_coll_ctme (
+            nps integer not null,
+            coll integer not null,
+            ctme float not null,
+            out_file text not null
+        );
         """
     )
 
+class _Scanner:
+    def accept(self, line_no: int, line: str) -> None:
+        ...
 
-def extract_descriptions(p: Path) -> Iterator[tuple[int, list[str]]]:
-    """Extract lost particles descriptions from MCNP output file.
+@dataclass
+class _DescriptionsItem:
+    start_line: int
+    description: list[str]
 
-    Args:
-        p: path to MCNP output file
 
-    Yields:
-        start line of portion, portion of lines corresponding to a lost particle
-    """
-    wait_description = True
-    start_line = 0
-    description = []
-    with p.open() as fid:
-        for i, line in enumerate(fid):
-            if wait_description:
-                if line.startswith("1   lost particle no."):
-                    start_line = i + 1
-                    description.append(line)
-                    wait_description = False
-            else:
-                description.append(line)
-                if len(description) > 15:
-                    wait_description = True
-                    yield start_line, description
-                    description = []
+@dataclass
+class _DescriptionsScanner(_Scanner):
+    _wait_description: bool = True
+    _start_line: int = 0
+    _description: list[str] = field(default_factory=list)
+    descriptions: list[_DescriptionsItem] = field(default_factory=list)
+
+    def accept(self, line_no: int, line: str) -> None:
+        if self._wait_description:
+            if line.startswith("1   lost particle no."):
+                self._start_line = line_no + 1
+                self._description.append(line)
+                self._wait_description = False
+        else:
+            self._description.append(line)
+            if len(self._description) > 15:
+                self._wait_description = True
+                self.descriptions.append(_DescriptionsItem(self._start_line, self._description))
+                self._description = []
+
+
+@dataclass
+class _NpsScanner(_Scanner):
+    nps: int = 0
+    coll: int = 0
+    ctme: float = 0.0
+
+    def accept(self, line_no: int, line: str) -> None:
+        match = NPS_COLL_CTME_RE.match(line)
+        if match:
+            self.nps = int(match.group("nps"))
+            self.coll = int(match.group("coll"))
+            self.ctme = float(match.group("ctme"))
+
 
 
 @dataclass
@@ -115,11 +139,8 @@ def _parse_description(lines: list[str]) -> _Description:
     if match is None:
         raise ParseError("Cannot find lost particle number")
     lp_no_str = match["lp_no"]
+    lp_no = 9999 if lp_no_str == "***" else int(lp_no_str)
 
-    if lp_no_str == "***":
-        lp_no = 9999
-    else:
-        lp_no = int(lp_no_str)
     match = HISTORY_NO_RE.search(lines[0])
     if match is None:
         raise ParseError("Cannot find lost history number")
@@ -151,52 +172,83 @@ def _parse_description(lines: list[str]) -> _Description:
 
 # noinspection PyTypeChecker
 def _process_file(p: Path, cur: sq.Cursor) -> None:
-    with Path("lp-details.txt").open("a") as fid:
-        out_file_name = str(p)
-        for start_line, lines in extract_descriptions(p):
+    with  p.open("r") as fid:
+        descriptions_scanner = _DescriptionsScanner()
+        nps_scanner = _NpsScanner()
+        for i, line in enumerate(fid.readlines()):
+            descriptions_scanner.accept(i, line)
+            nps_scanner.accept(i, line)
+    _save_lost_particles_information(cur, descriptions_scanner,  p)
+    _save_nps_information(cur, nps_scanner, p)
+
+def _save_lost_particles_information(cur: Cursor, descriptions_scanner: _DescriptionsScanner, p: Path) -> None:
+    out_file_name = str(p)
+    details_path = Path("lp-details.txt")
+    if not details_path.exists():
+        LOG.info("Creating file lp-details.txt")
+    with details_path.open("a") as fid:
+        for item in descriptions_scanner.descriptions:
+            lines = item.description
             print("-" * 20, file=fid)
             for line in lines:
                 print(line, file=fid, end="")
-            try:
-                description = _parse_description(lines)
-                cur.execute(
-                    """
-                    insert into lost_particles (
-                        cell_fail,
-                        surface,
-                        cell_in,
-                        x,
-                        y,
+    for item in descriptions_scanner.descriptions:
+        lines = item.description
+        try:
+            description = _parse_description(lines)
+            cur.execute(
+                """
+                insert into lost_particles (
+                    cell_fail,
+                    surface,
+                    cell_in,
+                    x,
+                    y,
 
-                        z,
-                        u,
-                        v,
-                        w,
-                        lp_no,
+                    z,
+                    u,
+                    v,
+                    w,
+                    lp_no,
 
-                        hist_no,
-                        out_file
-                    )
-                    values (?,?,?,?,?, ?,?,?,?,?, ?,?)
-                """,
-                    (
-                        description.cell_fail,
-                        description.surface,
-                        description.cell_in,
-                        description.x,
-                        description.y,
-                        description.z,
-                        description.u,
-                        description.v,
-                        description.w,
-                        description.lp_no,
-                        description.hist_no,
-                        out_file_name,
-                    ),
+                    hist_no,
+                    out_file
                 )
-            except ParseError as ex:
-                msg = f"Error parsing {p}: {start_line}"
-                raise ParseError(msg) from ex
+                values (?,?,?,?,?, ?,?,?,?,?, ?,?)
+            """,
+                (
+                    description.cell_fail,
+                    description.surface,
+                    description.cell_in,
+                    description.x,
+                    description.y,
+                    description.z,
+                    description.u,
+                    description.v,
+                    description.w,
+                    description.lp_no,
+                    description.hist_no,
+                    out_file_name,
+                ),
+            )
+        except ParseError as ex:
+            msg = f"Error parsing {p}: {item.start_line}"
+            raise ParseError(msg) from ex
+
+def _save_nps_information(cur: Cursor, nps_scanner: _NpsScanner, p: Path) -> None:
+    out_file_name = str(p)
+    if nps_scanner.ctme > 0:
+        cur.execute(
+                """
+                    insert into nps_coll_ctme (
+                        nps, coll, ctme, out_file
+                    )
+                    values (?,?,?,?)
+                """,
+            (nps_scanner.nps, nps_scanner.coll, nps_scanner.ctme, out_file_name)
+            )
+    else:
+        LOG.warning("No NPS found in %s", out_file_name)
 
 
 # noinspection PyTypeChecker
@@ -211,8 +263,25 @@ def _analyze(db) -> None:
                 lost_particles
             """
         ).fetchone()[0]
+        rec = cur.execute(
+            """
+            select
+                sum(nps) as nps, sum(ctme) as ctme
+            from (
+                select max(nps) as nps, max(ctme) as ctme
+                from nps_coll_ctme
+                group by out_file
+            )
+            """
+        ).fetchone()
+        nps, ctme = rec
+        LOG.info("Total nps: %d (%.3g)", nps, nps)
+        LOG.info("Total ctme: %.3g", ctme)
+        LOG.info("NPS/hour: %.3g", nps*3600/ctme)
         if total_lp:
             LOG.info("Total lost particles: %d", total_lp)
+            if nps > 0:
+                LOG.info("LPR: %.2g", total_lp/nps)
             cell_fail_counts = cur.execute(
                 """
                 select
@@ -263,7 +332,7 @@ def _analyze(db) -> None:
             ).fetchone()
             coordinates_text = " ".join(map(str, coordinates_to_work))
             origin_text = "origin " + coordinates_text + " &"
-            comin_path = Path("comin")
+            comin_path = Path("lp-comin")
             if comin_path.exists():
                 LOG.info("Using existing 'comin' template %s", comin_path)
                 comin_text = Path("comin").read_text()
@@ -271,7 +340,7 @@ def _analyze(db) -> None:
                 comin_lines[0] = origin_text
                 new_comin_text = "\n".join(comin_lines)
             else:
-                LOG.info("Creating 'comin' file %s", comin_path)
+                LOG.info("Creating 'com' file %s", comin_path)
                 new_comin_text = origin_text[:-1]
             with Path("comin").open("w") as fid:
                 print(new_comin_text, file=fid)
@@ -295,25 +364,21 @@ def _collect_lost_particles(db: str) -> bool:
             LOG.info("Initializing database %s", db)
             setup_db(cur)
         for f in files:
-            logging.debug("Processing file %s", f)
+            LOG.debug("Processing file %s", f)
             _process_file(f, cur)
     return True
 
 
 def _collect_files() -> list[Path]:
     args = sys.argv[1:]
-    if args:
-        files = [Path(a) for a in args]
-    else:
-        files = list(Path.cwd().glob("*.o"))
-    return files
+    return  [Path(a) for a in args] if args  else list(Path.cwd().glob("*.o"))
 
 
 def main() -> None:
     """Workflow implementation."""
     logging.basicConfig(
         level=logging.INFO,
-        filename="extract_lost_particles.log",
+        filename="lp.log",
         filemode="a",
         format="%(asctime)s %(levelname)-9s %(message)s",
         datefmt="%Y-%d-%m %H:%M:%S",
@@ -321,12 +386,13 @@ def main() -> None:
     LOG.info("extract-lost-particles, v%s", __version__)
     LOG.info("python version: %s", sys.version)
 
-    db = "lost-particles.sqlite"
+    db = "lp.sqlite"
     if _collect_lost_particles(db):
         _analyze(db)
     else:
-        logging.warning("Files not found")
+        LOG.warning("Files not found")
 
 
 if __name__ == "__main__":
     main()
+
