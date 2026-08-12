@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 __appname__ = "extract_lost_particles"
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 from sqlite3 import Cursor
 
@@ -276,7 +276,7 @@ def _analyze(db) -> None:
         ).fetchone()
         nps, ctme = rec
         LOG.info("Total nps: %d (%.3g)", nps, nps)
-        LOG.info("Total ctme: %.3g", ctme)
+        LOG.info("Total ctme: %.3g (%.3g hours)", ctme, ctme/3600)
         LOG.info("NPS/hour: %.3g", nps*3600/ctme)
         if total_lp:
             LOG.info("Total lost particles: %d", total_lp)
@@ -335,14 +335,14 @@ def _analyze(db) -> None:
             comin_path = Path("lp-comin")
             if comin_path.exists():
                 LOG.info("Using existing 'comin' template %s", comin_path)
-                comin_text = Path("comin").read_text()
+                comin_text = comin_path.read_text()
                 comin_lines = comin_text.split("\n")
                 comin_lines[0] = origin_text
                 new_comin_text = "\n".join(comin_lines)
             else:
                 LOG.info("Creating 'com' file %s", comin_path)
                 new_comin_text = origin_text[:-1]
-            with Path("comin").open("w") as fid:
+            with comin_path.open("w") as fid:
                 print(new_comin_text, file=fid)
             LOG.info("Created file comin")
         else:
