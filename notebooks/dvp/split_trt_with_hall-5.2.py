@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.16"
+__generated_with = "0.23.15"
 app = marimo.App(width="medium")
 
 with app.setup:
@@ -16,8 +16,8 @@ with app.setup:
     import mckit.workflow as mcw
 
     HOST = os.uname().nodename
-    VERSION = "0.2.1"
-    MODEL_DIR = mut.check_dir(mut.mkpath("~/dev/mcnp/trt/wrk/models/2025/5.4.3").expanduser())
+    VERSION = "0.2.0"
+    MODEL_DIR = mut.check_dir(mut.mkpath("~/dev/mcnp/trt/wrk/models/2025/5.4.1").expanduser())
 
 
 @app.cell(hide_code=True)
@@ -27,7 +27,7 @@ def _(mo):
 
     Входные файлы:
     - модель здания смещенная в систему координат установки (номера ячеек и поверхностей сдвинуты на 30000 от исходной модели здания)
-    - модель установки, сгенерированная geouned (до всяких манипуляций), trt-5.4.3.mcnp
+    - модель установки, сгенерированная geouned (до всяких манипуляций), trt-5.4.mcnp
 
     Известно, что geouned добавляет в модель две ячейки:
     - graveyard_in пространство между "tokamak envelop" до внешней сферы
@@ -52,8 +52,8 @@ def _(mo):
 
     ### Установка
 
-    - 16166 - graveyard_in
-    - 16167 - graveyard
+    - 16160 - graveyard_in
+    - 16161 - graveyard
     - ячейки "Automatic Generated Void Cell" (с этим комменатарием) - проверить не налезают ли они на floor
     """)
     return
@@ -82,11 +82,6 @@ def _():
     INPUT_PATH = Path("/home/dvp/dev/mcnp/trt-hall/model/1.2-walls-split/1.2.4-shifted+renamed/hall.mcnp")
     assert INPUT_PATH.is_file()
     return (INPUT_PATH,)
-
-
-@app.cell
-def _():
-    return
 
 
 @app.cell
