@@ -8,6 +8,7 @@ with app.setup:
     import sys
 
     from pathlib import Path
+    from textwrap import dedent
 
     import numpy as np
 
@@ -85,11 +86,6 @@ def _():
 
 
 @app.cell
-def _():
-    return
-
-
-@app.cell
 def _(INPUT_PATH):
     hall_info = mc.from_file(INPUT_PATH)
     return (hall_info,)
@@ -127,7 +123,7 @@ def _(floor_cell):
 
 @app.cell
 def _():
-    tokamak_input_path = mut.check_file(MODEL_DIR / "trt-5.4.0.i")
+    tokamak_input_path = mut.check_file(MODEL_DIR / "trt-5.4.3.i")
     return (tokamak_input_path,)
 
 
@@ -155,7 +151,7 @@ def _(do_split):
 
 @app.cell
 def _(split_model, tokamak_input_path):
-    SPLIT_DIR = MODEL_DIR / "trt-5.4.split"
+    SPLIT_DIR = MODEL_DIR / "trt-5.4.3.split"
     split_model(SPLIT_DIR, tokamak_input_path)
     return (SPLIT_DIR,)
 
@@ -175,10 +171,17 @@ def _(SPLIT_DIR):
         path_a = cells_part_path.parent / "cells-installation.txt"
         path_b = cells_part_path.parent / "cells-generated-voids.txt"
         text = cells_part_path.read_text()
-        idx = text.find("\n9016")
+        search = dedent("""\
+        C 
+        C ##########################################################
+        C              VOID CELLS
+        C ##########################################################
+        C
+        """)
+        idx = text.find(search)
         assert idx > 0
-        path_a.write_text(text[:idx+1])  # leava \n in the "installation" part
-        path_b.write_text(text[idx+1:])
+        path_a.write_text(text[:idx])  # leava \n in the "installation" part
+        path_b.write_text(text[idx:])
     _()
     return
 
@@ -203,7 +206,7 @@ def _(tokamak):
 
 @app.cell
 def _(tokamak_info):
-    tokamak_graveyard_in = tokamak_info.cells_index[16160]
+    tokamak_graveyard_in = tokamak_info.cells_index[16166]
     return (tokamak_graveyard_in,)
 
 
@@ -281,13 +284,16 @@ def _(hall_graveyard_in_intersectin_simplified_universe):
 def _(mo):
     mo.md(r"""
     ## Проверить и скорректировать "generated void cells"
+
+    Вначале убедимся, что не все "generated void" имеют единообразный комментарий.
+    Т.е. нельзя отобрать такие ячейки по комментарию. Прийдется использовать другой предикат.
     """)
     return
 
 
 @app.function
 def generated_void(x):
-    return 9016 <= x.name() < 16160
+    return 9046 <= x.name() < 16166
 
 
 @app.cell
