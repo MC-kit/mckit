@@ -108,6 +108,26 @@ def _():
 def _(suspicious_surfaces, tokamak_complex):
     suspicious_universe = extract_suspicious_universe(tokamak_complex, suspicious_surfaces)
     save_suspicious_universe(suspicious_universe, suspicious_surfaces)
+    return (suspicious_universe,)
+
+
+@app.cell
+def _(suspicious_universe):
+    len(suspicious_universe)
+    return
+
+
+@app.cell
+def _(cells, suspicious_surfaces, tokamak_complex):
+    cells1 = list(mwf.extract_cells(tokamak_complex, mwf.filter_by_surface_numbers(suspicious_surfaces)))
+    len(cells)
+    return
+
+
+@app.cell
+def _(cells, suspicious_surfaces, tokamak_complex):
+    cells2 = list(mwf.extract_cells(tokamak_complex, mwf.filter_by_surface_number(suspicious_surfaces[2])))
+    len(cells)
     return
 
 
@@ -116,6 +136,16 @@ def _():
     import marimo as mo
 
     return (mo,)
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _():
+    return
 
 
 if __name__ == "__main__":
