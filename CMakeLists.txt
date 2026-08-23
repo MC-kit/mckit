@@ -104,64 +104,7 @@ if(NOT DEFINED MCKIT_PIXI_ENV_ROOT)
 endif()
 message(STATUS "pixi env: ${MCKIT_PIXI_ENV_ROOT}")
 
-# Устанавливаем пути в зависимости от ОС
-if(WIN32)
-  # На Windows пакеты conda/pixi лежат в поддиректории Library
-  set(MKL_ROOT_DIR "${MCKIT_PIXI_ENV_ROOT}/Library")
-  set(MKL_INCLUDE_SEARCH_PATH "${MCKIT_PIXI_ENV_ROOT}/Library/include")
-  # Добавляем Library в префикс поиска
-  list(APPEND CMAKE_PREFIX_PATH "${MCKIT_PIXI_ENV_ROOT}/Library/lib")
-else()
-  # На Linux пути стандартные (корень окружения)
-  set(MKL_ROOT_DIR "${MCKIT_PIXI_ENV_ROOT}")
-  set(MKL_INCLUDE_SEARCH_PATH "${MCKIT_PIXI_ENV_ROOT}/include")
-  list(APPEND CMAKE_PREFIX_PATH "${MCKIT_PIXI_ENV_ROOT}")
-endif()
-
-# Явно указываем переменные, которые ищет MKLConfig.cmake
-set(MKL_INCLUDE_DIR
-    "${MKL_INCLUDE_SEARCH_PATH}"
-    CACHE PATH "Path to MKL headers")
-set(ENV{MKLROOT} "${MKL_ROOT_DIR}")
-set(ENV{MKL_INCLUDE_DIR} "${MKL_INCLUDE_SEARCH_PATH}")
-
-# Опционально: выводим пути для отладки
-message(STATUS "MKL Root: ${MKL_ROOT_DIR}")
-message(STATUS "MKL Include: ${MKL_INCLUDE_DIR}")
-message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
-
 add_subdirectory(extern)
-
-# if(NOT WIN32) message("Creating symlinks in environment ${PythonEnv_ROOT}")
-# execute_process( COMMAND ${Python_EXECUTABLE} create_mkl_symlinks.py
-# WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE
-# CREATED_MKL_SYMLINKS OUTPUT_STRIP_TRAILING_WHITESPACE) endif()
-
-# if(WIN32) set(MKL_DIR ${PythonEnv_ROOT}/Library) else() set(MKL_DIR
-# ${PythonEnv_ROOT}) endif()
-
-find_package(MKL REQUIRED)
-# find_package(NLopt REQUIRED)
-
-if(NOT Win32)
-  # Fix MKL packaging bug: the issue is that libmkl_intel_thread.so lacks a
-  # DT_NEEDED entry for libatomic.so.1.
-  find_program(PATCHELF_EXECUTABLE patchelf)
-  if(PATCHELF_EXECUTABLE)
-    set(MKL_LIB_PATH "${MCKIT_PIXI_ENV_ROOT}/lib/libmkl_intel_thread.so.3")
-    execute_process(COMMAND ${PATCHELF_EXECUTABLE} --add-needed libatomic.so.1
-                            ${MKL_LIB_PATH} RESULT_VARIABLE PATCH_RESULT)
-    if(NOT PATCH_RESULT EQUAL 0)
-      message(WARNING "Failed to patch MKL library, but continuing...")
-    else()
-      message(STATUS "MKL library is patched...")
-    endif()
-  else()
-    message(
-      WARNING
-        "patchelf not found. MKL atomic fix will not be applied automatically.")
-  endif()
-endif()
 
 set(geometry_dir ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src/)
 
@@ -171,11 +114,12 @@ set(geometry_sources
 
 python_add_library(geometry MODULE ${geometry_sources}
   src/mckit/src/stats.h
-  src/mckit/src/rand.h WITH_SOABI)
+  src/mckit/src/rand.h
+  src/mckit/src/vecops.h WITH_SOABI)
 target_include_directories(
-  geometry PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src MKL::MKL
+  geometry PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src
                   ${Python_NumPy_INCLUDE_DIRS})
-target_link_libraries(geometry PUBLIC nlopt MKL::MKL)
+target_link_libraries(geometry PUBLIC nlopt)
 if(WIN32)
   target_link_libraries(geometry PUBLIC Python::Module)
 else()

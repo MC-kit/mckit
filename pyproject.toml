@@ -63,7 +63,6 @@ exclude = [ "**/__pycache__", "**/*.pyc" ]
 [tool.pixi.dependencies]
 click = "*"
 loguru = "*"
-mkl-devel = ">=2026.0.0,<2027"
 numpy = ">=2.4"
 ply = "*"
 python = ">=3.12,<3.14"
@@ -152,7 +151,6 @@ typeguard = ">=4.5"
 [tool.pixi.feature.typeguard.tasks]
 typeguard = { cmd = "pytest --typeguard-packages=src", description = "Run dynamic type cheks on testing." }
 [tool.pixi.package]
-host-dependencies.mkl-devel = ">=2026"
 host-dependencies.numpy = "*"
 host-dependencies.scikit-build-core = ">=0.12"
 name = "mckit"
@@ -240,7 +238,7 @@ formats = "ipynb,py:percent"
 
 [tool.creosote]
 deps-file = "pyproject.toml"
-exclude-deps = [ "intel-cmplr-lib-ur", "mkl-devel", "python-dotenv", "tomli", "tqdm", "typer" ]
+exclude-deps = [ "intel-cmplr-lib-ur", "python-dotenv", "tomli", "tqdm", "typer" ]
 paths = [ "adhoc", "src" ]
 sections = [ "project.dependencies" ]
 venvs = [ ".pixi/envs/analyze", ".pixi/envs/default", ".pixi/envs/docs" ]

@@ -1,8 +1,8 @@
 #include "box.h"
-#include <mkl_cblas.h>
 #include <nlopt.h>
 
 #include "rand.h"
+#include "vecops.h"
 
 /* Each row is delta to be added to center point to obtain specific corner.
  * They must be multiplied by corresponding box's dimensions.
@@ -61,15 +61,15 @@ int box_init(Box *box, const double *center, const double *ex, const double *ey,
         // .* - element wise multiplication
         // then
         // corner[i] =  A . (perm[i] .* w) + center
-        cblas_dcopy(NDIM, box->center, 1, box->corners + i * NDIM, 1);
-        cblas_daxpy(NDIM, 0.5 * perm[i][0] * box->dims[0], box->ex, 1, box->corners + i * NDIM, 1);
-        cblas_daxpy(NDIM, 0.5 * perm[i][1] * box->dims[1], box->ey, 1, box->corners + i * NDIM, 1);
-        cblas_daxpy(NDIM, 0.5 * perm[i][2] * box->dims[2], box->ez, 1, box->corners + i * NDIM, 1);
+        vec_copy(NDIM, box->center, box->corners + i * NDIM);
+        vec_axpy(NDIM, 0.5 * perm[i][0] * box->dims[0], box->ex, box->corners + i * NDIM);
+        vec_axpy(NDIM, 0.5 * perm[i][1] * box->dims[1], box->ey, box->corners + i * NDIM);
+        vec_axpy(NDIM, 0.5 * perm[i][2] * box->dims[2], box->ez, box->corners + i * NDIM);
     }
 
     // Finding lower and upper bounds
-    cblas_dcopy(NDIM, box->corners, 1, box->lb, 1);
-    cblas_dcopy(NDIM, box->corners, 1, box->ub, 1);
+    vec_copy(NDIM, box->corners, box->lb);
+    vec_copy(NDIM, box->corners, box->ub);
     for (int i = 1; i < NCOR; ++i)
     {
         for (int j = 0; j < NDIM; ++j)
@@ -102,10 +102,10 @@ void box_generate_random_points(const Box *box, size_t npts, double *points)
         for (int j = 0; j < NDIM; ++j)
             d[j] = rng.next_double() - 0.5;
 
-        cblas_dcopy(NDIM, box->center, 1, points + i * NDIM, 1);
-        cblas_daxpy(NDIM, d[0] * box->dims[0], box->ex, 1, points + i * NDIM, 1);
-        cblas_daxpy(NDIM, d[1] * box->dims[1], box->ey, 1, points + i * NDIM, 1);
-        cblas_daxpy(NDIM, d[2] * box->dims[2], box->ez, 1, points + i * NDIM, 1);
+        vec_copy(NDIM, box->center, points + i * NDIM);
+        vec_axpy(NDIM, d[0] * box->dims[0], box->ex, points + i * NDIM);
+        vec_axpy(NDIM, d[1] * box->dims[1], box->ey, points + i * NDIM);
+        vec_axpy(NDIM, d[2] * box->dims[2], box->ez, points + i * NDIM);
     }
 }
 
@@ -117,11 +117,11 @@ void box_test_points(const Box *box, size_t npts, const double *points, int *res
 
     for (i = 0; i < npts; ++i)
     {
-        cblas_dcopy(NDIM, points + i * NDIM, 1, delta, 1);
-        cblas_daxpy(NDIM, -1, box->center, 1, delta, 1);
-        x = cblas_ddot(NDIM, delta, 1, box->ex, 1) / box->dims[0];
-        y = cblas_ddot(NDIM, delta, 1, box->ey, 1) / box->dims[1];
-        z = cblas_ddot(NDIM, delta, 1, box->ez, 1) / box->dims[2];
+        vec_copy(NDIM, points + i * NDIM, delta);
+        vec_axpy(NDIM, -1, box->center, delta);
+        x = vec_dot(NDIM, delta, box->ex) / box->dims[0];
+        y = vec_dot(NDIM, delta, box->ey) / box->dims[1];
+        z = vec_dot(NDIM, delta, box->ez) / box->dims[2];
         if (x > -0.5 && x < 0.5 && y > -0.5 && y < 0.5 && z > -0.5 && z < 0.5)
         {
             result[i] = 1;
@@ -137,23 +137,23 @@ int box_split(const Box *box, Box *box1, Box *box2, int dir, double ratio)
 {
     // Find splitting direction
     if (dir == BOX_SPLIT_AUTODIR)
-        dir = (int)cblas_idamax(NDIM, box->dims, 1);
+        dir = (int)vec_argmax_abs(NDIM, box->dims);
 
     double center1[NDIM], center2[NDIM], dims1[NDIM], dims2[NDIM];
     const double *basis[NDIM] = {box->ex, box->ey, box->ez};
 
     // find new dimensions
-    cblas_dcopy(NDIM, box->dims, 1, dims1, 1);
-    cblas_dcopy(NDIM, box->dims, 1, dims2, 1);
+    vec_copy(NDIM, box->dims, dims1);
+    vec_copy(NDIM, box->dims, dims2);
     dims1[dir] *= ratio;
     dims2[dir] *= 1 - ratio;
 
     // find new centers.
-    cblas_dcopy(NDIM, box->center, 1, center1, 1);
-    cblas_dcopy(NDIM, box->center, 1, center2, 1);
+    vec_copy(NDIM, box->center, center1);
+    vec_copy(NDIM, box->center, center2);
 
-    cblas_daxpy(NDIM, -0.5 * dims2[dir], basis[dir], 1, center1, 1);
-    cblas_daxpy(NDIM, 0.5 * dims1[dir], basis[dir], 1, center2, 1);
+    vec_axpy(NDIM, -0.5 * dims2[dir], basis[dir], center1);
+    vec_axpy(NDIM, 0.5 * dims1[dir], basis[dir], center2);
 
     // subdivision index.
     char hb = high_bit(box->subdiv);
@@ -194,16 +194,16 @@ extern "C" void box_ieqcons(unsigned int m, double *result, unsigned int n, cons
 
     for (i = 0; i < 6; ++i)
     {
-        cblas_dcopy(NDIM, box->center, 1, point, 1);
+        vec_copy(NDIM, box->center, point);
         mult = 2 * (i % 2) - 1;
         j = i % 3;
-        cblas_daxpy(NDIM, mult * box->dims[j], basis[j], 1, point, 1);
-        result[i] = mult * (cblas_ddot(NDIM, basis[j], 1, x, 1) - cblas_ddot(NDIM, basis[j], 1, point, 1));
+        vec_axpy(NDIM, mult * box->dims[j], basis[j], point);
+        result[i] = mult * (vec_dot(NDIM, basis[j], x) - vec_dot(NDIM, basis[j], point));
 
         if (grad != NULL)
         {
-            cblas_dcopy(NDIM, basis[j], 1, grad + i * NDIM, 1);
-            cblas_dscal(NDIM, mult, grad + i * NDIM, 1);
+            vec_copy(NDIM, basis[j], grad + i * NDIM);
+            vec_scale(NDIM, mult, grad + i * NDIM);
         }
     }
 }
@@ -213,14 +213,14 @@ static double min_func(unsigned int n, const double *x, double *grad, void *f_da
     Box *data = (Box *)f_data;
     if (grad != NULL)
     {
-        cblas_dcopy(NDIM, x, 1, grad, 1);
-        cblas_daxpy(NDIM, -1, data->center, 1, grad, 1);
-        cblas_dscal(NDIM, 2, grad, 1);
+        vec_copy(NDIM, x, grad);
+        vec_axpy(NDIM, -1, data->center, grad);
+        vec_scale(NDIM, 2, grad);
     }
     double delta[NDIM];
-    cblas_dcopy(NDIM, x, 1, delta, 1);
-    cblas_daxpy(NDIM, -1, data->center, 1, delta, 1);
-    return cblas_ddot(NDIM, delta, 1, delta, 1);
+    vec_copy(NDIM, x, delta);
+    vec_axpy(NDIM, -1, data->center, delta);
+    return vec_dot(NDIM, delta, delta);
 }
 
 // Checks if the box intersects with another one.
@@ -241,7 +241,7 @@ int box_check_intersection(const Box *box1, const Box *box2)
     nlopt_set_stopval(opt, 0);
     nlopt_set_maxeval(opt, 1000); // TODO @rrn: consider passing this parameter.
 
-    cblas_dcopy(NDIM, box1->center, 1, x, 1);
+    vec_copy(NDIM, box1->center, x);
     opt_result = nlopt_optimize(opt, x, &opt_val);
     box_test_points(box2, 1, x, &result);
     nlopt_destroy(opt);

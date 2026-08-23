@@ -1,8 +1,9 @@
 #include "surface.h"
-#include "mkl.h"
 #include "nlopt.h"
 #include <math.h>
 #include <stdlib.h>
+
+#include "vecops.h"
 
 // dvp:
 // Don't use "standard" macro "max": it can cause not obvious effects.
@@ -36,9 +37,9 @@ double plane_func(unsigned int n,  // Space dimension (must be NDIM)
     Plane *data = (Plane *)f_data;
     if (grad != NULL)
     {
-        cblas_dcopy(NDIM, data->norm, 1, grad, 1);
+        vec_copy(NDIM, data->norm, grad);
     }
-    return cblas_ddot(NDIM, x, 1, data->norm, 1) + data->offset;
+    return vec_dot(NDIM, x, data->norm) + data->offset;
 }
 
 /// Calculates deviation of point x from the sphere.
@@ -47,30 +48,30 @@ double sphere_func(unsigned int n, const double *x, double *grad, void *f_data)
     Sphere *data = (Sphere *)f_data;
     if (grad != NULL)
     {
-        cblas_dcopy(NDIM, x, 1, grad, 1);
-        cblas_daxpy(NDIM, -1, data->center, 1, grad, 1);
-        cblas_dscal(NDIM, 2, grad, 1);
+        vec_copy(NDIM, x, grad);
+        vec_axpy(NDIM, -1, data->center, grad);
+        vec_scale(NDIM, 2, grad);
     }
     double delta[NDIM];
-    cblas_dcopy(NDIM, x, 1, delta, 1);
-    cblas_daxpy(NDIM, -1, data->center, 1, delta, 1);
-    return cblas_ddot(NDIM, delta, 1, delta, 1) - pow(data->radius, 2);
+    vec_copy(NDIM, x, delta);
+    vec_axpy(NDIM, -1, data->center, delta);
+    return vec_dot(NDIM, delta, delta) - pow(data->radius, 2);
 }
 
 double cylinder_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     Cylinder *data = (Cylinder *)f_data;
     double a[NDIM];
-    cblas_dcopy(NDIM, x, 1, a, 1);
-    cblas_daxpy(NDIM, -1, data->point, 1, a, 1);
-    double an = cblas_ddot(NDIM, a, 1, data->axis, 1);
+    vec_copy(NDIM, x, a);
+    vec_axpy(NDIM, -1, data->point, a);
+    double an = vec_dot(NDIM, a, data->axis);
     if (grad != NULL)
     {
-        cblas_dcopy(NDIM, a, 1, grad, 1);
-        cblas_daxpy(NDIM, -an, data->axis, 1, grad, 1);
-        cblas_dscal(NDIM, 2, grad, 1);
+        vec_copy(NDIM, a, grad);
+        vec_axpy(NDIM, -an, data->axis, grad);
+        vec_scale(NDIM, 2, grad);
     }
-    return cblas_ddot(NDIM, a, 1, a, 1) - pow(an, 2) - pow(data->radius, 2);
+    return vec_dot(NDIM, a, a) - pow(an, 2) - pow(data->radius, 2);
 }
 
 double RCC_func(unsigned int n, const double *x, double *grad, void *f_data)
@@ -96,9 +97,9 @@ double RCC_func(unsigned int n, const double *x, double *grad, void *f_data)
     double h = fabs(data->top->offset + data->bot->offset);
     if (grad != NULL)
     {
-        cblas_daxpy(NDIM, top_wgt, gtop, 1, grad, 1);
-        cblas_daxpy(NDIM, bot_wgt, gbot, 1, grad, 1);
-        cblas_daxpy(NDIM, 1, gcyl, 1, grad, 1);
+        vec_axpy(NDIM, top_wgt, gtop, grad);
+        vec_axpy(NDIM, bot_wgt, gbot, grad);
+        vec_axpy(NDIM, 1, gcyl, grad);
     }
     return _max(cyl_obj, _max(top_obj, bot_obj));
 }
@@ -121,7 +122,7 @@ double BOX_func(unsigned int n, const double *x, double *grad, void *f_data)
 
     if (grad != NULL)
     {
-        cblas_dcopy(NDIM, gp + index * NDIM, 1, grad, 1);
+        vec_copy(NDIM, gp + index * NDIM, grad);
     }
 
     return result[index];
@@ -131,18 +132,18 @@ double cone_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     Cone *data = (Cone *)f_data;
     double a[NDIM];
-    cblas_dcopy(NDIM, x, 1, a, 1);
-    cblas_daxpy(NDIM, -1, data->apex, 1, a, 1);
-    double an = cblas_ddot(NDIM, a, 1, data->axis, 1);
+    vec_copy(NDIM, x, a);
+    vec_axpy(NDIM, -1, data->apex, a);
+    double an = vec_dot(NDIM, a, data->axis);
     if (data->sheet != 0 && data->sheet * an < 0)
         an = 0;
     if (grad != NULL)
     {
-        cblas_dcopy(NDIM, a, 1, grad, 1);
-        cblas_daxpy(NDIM, -an * (1 + data->ta), data->axis, 1, grad, 1);
-        cblas_dscal(NDIM, 2, grad, 1);
+        vec_copy(NDIM, a, grad);
+        vec_axpy(NDIM, -an * (1 + data->ta), data->axis, grad);
+        vec_scale(NDIM, 2, grad);
     }
-    return cblas_ddot(NDIM, a, 1, a, 1) - pow(an, 2) * (1 + data->ta);
+    return vec_dot(NDIM, a, a) - pow(an, 2) * (1 + data->ta);
 }
 
 double gq_func(unsigned int n, const double *x, double *grad, void *f_data)
@@ -150,14 +151,14 @@ double gq_func(unsigned int n, const double *x, double *grad, void *f_data)
     GQuadratic *data = (GQuadratic *)f_data;
     if (grad != NULL)
     {
-        cblas_dcopy(NDIM, data->v, 1, grad, 1);
-        cblas_dgemv(CblasRowMajor, CblasNoTrans, NDIM, NDIM, 2, data->m, NDIM, x, 1, 1, grad, 1);
-        cblas_dscal(NDIM, data->factor, grad, 1);
+        vec_copy(NDIM, data->v, grad);
+        mat_vec_add(NDIM, 2, data->m, x, grad);
+        vec_scale(NDIM, data->factor, grad);
     }
     double y[NDIM];
-    cblas_dcopy(NDIM, data->v, 1, y, 1);
-    cblas_dgemv(CblasRowMajor, CblasNoTrans, NDIM, NDIM, 1, data->m, NDIM, x, 1, 1, y, 1);
-    return (cblas_ddot(NDIM, y, 1, x, 1) + data->k) * data->factor;
+    vec_copy(NDIM, data->v, y);
+    mat_vec_add(NDIM, 1, data->m, x, y);
+    return (vec_dot(NDIM, y, x) + data->k) * data->factor;
 }
 
 double clip_negative_values(double value)
@@ -169,21 +170,21 @@ double torus_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     Torus *data = (Torus *)f_data;
     double p[NDIM];
-    cblas_dcopy(NDIM, x, 1, p, 1);
-    cblas_daxpy(NDIM, -1, data->center, 1, p, 1);
-    double pn = cblas_ddot(NDIM, p, 1, data->axis, 1);
-    double pp = cblas_ddot(NDIM, p, 1, p, 1);
+    vec_copy(NDIM, x, p);
+    vec_axpy(NDIM, -1, data->center, p);
+    double pn = vec_dot(NDIM, p, data->axis);
+    double pp = vec_dot(NDIM, p, p);
     double sq = sqrt(clip_negative_values(pp - pow(pn, 2)));
     if (grad != NULL)
     {
         double add = 0;
         if (sq > 1.e-100)
             add = data->radius / sq;
-        cblas_dcopy(NDIM, p, 1, grad, 1);
-        cblas_daxpy(NDIM, -pn, data->axis, 1, grad, 1);
-        cblas_dscal(NDIM, (1 - add) / pow(data->b, 2), grad, 1);
-        cblas_daxpy(NDIM, pn / pow(data->a, 2), data->axis, 1, grad, 1);
-        cblas_dscal(NDIM, 2, grad, 1);
+        vec_copy(NDIM, p, grad);
+        vec_axpy(NDIM, -pn, data->axis, grad);
+        vec_scale(NDIM, (1 - add) / pow(data->b, 2), grad);
+        vec_axpy(NDIM, pn / pow(data->a, 2), data->axis, grad);
+        vec_scale(NDIM, 2, grad);
     }
     return pow(pn / data->a, 2) + pow((sq - data->radius) / data->b, 2) - 1;
 }
@@ -330,10 +331,10 @@ int torus_init(Torus *surf, const double *center, const double *axis, double rad
     {
         surf->degenerate = 1;
         double offset = a * sqrt(1 - pow(radius / b, 2));
-        cblas_dcopy(NDIM, center, 1, surf->specpts, 1);
-        cblas_dcopy(NDIM, center, 1, surf->specpts + NDIM, 1);
-        cblas_daxpy(NDIM, offset, axis, 1, surf->specpts, 1);
-        cblas_daxpy(NDIM, -offset, axis, 1, surf->specpts + NDIM, 1);
+        vec_copy(NDIM, center, surf->specpts);
+        vec_copy(NDIM, center, surf->specpts + NDIM);
+        vec_axpy(NDIM, offset, axis, surf->specpts);
+        vec_axpy(NDIM, -offset, axis, surf->specpts + NDIM);
     }
     else
         surf->degenerate = 0;
@@ -443,7 +444,7 @@ int surface_test_box(Surface *surf, const Box *box)
         // box's corners.
         for (i = 0; i < NCOR; ++i)
         {
-            cblas_dcopy(NDIM, box->corners + i * NDIM, 1, x, 1);
+            vec_copy(NDIM, box->corners + i * NDIM, x);
             opt_result = nlopt_optimize(opt, x, &opt_val);
             if (sign * opt_val < 0)
             {             // If sign and found opt_val have
