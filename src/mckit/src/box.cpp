@@ -2,9 +2,6 @@
 #include <mkl.h>
 #include <nlopt.h>
 
-// Turn on caching of test_box results.
-char enable_box_cache = 0;
-
 /* Each row is delta to be added to center point to obtain specific corner.
  * They must be multiplied by corresponding box's dimensions.
  */
@@ -200,7 +197,7 @@ int box_split(const Box *box, Box *box1, Box *box2, int dir, double ratio)
     return BOX_SUCCESS;
 }
 
-void box_ieqcons(unsigned int m, double *result, unsigned int n, const double *x, double *grad, void *f_data)
+extern "C" void box_ieqcons(unsigned int m, double *result, unsigned int n, const double *x, double *grad, void *f_data)
 {
     Box *box = (Box *)f_data;
 
@@ -224,7 +221,7 @@ void box_ieqcons(unsigned int m, double *result, unsigned int n, const double *x
     }
 }
 
-double min_func(unsigned int n, const double *x, double *grad, void *f_data)
+static double min_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     Box *data = (Box *)f_data;
     if (grad != NULL)

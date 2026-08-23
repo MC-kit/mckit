@@ -189,10 +189,10 @@ double torus_func(unsigned int n, const double *x, double *grad, void *f_data)
 }
 
 // Interface to all surface functions. Decides, which function to apply.
-double surface_func(unsigned int n,  // Space dimension (NDIM)
-                    const double *x, // Point to be checked
-                    double *grad,    // Gradient - calculated if not NULL (array of size NDIM)
-                    void *f_data     // Surface data
+extern "C" double surface_func(unsigned int n,  // Space dimension (NDIM)
+                               const double *x, // Point to be checked
+                               double *grad,    // Gradient - calculated if not NULL (array of size NDIM)
+                               void *f_data     // Surface data
 )
 {
     Surface *surf = (Surface *)f_data;

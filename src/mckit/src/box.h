@@ -1,5 +1,5 @@
-#ifndef __BOX_H
-#define __BOX_H
+#ifndef MCKIT_BOX_H
+#define MCKIT_BOX_H
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -35,8 +35,6 @@ struct Box
     uint64_t subdiv;             /// Box location. The most outer (parent) box
     VSLStreamStatePtr rng;       /// Random generator. Allocated when it is needed.
 };
-
-extern char enable_box_cache;
 
 /// Initializes box structure.
 int box_init(Box *box,             /// Pointer to box structure being initialized
@@ -90,8 +88,12 @@ int box_split(const Box *box, // Box to be split
  * @param x Point to be tested
  * @param grad Gradient of constraint function - only if not NULL.
  * @param f_data Box structure
+ *
+ * The function is passed as a callback to the C NLopt library,
+ * so it must have C linkage.
  */
-void box_ieqcons(unsigned int m, double *result, unsigned int n, const double *x, double *grad, void *f_data);
+extern "C" void box_ieqcons(unsigned int m, double *result, unsigned int n, const double *x, double *grad,
+                            void *f_data);
 
 /**
  * Checks if the box intersects with another one.

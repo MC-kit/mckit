@@ -4,7 +4,8 @@
 
 #include "shape.h"
 #include "surface.h"
-#include <stdlib.h>
+#include <new>
+#include <vector>
 
 #define is_final(opc) (opc == COMPLEMENT || opc == IDENTITY)
 #define is_void(opc) (opc == EMPTY || opc == UNIVERSE)
@@ -12,31 +13,9 @@
 
 #define geom_complement(arg) (-1 * (arg))
 
-char geom_intersection(char *args, size_t n, size_t inc);
+char geom_intersection(const char *args, size_t n, size_t inc);
 
-char geom_union(char *args, size_t n, size_t inc);
-
-typedef struct StatUnit StatUnit;
-
-struct StatUnit
-{
-    char *arr;
-    size_t len;
-    double vol;
-};
-
-static int stat_compare(const StatUnit *a, const StatUnit *b)
-{
-    size_t i, n = a->len;
-    for (i = 0; i < n; ++i)
-    {
-        if (a->arr[i] < b->arr[i])
-            return 1;
-        else if (a->arr[i] > b->arr[i])
-            return -1;
-    }
-    return 0;
-}
+char geom_union(const char *args, size_t n, size_t inc);
 
 /**
   Initializes Shape struct.
@@ -52,7 +31,10 @@ int shape_init(Shape *shape, char opc, size_t alen, const void *args)
 {
     shape->opc = opc;
     shape->alen = alen;
-    shape->stats = rbtree_create((rbtree_comparator)stat_compare);
+    delete shape->stats; // Drop statistics left from a previous initialization, if any.
+    shape->stats = new (std::nothrow) StatsMap();
+    if (shape->stats == NULL)
+        return SHAPE_NO_MEMORY;
     shape->last_box = 0;
     shape->last_box_result = 0;
     if (is_final(opc))
@@ -82,16 +64,8 @@ void shape_dealloc(Shape *shape)
 {
     if (is_composite(shape->opc))
         free(shape->args.shapes);
-    if (shape->stats != NULL)
-    {
-        StatUnit *s;
-        while ((s = rbtree_pop(shape->stats, NULL)) != NULL)
-        {
-            free(s->arr);
-            free(s);
-        }
-        rbtree_free(shape->stats);
-    }
+    delete shape->stats;
+    shape->stats = NULL;
 }
 
 /**
@@ -148,7 +122,7 @@ int shape_test_box(Shape *shape, const Box *box, char collect, int *zero_surface
     }
     else
     {
-        char *sub = malloc(shape->alen * sizeof(char));
+        std::vector<char> sub(shape->alen);
 
         for (int i = 0; i < shape->alen; ++i)
         {
@@ -157,29 +131,20 @@ int shape_test_box(Shape *shape, const Box *box, char collect, int *zero_surface
 
         if (shape->opc == INTERSECTION)
         {
-            result = geom_intersection(sub, shape->alen, 1);
+            result = geom_intersection(sub.data(), shape->alen, 1);
         }
         else
         {
-            result = geom_union(sub, shape->alen, 1);
+            result = geom_union(sub.data(), shape->alen, 1);
         }
 
         // TODO: Review statistics collection
         if (collect != 0 && result != 0)
         {
-            StatUnit *stat = (StatUnit *)malloc(sizeof(StatUnit));
-            stat->arr = sub;
-            stat->len = shape->alen;
-            stat->vol = box->volume;
-
-            if (rbtree_add(shape->stats, stat) != RBT_OK)
-            {
-                free(stat);
-                free(sub);
-            }
+            // On a duplicate key the first recorded volume is kept -
+            // the new entry is discarded, as the former rbtree did.
+            shape->stats->entries.emplace(sub, box->volume);
         }
-        else
-            free(sub);
     }
     // Cache test result;
     if (collect >= 0 && !(box->subdiv & HIGHEST_BIT))
@@ -242,11 +207,9 @@ int shape_ultimate_test_box(Shape *shape,   // Pointer to shape
         if (zero_surfaces == 1 || box->volume < min_vol)
         {
             // vary all zero surfaces that remain to be -1 and +1
-            Surface **zs = (Surface **)malloc(zero_surfaces * sizeof(Surface *));
-            for (int i = 0; i < zero_surfaces; ++i)
-                zs[i] = NULL;
+            std::vector<Surface *> zs(zero_surfaces, NULL);
 
-            int k = set_zero_surface_pointers(shape, 0, zs, box->subdiv);
+            int k = set_zero_surface_pointers(shape, 0, zs.data(), box->subdiv);
             int n = 1 << zero_surfaces;
             for (int i = 0; i < n; ++i)
             {
@@ -256,7 +219,6 @@ int shape_ultimate_test_box(Shape *shape,   // Pointer to shape
                 }
                 shape_test_box(shape, box, -collect, NULL);
             }
-            free(zs);
             return result;
         }
     }
@@ -299,21 +261,18 @@ int shape_test_points(const Shape *shape,   // test shape
     }
     else
     {
-        char (*op)(char *arg, size_t n, size_t inc);
+        char (*op)(const char *arg, size_t n, size_t inc);
         op = (shape->opc == INTERSECTION) ? geom_intersection : geom_union;
 
         size_t n = shape->alen;
-        char *sub = malloc(n * npts * sizeof(char));
-        if (sub == NULL)
-            return SHAPE_NO_MEMORY;
+        std::vector<char> sub(n * npts);
 
         for (i = 0; i < n; ++i)
         {
-            shape_test_points((shape->args.shapes)[i], npts, points, sub + i * npts);
+            shape_test_points((shape->args.shapes)[i], npts, points, sub.data() + i * npts);
         }
         for (i = 0; i < npts; ++i)
-            result[i] = op(sub + i, n * npts, npts);
-        free(sub);
+            result[i] = op(sub.data() + i, n * npts, npts);
     }
     return SHAPE_SUCCESS;
 }
@@ -428,12 +387,8 @@ void shape_reset_cache(Shape *shape)
  */
 void shape_reset_stat(Shape *shape)
 {
-    StatUnit *s;
-    while ((s = rbtree_pop(shape->stats, NULL)) != NULL)
-    {
-        free(s->arr);
-        free(s);
-    }
+    if (shape->stats != NULL)
+        shape->stats->entries.clear();
     shape->last_box = 0;
     if (is_composite(shape->opc) && shape->args.shapes != NULL)
     {
@@ -487,21 +442,25 @@ char *shape_get_stat_table(Shape *shape,  // Shape
                            size_t *ncols  // number of columns
 )
 {
-    *nrows = shape->stats->len;
+    *nrows = shape->stats->entries.size();
     *ncols = shape->alen;
-    char *table = malloc(*ncols * *nrows * sizeof(char));
-    StatUnit **statarr = rbtree_to_array(shape->stats);
-    size_t i, j;
-    for (i = 0; i < *nrows; ++i)
-        for (j = 0; j < *ncols; ++j)
-            *(table + i * (*ncols) + j) = statarr[i]->arr[j];
-    free(statarr);
+    char *table = (char *)malloc(*ncols * *nrows * sizeof(char));
+    if (table == NULL)
+        return NULL;
+    size_t i = 0;
+    for (const auto &entry : shape->stats->entries)
+    {
+        const std::vector<char> &key = entry.first;
+        for (size_t j = 0; j < *ncols; ++j)
+            table[i * (*ncols) + j] = key[j];
+        ++i;
+    }
     return table;
 }
 
 // Operation functions
 
-char geom_intersection(char *args, size_t n, size_t inc)
+char geom_intersection(const char *args, size_t n, size_t inc)
 {
     size_t i;
     char result = +1;
@@ -518,7 +477,7 @@ char geom_intersection(char *args, size_t n, size_t inc)
     return result;
 }
 
-char geom_union(char *args, size_t n, size_t inc)
+char geom_union(const char *args, size_t n, size_t inc)
 {
     size_t i;
     char result = -1;

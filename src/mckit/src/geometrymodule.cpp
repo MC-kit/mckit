@@ -12,6 +12,8 @@
 #include <string.h>
 #include <structmember.h>
 
+#include <vector>
+
 #include "numpy/arrayobject.h"
 
 #include "box.h"
@@ -36,6 +38,7 @@ static int convert_to_dbl_vec(PyObject *obj, PyObject **addr)
     {
         PyErr_SetString(PyExc_ValueError, "Vector of length 3 is expected");
         Py_DECREF(arr);
+        return 0;
     }
     *addr = arr;
     return 1;
@@ -131,20 +134,21 @@ static PyMethodDef boxobj_methods[] = {
     {"copy", (PyCFunction)boxobj_copy, METH_NOARGS, BOX_COPY_DOC},
     {"generate_random_points", (PyCFunction)boxobj_generate_random_points, METH_O, BOX_GRP_DOC},
     {"test_points", (PyCFunction)boxobj_test_points, METH_O, BOX_TEST_POINTS_DOC},
-    {"split", (void *)boxobj_split, METH_VARARGS | METH_KEYWORDS, BOX_SPLIT_DOC},
+    {"split", (PyCFunction)boxobj_split, METH_VARARGS | METH_KEYWORDS, BOX_SPLIT_DOC},
     {"check_intersection", (PyCFunction)boxobj_check_intersection, METH_O, BOX_CHECK_INTERSECTION_DOC},
     {NULL}};
 
 static PyTypeObject BoxType = {
-    PyObject_HEAD_INIT(0).tp_name = "geometry.Box",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "geometry.Box",
     .tp_basicsize = sizeof(BoxObject),
+    .tp_dealloc = (destructor)boxobj_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = BOX_DOC,
-    .tp_new = PyType_GenericNew,
-    .tp_dealloc = (destructor)boxobj_dealloc,
-    .tp_init = (initproc)boxobj_init,
     .tp_methods = boxobj_methods,
     .tp_getset = boxobj_getsetters,
+    .tp_init = (initproc)boxobj_init,
+    .tp_new = PyType_GenericNew,
 };
 
 static void boxobj_dealloc(BoxObject *self)
@@ -158,7 +162,8 @@ static int boxobj_init(BoxObject *self, PyObject *args, PyObject *kwds)
     PyObject *cent, *ex = NULL, *ey = NULL, *ez = NULL;
     double xdim, ydim, zdim;
 
-    char *kwlist[] = {"", "", "", "", "ex", "ey", "ez", NULL};
+    char *kwlist[] = {const_cast<char *>(""), const_cast<char *>(""), const_cast<char *>(""), const_cast<char *>(""),
+                      const_cast<char *>("ex"), const_cast<char *>("ey"), const_cast<char *>("ez"), NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O&ddd|O&O&O&", kwlist, convert_to_dbl_vec, &cent, &xdim, &ydim, &zdim,
                                      convert_to_dbl_vec, &ex, convert_to_dbl_vec, &ey, convert_to_dbl_vec, &ez))
@@ -211,7 +216,7 @@ static PyObject *boxobj_generate_random_points(BoxObject *self, PyObject *npts)
     }
     size_t n = PyLong_AsLong(npts);
 
-    npy_intp dims[] = {n, NDIM};
+    npy_intp dims[] = {(npy_intp)n, NDIM};
     PyObject *points = PyArray_EMPTY(2, dims, NPY_DOUBLE, 0);
     if (points == NULL)
         return NULL;
@@ -266,7 +271,7 @@ static PyObject *boxobj_split(BoxObject *self, PyObject *args, PyObject *kwds)
     char *dir = "auto";
     double ratio = 0.5;
     int direct;
-    static char *kwlist[] = {"dir", "ratio", NULL};
+    static char *kwlist[] = {const_cast<char *>("dir"), const_cast<char *>("ratio"), NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|$sd", kwlist, &dir, &ratio))
         return NULL;
@@ -293,6 +298,12 @@ static PyObject *boxobj_split(BoxObject *self, PyObject *args, PyObject *kwds)
 
     BoxObject *box1 = (BoxObject *)PyType_GenericNew(&BoxType, NULL, NULL);
     BoxObject *box2 = (BoxObject *)PyType_GenericNew(&BoxType, NULL, NULL);
+    if (box1 == NULL || box2 == NULL)
+    {
+        Py_XDECREF(box1);
+        Py_XDECREF(box2);
+        return NULL;
+    }
     int status = box_split(&self->box, &box1->box, &box2->box, direct, ratio);
 
     if (status == BOX_FAILURE)
@@ -473,7 +484,7 @@ static PyObject *surfobj_test_points(SurfaceObject *self, PyObject *points)
 
     npy_intp size = PyArray_SIZE((PyArrayObject *)pts);
     size_t npts = size > NDIM ? PyArray_DIM((PyArrayObject *)pts, 0) : 1;
-    npy_intp dims[] = {npts};
+    npy_intp dims[] = {(npy_intp)npts};
     PyObject *result = PyArray_EMPTY(1, dims, NPY_BYTE, 0);
     if (result == NULL)
     {
@@ -588,12 +599,13 @@ static int gqobj_init(GQuadraticObject *self, PyObject *args, PyObject *kwds)
 }
 
 static PyTypeObject SurfaceType = {
-    PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.Surface",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "geometry.Surface",
     .tp_basicsize = sizeof(SurfaceObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Surface base class",
-    .tp_new = surfobj_new,
     .tp_methods = surfobj_methods,
+    .tp_new = surfobj_new,
 };
 
 static PyObject *planeobj_getnorm(PlaneObject *self, void *closure)
@@ -616,14 +628,15 @@ static PyGetSetDef planeobj_getset[] = {{"_v", (getter)planeobj_getnorm, NULL, "
                                         {NULL}};
 
 static PyTypeObject PlaneType = {
-    PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "geometry.Plane",
     .tp_basicsize = sizeof(PlaneObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Plane class",
-    .tp_new = PyType_GenericNew,
-    .tp_init = (initproc)planeobj_init,
     .tp_getset = planeobj_getset,
+    .tp_base = &SurfaceType,
+    .tp_init = (initproc)planeobj_init,
+    .tp_new = PyType_GenericNew,
 };
 
 static PyObject *sphereobj_getcenter(SphereObject *self, void *closure)
@@ -646,14 +659,15 @@ static PyGetSetDef sphereobj_getset[] = {{"_center", (getter)sphereobj_getcenter
                                          {NULL}};
 
 static PyTypeObject SphereType = {
-    PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "geometry.Sphere",
     .tp_basicsize = sizeof(SphereObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Sphere class",
-    .tp_new = PyType_GenericNew,
-    .tp_init = (initproc)sphereobj_init,
     .tp_getset = sphereobj_getset,
+    .tp_base = &SurfaceType,
+    .tp_init = (initproc)sphereobj_init,
+    .tp_new = PyType_GenericNew,
 };
 
 static PyObject *cylinderobj_getpt(CylinderObject *self, void *closure)
@@ -687,14 +701,15 @@ static PyGetSetDef cylinderobj_getset[] = {{"_pt", (getter)cylinderobj_getpt, NU
                                            {NULL}};
 
 static PyTypeObject CylinderType = {
-    PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "geometry.Cylinder",
     .tp_basicsize = sizeof(CylinderObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Cylinder class",
-    .tp_new = PyType_GenericNew,
-    .tp_init = (initproc)cylinderobj_init,
     .tp_getset = cylinderobj_getset,
+    .tp_base = &SurfaceType,
+    .tp_init = (initproc)cylinderobj_init,
+    .tp_new = PyType_GenericNew,
 };
 
 static PyObject *rccobj_surfaces(RCCObject *self, void *closure)
@@ -767,15 +782,16 @@ static void rccobj_dealloc(RCCObject *self)
 static PyGetSetDef rccobj_getset[] = {{"surfaces", (getter)rccobj_surfaces, NULL, "Surfaces of RCC", NULL}, {NULL}};
 
 static PyTypeObject RCCType = {
-    PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "geometry.RCC",
     .tp_basicsize = sizeof(RCCObject),
+    .tp_dealloc = (destructor)rccobj_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "RCC class",
-    .tp_new = PyType_GenericNew,
-    .tp_init = (initproc)rccobj_init,
-    .tp_dealloc = (destructor)rccobj_dealloc,
     .tp_getset = rccobj_getset,
+    .tp_base = &SurfaceType,
+    .tp_init = (initproc)rccobj_init,
+    .tp_new = PyType_GenericNew,
 };
 
 static PyObject *mboxobj_surfaces(BOXObject *self, void *closure)
@@ -838,15 +854,16 @@ static void mboxobj_dealloc(BOXObject *self)
 static PyGetSetDef mboxobj_getset[] = {{"surfaces", (getter)mboxobj_surfaces, NULL, "Surfaces of BOX", NULL}, {NULL}};
 
 static PyTypeObject BOXType = {
-    PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "geometry.BOX",
     .tp_basicsize = sizeof(BOXObject),
+    .tp_dealloc = (destructor)mboxobj_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "BOX class",
-    .tp_new = PyType_GenericNew,
-    .tp_init = (initproc)mboxobj_init,
-    .tp_dealloc = (destructor)mboxobj_dealloc,
     .tp_getset = mboxobj_getset,
+    .tp_base = &SurfaceType,
+    .tp_init = (initproc)mboxobj_init,
+    .tp_new = PyType_GenericNew,
 };
 
 static PyObject *coneobj_getapex(ConeObject *self, void *closure)
@@ -886,14 +903,15 @@ static PyGetSetDef coneobj_getset[] = {{"_apex", (getter)coneobj_getapex, NULL, 
                                        {NULL}};
 
 static PyTypeObject ConeType = {
-    PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "geometry.Cone",
     .tp_basicsize = sizeof(ConeObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Cone class",
-    .tp_new = PyType_GenericNew,
-    .tp_init = (initproc)coneobj_init,
     .tp_getset = coneobj_getset,
+    .tp_base = &SurfaceType,
+    .tp_init = (initproc)coneobj_init,
+    .tp_new = PyType_GenericNew,
 };
 
 static PyObject *torusobj_getcenter(TorusObject *self, void *closure)
@@ -929,15 +947,16 @@ static PyMemberDef torusobj_members[] = {
     {NULL}};
 
 static PyTypeObject TorusType = {
-    PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "geometry.Torus",
     .tp_basicsize = sizeof(TorusObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Torus class",
-    .tp_new = PyType_GenericNew,
-    .tp_init = (initproc)torusobj_init,
-    .tp_getset = torusobj_getset,
     .tp_members = torusobj_members,
+    .tp_getset = torusobj_getset,
+    .tp_base = &SurfaceType,
+    .tp_init = (initproc)torusobj_init,
+    .tp_new = PyType_GenericNew,
 };
 
 static PyObject *gqobj_get_m(GQuadraticObject *self, void *closure)
@@ -978,14 +997,15 @@ static PyGetSetDef gqobj_getset[] = {
     {NULL}};
 
 static PyTypeObject GQuadraticType = {
-    PyVarObject_HEAD_INIT(NULL, 0).tp_base = &SurfaceType,
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "geometry.GQuadratic",
     .tp_basicsize = sizeof(GQuadraticObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "GQuadratic class",
-    .tp_new = PyType_GenericNew,
-    .tp_init = (initproc)gqobj_init,
     .tp_getset = gqobj_getset,
+    .tp_base = &SurfaceType,
+    .tp_init = (initproc)gqobj_init,
+    .tp_new = PyType_GenericNew,
 };
 
 // ==========================================================================================
@@ -1011,7 +1031,7 @@ static PyObject *shapeobj_collect_statistics(ShapeObject *self, PyObject *args);
 static PyObject *shapeobj_get_stat_table(ShapeObject *self);
 static void shapeobj_dealloc(ShapeObject *self);
 
-static char *opcodes[] = {"I", "C", "E", "U", "S", "R"};
+static const char *opcodes[] = {"I", "C", "E", "U", "S", "R"};
 
 static PyObject *shapeobj_getopc(ShapeObject *self, void *closure)
 {
@@ -1054,11 +1074,11 @@ static PyGetSetDef shapeobj_getset[] = {
     {NULL}};
 
 static PyMethodDef shapeobj_methods[] = {
-    {"test_box", (void *)shapeobj_test_box, METH_VARARGS | METH_KEYWORDS,
+    {"test_box", (PyCFunction)shapeobj_test_box, METH_VARARGS | METH_KEYWORDS,
      "Tests where the box is located with respect to the surface."},
-    {"ultimate_test_box", (void *)shapeobj_ultimate_test_box, METH_VARARGS | METH_KEYWORDS, ""},
-    {"volume", (void *)shapeobj_volume, METH_VARARGS | METH_KEYWORDS, ""},
-    {"bounding_box", (void *)shapeobj_bounding_box, METH_VARARGS | METH_KEYWORDS, ""},
+    {"ultimate_test_box", (PyCFunction)shapeobj_ultimate_test_box, METH_VARARGS | METH_KEYWORDS, ""},
+    {"volume", (PyCFunction)shapeobj_volume, METH_VARARGS | METH_KEYWORDS, ""},
+    {"bounding_box", (PyCFunction)shapeobj_bounding_box, METH_VARARGS | METH_KEYWORDS, ""},
     {"collect_statistics", (PyCFunction)shapeobj_collect_statistics, METH_VARARGS, ""},
     {"get_stat_table", (PyCFunction)shapeobj_get_stat_table, METH_NOARGS, ""},
     {"test_points", (PyCFunction)shapeobj_test_points, METH_O,
@@ -1066,15 +1086,16 @@ static PyMethodDef shapeobj_methods[] = {
     {NULL}};
 
 static PyTypeObject ShapeType = {
-    PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.Shape",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "geometry.Shape",
     .tp_basicsize = sizeof(ShapeObject),
+    .tp_dealloc = (destructor)shapeobj_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Shape class",
-    .tp_new = PyType_GenericNew,
-    .tp_init = (initproc)shapeobj_init,
-    .tp_dealloc = (destructor)shapeobj_dealloc,
     .tp_methods = shapeobj_methods,
     .tp_getset = shapeobj_getset,
+    .tp_init = (initproc)shapeobj_init,
+    .tp_new = PyType_GenericNew,
 };
 
 static int shapeobj_init(ShapeObject *self, PyObject *args, PyObject *kwds)
@@ -1091,7 +1112,9 @@ static int shapeobj_init(ShapeObject *self, PyObject *args, PyObject *kwds)
         PyErr_SetString(PyExc_TypeError, "String object is expected.");
         return -1;
     }
-    char *opcstr = PyUnicode_DATA(pyopc);
+    const char *opcstr = PyUnicode_AsUTF8(pyopc);
+    if (opcstr == NULL)
+        return -1;
 
     char opc;
     if (strcmp(opcstr, opcodes[INTERSECTION]) == 0)
@@ -1137,7 +1160,7 @@ static int shapeobj_init(ShapeObject *self, PyObject *args, PyObject *kwds)
             return -1;
         }
         PyObject *item;
-        Shape **operands = (Shape **)malloc(alen * sizeof(Shape *));
+        std::vector<Shape *> operands(alen);
         for (i = 0; i < alen; ++i)
         {
             item = PyTuple_GetItem(args, i + 1);
@@ -1149,12 +1172,10 @@ static int shapeobj_init(ShapeObject *self, PyObject *args, PyObject *kwds)
             else
             {
                 PyErr_SetString(PyExc_TypeError, "Shape instance is expected");
-                free(operands);
                 return -1;
             }
         }
-        status = shape_init(&self->shape, opc, alen, operands);
-        free(operands);
+        status = shape_init(&self->shape, opc, alen, operands.data());
     }
     if (status != SHAPE_SUCCESS)
         return -1;
@@ -1185,7 +1206,7 @@ static PyObject *shapeobj_test_box(ShapeObject *self, PyObject *args, PyObject *
 {
     PyObject *box = NULL;
     char collect = 0;
-    static char *kwlist[] = {"box", NULL};
+    static char *kwlist[] = {const_cast<char *>("box"), NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &box))
         return NULL;
@@ -1210,7 +1231,8 @@ static PyObject *shapeobj_ultimate_test_box(ShapeObject *self, PyObject *args, P
     char collect = 0;
     double min_vol = MIN_VOLUME;
 
-    static char *kwlist[] = {"box", "min_volume", "collect", NULL};
+    static char *kwlist[] = {const_cast<char *>("box"), const_cast<char *>("min_volume"), const_cast<char *>("collect"),
+                             NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Odb", kwlist, &box, &min_vol, &collect))
         return NULL;
@@ -1237,7 +1259,7 @@ static PyObject *shapeobj_test_points(ShapeObject *self, PyObject *points)
 
     npy_intp size = PyArray_SIZE((PyArrayObject *)pts);
     size_t npts = size > NDIM ? PyArray_DIM((PyArrayObject *)pts, 0) : 1;
-    npy_intp dims[] = {npts};
+    npy_intp dims[] = {(npy_intp)npts};
     PyObject *result = PyArray_EMPTY(1, dims, NPY_BYTE, 0);
     if (result == NULL)
     {
@@ -1257,7 +1279,7 @@ static PyObject *shapeobj_bounding_box(ShapeObject *self, PyObject *args, PyObje
     double tol = 100.0;
     int status = SHAPE_FAILURE;
 
-    static char *kwlist[] = {"tol", "box", NULL};
+    static char *kwlist[] = {const_cast<char *>("tol"), const_cast<char *>("box"), NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|dO", kwlist, &tol, &start_box))
         return NULL;
@@ -1300,7 +1322,7 @@ static PyObject *shapeobj_volume(ShapeObject *self, PyObject *args, PyObject *kw
     double min_vol = MIN_VOLUME;
     double vol = -1.0;
 
-    static char *kwlist[] = {"box", "min_volume", NULL};
+    static char *kwlist[] = {const_cast<char *>("box"), const_cast<char *>("min_volume"), NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Od", kwlist, &box, &min_vol))
         return NULL;
@@ -1397,8 +1419,19 @@ static PyObject *shapeobj_get_stat_table(ShapeObject *self)
 {
     size_t nrows = 0, ncols = 0;
     char *table_data = shape_get_stat_table(&self->shape, &nrows, &ncols);
-    npy_intp dims[] = {nrows, ncols};
-    PyObject *table = PyArray_SimpleNewFromData(2, dims, NPY_BYTE, table_data);
+    if (table_data == NULL && nrows * ncols != 0)
+    {
+        PyErr_NoMemory();
+        return NULL;
+    }
+    // Copy the data into a numpy owned array, so the table buffer can be
+    // released right away and the array stays valid on further statistics
+    // updates.
+    npy_intp dims[] = {(npy_intp)nrows, (npy_intp)ncols};
+    PyObject *table = PyArray_SimpleNew(2, dims, NPY_BYTE);
+    if (table != NULL && table_data != NULL)
+        memcpy(PyArray_DATA((PyArrayObject *)table), table_data, nrows * ncols);
+    free(table_data);
     return table;
 }
 
@@ -1448,7 +1481,7 @@ PyMODINIT_FUNC PyInit_geometry(void)
 
     Py_INCREF(&BoxType);
 
-    Py_INCREF(&SphereType);
+    Py_INCREF(&SurfaceType);
     Py_INCREF(&PlaneType);
     Py_INCREF(&SphereType);
     Py_INCREF(&CylinderType);

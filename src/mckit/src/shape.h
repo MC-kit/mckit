@@ -8,7 +8,7 @@
 #include <stddef.h>
 
 #include "box.h"
-#include "rbtree.h"
+#include "stats.h"
 #include "surface.h"
 
 #define BOX_INSIDE_SHAPE +1
@@ -50,7 +50,7 @@ struct Shape
                          ///< structures
     uint64_t last_box;   ///< Subdivision code of last tested box
     int last_box_result; ///< Result of last test_box call.
-    RBTree *stats;       ///< Statistics about argument results.
+    StatsMap *stats;     ///< Statistics about argument results.
 };
 
 /// Initializes Shape struct/

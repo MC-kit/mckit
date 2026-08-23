@@ -1,5 +1,5 @@
-#ifndef __SURFACE_H
-#define __SURFACE_H
+#ifndef MCKIT_SURFACE_H
+#define MCKIT_SURFACE_H
 
 #include "box.h"
 #include "common.h"
@@ -124,6 +124,18 @@ int gq_init(GQuadratic *surf, const double *m, const double *v, double k, double
 int RCC_init(RCC *surf, Cylinder *cyl, Plane *top, Plane *bot);
 
 int BOX_init(BOX *surf, Plane **planes);
+
+/**
+ * Interface to all surface functions. Decides, which function to apply.
+ *
+ * The function is passed as a callback to the C NLopt library,
+ * so it must have C linkage.
+ */
+extern "C" double surface_func(unsigned int n,  // Space dimension (NDIM)
+                               const double *x, // Point to be checked
+                               double *grad,    // Gradient - calculated if not NULL (array of size NDIM)
+                               void *f_data     // Surface data
+);
 
 /// Tests senses of points with respect to the surface.
 void surface_test_points(const Surface *surf,  ///< Surface
