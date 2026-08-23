@@ -1,6 +1,8 @@
 #include "box.h"
-#include <mkl.h>
+#include <mkl_cblas.h>
 #include <nlopt.h>
+
+#include "rand.h"
 
 /* Each row is delta to be added to center point to obtain specific corner.
  * They must be multiplied by corresponding box's dimensions.
@@ -79,16 +81,9 @@ int box_init(Box *box, const double *center, const double *ex, const double *ey,
         }
     }
 
-    box->rng = NULL;
     box->subdiv = 1; // Means that it is the most outer box for now.
 
     return BOX_SUCCESS;
-}
-
-void box_dispose(Box *box)
-{
-    if (box != NULL && box->rng != NULL)
-        vslDeleteStream(&box->rng);
 }
 
 void box_copy(Box *dst, const Box *src)
@@ -97,29 +92,21 @@ void box_copy(Box *dst, const Box *src)
     dst->subdiv = src->subdiv;
 }
 
-int box_generate_random_points(Box *box, size_t npts, double *points)
+void box_generate_random_points(const Box *box, size_t npts, double *points)
 {
-    // If rng is not allocated yet, try to allocate. It will be used at future calls.
-    if (box->rng == NULL)
-        vslNewStream(&box->rng, VSL_BRNG_MT19937, 777);
-    if (box->rng == NULL)
-        return BOX_FAILURE;
-    int i, status;
+    Xoshiro256ss &rng = thread_local_rng();
     double d[NDIM];
 
-    // TODO: Try to implement generation of all points during one single call to rng.
-    for (i = 0; i < npts; ++i)
+    for (size_t i = 0; i < npts; ++i)
     {
-        status = vdRngUniform(VSL_RNG_METHOD_UNIFORM_STD, box->rng, NDIM, d, -0.5, 0.5);
-        if (status != VSL_STATUS_OK)
-            return BOX_FAILURE;
+        for (int j = 0; j < NDIM; ++j)
+            d[j] = rng.next_double() - 0.5;
 
         cblas_dcopy(NDIM, box->center, 1, points + i * NDIM, 1);
         cblas_daxpy(NDIM, d[0] * box->dims[0], box->ex, 1, points + i * NDIM, 1);
         cblas_daxpy(NDIM, d[1] * box->dims[1], box->ey, 1, points + i * NDIM, 1);
         cblas_daxpy(NDIM, d[2] * box->dims[2], box->ez, 1, points + i * NDIM, 1);
     }
-    return BOX_SUCCESS;
 }
 
 void box_test_points(const Box *box, size_t npts, const double *points, int *result)

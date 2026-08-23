@@ -153,7 +153,6 @@ static PyTypeObject BoxType = {
 
 static void boxobj_dealloc(BoxObject *self)
 {
-    box_dispose(&self->box);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -185,7 +184,6 @@ static int boxobj_init(BoxObject *self, PyObject *args, PyObject *kwds)
         Py_INCREF(ez);
     }
 
-    box_dispose(&self->box);
     box_init(&self->box, (double *)PyArray_DATA((const PyArrayObject *)cent),
              (double *)PyArray_DATA((const PyArrayObject *)ex), (double *)PyArray_DATA((const PyArrayObject *)ey),
              (double *)PyArray_DATA((const PyArrayObject *)ez), xdim, ydim, zdim);
@@ -221,13 +219,7 @@ static PyObject *boxobj_generate_random_points(BoxObject *self, PyObject *npts)
     if (points == NULL)
         return NULL;
 
-    int status = box_generate_random_points(&self->box, n, (double *)PyArray_DATA((const PyArrayObject *)points));
-    if (status == BOX_FAILURE)
-    {
-        PyErr_SetString(PyExc_MemoryError, "Could not generate points.");
-        Py_DECREF(points);
-        points = NULL;
-    }
+    box_generate_random_points(&self->box, n, (double *)PyArray_DATA((const PyArrayObject *)points));
     return points;
 }
 

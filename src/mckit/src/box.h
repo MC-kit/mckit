@@ -17,8 +17,6 @@
 #define BIT_LEN 64
 #define HIGHEST_BIT (1ull << BIT_LEN - 1)
 
-#include "mkl_vsl.h"
-
 typedef struct Box Box;
 
 struct Box
@@ -33,7 +31,6 @@ struct Box
     double corners[NCOR * NDIM]; /// corners
     double volume;               /// volume
     uint64_t subdiv;             /// Box location. The most outer (parent) box
-    VSLStreamStatePtr rng;       /// Random generator. Allocated when it is needed.
 };
 
 /// Initializes box structure.
@@ -47,16 +44,13 @@ int box_init(Box *box,             /// Pointer to box structure being initialize
              double zdim           ///
 );
 
-/// Deallocates memory created for box's random generator if necessary.
-void box_dispose(Box *box);
-
 /// Copies content of src box to the dst box.
 void box_copy(Box *dst, const Box *src);
 
 /// Generates random points inside the box.
-int box_generate_random_points(Box *box,
-                               size_t npts,   /// IN: the number of points to be generated
-                               double *points /// OUT: generated points
+void box_generate_random_points(const Box *box,
+                                size_t npts,   /// IN: the number of points to be generated
+                                double *points /// OUT: generated points
 );
 
 /**

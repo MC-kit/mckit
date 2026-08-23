@@ -170,7 +170,8 @@ set(geometry_sources
     ${geometry_dir}shape.cpp ${geometry_dir}surface.cpp)
 
 python_add_library(geometry MODULE ${geometry_sources}
-  src/mckit/src/stats.h WITH_SOABI)
+  src/mckit/src/stats.h
+  src/mckit/src/rand.h WITH_SOABI)
 target_include_directories(
   geometry PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src MKL::MKL
                   ${Python_NumPy_INCLUDE_DIRS})
