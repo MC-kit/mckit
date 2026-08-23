@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from mckit._init_dynamic_libraries import MACOS, WIN
+import sys
+import sysconfig
+
 from mckit.body import Body, Shape
 from mckit.box import GLOBAL_BOX, Box
 from mckit.fmesh import FMesh
@@ -17,6 +19,9 @@ from mckit.version import (
     __title__,
     __version__,
 )
+
+WIN = sys.platform.startswith("win32") and "mingw" not in sysconfig.get_platform()
+MACOS = sys.platform.startswith("darwin")
 
 __all__: list[str] = [
     "AVOGADRO",
