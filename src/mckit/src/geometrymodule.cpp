@@ -139,8 +139,7 @@ static PyMethodDef boxobj_methods[] = {
     {NULL}};
 
 static PyTypeObject BoxType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "geometry.Box",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.Box",
     .tp_basicsize = sizeof(BoxObject),
     .tp_dealloc = (destructor)boxobj_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
@@ -161,8 +160,9 @@ static int boxobj_init(BoxObject *self, PyObject *args, PyObject *kwds)
     PyObject *cent, *ex = NULL, *ey = NULL, *ez = NULL;
     double xdim, ydim, zdim;
 
-    char *kwlist[] = {const_cast<char *>(""), const_cast<char *>(""), const_cast<char *>(""), const_cast<char *>(""),
-                      const_cast<char *>("ex"), const_cast<char *>("ey"), const_cast<char *>("ez"), NULL};
+    char *kwlist[] = {
+        const_cast<char *>(""),   const_cast<char *>(""),   const_cast<char *>(""),   const_cast<char *>(""),
+        const_cast<char *>("ex"), const_cast<char *>("ey"), const_cast<char *>("ez"), NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O&ddd|O&O&O&", kwlist, convert_to_dbl_vec, &cent, &xdim, &ydim, &zdim,
                                      convert_to_dbl_vec, &ex, convert_to_dbl_vec, &ey, convert_to_dbl_vec, &ez))
@@ -591,8 +591,7 @@ static int gqobj_init(GQuadraticObject *self, PyObject *args, PyObject *kwds)
 }
 
 static PyTypeObject SurfaceType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "geometry.Surface",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.Surface",
     .tp_basicsize = sizeof(SurfaceObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Surface base class",
@@ -620,8 +619,7 @@ static PyGetSetDef planeobj_getset[] = {{"_v", (getter)planeobj_getnorm, NULL, "
                                         {NULL}};
 
 static PyTypeObject PlaneType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "geometry.Plane",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.Plane",
     .tp_basicsize = sizeof(PlaneObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Plane class",
@@ -651,8 +649,7 @@ static PyGetSetDef sphereobj_getset[] = {{"_center", (getter)sphereobj_getcenter
                                          {NULL}};
 
 static PyTypeObject SphereType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "geometry.Sphere",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.Sphere",
     .tp_basicsize = sizeof(SphereObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Sphere class",
@@ -693,8 +690,7 @@ static PyGetSetDef cylinderobj_getset[] = {{"_pt", (getter)cylinderobj_getpt, NU
                                            {NULL}};
 
 static PyTypeObject CylinderType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "geometry.Cylinder",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.Cylinder",
     .tp_basicsize = sizeof(CylinderObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Cylinder class",
@@ -774,8 +770,7 @@ static void rccobj_dealloc(RCCObject *self)
 static PyGetSetDef rccobj_getset[] = {{"surfaces", (getter)rccobj_surfaces, NULL, "Surfaces of RCC", NULL}, {NULL}};
 
 static PyTypeObject RCCType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "geometry.RCC",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.RCC",
     .tp_basicsize = sizeof(RCCObject),
     .tp_dealloc = (destructor)rccobj_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
@@ -846,8 +841,7 @@ static void mboxobj_dealloc(BOXObject *self)
 static PyGetSetDef mboxobj_getset[] = {{"surfaces", (getter)mboxobj_surfaces, NULL, "Surfaces of BOX", NULL}, {NULL}};
 
 static PyTypeObject BOXType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "geometry.BOX",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.BOX",
     .tp_basicsize = sizeof(BOXObject),
     .tp_dealloc = (destructor)mboxobj_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
@@ -895,8 +889,7 @@ static PyGetSetDef coneobj_getset[] = {{"_apex", (getter)coneobj_getapex, NULL, 
                                        {NULL}};
 
 static PyTypeObject ConeType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "geometry.Cone",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.Cone",
     .tp_basicsize = sizeof(ConeObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Cone class",
@@ -939,8 +932,7 @@ static PyMemberDef torusobj_members[] = {
     {NULL}};
 
 static PyTypeObject TorusType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "geometry.Torus",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.Torus",
     .tp_basicsize = sizeof(TorusObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "Torus class",
@@ -989,8 +981,7 @@ static PyGetSetDef gqobj_getset[] = {
     {NULL}};
 
 static PyTypeObject GQuadraticType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "geometry.GQuadratic",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.GQuadratic",
     .tp_basicsize = sizeof(GQuadraticObject),
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_doc = "GQuadratic class",
@@ -1078,8 +1069,7 @@ static PyMethodDef shapeobj_methods[] = {
     {NULL}};
 
 static PyTypeObject ShapeType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "geometry.Shape",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "geometry.Shape",
     .tp_basicsize = sizeof(ShapeObject),
     .tp_dealloc = (destructor)shapeobj_dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
