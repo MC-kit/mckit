@@ -312,11 +312,13 @@ static PyObject *boxobj_getcorners(BoxObject *self, void *closure)
 {
     npy_intp dims[] = {NCOR, NDIM};
     PyObject *corners = PyArray_EMPTY(2, dims, NPY_DOUBLE, 0);
-    int i;
     double *data = (double *)PyArray_DATA((const PyArrayObject *)corners);
-    for (i = 0; i < NCOR * NDIM; ++i)
+    for (int i = 0; i < NCOR; ++i)
     {
-        data[i] = self->box.corners[i];
+        for (int j = 0; j < NDIM; ++j)
+        {
+            data[i * NDIM + j] = self->box.corners[i][j];
+        }
     }
     return corners;
 }

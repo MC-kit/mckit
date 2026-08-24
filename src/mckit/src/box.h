@@ -1,6 +1,7 @@
 #ifndef MCKIT_BOX_H
 #define MCKIT_BOX_H
 
+#include <array>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -21,14 +22,14 @@ typedef struct Box Box;
 
 struct Box
 {
-    double center[NDIM];         /// center of the box
-    double ex[NDIM];             ///
-    double ey[NDIM];             /// basis vectors. Shows directions of box's edges
-    double ez[NDIM];             ///
-    double dims[NDIM];           /// Dimensions of the box.
-    double lb[NDIM];             /// lower bounds
-    double ub[NDIM];             /// upper bounds
-    double corners[NCOR * NDIM]; /// corners
+    std::array<double, NDIM> center; /// center of the box
+    std::array<double, NDIM> ex;     ///
+    std::array<double, NDIM> ey;     /// basis vectors. Shows directions of box's edges
+    std::array<double, NDIM> ez;     ///
+    std::array<double, NDIM> dims;   /// Dimensions of the box.
+    std::array<double, NDIM> lb;     /// lower bounds
+    std::array<double, NDIM> ub;     /// upper bounds
+    std::array<std::array<double, NDIM>, NCOR> corners; /// corners
     double volume;               /// volume
     uint64_t subdiv;             /// Box location. The most outer (parent) box
 };

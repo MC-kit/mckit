@@ -37,41 +37,44 @@ double plane_func(unsigned int n,  // Space dimension (must be NDIM)
     Plane *data = (Plane *)f_data;
     if (grad != NULL)
     {
-        vec_copy(NDIM, data->norm, grad);
+        vec_copy(data->norm, std::span(grad, NDIM));
     }
-    return vec_dot(NDIM, x, data->norm) + data->offset;
+    return vec_dot(std::span(x, NDIM), data->norm) + data->offset;
 }
 
 /// Calculates deviation of point x from the sphere.
 double sphere_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     Sphere *data = (Sphere *)f_data;
+    const std::span x_span(x, NDIM);
     if (grad != NULL)
     {
-        vec_copy(NDIM, x, grad);
-        vec_axpy(NDIM, -1, data->center, grad);
-        vec_scale(NDIM, 2, grad);
+        std::span grad_span(grad, NDIM);
+        vec_copy(x_span, grad_span);
+        vec_axpy(-1, data->center, grad_span);
+        vec_scale(2, grad_span);
     }
     double delta[NDIM];
-    vec_copy(NDIM, x, delta);
-    vec_axpy(NDIM, -1, data->center, delta);
-    return vec_dot(NDIM, delta, delta) - pow(data->radius, 2);
+    vec_copy(x_span, delta);
+    vec_axpy(-1, data->center, delta);
+    return vec_dot(delta, delta) - pow(data->radius, 2);
 }
 
 double cylinder_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     Cylinder *data = (Cylinder *)f_data;
     double a[NDIM];
-    vec_copy(NDIM, x, a);
-    vec_axpy(NDIM, -1, data->point, a);
-    double an = vec_dot(NDIM, a, data->axis);
+    vec_copy(std::span(x, NDIM), a);
+    vec_axpy(-1, data->point, a);
+    double an = vec_dot(a, data->axis);
     if (grad != NULL)
     {
-        vec_copy(NDIM, a, grad);
-        vec_axpy(NDIM, -an, data->axis, grad);
-        vec_scale(NDIM, 2, grad);
+        std::span grad_span(grad, NDIM);
+        vec_copy(a, grad_span);
+        vec_axpy(-an, data->axis, grad_span);
+        vec_scale(2, grad_span);
     }
-    return vec_dot(NDIM, a, a) - pow(an, 2) - pow(data->radius, 2);
+    return vec_dot(a, a) - pow(an, 2) - pow(data->radius, 2);
 }
 
 double RCC_func(unsigned int n, const double *x, double *grad, void *f_data)
@@ -97,9 +100,10 @@ double RCC_func(unsigned int n, const double *x, double *grad, void *f_data)
     double h = fabs(data->top->offset + data->bot->offset);
     if (grad != NULL)
     {
-        vec_axpy(NDIM, top_wgt, gtop, grad);
-        vec_axpy(NDIM, bot_wgt, gbot, grad);
-        vec_axpy(NDIM, 1, gcyl, grad);
+        std::span grad_span(grad, NDIM);
+        vec_axpy(top_wgt, gtop, grad_span);
+        vec_axpy(bot_wgt, gbot, grad_span);
+        vec_axpy(1, gcyl, grad_span);
     }
     return _max(cyl_obj, _max(top_obj, bot_obj));
 }
@@ -122,7 +126,7 @@ double BOX_func(unsigned int n, const double *x, double *grad, void *f_data)
 
     if (grad != NULL)
     {
-        vec_copy(NDIM, gp + index * NDIM, grad);
+        vec_copy(std::span(gp + index * NDIM, NDIM), std::span(grad, NDIM));
     }
 
     return result[index];
@@ -132,33 +136,36 @@ double cone_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     Cone *data = (Cone *)f_data;
     double a[NDIM];
-    vec_copy(NDIM, x, a);
-    vec_axpy(NDIM, -1, data->apex, a);
-    double an = vec_dot(NDIM, a, data->axis);
+    vec_copy(std::span(x, NDIM), a);
+    vec_axpy(-1, data->apex, a);
+    double an = vec_dot(a, data->axis);
     if (data->sheet != 0 && data->sheet * an < 0)
         an = 0;
     if (grad != NULL)
     {
-        vec_copy(NDIM, a, grad);
-        vec_axpy(NDIM, -an * (1 + data->ta), data->axis, grad);
-        vec_scale(NDIM, 2, grad);
+        std::span grad_span(grad, NDIM);
+        vec_copy(a, grad_span);
+        vec_axpy(-an * (1 + data->ta), data->axis, grad_span);
+        vec_scale(2, grad_span);
     }
-    return vec_dot(NDIM, a, a) - pow(an, 2) * (1 + data->ta);
+    return vec_dot(a, a) - pow(an, 2) * (1 + data->ta);
 }
 
 double gq_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     GQuadratic *data = (GQuadratic *)f_data;
+    const std::span x_span(x, NDIM);
     if (grad != NULL)
     {
-        vec_copy(NDIM, data->v, grad);
-        mat_vec_add(NDIM, 2, data->m, x, grad);
-        vec_scale(NDIM, data->factor, grad);
+        std::span grad_span(grad, NDIM);
+        vec_copy(data->v, grad_span);
+        mat_vec_add(2, data->m, x_span, grad_span);
+        vec_scale(data->factor, grad_span);
     }
     double y[NDIM];
-    vec_copy(NDIM, data->v, y);
-    mat_vec_add(NDIM, 1, data->m, x, y);
-    return (vec_dot(NDIM, y, x) + data->k) * data->factor;
+    vec_copy(data->v, y);
+    mat_vec_add(1, data->m, x_span, y);
+    return (vec_dot(y, x_span) + data->k) * data->factor;
 }
 
 double clip_negative_values(double value)
@@ -170,21 +177,22 @@ double torus_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     Torus *data = (Torus *)f_data;
     double p[NDIM];
-    vec_copy(NDIM, x, p);
-    vec_axpy(NDIM, -1, data->center, p);
-    double pn = vec_dot(NDIM, p, data->axis);
-    double pp = vec_dot(NDIM, p, p);
+    vec_copy(std::span(x, NDIM), p);
+    vec_axpy(-1, data->center, p);
+    double pn = vec_dot(p, data->axis);
+    double pp = vec_dot(p, p);
     double sq = sqrt(clip_negative_values(pp - pow(pn, 2)));
     if (grad != NULL)
     {
         double add = 0;
         if (sq > 1.e-100)
             add = data->radius / sq;
-        vec_copy(NDIM, p, grad);
-        vec_axpy(NDIM, -pn, data->axis, grad);
-        vec_scale(NDIM, (1 - add) / pow(data->b, 2), grad);
-        vec_axpy(NDIM, pn / pow(data->a, 2), data->axis, grad);
-        vec_scale(NDIM, 2, grad);
+        std::span grad_span(grad, NDIM);
+        vec_copy(p, grad_span);
+        vec_axpy(-pn, data->axis, grad_span);
+        vec_scale((1 - add) / pow(data->b, 2), grad_span);
+        vec_axpy(pn / pow(data->a, 2), data->axis, grad_span);
+        vec_scale(2, grad_span);
     }
     return pow(pn / data->a, 2) + pow((sq - data->radius) / data->b, 2) - 1;
 }
@@ -331,10 +339,12 @@ int torus_init(Torus *surf, const double *center, const double *axis, double rad
     {
         surf->degenerate = 1;
         double offset = a * sqrt(1 - pow(radius / b, 2));
-        vec_copy(NDIM, center, surf->specpts);
-        vec_copy(NDIM, center, surf->specpts + NDIM);
-        vec_axpy(NDIM, offset, axis, surf->specpts);
-        vec_axpy(NDIM, -offset, axis, surf->specpts + NDIM);
+        std::span top = surf->specpts[0];
+        std::span bottom = surf->specpts[1];
+        vec_copy(std::span(center, NDIM), top);
+        vec_copy(std::span(center, NDIM), bottom);
+        vec_axpy(offset, std::span(axis, NDIM), top);
+        vec_axpy(-offset, std::span(axis, NDIM), bottom);
     }
     else
         surf->degenerate = 0;
@@ -383,7 +393,7 @@ int surface_test_box(Surface *surf, const Box *box)
     // First, test corner points of the box. If they have different senses,
     // then surface definitely intersects the box.
     char corner_tests[NCOR];
-    surface_test_points(surf, NCOR, box->corners, corner_tests);
+    surface_test_points(surf, NCOR, box->corners[0].data(), corner_tests);
     int mins = 1, maxs = -1, i;
 
     for (i = 0; i < NCOR; ++i)
@@ -408,7 +418,7 @@ int surface_test_box(Surface *surf, const Box *box)
         if (surf->type == TORUS && ((Torus *)surf)->degenerate)
         {
             int test_res[2];
-            box_test_points(box, 2, ((Torus *)surf)->specpts, test_res);
+            box_test_points(box, 2, ((Torus *)surf)->specpts[0].data(), test_res);
             if (test_res[0] == 1 || test_res[1] == 1)
                 return 0;
         }
@@ -423,8 +433,8 @@ int surface_test_box(Surface *surf, const Box *box)
 
         nlopt_opt opt;
         opt = nlopt_create(NLOPT_LD_SLSQP, 3);
-        nlopt_set_lower_bounds(opt, box->lb);
-        nlopt_set_upper_bounds(opt, box->ub);
+        nlopt_set_lower_bounds(opt, box->lb.data());
+        nlopt_set_upper_bounds(opt, box->ub.data());
 
         if (sign > 0)
             nlopt_set_min_objective(opt, surface_func, surf);
@@ -444,7 +454,7 @@ int surface_test_box(Surface *surf, const Box *box)
         // box's corners.
         for (i = 0; i < NCOR; ++i)
         {
-            vec_copy(NDIM, box->corners + i * NDIM, x);
+            vec_copy(box->corners[i], x);
             opt_result = nlopt_optimize(opt, x, &opt_val);
             if (sign * opt_val < 0)
             {             // If sign and found opt_val have

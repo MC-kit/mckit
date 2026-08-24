@@ -3,6 +3,7 @@
 
 #include "box.h"
 #include "common.h"
+#include <array>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -44,30 +45,30 @@ struct Surface
 struct Plane
 {
     Surface base;
-    double norm[NDIM];
+    std::array<double, NDIM> norm;
     double offset;
 };
 
 struct Sphere
 {
     Surface base;
-    double center[NDIM];
+    std::array<double, NDIM> center;
     double radius;
 };
 
 struct Cylinder
 {
     Surface base;
-    double point[NDIM];
-    double axis[NDIM];
+    std::array<double, NDIM> point;
+    std::array<double, NDIM> axis;
     double radius;
 };
 
 struct Cone
 {
     Surface base;
-    double apex[NDIM];
-    double axis[NDIM];
+    std::array<double, NDIM> apex;
+    std::array<double, NDIM> axis;
     double ta;
     int sheet;
 };
@@ -75,20 +76,20 @@ struct Cone
 struct Torus
 {
     Surface base;
-    double center[NDIM];
-    double axis[NDIM];
+    std::array<double, NDIM> center;
+    std::array<double, NDIM> axis;
     double radius;
     double a;
     double b;
     char degenerate;
-    double specpts[NDIM * 2]; ///< Special points, if present.
+    std::array<std::array<double, NDIM>, 2> specpts; ///< Special points, if present.
 };
 
 struct GQuadratic
 {
     Surface base;
-    double m[NDIM * NDIM];
-    double v[NDIM];
+    std::array<double, NDIM * NDIM> m;
+    std::array<double, NDIM> v;
     double k;
     double factor;
 };
