@@ -1402,20 +1402,16 @@ static PyObject *shapeobj_collect_statistics(ShapeObject *self, PyObject *args)
 static PyObject *shapeobj_get_stat_table(ShapeObject *self)
 {
     size_t nrows = 0, ncols = 0;
-    char *table_data = shape_get_stat_table(&self->shape, &nrows, &ncols);
-    if (table_data == NULL && nrows * ncols != 0)
-    {
-        PyErr_NoMemory();
-        return NULL;
-    }
+    const std::vector<char> table_data =
+        shape_get_stat_table(&self->shape, &nrows, &ncols);
     // Copy the data into a numpy owned array, so the table buffer can be
     // released right away and the array stays valid on further statistics
     // updates.
     npy_intp dims[] = {(npy_intp)nrows, (npy_intp)ncols};
     PyObject *table = PyArray_SimpleNew(2, dims, NPY_BYTE);
-    if (table != NULL && table_data != NULL)
-        memcpy(PyArray_DATA((PyArrayObject *)table), table_data, nrows * ncols);
-    free(table_data);
+    if (table != NULL && !table_data.empty())
+        memcpy(PyArray_DATA((PyArrayObject *)table), table_data.data(),
+               table_data.size());
     return table;
 }
 

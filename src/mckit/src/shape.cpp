@@ -33,7 +33,7 @@ int shape_init(Shape *shape, char opc, size_t alen, const void *args)
     shape->alen = alen;
     delete shape->stats; // Drop statistics left from a previous initialization, if any.
     shape->stats = new (std::nothrow) StatsMap();
-    if (shape->stats == NULL)
+    if (shape->stats == nullptr)
         return SHAPE_NO_MEMORY;
     shape->last_box = 0;
     shape->last_box_result = 0;
@@ -43,13 +43,13 @@ int shape_init(Shape *shape, char opc, size_t alen, const void *args)
     }
     else if (is_void(opc))
     {
-        shape->args.surface = NULL;
+        shape->args.surface = nullptr;
     }
     else
     {
-        shape->args.shapes = (Shape **)malloc(alen * sizeof(Shape *));
+        shape->args.shapes = new (std::nothrow) Shape *[alen];
 
-        if (shape->args.shapes == NULL)
+        if (shape->args.shapes == nullptr)
             return SHAPE_NO_MEMORY;
 
         size_t i;
@@ -63,9 +63,9 @@ int shape_init(Shape *shape, char opc, size_t alen, const void *args)
 void shape_dealloc(Shape *shape)
 {
     if (is_composite(shape->opc))
-        free(shape->args.shapes);
+        delete[] shape->args.shapes;
     delete shape->stats;
-    shape->stats = NULL;
+    shape->stats = nullptr;
 }
 
 /**
@@ -207,7 +207,7 @@ int shape_ultimate_test_box(Shape *shape,   // Pointer to shape
         if (zero_surfaces == 1 || box->volume < min_vol)
         {
             // vary all zero surfaces that remain to be -1 and +1
-            std::vector<Surface *> zs(zero_surfaces, NULL);
+            std::vector<Surface *> zs(zero_surfaces, nullptr);
 
             int k = set_zero_surface_pointers(shape, 0, zs.data(), box->subdiv);
             int n = 1 << zero_surfaces;
@@ -217,7 +217,7 @@ int shape_ultimate_test_box(Shape *shape,   // Pointer to shape
                 {
                     zs[j]->last_box_result = ((i >> j) & 1) * 2 - 1;
                 }
-                shape_test_box(shape, box, -collect, NULL);
+                shape_test_box(shape, box, -collect, nullptr);
             }
             return result;
         }
@@ -335,7 +335,7 @@ int shape_bounding_box(Shape *shape, Box *box, double tol)
  */
 double shape_volume(Shape *shape, const Box *box, double min_vol)
 {
-    int result = shape_test_box(shape, box, 0, NULL);
+    int result = shape_test_box(shape, box, 0, nullptr);
 
     if (result == BOX_INSIDE_SHAPE)
         return box->volume; // Box totally belongs to the shape
@@ -387,14 +387,14 @@ void shape_reset_cache(Shape *shape)
  */
 void shape_reset_stat(Shape *shape)
 {
-    if (shape->stats != NULL)
+    if (shape->stats != nullptr)
         shape->stats->entries.clear();
     shape->last_box = 0;
-    if (is_composite(shape->opc) && shape->args.shapes != NULL)
+    if (is_composite(shape->opc) && shape->args.shapes != nullptr)
     {
         for (int i = 0; i < shape->alen; ++i)
         {
-            if (shape->args.shapes[i] != NULL)
+            if (shape->args.shapes[i] != nullptr)
                 shape_reset_stat(shape->args.shapes[i]);
         }
     }
@@ -407,7 +407,7 @@ size_t shape_contour(Shape *shape,   // Shape
                      double *buffer  // Buffer, where points are put.
 )
 {
-    int result = shape_test_box(shape, box, 0, NULL);
+    int result = shape_test_box(shape, box, 0, nullptr);
     if (result == BOX_INSIDE_SHAPE || result == BOX_OUTSIDE_SHAPE)
         return 0;
     if (box->volume > min_vol)
@@ -437,16 +437,14 @@ void shape_collect_statistics(Shape *shape,   // Shape
 }
 
 // Gets statistics table
-char *shape_get_stat_table(Shape *shape,  // Shape
-                           size_t *nrows, // number of rows
-                           size_t *ncols  // number of columns
+std::vector<char> shape_get_stat_table(Shape *shape,  // Shape
+                                       size_t *nrows, // number of rows
+                                       size_t *ncols  // number of columns
 )
 {
     *nrows = shape->stats->entries.size();
     *ncols = shape->alen;
-    char *table = (char *)malloc(*ncols * *nrows * sizeof(char));
-    if (table == NULL)
-        return NULL;
+    std::vector<char> table((*nrows) * (*ncols), '\0');
     size_t i = 0;
     for (const auto &entry : shape->stats->entries)
     {

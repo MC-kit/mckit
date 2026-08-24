@@ -203,7 +203,7 @@ extern "C" void box_ieqcons(unsigned int m, double *result, unsigned int n, cons
         vec_axpy(mult * box->dims[j], basis[j], point);
         result[i] = mult * (vec_dot(basis[j], std::span(x, NDIM)) - vec_dot(basis[j], point));
 
-        if (grad != NULL)
+        if (grad != nullptr)
         {
             std::span grad_row(grad + i * NDIM, NDIM);
             vec_copy(basis[j], grad_row);
@@ -216,7 +216,7 @@ static double min_func(unsigned int n, const double *x, double *grad, void *f_da
 {
     Box *data = (Box *)f_data;
     const std::span x_span(x, NDIM);
-    if (grad != NULL)
+    if (grad != nullptr)
     {
         std::span grad_span(grad, NDIM);
         vec_copy(x_span, grad_span);
@@ -243,7 +243,7 @@ int box_check_intersection(const Box *box1, const Box *box2)
 
     nlopt_set_min_objective(opt, min_func, (void *)box2);
 
-    nlopt_add_inequality_mconstraint(opt, 6, box_ieqcons, (void *)box1, NULL);
+    nlopt_add_inequality_mconstraint(opt, 6, box_ieqcons, (void *)box1, nullptr);
     nlopt_set_stopval(opt, 0);
     nlopt_set_maxeval(opt, 1000); // TODO @rrn: consider passing this parameter.
 

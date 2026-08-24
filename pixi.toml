@@ -1,0 +1,133 @@
+[workspace]
+channels = [ "conda-forge" ]
+platforms = [ "linux-64", "win-64" ]
+# channels = ["https://prefix.dev/conda-forge"] - 2026-05-06 - timeout
+conda-pypi-map = false                   # fix: pixi failed to load conda-pypi map - timeout
+requires-pixi = ">=0.70.2"
+preview = [ "pixi-build" ]
+
+[dependencies]
+click = "*"
+loguru = "*"
+numpy = ">=2.4"
+ply = "*"
+python = ">=3.12,<3.14"
+sly = "*"
+tomli-w = "*"
+
+[pypi-dependencies]
+mckit = { path = ".", editable = true }
+
+[pypi-options]
+no-build-isolation = [ "mckit" ]
+
+[environments]
+# analyze = { features = [ "analyze", "build", "py314" ], solve-group = "default" }
+analyze = { features = [ "analyze", "build", "py313" ] }
+default = { features = [ "build", "test", "style" ], solve-group = "default" }
+docs = { features = [ "build", "docs" ], solve-group = "default" }
+prod = { features = [ "build" ], solve-group = "default" }
+py312 = { features = [ "build", "py312", "test" ] }
+py313 = { features = [ "build", "py313", "test" ], solve-group = "default" }
+# py314 = { features = [ "build", "py314", "test" ] }
+publish313 = { features = [ "build", "py313", "publish313" ] }
+# publish314 = { features = [ "build", "py314", "publish314" ], solve-group = "default" }
+# publish314 = { features = [ "build", "py314", "publish314" ] }
+# pypi = { features = [ "pypi" ], solve-group = "default" }
+typeguard = { features = [ "typeguard", "test" ], solve-group = "default" }
+
+[feature.py312.dependencies]
+python = "3.12.*"
+
+[feature.py313.dependencies]
+python = "3.13.*"
+# [feature.py314.dependencies]
+# python = "3.14.*"
+
+[feature.analyze.dependencies]
+marimo = ">=0.23.13"
+polars = ">=1.43.0,<2"
+duckdb = ">=1.5.5,<2"
+sqlglot = ">=28.10.1,<29"
+pyarrow = ">=25.0.0,<26"
+
+[feature.build.dependencies]
+# Explicitly add build tools for faster resolution
+# cmake = ">=4"
+# ninja = "*"
+scikit-build-core = ">=0.12"
+# uv = ">=0.11.25,<0.12"
+pysocks = ">=1.7.1,<2"
+
+[feature.docs.dependencies]
+esbonio = ">=2"
+# rstcheck[sphinx,toml]>=6.2.5",
+sphinx = ">=9.1"
+sphinx-autobuild = ">=2025.8.25"
+sphinx-autodoc-typehints = ">=3.10"
+sphinx-click = ">=6.2.0"
+
+[feature.docs.tasks]
+docs = { cmd = "sphinx-autobuild --open-browser docs/source docs/_build", description = "Preview the edited docs in a browser." }
+docs-build = { cmd = "sphinx-build docs/source docs/build", description = "Build the docs in docs/build folder." }
+
+[feature.publish313.tasks]
+publish313 = { cmd = "pixi publish -vvv --target-channel .output-3.13", description = "Publish for python-3.13" }
+# [feature.publish314.tasks]
+# publish314 = { cmd = "pixi publish -vvv --target-channel .output-3.14", description = "Publish for python-3.14" }
+# [feature.pypi.tasks]
+# pypi_build = "pixi run uv build --no-build-isolation"
+# repairwheel = "repairwheel -l .pixi/envs/default/lib -o fixed-wheels dist/*.whl"
+
+[feature.style.dependencies]
+pylint = ">=4.0.6,<5"
+mypy = ">=2.1.0"
+pre_commit = ">=4.3"
+pyright = ">=1.1.406"
+ruff = ">=0.15"
+ty = ">=0.0.55"
+pyrefly = ">=1.1.1"
+basedpyright = ">=1.39.8"
+
+[feature.style.tasks]
+mypy = "mypy src"
+pre-commit = "pre-commit run --show-diff-on-failure --color=always --all-files"
+pylint = "pylint --recursive=y src tests"
+pyright = "pyright"
+basedpyright = "basedpyright"
+ruff = { cmd = [ "ruff check --fix src tests", "ruff format src tests" ] }
+
+[feature.test.dependencies]
+pytest = ">=9.0.3"
+pytest-cov = ">=7.1.0"
+pytest-benchmark = ">=5.2.3"
+pytest-mock = ">=3.15.1"
+pytest-xdist = ">=3.8.0"
+psutil = ">=7.2.2"
+xdoctest = ">=1.3.2"
+
+[feature.test.tasks]
+test-fast = { cmd = "pytest -m 'not slow'", description = "Run fast test" }
+test-slow = { cmd = "pytest -m 'slow'", description = "Run slow test (if test-fast passed)" }
+test = { cmd = "pytest", description = "Run all the tests." }
+coverage = { cmd = "pytest --cov --cov-report=term-missing:skip-covered", description = "Run tests with coverage" }
+coverage-html = { cmd = "pytest --cov --cov-report html:htmlcov && open htmlcov/index.html", description = "Run tests with coverage and open results in a browser" }
+coverage-xml = { cmd = "pytest --cov --cov-report=term-missing:skip-covered --cov-report xml", description = "Run tests with coverage to upload to codecov" }
+
+[feature.typeguard.dependencies]
+typeguard = ">=4.5"
+
+[feature.typeguard.tasks]
+typeguard = { cmd = "pytest --typeguard-packages=src", description = "Run dynamic type cheks on testing." }
+
+[package]
+name = "mckit"
+version = "0.9.2"
+
+[package.host-dependencies]
+numpy = "*"
+scikit-build-core = ">=0.12"
+
+[package.build.backend]
+name = "pixi-build-python"
+version = "*"

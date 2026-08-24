@@ -6,6 +6,7 @@
 #define MCKIT_SHAPE_H
 
 #include <stddef.h>
+#include <vector>
 
 #include "box.h"
 #include "stats.h"
@@ -126,10 +127,11 @@ void shape_collect_statistics(Shape *shape,   ///< Shape
                               double min_vol  ///< minimal volume, when splitting process stops.
 );
 
-/// Gets statistics table
-char *shape_get_stat_table(Shape *shape,  ///< Shape
-                           size_t *nrows, ///< number of rows
-                           size_t *ncols  ///< number of columns
+/// Gets statistics table as a row-major char matrix
+/// with `*nrows` rows and `*ncols` columns.
+std::vector<char> shape_get_stat_table(Shape *shape,  ///< Shape
+                                       size_t *nrows, ///< number of rows
+                                       size_t *ncols  ///< number of columns
 );
 
 #endif // MCKIT_SHAPE_H

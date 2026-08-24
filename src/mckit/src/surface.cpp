@@ -35,7 +35,7 @@ double plane_func(unsigned int n,  // Space dimension (must be NDIM)
 )
 {
     Plane *data = (Plane *)f_data;
-    if (grad != NULL)
+    if (grad != nullptr)
     {
         vec_copy(data->norm, std::span(grad, NDIM));
     }
@@ -47,7 +47,7 @@ double sphere_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     Sphere *data = (Sphere *)f_data;
     const std::span x_span(x, NDIM);
-    if (grad != NULL)
+    if (grad != nullptr)
     {
         std::span grad_span(grad, NDIM);
         vec_copy(x_span, grad_span);
@@ -67,7 +67,7 @@ double cylinder_func(unsigned int n, const double *x, double *grad, void *f_data
     vec_copy(std::span(x, NDIM), a);
     vec_axpy(-1, data->point, a);
     double an = vec_dot(a, data->axis);
-    if (grad != NULL)
+    if (grad != nullptr)
     {
         std::span grad_span(grad, NDIM);
         vec_copy(a, grad_span);
@@ -98,7 +98,7 @@ double RCC_func(unsigned int n, const double *x, double *grad, void *f_data)
     double bot_wgt = fabs(bot_obj) / tot_wgt;
 
     double h = fabs(data->top->offset + data->bot->offset);
-    if (grad != NULL)
+    if (grad != nullptr)
     {
         std::span grad_span(grad, NDIM);
         vec_axpy(top_wgt, gtop, grad_span);
@@ -124,7 +124,7 @@ double BOX_func(unsigned int n, const double *x, double *grad, void *f_data)
             index = i;
     }
 
-    if (grad != NULL)
+    if (grad != nullptr)
     {
         vec_copy(std::span(gp + index * NDIM, NDIM), std::span(grad, NDIM));
     }
@@ -141,7 +141,7 @@ double cone_func(unsigned int n, const double *x, double *grad, void *f_data)
     double an = vec_dot(a, data->axis);
     if (data->sheet != 0 && data->sheet * an < 0)
         an = 0;
-    if (grad != NULL)
+    if (grad != nullptr)
     {
         std::span grad_span(grad, NDIM);
         vec_copy(a, grad_span);
@@ -155,7 +155,7 @@ double gq_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     GQuadratic *data = (GQuadratic *)f_data;
     const std::span x_span(x, NDIM);
-    if (grad != NULL)
+    if (grad != nullptr)
     {
         std::span grad_span(grad, NDIM);
         vec_copy(data->v, grad_span);
@@ -182,7 +182,7 @@ double torus_func(unsigned int n, const double *x, double *grad, void *f_data)
     double pn = vec_dot(p, data->axis);
     double pp = vec_dot(p, p);
     double sq = sqrt(clip_negative_values(pp - pow(pn, 2)));
-    if (grad != NULL)
+    if (grad != nullptr)
     {
         double add = 0;
         if (sq > 1.e-100)
@@ -373,7 +373,7 @@ void surface_test_points(const Surface *surf, size_t npts, const double *points,
     double fval;
     for (i = 0; i < npts; ++i)
     {
-        fval = surface_func(NDIM, points + NDIM * i, NULL, (void *)surf);
+        fval = surface_func(NDIM, points + NDIM * i, nullptr, (void *)surf);
         result[i] = (int)copysign(1, fval);
     }
 }
@@ -444,7 +444,7 @@ int surface_test_box(Surface *surf, const Box *box)
         for (i = 0; i < NDIM; ++i)
             xtol[i] = box->dims[i] / 1000;
 
-        nlopt_add_inequality_mconstraint(opt, 6, box_ieqcons, (void *)box, NULL);
+        nlopt_add_inequality_mconstraint(opt, 6, box_ieqcons, (void *)box, nullptr);
         nlopt_set_stopval(opt, 0);
         nlopt_set_maxeval(opt, 1000); // TODO: consider passing this parameter.
         // nlopt_set_xtol_abs(opt, xtol);
