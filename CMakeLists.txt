@@ -76,52 +76,28 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   cmake_print_variables(ipo_supported)
 endif()
 
-# list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake) list(APPEND
-# CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
 if(WIN32)
   set(Python_FIND_VIRTUALENV FIRST)
 endif()
 
 find_package(Python COMPONENTS Interpreter Development.Module NumPy)
 
-# find_package( Python COMPONENTS Interpreter Development.Module NumPy
-# ${SKBUILD_SABI_COMPONENT} USE_SABI ${SKBUILD_SABI_VERSION})
-
-# set(Python_SOABI ${SKBUILD_SOABI})
-
-execute_process(COMMAND ${Python_EXECUTABLE} "--version"
-                RESULT_VARIABLE _PYTHON_VERSION)
-cmake_print_variables(Python_EXECUTABLE _PYTHON_VERSION SKBUILD_SOABI
-                      Python_SOABI)
-
-cmake_path(GET Python_EXECUTABLE PARENT_PATH MCKIT_ENV_BIN_DIR)
-message(STATUS "bin dir: ${MCKIT_ENV_BIN_DIR}")
-cmake_path(GET MCKIT_ENV_BIN_DIR PARENT_PATH MCKIT_PIXI_ENV_ROOT)
-if(NOT DEFINED MCKIT_PIXI_ENV_ROOT)
-  # Резервный вариант: относительный путь, если запускается локально
-  set(MCKIT_PIXI_ENV_ROOT "${CMAKE_SOURCE_DIR}/.pixi/envs/default")
-endif()
-message(STATUS "pixi env: ${MCKIT_PIXI_ENV_ROOT}")
 
 add_subdirectory(extern)
 
-set(geometry_dir ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src/)
-
-set(geometry_sources ${geometry_dir}box.cpp ${geometry_dir}geometrymodule.cpp
-                     ${geometry_dir}shape.cpp ${geometry_dir}surface.cpp)
-
-python_add_library(
-  geometry
-  MODULE
-  ${geometry_sources}
+python_add_library( geometry MODULE
+  src/mckit/src/box.cpp
+  src/mckit/src/geometrymodule.cpp
+  src/mckit/src/shape.cpp
+  src/mckit/src/surface.cpp
   src/mckit/src/stats.h
   src/mckit/src/rand.h
   src/mckit/src/vecops.h
-  WITH_SOABI)
-target_include_directories(
-  geometry PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src
-                  ${Python_NumPy_INCLUDE_DIRS})
+  WITH_SOABI
+)
+target_include_directories( geometry
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src ${Python_NumPy_INCLUDE_DIRS}
+)
 target_link_libraries(geometry PUBLIC nlopt)
 if(WIN32)
   target_link_libraries(geometry PUBLIC Python::Module)
@@ -141,12 +117,7 @@ else()
   set(origin_token "$ORIGIN")
 endif()
 set_property(TARGET geometry PROPERTY INSTALL_RPATH "${origin_token}/../../..")
-# install(TARGETS nlopt DESTINATION ${SKBUILD_PROJECT_NAME})
 install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
-# copy libraries to the source tree for editable installation install(TARGETS
-# nlopt DESTINATION $ENV{MCKIT_SRC}/src/mckit) install(TARGETS geometry
-# DESTINATION $ENV{MCKIT_SRC}/src/mckit) install(TARGETS geometry DESTINATION
-# ${CMAKE_SOURCE_DIR}/src/mckit)
 
 include(FeatureSummary)
 
