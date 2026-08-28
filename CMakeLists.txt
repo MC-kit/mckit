@@ -86,17 +86,17 @@ find_package(Python COMPONENTS Interpreter Development.Module NumPy)
 add_subdirectory(extern)
 
 python_add_library( geometry MODULE
-  src/mckit/src/box.cpp
-  src/mckit/src/geometrymodule.cpp
-  src/mckit/src/shape.cpp
-  src/mckit/src/surface.cpp
-  src/mckit/src/stats.h
-  src/mckit/src/rand.h
-  src/mckit/src/vecops.h
+  src/mckit/_geometry/box.cpp
+  src/mckit/_geometry/geometrymodule.cpp
+  src/mckit/_geometry/shape.cpp
+  src/mckit/_geometry/surface.cpp
+  src/mckit/_geometry/stats.h
+  src/mckit/_geometry/rand.h
+  src/mckit/_geometry/vecops.h
   WITH_SOABI
 )
 target_include_directories( geometry
-  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/src ${Python_NumPy_INCLUDE_DIRS}
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/_geometry/mckit/_geometry ${Python_NumPy_INCLUDE_DIRS}
 )
 target_link_libraries(geometry PUBLIC nlopt)
 if(WIN32)
