@@ -76,6 +76,8 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   cmake_print_variables(ipo_supported)
 endif()
 
+option(MCKIT_BUILD_TEST "Build and run MCKIT CTEST suite" TRUE)
+
 if(WIN32)
   set(Python_FIND_VIRTUALENV FIRST)
 endif()
@@ -85,20 +87,30 @@ find_package(Python COMPONENTS Interpreter Development.Module NumPy)
 
 add_subdirectory(extern)
 
-python_add_library( geometry MODULE
+add_library( geometry_objs STATIC
   src/mckit/_geometry/box.cpp
-  src/mckit/_geometry/geometrymodule.cpp
   src/mckit/_geometry/shape.cpp
   src/mckit/_geometry/surface.cpp
   src/mckit/_geometry/stats.h
   src/mckit/_geometry/rand.h
   src/mckit/_geometry/vecops.h
+)
+target_include_directories( geometry_objs
+  PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/_geometry 
+    ${Python_NumPy_INCLUDE_DIRS}
+)
+target_link_Libraries(geometry_objs PUBLIC nlopt)
+
+
+python_add_library( geometry MODULE
+  src/mckit/_geometry/box.cpp
   WITH_SOABI
 )
-target_include_directories( geometry
-  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/_geometry/mckit/_geometry ${Python_NumPy_INCLUDE_DIRS}
-)
-target_link_libraries(geometry PUBLIC nlopt)
+# target_include_directories( geometry
+#   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/_geometry/mckit/_geometry ${Python_NumPy_INCLUDE_DIRS}
+# )
+target_link_libraries(geometry PUBLIC geometry_objs)
 if(WIN32)
   target_link_libraries(geometry PUBLIC Python::Module)
 else()
@@ -118,6 +130,14 @@ else()
 endif()
 set_property(TARGET geometry PROPERTY INSTALL_RPATH "${origin_token}/../../..")
 install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
+
+
+if(MCKIT_BUILD_TEST)
+  message(STATUS Building MCKIT CTEST suite)
+  include(CTest)
+  add_subdirectory(ctests)
+endif()
+  
 
 include(FeatureSummary)
 
