@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/module/")
+
 include(CMakePrintHelpers)
 
 # to make CMake happy, if not running under skbuild
@@ -101,6 +103,10 @@ target_include_directories( geometry_objs
     ${Python_NumPy_INCLUDE_DIRS}
 )
 target_link_Libraries(geometry_objs PUBLIC nlopt)
+#  TODO @dvp: uncomment this andfix clang-tidy warnings
+#      when ctest testing coverage reached at least 80% 
+# include(ClangTidy)
+# AddClangTidy(geometry_objs) 
 
 
 python_add_library( geometry MODULE
@@ -133,8 +139,6 @@ install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
 
 
 if(MCKIT_BUILD_TEST)
-  message(STATUS Building MCKIT CTEST suite)
-  include(CTest)
   add_subdirectory(ctests)
 endif()
   

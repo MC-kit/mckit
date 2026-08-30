@@ -37,7 +37,7 @@ double plane_func(unsigned int n,  // Space dimension (must be NDIM)
     Plane *data = (Plane *)f_data;
     if (grad != nullptr)
     {
-        vec_copy(data->norm, std::span(grad, NDIM));
+        vec_copy(data->norm, std::span<double, NDIM>(grad, NDIM));
     }
     return vec_dot(std::span(x, NDIM), data->norm) + data->offset;
 }
@@ -46,10 +46,10 @@ double plane_func(unsigned int n,  // Space dimension (must be NDIM)
 double sphere_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     Sphere *data = (Sphere *)f_data;
-    const std::span x_span(x, NDIM);
+    const std::span<const double, NDIM> x_span(x, NDIM);
     if (grad != nullptr)
     {
-        std::span grad_span(grad, NDIM);
+        std::span<double, NDIM> grad_span(grad, NDIM);
         vec_copy(x_span, grad_span);
         vec_axpy(-1, data->center, grad_span);
         vec_scale(2, grad_span);
@@ -64,12 +64,12 @@ double cylinder_func(unsigned int n, const double *x, double *grad, void *f_data
 {
     Cylinder *data = (Cylinder *)f_data;
     double a[NDIM];
-    vec_copy(std::span(x, NDIM), a);
+    vec_copy(std::span<const double, NDIM>(x, NDIM), a);
     vec_axpy(-1, data->point, a);
     double an = vec_dot(a, data->axis);
     if (grad != nullptr)
     {
-        std::span grad_span(grad, NDIM);
+        std::span<double, NDIM> grad_span(grad, NDIM);
         vec_copy(a, grad_span);
         vec_axpy(-an, data->axis, grad_span);
         vec_scale(2, grad_span);
@@ -126,7 +126,7 @@ double BOX_func(unsigned int n, const double *x, double *grad, void *f_data)
 
     if (grad != nullptr)
     {
-        vec_copy(std::span(gp + index * NDIM, NDIM), std::span(grad, NDIM));
+        vec_copy(std::span<const double, NDIM>(gp + index * NDIM, NDIM), std::span<double, NDIM>(grad, NDIM));
     }
 
     return result[index];
@@ -136,14 +136,14 @@ double cone_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     Cone *data = (Cone *)f_data;
     double a[NDIM];
-    vec_copy(std::span(x, NDIM), a);
+    vec_copy(std::span<const double, NDIM>(x, NDIM), a);
     vec_axpy(-1, data->apex, a);
     double an = vec_dot(a, data->axis);
     if (data->sheet != 0 && data->sheet * an < 0)
         an = 0;
     if (grad != nullptr)
     {
-        std::span grad_span(grad, NDIM);
+        std::span<double, NDIM> grad_span(grad, NDIM);
         vec_copy(a, grad_span);
         vec_axpy(-an * (1 + data->ta), data->axis, grad_span);
         vec_scale(2, grad_span);
@@ -157,7 +157,7 @@ double gq_func(unsigned int n, const double *x, double *grad, void *f_data)
     const std::span x_span(x, NDIM);
     if (grad != nullptr)
     {
-        std::span grad_span(grad, NDIM);
+        std::span<double, NDIM> grad_span(grad, NDIM);
         vec_copy(data->v, grad_span);
         mat_vec_add(2, data->m, x_span, grad_span);
         vec_scale(data->factor, grad_span);
@@ -177,7 +177,7 @@ double torus_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     Torus *data = (Torus *)f_data;
     double p[NDIM];
-    vec_copy(std::span(x, NDIM), p);
+    vec_copy(std::span<const double, NDIM>(x, NDIM), p);
     vec_axpy(-1, data->center, p);
     double pn = vec_dot(p, data->axis);
     double pp = vec_dot(p, p);
@@ -187,7 +187,7 @@ double torus_func(unsigned int n, const double *x, double *grad, void *f_data)
         double add = 0;
         if (sq > 1.e-100)
             add = data->radius / sq;
-        std::span grad_span(grad, NDIM);
+        std::span<double, NDIM> grad_span(grad, NDIM);
         vec_copy(p, grad_span);
         vec_axpy(-pn, data->axis, grad_span);
         vec_scale((1 - add) / pow(data->b, 2), grad_span);
@@ -339,10 +339,11 @@ int torus_init(Torus *surf, const double *center, const double *axis, double rad
     {
         surf->degenerate = 1;
         double offset = a * sqrt(1 - pow(radius / b, 2));
-        std::span top = surf->specpts[0];
-        std::span bottom = surf->specpts[1];
-        vec_copy(std::span(center, NDIM), top);
-        vec_copy(std::span(center, NDIM), bottom);
+        std::span<double, NDIM> top = surf->specpts[0];
+        std::span<double, NDIM> bottom = surf->specpts[1];
+        vec_copy(std::span<const double, NDIM>(center, NDIM), top);
+        // TODO @dvp: duplicate span of center creation
+        vec_copy(std::span<const double, NDIM>(center, NDIM), bottom);
         vec_axpy(offset, std::span(axis, NDIM), top);
         vec_axpy(-offset, std::span(axis, NDIM), bottom);
     }

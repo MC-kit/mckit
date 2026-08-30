@@ -104,7 +104,7 @@ void box_generate_random_points(const Box *box, size_t npts, double *points)
         for (int j = 0; j < NDIM; ++j)
             d[j] = rng.next_double() - 0.5;
 
-        std::span point_row(points + i * NDIM, NDIM);
+        std::span<double, NDIM> point_row(points + i * NDIM, NDIM);
         vec_copy(box->center, point_row);
         vec_axpy(d[0] * box->dims[0], box->ex, point_row);
         vec_axpy(d[1] * box->dims[1], box->ey, point_row);
@@ -120,7 +120,7 @@ void box_test_points(const Box *box, size_t npts, const double *points, int *res
 
     for (i = 0; i < npts; ++i)
     {
-        vec_copy(std::span(points + i * NDIM, NDIM), delta);
+        vec_copy(std::span<const double, NDIM>(points + i * NDIM, NDIM), delta);
         vec_axpy(-1, box->center, delta);
         x = vec_dot(delta, box->ex) / box->dims[0];
         y = vec_dot(delta, box->ey) / box->dims[1];
@@ -191,7 +191,7 @@ extern "C" void box_ieqcons(unsigned int m, double *result, unsigned int n, cons
 {
     Box *box = (Box *)f_data;
 
-    const std::span<const double> basis[NDIM] = {box->ex, box->ey, box->ez};
+    const std::span<const double, NDIM> basis[NDIM] = {box->ex, box->ey, box->ez};
     double point[NDIM];
     int i, j, mult;
 
@@ -205,7 +205,7 @@ extern "C" void box_ieqcons(unsigned int m, double *result, unsigned int n, cons
 
         if (grad != nullptr)
         {
-            std::span grad_row(grad + i * NDIM, NDIM);
+            std::span<double,NDIM> grad_row(grad + i * NDIM, NDIM);
             vec_copy(basis[j], grad_row);
             vec_scale(mult, grad_row);
         }
@@ -215,10 +215,10 @@ extern "C" void box_ieqcons(unsigned int m, double *result, unsigned int n, cons
 static double min_func(unsigned int n, const double *x, double *grad, void *f_data)
 {
     Box *data = (Box *)f_data;
-    const std::span x_span(x, NDIM);
+    const std::span<const double, NDIM> x_span(x, NDIM);
     if (grad != nullptr)
     {
-        std::span grad_span(grad, NDIM);
+        std::span<double, NDIM> grad_span(grad, NDIM);
         vec_copy(x_span, grad_span);
         vec_axpy(-1, data->center, grad_span);
         vec_scale(2, grad_span);

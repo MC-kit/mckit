@@ -16,12 +16,24 @@
 #include <cstddef>
 #include <span>
 
+#include "common.h"
+
 /// Copies the vector src to dst. Replaces cblas_dcopy.
-inline void vec_copy(std::span<const double> src, std::span<double> dst)
+inline void vec_copy(std::span<const double, NDIM> src, std::span<double, NDIM> dst)
 {
-    for (size_t i = 0; i < dst.size(); ++i)
+    for (size_t i = 0; i < NDIM; ++i)
         dst[i] = src[i];
 }
+
+/// Check if vectors are equal.
+inline bool vec_equal(std::span<const double, NDIM> a, std::span<const double, NDIM> b)
+{
+    for (size_t i = 0; i < NDIM; ++i)
+        if (a[i] != b[i]) 
+            return false;
+    return true;
+}
+
 
 /// Adds alpha * x to y. Replaces cblas_daxpy.
 inline void vec_axpy(double alpha, std::span<const double> x, std::span<double> y)

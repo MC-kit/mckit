@@ -1,4 +1,19 @@
+message(STATUS Building MCKIT CTEST suite)
+include(CTest)
+include(FetchContent)
+FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG
+    v3.16.0
+)
+FetchContent_MakeAvailable(Catch2)
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+include(Catch)
 
-add_executable(test_box main.cpp)
-target_link_libraries(test_box geometry_objs)
-add_test(NAME test_box COMMAND test_box)
+add_executable(test_box test_box.cpp)
+target_link_libraries(test_box PRIVATE geometry_objs Catch2::Catch2WithMain)
+# add_test(NAME test_box COMMAND test_box)
+
+catch_discover_tests(test_box)
+
