@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.28.0)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/module/")
 
@@ -16,7 +16,8 @@ project(
   ${SKBUILD_PROJECT_NAME}
   VERSION ${SKBUILD_PROJECT_VERSION}
   DESCRIPTION "mckit geometry extension"
-  LANGUAGES C CXX)
+  LANGUAGES CXX
+)
 
 if(SKBUILD)
   message(STATUS "The project is built using scikit-build")
@@ -69,6 +70,8 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
       Please update submodules and try again.")
   endif()
 
+  # Libc++ has no support compiler extensions for modules.
+  set(CMAKE_CXX_EXTENSIONS OFF)
   # Set C++ standard
   set(CMAKE_CXX_STANDARD 20)
   # Use Inter Procedural Optimization, if possible
@@ -79,6 +82,12 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 endif()
 
 option(MCKIT_BUILD_TEST "Build and run MCKIT CTEST suite" TRUE)
+option(MCKIT_BUILD_COVERAGE "Check coverage of MCKIT CTEST suite" TRUE)
+option(MCKIT_BUILD_MEMCHECK "Check memory leaks with valgrind" TRUE)
+if (NOT MCKIT_BUILD_TEST)
+  set(MCKIT_BUILD_COVERAGE FALSE)
+  set(MCKIT_BUILD_MEMCHECK FALSE)
+endif()
 
 if(WIN32)
   set(Python_FIND_VIRTUALENV FIRST)
@@ -102,8 +111,15 @@ target_include_directories( geometry_objs
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/_geometry 
     ${Python_NumPy_INCLUDE_DIRS}
 )
+if (MCKIT_BUILD_COVERAGE AND CMAKE_BUILD_TYPE STREQUAL Debug)
+  target_compile_options(geometry_objs PRIVATE --coverage)
+  target_link_options(geometry_objs PUBLIC --coverage)
+  add_custom_command(TARGET geometry_objs PRE_BUILD COMMAND
+    find ${CMAKE_BINARY_DIR} -type f -name '*.gcda' -exec rm {} +
+  )
+endif()
 target_link_Libraries(geometry_objs PUBLIC nlopt)
-#  TODO @dvp: uncomment this andfix clang-tidy warnings
+#  TODO @dvp: uncomment this and fix clang-tidy warnings
 #      when ctest testing coverage reached at least 80% 
 # include(ClangTidy)
 # AddClangTidy(geometry_objs) 
@@ -137,6 +153,8 @@ endif()
 set_property(TARGET geometry PROPERTY INSTALL_RPATH "${origin_token}/../../..")
 install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
 
+include(FetchContent)
+set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/_deps")
 
 if(MCKIT_BUILD_TEST)
   add_subdirectory(ctests)

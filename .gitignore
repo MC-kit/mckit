@@ -80,3 +80,6 @@ cmake-build-debug
 
 # Visual studio
 .vs
+
+# FetchContent cache 
+_deps/
