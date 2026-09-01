@@ -4,8 +4,8 @@ function(AddMemcheck target)
     FetchContent_Declare(
         memcheck-cover
         GIT_REPOSITORY https://github.com/Farigh/memcheck-cover.git
-        GIT_TAG
-        release-1.3
+        GIT_TAG release-1.3
+        FIND_PACKAGE_ARGS
     )
     FetchContent_MakeAvailable(memcheck-cover)
     set(MEMCHECK_PATH ${memcheck-cover_SOURCE_DIR}/bin)

@@ -155,6 +155,8 @@ install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
 
 include(FetchContent)
 set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/_deps")
+include(fetchcontent-offline)
+FetchContent_DisconnectedIfOffline() 
 
 if(MCKIT_BUILD_TEST)
   add_subdirectory(ctests)
