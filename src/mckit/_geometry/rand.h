@@ -13,7 +13,10 @@
 #include <random>
 
 /// 64-bit rotate left.
-inline uint64_t rotl64(uint64_t x, int k) { return (x << k) | (x >> (64 - k)); }
+inline uint64_t rotl64(uint64_t x, int k)
+{
+    return (x << k) | (x >> (64 - k));
+}
 
 /// Splitmix64 generator - the standard way to seed xoshiro family generators.
 ///
@@ -64,7 +67,10 @@ struct Xoshiro256ss
     ///
     /// The bit manipulation keeps results identical across compilers
     /// and platforms, unlike std::uniform_real_distribution.
-    double next_double() { return (next() >> 11) * 0x1.0p-53; }
+    double next_double()
+    {
+        return (next() >> 11) * 0x1.0p-53;
+    }
 };
 
 /// Accessor for the thread-local generator shared by all boxes.

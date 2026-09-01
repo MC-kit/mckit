@@ -22,16 +22,16 @@ typedef struct Box Box;
 
 struct Box
 {
-    std::array<double, NDIM> center; /// center of the box
-    std::array<double, NDIM> ex;     ///
-    std::array<double, NDIM> ey;     /// basis vectors. Shows directions of box's edges
-    std::array<double, NDIM> ez;     ///
-    std::array<double, NDIM> dims;   /// Dimensions of the box.
-    std::array<double, NDIM> lb;     /// lower bounds
-    std::array<double, NDIM> ub;     /// upper bounds
+    std::array<double, NDIM> center;                    /// center of the box
+    std::array<double, NDIM> ex;                        ///
+    std::array<double, NDIM> ey;                        /// basis vectors. Shows directions of box's edges
+    std::array<double, NDIM> ez;                        ///
+    std::array<double, NDIM> dims;                      /// Dimensions of the box.
+    std::array<double, NDIM> lb;                        /// lower bounds
+    std::array<double, NDIM> ub;                        /// upper bounds
     std::array<std::array<double, NDIM>, NCOR> corners; /// corners
-    double volume;               /// volume
-    uint64_t subdiv;             /// Box location. The most outer (parent) box
+    double volume;                                      /// volume
+    uint64_t subdiv;                                    /// Box location. The most outer (parent) box
 };
 
 /// Initializes box structure.

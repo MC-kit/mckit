@@ -7,8 +7,8 @@
 /* Each row is delta to be added to center point to obtain specific corner.
  * They must be multiplied by corresponding box's dimensions.
  */
-static constexpr std::array<std::array<double, NDIM>, NCOR> perm = {{{-1, -1, -1}, {-1, -1, 1}, {-1, 1, -1}, {-1, 1, 1},
-                                                                     {1, -1, -1},  {1, -1, 1},  {1, 1, -1},  {1, 1, 1}}};
+static constexpr std::array<std::array<double, NDIM>, NCOR> perm = {
+    {{-1, -1, -1}, {-1, -1, 1}, {-1, 1, -1}, {-1, 1, 1}, {1, -1, -1}, {1, -1, 1}, {1, 1, -1}, {1, 1, 1}}};
 
 // Finds the highest set bit.
 static inline char high_bit(uint64_t value)
@@ -205,7 +205,7 @@ extern "C" void box_ieqcons(unsigned int m, double *result, unsigned int n, cons
 
         if (grad != nullptr)
         {
-            std::span<double,NDIM> grad_row(grad + i * NDIM, NDIM);
+            std::span<double, NDIM> grad_row(grad + i * NDIM, NDIM);
             vec_copy(basis[j], grad_row);
             vec_scale(mult, grad_row);
         }

@@ -29,11 +29,10 @@ inline void vec_copy(std::span<const double, NDIM> src, std::span<double, NDIM> 
 inline bool vec_equal(std::span<const double, NDIM> a, std::span<const double, NDIM> b)
 {
     for (size_t i = 0; i < NDIM; ++i)
-        if (a[i] != b[i]) 
+        if (a[i] != b[i])
             return false;
     return true;
 }
-
 
 /// Adds alpha * x to y. Replaces cblas_daxpy.
 inline void vec_axpy(double alpha, std::span<const double> x, std::span<double> y)
@@ -79,8 +78,7 @@ inline size_t vec_argmax_abs(std::span<const double> x)
 /// Adds alpha * m * x to y, where m is a row-major n x n matrix
 /// with n equal to the size of y. Replaces cblas_dgemv
 /// with CblasRowMajor and CblasNoTrans.
-inline void mat_vec_add(double alpha, std::span<const double> m, std::span<const double> x,
-                        std::span<double> y)
+inline void mat_vec_add(double alpha, std::span<const double> m, std::span<const double> x, std::span<double> y)
 {
     const size_t n = y.size();
     for (size_t i = 0; i < n; ++i)

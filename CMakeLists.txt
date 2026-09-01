@@ -16,7 +16,7 @@ project(
   ${SKBUILD_PROJECT_NAME}
   VERSION ${SKBUILD_PROJECT_VERSION}
   DESCRIPTION "mckit geometry extension"
-  LANGUAGES CXX
+  LANGUAGES C CXX
 )
 
 if(SKBUILD)
@@ -27,48 +27,9 @@ endif()
 # add_subdirectory
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
-  # Set CMAKE_BUILD_TYPE to Release by default. Must be done before calling
-  # project()
-  set(default_build_type "Release")
-  if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-    message(
-      STATUS
-        "Setting build type to '${default_build_type}' as none was specified.")
-    set(CMAKE_BUILD_TYPE
-        "${default_build_type}"
-        CACHE STRING "Choose the type of build." FORCE)
-    # Set the possible values of build type for cmake-gui
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
-                                                 "MinSizeRel" "RelWithDebInfo")
-  endif()
-
-  if(CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
-    message(
-      FATAL_ERROR
-        "Building in-source is not supported! Create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt"
-    )
-  endif()
-
-  find_package(Git QUIET)
-
-  if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
-    execute_process(
-      COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      RESULT_VARIABLE GIT_SUBMOD_RESULT)
-    if(NOT GIT_SUBMOD_RESULT EQUAL "0")
-      message(
-        FATAL_ERROR
-          "git submodule update --init --recursive failed with ${GIT_SUBMOD_RESULT},
-        please checkout submodules")
-    endif()
-  endif()
-  if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/nlopt/CMakeLists.txt")
-    message(
-      FATAL_ERROR
-        "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed.
-      Please update submodules and try again.")
-  endif()
+  include(SetBuildType)
+  include(NoInSourceBuild)
+  include(UpdateGitSubModules)
 
   # Libc++ has no support compiler extensions for modules.
   set(CMAKE_CXX_EXTENSIONS OFF)
@@ -111,6 +72,9 @@ target_include_directories( geometry_objs
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/_geometry 
     ${Python_NumPy_INCLUDE_DIRS}
 )
+set_target_properties(geometry_objs PROPERTIES
+  POSITION_INDEPENDENT_CODE 1
+)
 if (MCKIT_BUILD_COVERAGE AND CMAKE_BUILD_TYPE STREQUAL Debug)
   target_compile_options(geometry_objs PRIVATE --coverage)
   target_link_options(geometry_objs PUBLIC --coverage)
@@ -119,14 +83,17 @@ if (MCKIT_BUILD_COVERAGE AND CMAKE_BUILD_TYPE STREQUAL Debug)
   )
 endif()
 target_link_Libraries(geometry_objs PUBLIC nlopt)
-#  TODO @dvp: uncomment this and fix clang-tidy warnings
-#      when ctest testing coverage reached at least 80% 
+include(Format)
+Format(geometry_objs src/mckit/_geometry)
+#  TODO @dvp: fix clang-tidy warnings allowingx` more checks
+#      in .clang-tidy config,
+#      when ctest testing coverage reaches at least 80% 
 # include(ClangTidy)
 # AddClangTidy(geometry_objs) 
 
 
 python_add_library( geometry MODULE
-  src/mckit/_geometry/box.cpp
+  src/mckit/_geometry/geometrymodule.cpp
   WITH_SOABI
 )
 # target_include_directories( geometry
