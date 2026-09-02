@@ -45,7 +45,8 @@ filterwarnings = [
     "ignore:.*not typechecking multipledispatch.dispatcher.*UserWarning",
     'ignore:.*Implicit None on return values:DeprecationWarning',
     'ignore:.*io.FileIO \[closed\]',
-    "ignore:.*GIL.*enabled to load module.*mckit.geometry.*:RuntimeWarning"
+    "ignore:.*GIL.*enabled to load module.*mckit.geometry.*:RuntimeWarning",
+    "ignore:.*isolated_filesystem.* is deprecated and will be removed in Click 9.0.*:DeprecationWarning",
 ]
 log_level = "INFO"
 log_format = "%(asctime)s %(levelname)s %(message)s"
