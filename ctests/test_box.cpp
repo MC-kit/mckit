@@ -3,11 +3,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 
-// template<typename T=double, int D=NDIM>
-// ostream& operator <<(ostream& os, const std::array[T, D] & a)
-// {
-//     return os << '[' < a[0] << ',' << a[1] << ',' << a[2] << ']';
-// }
+
 TEST_CASE("Test box init", "[box]")
 {
     const double center[NDIM]{0, 0, 0};

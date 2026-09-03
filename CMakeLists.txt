@@ -118,7 +118,7 @@ else()
   set(origin_token "$ORIGIN")
 endif()
 set_property(TARGET geometry PROPERTY INSTALL_RPATH "${origin_token}/../../..")
-install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
+# install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
 
 include(FetchContent)
 set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/_deps")
