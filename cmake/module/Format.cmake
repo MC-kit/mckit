@@ -11,6 +11,6 @@ function(Format target directory)
             ${CLANG_FORMAT_PATH} -i --style=file ${SOURCE_FILES}
         )
     else()
-        message(STATUS "lang-format not found")
+        message(WARNING "lang-format not found")
     endif()
 endfunction()

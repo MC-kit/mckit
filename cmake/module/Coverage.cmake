@@ -16,6 +16,6 @@ function(AddCoverage target)
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         )
     else()
-        message(STATUS "coverage disabled: lcov or genhtml not found")
+        message(WARNING "coverage disabled: lcov or genhtml not found")
     endif()
 endfunction()
