@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.28.0)
+cmake_minimum_required(VERSION 3.30)
+cmake_policy(SET CMP0168 NEW)  # eliminate the sub-build
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/module/")
 
@@ -16,8 +17,7 @@ project(
   ${SKBUILD_PROJECT_NAME}
   VERSION ${SKBUILD_PROJECT_VERSION}
   DESCRIPTION "mckit geometry extension"
-  LANGUAGES C CXX
-)
+  LANGUAGES C CXX)
 
 if(SKBUILD)
   message(STATUS "The project is built using scikit-build")
@@ -45,7 +45,7 @@ endif()
 option(MCKIT_BUILD_TEST "Build and run MCKIT CTEST suite" TRUE)
 option(MCKIT_BUILD_COVERAGE "Check coverage of MCKIT CTEST suite" TRUE)
 option(MCKIT_BUILD_MEMCHECK "Check memory leaks with valgrind" TRUE)
-if (NOT MCKIT_BUILD_TEST)
+if(NOT MCKIT_BUILD_TEST)
   set(MCKIT_BUILD_COVERAGE FALSE)
   set(MCKIT_BUILD_MEMCHECK FALSE)
 endif()
@@ -56,49 +56,37 @@ endif()
 
 find_package(Python COMPONENTS Interpreter Development.Module NumPy)
 
-
 add_subdirectory(extern)
 
-add_library( geometry_objs STATIC
-  src/mckit/_geometry/box.cpp
-  src/mckit/_geometry/shape.cpp
-  src/mckit/_geometry/surface.cpp
-  src/mckit/_geometry/stats.h
-  src/mckit/_geometry/rand.h
-  src/mckit/_geometry/vecops.h
-)
-target_include_directories( geometry_objs
-  PUBLIC 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/_geometry 
-    ${Python_NumPy_INCLUDE_DIRS}
-)
-set_target_properties(geometry_objs PROPERTIES
-  POSITION_INDEPENDENT_CODE 1
-)
-if (MCKIT_BUILD_COVERAGE AND CMAKE_BUILD_TYPE STREQUAL Debug)
+add_library(
+  geometry_objs STATIC
+  src/mckit/_geometry/box.cpp src/mckit/_geometry/shape.cpp
+  src/mckit/_geometry/surface.cpp src/mckit/_geometry/stats.h
+  src/mckit/_geometry/rand.h src/mckit/_geometry/vecops.h)
+target_include_directories(
+  geometry_objs PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/mckit/_geometry
+                       ${Python_NumPy_INCLUDE_DIRS})
+set_target_properties(geometry_objs PROPERTIES POSITION_INDEPENDENT_CODE 1)
+if(MCKIT_BUILD_COVERAGE AND CMAKE_BUILD_TYPE STREQUAL Debug)
   target_compile_options(geometry_objs PRIVATE --coverage)
   target_link_options(geometry_objs PUBLIC --coverage)
-  add_custom_command(TARGET geometry_objs PRE_BUILD COMMAND
-    find ${CMAKE_BINARY_DIR} -type f -name '*.gcda' -exec rm {} +
-  )
+  add_custom_command(
+    TARGET geometry_objs
+    PRE_BUILD
+    COMMAND find ${CMAKE_BINARY_DIR} -type f -name '*.gcda' -exec rm {} +)
 endif()
-target_link_Libraries(geometry_objs PUBLIC nlopt)
+target_link_libraries(geometry_objs PUBLIC nlopt)
 include(Format)
-Format(geometry_objs src/mckit/_geometry)
-#  TODO @dvp: fix clang-tidy warnings allowingx` more checks
-#      in .clang-tidy config,
-#      when ctest testing coverage reaches at least 80% 
-# include(ClangTidy)
-# AddClangTidy(geometry_objs) 
+format(geometry_objs src/mckit/_geometry)
+# TODO @dvp: fix clang-tidy warnings allowingx` more checks in .clang-tidy
+# config, when ctest testing coverage reaches at least 80% include(ClangTidy)
+# AddClangTidy(geometry_objs)
 
-
-python_add_library( geometry MODULE
-  src/mckit/_geometry/geometrymodule.cpp
-  WITH_SOABI
-)
-# target_include_directories( geometry
-#   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/_geometry/mckit/_geometry ${Python_NumPy_INCLUDE_DIRS}
-# )
+python_add_library(geometry MODULE src/mckit/_geometry/geometrymodule.cpp
+                   WITH_SOABI)
+# target_include_directories( geometry PRIVATE
+# ${CMAKE_CURRENT_SOURCE_DIR}/_geometry/mckit/_geometry
+# ${Python_NumPy_INCLUDE_DIRS} )
 target_link_libraries(geometry PUBLIC geometry_objs)
 if(WIN32)
   target_link_libraries(geometry PUBLIC Python::Module)
@@ -118,17 +106,16 @@ else()
   set(origin_token "$ORIGIN")
 endif()
 set_property(TARGET geometry PROPERTY INSTALL_RPATH "${origin_token}/../../..")
-# install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
+install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
 
 include(FetchContent)
-set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/_deps")
+# set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/_deps")
 include(fetchcontent-offline)
-FetchContent_DisconnectedIfOffline() 
+fetchcontent_disconnectedifoffline()
 
 if(MCKIT_BUILD_TEST)
   add_subdirectory(ctests)
 endif()
-  
 
 include(FeatureSummary)
 

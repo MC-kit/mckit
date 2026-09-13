@@ -3,7 +3,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 
-
 TEST_CASE("Test box init", "[box]")
 {
     const double center[NDIM]{0, 0, 0};

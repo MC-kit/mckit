@@ -12,14 +12,6 @@ license = "MIT"
 # TODO @dvp: if python 3.14 is allowed, then pixi uses its freethreaded version, mckit (or numpy?) is not ready for that
 #            implement testing environment and code changes for 3.14+-freethreaded
 requires-python = ">=3.12,<3.14"
-dependencies = [
-  "click",
-  "loguru",
-  "numpy>=2.4",
-  "ply",
-  "sly",
-  "tomli-w",
-]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Environment :: Console",
@@ -32,6 +24,14 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+  "click",
+  "loguru",
+  "numpy>=2.4",
+  "ply",
+  "sly",
+  "tomli-w",
 ]
 [[project.authors]]
 name = "rrn"
@@ -46,16 +46,62 @@ Homepage = "https://github.com/MC-kit/mckit"
 Issues = "https://github.com/MC-kit/mckit/issues"
 Repository = "https://github.com/MC-kit/mckit"
 
+# Dependency groups for the uv package manager (PEP 735).
+# They mirror the feature sets defined in pixi.toml.
+[dependency-groups]
+test = [
+  "psutil>=7.2.2",
+  "pytest>=9.0.3",
+  "pytest-benchmark>=5.2.3",
+  "pytest-cov>=7.1",
+  "pytest-mock>=3.15.1",
+  "pytest-xdist>=3.8",
+  "xdoctest>=1.3.2",
+]
+docs = [
+  "esbonio>=2",
+  "sphinx>=9.1",
+  "sphinx-autobuild>=2025.8.25",
+  "sphinx-autodoc-typehints>=3.10",
+  "sphinx-click>=6.2",
+]
+analyze = [
+  "duckdb>=1.5.5,<2",
+  "marimo>=0.23.13",
+  "polars>=1.43,<2",
+  "pyarrow>=25,<26",
+  "sqlglot>=28.10.1,<29",
+]
+build = [
+  "pysocks>=1.7.1,<2",
+  "scikit-build-core>=0.12",
+]
+style = [
+  "basedpyright>=1.39.8",
+  "mypy>=2.1",
+  "pre-commit>=4.3",
+  "pylint>=4.0.6,<5",
+  "pyrefly>=1.1.1",
+  "pyright>=1.1.406",
+  "ruff>=0.15",
+  "ty>=0.0.55",
+]
+typeguard = [ "typeguard>=4.5" ]
+
 [tool.scikit-build]
 minimum-version = "build-system.requires"
 build-dir = ".sk-build/{wheel_tag}"
-[tool.scikit-build.build]
+  [tool.scikit-build.build]
 verbose = true
 [tool.scikit-build.cmake]
+version = ">=4"
 build-type = "Release"
 source-dir = "."
 [tool.scikit-build.logging]
 level = "INFO"
+[tool.scikit-build.ninja]
+version = ">=1"
+make-fallback = false
 [tool.scikit-build.wheel]
 # Установка py-api активирует Stable ABI, если версия ниже текущей
 # py-api = "cp312"  # scikit-build ignores this SABI request on building
@@ -66,48 +112,6 @@ level = "INFO"
 # which are hidden when Py_LIMITED_API is set on
 packages = [ "src/mckit" ]
 exclude = [ "**/__pycache__", "**/*.pyc" ]
-
-# Dependency groups for the uv package manager (PEP 735).
-# They mirror the feature sets defined in pixi.toml.
-[dependency-groups]
-analyze = [
-  "duckdb>=1.5.5,<2",
-  "marimo>=0.23.13",
-  "polars>=1.43.0,<2",
-  "pyarrow>=25.0.0,<26",
-  "sqlglot>=28.10.1,<29",
-]
-build = [
-  "pysocks>=1.7.1,<2",
-  "scikit-build-core>=0.12",
-]
-docs = [
-  "esbonio>=2",
-  "sphinx>=9.1",
-  "sphinx-autobuild>=2025.8.25",
-  "sphinx-autodoc-typehints>=3.10",
-  "sphinx-click>=6.2.0",
-]
-style = [
-  "basedpyright>=1.39.8",
-  "mypy>=2.1.0",
-  "pre-commit>=4.3",
-  "pyrefly>=1.1.1",
-  "pylint>=4.0.6,<5",
-  "pyright>=1.1.406",
-  "ruff>=0.15",
-  "ty>=0.0.55",
-]
-test = [
-  "psutil>=7.2.2",
-  "pytest>=9.0.3",
-  "pytest-benchmark>=5.2.3",
-  "pytest-cov>=7.1.0",
-  "pytest-mock>=3.15.1",
-  "pytest-xdist>=3.8.0",
-  "xdoctest>=1.3.2",
-]
-typeguard = [ "typeguard>=4.5" ]
 
 [tool.mypy]
 files = "src/**/*.py"
