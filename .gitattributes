@@ -2,22 +2,32 @@
 # Special handling for binary files
 # See https://git-scm.com/book/en/v2/Customizing-Git-Git-Attributes
 #
+*.7z binary
 *.bz2 binary
 *.dll binary
 *.docx binary
 *.duckdb binary
+*.eps binary
 *.gz binary
+*.hd5 binary
+*.nc binary
 *.npy binary
 *.npz binary
+*.odp binary
+*.ods binary
+*.odt binary
+*.parquet
+*.pdf binary
 *.png binary
-*.so binary
-*.dll binary
+*.pptx binary
 *.pyd binary
+*.r binary
 *.sqlite binary
-*.nc binary
+*.so binary
 *.parquet binary
 *.xlsx binary
 *.xz binary
 *.zip binary
 # SCM syntax highlighting & preventing 3-way merges
 uv.lock merge=binary linguist-language=TOML linguist-generated=true
+pixi.lock merge=binary linguist-language=TOML linguist-generated=true

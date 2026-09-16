@@ -1,14 +1,12 @@
 # Examples: msgspec
-# Disable showing recipe lines before execution.
 
+# Disable showing recipe lines before execution.
 set quiet
 
 # Enable unstable features.
-
 set unstable
 
 # Configure the shell for Windows.
-
 set windows-shell := ["pwsh.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command"]
 
 # We don't want to install any dev dependencies by default.
@@ -16,7 +14,6 @@ set windows-shell := ["pwsh.exe", "-NoProfile", "-NonInteractive", "-ExecutionPo
 
 alias t := test
 alias c := check
-
 set dotenv-load
 
 default_python := "3.13"
@@ -28,14 +25,15 @@ export JUST_LOG := log
 @_default:
     just --list
 
+# show version
 [group('dev')]
 @version:
-    uv version 
+    uv version
 
 # create venv, if not exists
 [group('dev')]
 @venv:
-    [ -d .venv ] || uv venv --python {{ default_python }} --seed
+    [ -d .venv ] || uv venv --python {{ default_python }}
 
 # build package
 [group('dev')]
@@ -51,36 +49,43 @@ export JUST_LOG := log
 # clean reproducible files
 [group('dev')]
 @clean:
-  #!/bin/bash
-  dirs_to_clean=(
-      ".benchmarks"
-      ".cache"
-      ".eggs"
-      ".mypy_cache"
-      ".nox"
-      ".pytest_cache"
-      ".ruff_cache"
-      ".venv"
-      "__pycache__"
-      "_build"
-      "build"
-      "cmake-build-debug"
-      "dist"
-      "htmlcov"
-  )
-  for d in "${dirs_to_clean[@]}"; do
-      find . -type d -name "$d" -exec rm -rf {} +
-  done
-  files_to_clean=(
-      "*.so"
-      "*.so.*"
-      "*.dll"
-      "*.dylib"
-  )
-  for f in "${files_to_clean[@]}"; do
-      find src/mckit -type f -name "$f" -exec rm -rf {} +
-  done
-
+    #!/bin/bash
+    dirs_to_clean=(
+        ".benchmarks"
+        ".cache"
+        ".eggs"
+        ".mypy_cache"
+        ".pytest_cache"
+        ".ruff_cache"
+        ".venv"
+        "_build"
+        "build"
+        "dist"
+        "docs/_build"
+        "htmlcov"
+    )
+    for d in "${dirs_to_clean[@]}"; do
+       [ -d "$d" ] && echo "removing $d" && rm -fr "$d" 
+    done
+    dirs_to_clean=(
+        "__pycache__"
+    )
+    for d in "${dirs_to_clean[@]}"; do
+        find . -type d -wholename "$d" -exec rm -rf {} +
+    done
+    files_to_clean=(
+        "*.so"
+        "*.so.*"
+        "*.dll"
+        "*.dylib"
+    )
+    for f in "${files_to_clean[@]}"; do
+        find src/mckit -type f -name "$f" -exec rm -f {} +
+    done
+    # pixi clean
+    coverage erase
+    #pyreverse files
+    find . -type f -name "*.puml" -delete
 
 # install package
 [group('dev')]
@@ -97,7 +102,7 @@ export JUST_LOG := log
 
 # Check style includeing mypy and pylint and test
 [group('dev')]
-@check-full: check mypy pylint pyright
+@check-full: check ty basedpyright pyrefly pylint
 
 # Bump project version
 [group('dev')]
@@ -109,7 +114,6 @@ export JUST_LOG := log
 [group('dev')]
 @up-tools:
     pre-commit autoupdate
-    uv self update
     pre-commit run -a 
 
 # update dependencies
@@ -152,7 +156,7 @@ export JUST_LOG := log
 # run documentation tests
 [group('test')]
 @xdoctest *args:
-    @uv run --no-dev --group test --group xdoctest python -m xdoctest --silent --style google -c all -m mckit {{args}}
+    uv run --no-dev --group test xdoctest --silent -c all -m mckit {{args}}
 
 # create coverage data
 [group('test')]
@@ -199,6 +203,14 @@ typeguard *args:
 @ty:
     uv run --no-dev --group style ty check 
 
+[group('style')]
+@basedpyright:
+    basedpyright
+
+[group('style')]
+@pyrefly *args="check":
+    pyrefly {{ args }}
+
 # Draw UML diagrams
 [group('style')]
 @pyreverse:
@@ -216,15 +228,10 @@ typeguard *args:
 
 # build documentation
 [group('docs')]
-@docs-build: # rstcheck
+@docs-build: rstcheck
     uv run --no-dev --group docs sphinx-build docs/source docs/_build
 
 # browse and edit documentation with auto build
 [group('docs')]
 @docs:
     uv run --no-dev --group docs --group docs sphinx-autobuild --open-browser docs/source docs/_build
-
-# modules required to debug setup.py
-[group: 'debug-setup']
-@scbld:
-    uv pip install cmake scikit-build mkl-devel numpy ninja

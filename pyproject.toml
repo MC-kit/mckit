@@ -167,12 +167,10 @@ log_date_format = "%Y-%m-%d %H:%M:%S"
 quiet = true
 options = ""
 
-[tool.coverage]
 [tool.coverage.paths]
 source = [ "src" ]
 [tool.coverage.report]
 exclude_lines = [
-  # Don't complain about missing debug-only code:
   "def __repr__",
   "if __name__ == .__main__.:",
   "if 0:",
@@ -194,6 +192,8 @@ omit = [ "**/__init__.py", "*_tab.py", "tools/*.py" ]
 parallel = true
 source = [ "src" ]
 
+[tool.marimo.runtime]
+pythonpath = [ "notebooks", "notebooks/common" ]
 
 
 # MyPy config

@@ -1,38 +1,45 @@
-target-version = "py312"
+target-version = "py313"
 line-length = 100
-src = ["src", "tests"]
+src = [ "src", "tests" ]
 exclude = [
-    "*.egg-info",
-    ".cache",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".mypy_cache",
-    ".nox",
-    ".ruff_cache",
-    ".unclassified",
-    ".venv",
-    "__pycache__",
-    "_build",
-    "adhoc",
-    "build",
-    "data", 
-    "dist",
-    "docs/source/conf.py",
-    "extern",
-    "notebooks",
-    "venv",
-    "wrk",
+  "*.egg-info",
+  ".cache",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".git-rewrite",
+  ".hg",
+  ".ipynb_checkpoints",
+  ".mypy_cache",
+  ".nox",
+  ".pytest_cache",
+  ".pytype",
+  ".ruff_cache",
+  ".venv",
+  ".vscode",
+  "__pycache__",
+  "__pypackages__",
+  "_build",
+  "adhoc",
+  "build",
+  "data",
+  "dist",
+  "docs/source/conf.py",
+  "notebooks",
+  "site-packages",
+  "tests/data",
+  "venv",
+  "wrk",
 ]
 
 [lint]
-select=["ALL"]
+select = [ "ALL" ]
 ignore=[
   "ANN",
   "ARG",
   "C901", # too complex - ...
   "COM812",
+  "CPY",
   "D203",
   "D100", # Missing docstring in public module
   "D101", # Missing docstring in public class
@@ -45,6 +52,13 @@ ignore=[
   "DTZ005",  #  `datetime.datetime.now()` called without a `tz` argument
   "D211",
   "D213",
+  "D400", # TODO - fix
+  "D401", # TODO - fix
+  "D406", # TODO - fix
+  "D407", # TODO - fix
+  "D411", # TODO - fix
+  "D412", # TODO - fix
+  "D414", # TODO - fix
   "E402", # Module level import not at top of file
   "E501", # Line too long (<LENGTH> > 100 characters)
 
@@ -58,7 +72,9 @@ ignore=[
   "N803", # Argument name `R` should be lowercase
   "N806", # Variable `D` in function should be lowercase
   "N802", # function name should be lowercase
+  "INP001", # TODO - fix
   "ISC001", # may cause conflicts when used with the ruff formatter
+  "ISC004", # TODO - fix
 
   "PLE1205", # logging-too-many-args - we use loguru with '{' style of placeholders
 
@@ -67,9 +83,10 @@ ignore=[
   "PLR0915", # Too many statements (65 > 50)
   "PLR2004", # magic number - don't want to declare 0.0 as constant
 #    "PLR5501", # Consider using `elif` instead of `else` then `if` to remove one indentation level
-
+  "PLR0917", # too many positional arguments
   "PT019", # Fixture `_bin` without value is injected as parameter (false positive?)
   "RUF009", # attrib() - remove attrs
+  "RUF068", # TODO - fix
   "S101", # Use of `assert` detected  - TODO - replace assert statements with exception raise
   "SLF001", #  Private member accessed: `_cells`
   "T201", #  `print` found
@@ -116,34 +133,37 @@ parametrize-names-type = "csv"
 [lint.flake8-type-checking]
 strict = true
 
+[lint.pep8-naming]
+ignore-names = [ "*He*", "*eV*" ]
+
 # warning: The isort option `isort.split-on-trailing-comma` is incompatible
 # with the formatter `format.skip-magic-trailing-comma=true` option.
 # To avoid unexpected behavior, we recommend either setting `isort.split-on-trailing-comma=false`
 # or `format.skip-magic-trailing-comma=false`.
 
 [lint.isort]
-known-first-party = ["src"]
-known-third-party = ["mpl_toolkits", "matplotlib", "numpy", "scipy", "loguru", "tqdm", "dotenv"]
+known-first-party = [ "src" ]
+known-third-party = [ "dotenv", "loguru", "matplotlib", "mpl_toolkits", "numpy", "scipy", "tqdm" ]
 default-section = "third-party"
 lines-between-types = 1
-required-imports = ["from __future__ import annotations"]
+required-imports = [ "from __future__ import annotations" ]
 case-sensitive = true
 section-order = [
-    "future",
-    "typing",
-    "standard-library",
-    "third-party",
-    "first-party",
-    "local-folder",
-    "testing"
+  "future",
+  "typing",
+  "standard-library",
+  "third-party",
+  "first-party",
+  "local-folder",
+  "testing",
 ]
 
 [lint.isort.sections]
-"typing" = ["typing", "typing_extension"]
-"testing" = ["tests"]
+"typing" = [ "typing", "typing_extension" ]
+"testing" = [ "tests" ]
 
 [lint.pydocstyle]
-convention = "google" # Use Google-style docstrings.
+convention = "numpy"
 
 [format]
 docstring-code-format = true
