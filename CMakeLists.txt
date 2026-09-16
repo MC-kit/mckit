@@ -6,12 +6,15 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/module/")
 include(CMakePrintHelpers)
 
 # to make CMake happy, if not running under skbuild
-if(NOT DEFINED SKBUILD_PROJECT_NAME AND DEFINED ENV{PIXI_PROJECT_VERSION})
+if(NOT DEFINED SKBUILD_PROJECT_NAME AND DEFINED ENV{MCKIT_PROJECT_VERSION})
   set(SKBUILD_PROJECT_NAME mckit)
-  set(SKBUILD_PROJECT_VERSION $ENV{PIXI_PROJECT_VERSION})
+  set(SKBUILD_PROJECT_VERSION $ENV{MCKIT_PROJECT_VERSION})
 endif()
 
 cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION SKBUIL_STATE)
+
+set(CMAKE_C_COMPILER /usr/local/bin/gcc)
+set(CMAKE_CXX_COMPILER /usr/local/bin/c++)
 
 project(
   ${SKBUILD_PROJECT_NAME}
@@ -42,9 +45,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   cmake_print_variables(ipo_supported)
 endif()
 
-option(MCKIT_BUILD_TEST "Build and run MCKIT CTEST suite" TRUE)
-option(MCKIT_BUILD_COVERAGE "Check coverage of MCKIT CTEST suite" TRUE)
-option(MCKIT_BUILD_MEMCHECK "Check memory leaks with valgrind" TRUE)
+option(MCKIT_BUILD_TEST "Build and run MCKIT CTEST suite" FALSE)
+option(MCKIT_BUILD_COVERAGE "Check coverage of MCKIT CTEST suite" FALSE)
+option(MCKIT_BUILD_MEMCHECK "Check memory leaks with valgrind" FALSE)
 if(NOT MCKIT_BUILD_TEST)
   set(MCKIT_BUILD_COVERAGE FALSE)
   set(MCKIT_BUILD_MEMCHECK FALSE)

@@ -11,7 +11,7 @@ keywords = [ "mckit", "MCNP" ]
 license = "MIT"
 # TODO @dvp: if python 3.14 is allowed, then pixi uses its freethreaded version, mckit (or numpy?) is not ready for that
 #            implement testing environment and code changes for 3.14+-freethreaded
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.12,<3.15"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Environment :: Console",
@@ -23,6 +23,7 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
@@ -49,6 +50,7 @@ Repository = "https://github.com/MC-kit/mckit"
 # Dependency groups for the uv package manager (PEP 735).
 # They mirror the feature sets defined in pixi.toml.
 [dependency-groups]
+dev = [ { include-group = "style" }, { include-group = "test" } ]
 test = [
   "psutil>=7.2.2",
   "pytest>=9.0.3",
@@ -60,31 +62,33 @@ test = [
 ]
 docs = [
   "esbonio>=2",
+  "rstcheck[sphinx,toml]>=6.2.5",
   "sphinx>=9.1",
   "sphinx-autobuild>=2025.8.25",
   "sphinx-autodoc-typehints>=3.10",
+  "sphinx-togglebutton>=0.4",
   "sphinx-click>=6.2",
 ]
 analyze = [
   "duckdb>=1.5.5,<2",
-  "marimo>=0.23.13",
+  "marimo>=0.23.14",
   "polars>=1.43,<2",
   "pyarrow>=25,<26",
   "sqlglot>=28.10.1,<29",
 ]
-build = [
-  "pysocks>=1.7.1,<2",
-  "scikit-build-core>=0.12",
-]
+lint = [ "pylint", "pylint-per-file-ignores" ]
+mypy = [ "mypy>=1.2", "pep8-naming>=0.12.1", "types-setuptools>=80.9.0.20250529" ]
+pre_commit = [ "pre-commit>=4.3" ]
+pyright = [ "pyright>=1.1.406" ]
+ruff = [ "ruff>=0.0.259" ]
 style = [
-  "basedpyright>=1.39.8",
-  "mypy>=2.1",
-  "pre-commit>=4.3",
-  "pylint>=4.0.6,<5",
+  "basedpyright>=1.39.9",
   "pyrefly>=1.1.1",
-  "pyright>=1.1.406",
-  "ruff>=0.15",
-  "ty>=0.0.55",
+  { include-group = "lint" },
+  { include-group = "mypy" },
+  { include-group = "pre_commit" },
+  { include-group = "pyright" },
+  { include-group = "ruff" },
 ]
 typeguard = [ "typeguard>=4.5" ]
 

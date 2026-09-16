@@ -44,12 +44,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  MKLROOT: "${{ github.workspace }}/.pixi/envs/default"
-  MKL_INCLUDE_PATH: "${{ github.workspace }}/.pixi/envs/default/include"
-  LD_LIBRARY_PATH: "${{ github.workspace }}/.pixi/envs/default/lib"
-  RUNNER_DEBUG: true
-  no_proxy: "pypi.org,files.pythonhosted.org,github.com,api.github.com"  # to avoid SOCKS issue on python3.14
-
+  DEFAULT_PYTHON: "3.13"
+  UV_LINK_MODE: "copy"
 
 jobs:
 
@@ -61,71 +57,85 @@ jobs:
       - name: ✅ Check out the repository
         uses: actions/checkout@v7
 
-      - uses: prefix-dev/setup-pixi@v0.10.0
+      - name: 📦 Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          pixi-version: v0.74.0
-          cache: true
-          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
-#          auth-host: prefix.dev
-#          auth-token: ${{ secrets.PREFIX_DEV_TOKEN }}
-          activate-environment: true
-
-      - name: 📦 Run pre commit checks
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          enable-cache: true
+          cache-dependency-glob: |
+            **/uv.lock
+            **/pyproject.toml      
+      
+      - name: Run pre commit checks
         run: |
-          pixi run pre-commit
+          uv run --no-dev --group pre-commit pre-commit run --show-diff-on-failure --color=always --all-files
+
+  
+  # typing:
+  #   runs-on: ubuntu-latest
+  #   if: |
+  #     !contains(github.event.head_commit.message, '[skip_ci]')
+  #   steps:
+  #     - name: ✅ Check out the repository
+  #       uses: actions/checkout@v7
+
+  #     - name: 📦 Install uv
+  #       uses: astral-sh/setup-uv@v6
+  #       with:
+  #         python-version: ${{ env.DEFAULT_PYTHON }}
+  #         enable-cache: true
+  #         cache-dependency-glob: |
+  #           **/uv.lock
+  #           **/pyproject.toml      
+
+  #     - name: 🐍 Install the project
+  #       run: |
+  #         uv sync --all-extras --no-dev --group mypy
+  #         uv pip list
+
+  #     # - name: 📦 Run mypy static type checks
+  #     #  run: |
+  #     #    uv run mypy src docs/source/conf.py
+
 
   docs:
     runs-on: ubuntu-latest
-    if: |
-      !contains(github.event.head_commit.message, '[skip_ci]')
     steps:
       - name: ✅ Check out the repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 1
           submodules: 'true'
-      - uses: prefix-dev/setup-pixi@v0.10.0
-        with:
-          pixi-version: v0.74.0
-          cache: true
-          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
-          environments: docs
-          activate-environment: true
-#          auth-host: prefix.dev
-#          auth-token: ${{ secrets.PREFIX_DEV_TOKEN }}
-#          cache-dependency-glob: |
-#            **/uv.lock
-#            **/pyproject.toml
 
-#      - name: 🐍 Install the project
-#        run: |
-#          pixi install
-        env:
-          MKLROOT: "${{ github.workspace }}/.pixi/envs/docs"
-          MKL_INCLUDE_PATH: "${{ github.workspace }}/.pixi/envs/docs/include"
-          LD_LIBRARY_PATH: "${{ github.workspace }}/.pixi/envs/docs/lib"
+      - name: 📦 Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          enable-cache: true
+          cache-dependency-glob: |
+            **/uv.lock
+            **/pyproject.toml      
+
+      - name: 🐍 Install the project
+        run: |
+          uv sync --all-extras --no-dev --group docs
+          uv pip list
 
       - name: 📦 Build documentation
         run: |
-          pixi run docs-build
+          uv run sphinx-build docs/source docs/build
 
   tests:
-    name: "${{ matrix.environment }} on ${{ matrix.os }}"
+    name: "Python ${{ matrix.python-version }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
-    if: |
-      !contains(github.event.head_commit.message, '[skip_ci]')
     strategy:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        environment: [ 'py312', 'py313' ]  # TODO @dvp: add py314+ when ready for freethread
+        python-version: [ '3.12', '3.13', '3.14' ]
         include: 
           - os: windows-latest
-            environment: 'py313'  # Windows runner is too slow
-    env:
-      MKLROOT: "${{ github.workspace }}/.pixi/envs/${{ matrix.environment }}"
-      MKL_INCLUDE_PATH: "${{ github.workspace }}/.pixi/envs/${{ matrix.environment }}/include"
-      LD_LIBRARY_PATH: "${{ github.workspace }}/.pixi/envs/${{ matrix.environment }}/lib"
+            python-version: '3.13'  # Windows runner is too slow
 
     steps:
 
@@ -135,17 +145,21 @@ jobs:
           fetch-depth: 1
           submodules: 'true'
 
-      - uses: prefix-dev/setup-pixi@v0.10.0
+      - name: 📦 Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          pixi-version: v0.74.0
-          cache: true
-          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
-          environments: ${{ matrix.environment }}
-          activate-environment: true
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: |
+            **/uv.lock
+            **/pyproject.toml      
+
+      - name: 🐍 Install the project
+        run: uv sync --all-extras --no-dev --group test
 
       - name: ✅ Run tests
         run: |
-          pixi run coverage-xml
+          uv run --group test pytest --cov --cov-report term-missing:skip-covered --cov-report xml
 
       - name: 📤 Upload coverage report
         uses: codecov/codecov-action@v7
