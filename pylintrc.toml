@@ -377,8 +377,6 @@ per-file-ignores = [ "**/__main__.py:too-many-arguments", "tests/**/*:C0114,C011
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
 #disable = ["raw-checker-failed", "bad-inline-option", "locally-disabled", "file-ignored", "suppressed-message", "useless-suppression", "deprecated-pragma", "use-implicit-booleaness-not-comparison-to-string", "use-implicit-booleaness-not-comparison-to-zero", "use-symbolic-message-instead", "wrong-import-order"]
-
-[tool.pylint.'messages control']
 disable = [
     "logging-too-many-args", # for loguru logging
     "missing-class-docstring",

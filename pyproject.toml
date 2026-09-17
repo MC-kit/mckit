@@ -66,8 +66,8 @@ docs = [
   "sphinx>=9.1",
   "sphinx-autobuild>=2025.8.25",
   "sphinx-autodoc-typehints>=3.10",
-  "sphinx-togglebutton>=0.4",
   "sphinx-click>=6.2",
+  "sphinx-togglebutton>=0.4",
 ]
 analyze = [
   "duckdb>=1.5.5,<2",
@@ -117,6 +117,9 @@ make-fallback = false
 packages = [ "src/mckit" ]
 exclude = [ "**/__pycache__", "**/*.pyc" ]
 
+[tool.cibuildwheel]
+build-frontend = "build[uv]"
+
 [tool.mypy]
 files = "src/**/*.py"
 exclude = """  (?x)(
@@ -145,9 +148,6 @@ show_error_codes = true
 module = [ "tomllib" ]
 allow_redefinition = true
 disable_error_code = "no-redef"
-
-[tool.cibuildwheel]
-build-frontend = "build[uv]"
 
 [tool.coverage.paths]
 source = [ "src" ]

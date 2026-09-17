@@ -191,11 +191,12 @@ class TestSource:
                         distrs[2],
                     ),
                 },
-                ( "SDEF PAR=3 X=D3 Y=FX D4 Z=FX D5\nSI3 L 4 5 6\nSP3 D 1 2 3\n"
-                  "DS4 S 10 11 12\nDS5 S 13 14 15\nSI10 H 2 3\nSP10 D 0 1\n"
-                  "SI11 H 3 4\nSP11 D 0 1\nSI12 H 4 5\nSP12 D 0 1\n"
-                  "SI13 H 6 7\nSP13 D 0 1\nSI14 H 7 8\nSP14 D 0 1\n"
-                  "SI15 H 8 9\nSP15 D 0 1"
+                (
+                    "SDEF PAR=3 X=D3 Y=FX D4 Z=FX D5\nSI3 L 4 5 6\nSP3 D 1 2 3\n"
+                    "DS4 S 10 11 12\nDS5 S 13 14 15\nSI10 H 2 3\nSP10 D 0 1\n"
+                    "SI11 H 3 4\nSP11 D 0 1\nSI12 H 4 5\nSP12 D 0 1\n"
+                    "SI13 H 6 7\nSP13 D 0 1\nSI14 H 7 8\nSP14 D 0 1\n"
+                    "SI15 H 8 9\nSP15 D 0 1"
                 ),
             ),
         ],
