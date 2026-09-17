@@ -7007,7 +7007,7 @@ packages:
   - ply
   - sly
   - tomli-w
-  requires_python: '>=3.12,<3.14'
+  requires_python: '>=3.12,<3.15'
 - pypi: https://files.pythonhosted.org/packages/0c/29/0348de65b8cc732daa3e33e67806420b2ae89bdce2b04af740289c5c6c8c/loguru-0.7.3-py3-none-any.whl
   name: loguru
   version: 0.7.3
