@@ -260,7 +260,7 @@ static PyObject *boxobj_check_intersection(BoxObject *self, PyObject *box)
 
 static PyObject *boxobj_split(BoxObject *self, PyObject *args, PyObject *kwds)
 {
-    char *dir = "auto";
+    const char *dir = "auto";
     double ratio = 0.5;
     int direct;
     static char *kwlist[] = {const_cast<char *>("dir"), const_cast<char *>("ratio"), NULL};
