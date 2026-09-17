@@ -29,7 +29,6 @@ updates:
   schedule:
     interval: monthly
   labels:
-    - "ci"
     - "dependencies"
     - "bot"
   groups:
@@ -46,7 +45,7 @@ updates:
   schedule:
     interval: monthly
   labels:
-    - "kind/dependencies"
+    - "dependencies"
     - "bot"
   open-pull-requests-limit: 10
   target-branch: devel

@@ -13,6 +13,9 @@
 - name: build
   description: Build System and Dependencies
   color: bfdadc
+- name: bot
+  description: Created by bot
+  color: 4a97a6
 - name: ci
   description: Continuous Integration
   color: 4a97d6
