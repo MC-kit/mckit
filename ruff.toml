@@ -1,4 +1,4 @@
-target-version = "py312"
+target-version = "py313"
 line-length = 100
 src = [ "src", "tests" ]
 exclude = [
@@ -57,7 +57,6 @@ ignore = [
   "DTZ005", #  `datetime.datetime.now()` called without a `tz` argument
   "E402",   # Module level import not at top of file
   "E501",   # Line too long (<LENGTH> > 100 characters)
-
   "EM",     # exception message
   "EM102",  #  Exception must not use an f-string literal, assign to variable first
   "ERA001", #  Found commented-out code
@@ -79,6 +78,7 @@ ignore = [
 
   "PT019",  # Fixture `_bin` without value is injected as parameter (false positive?)
   "RUF009", # attrib() - remove attrs
+  "RUF068", # TODO - fix
   "S101",   # Use of `assert` detected  - TODO - replace assert statements with exception raise
   "SLF001", #  Private member accessed: `_cells`
   "T201",   #  `print` found

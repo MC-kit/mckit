@@ -146,6 +146,9 @@ module = [ "tomllib" ]
 allow_redefinition = true
 disable_error_code = "no-redef"
 
+[tool.cibuildwheel]
+build-frontend = "build[uv]"
+
 [tool.coverage.paths]
 source = [ "src" ]
 [tool.coverage.report]
