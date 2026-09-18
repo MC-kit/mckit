@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import sys
+import tomllib
 
 from functools import reduce
 from pathlib import Path
@@ -10,11 +10,6 @@ from pathlib import Path
 import numpy as np
 
 import mckit as mk
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib
 
 from mckit import Transformation
 from mckit.cli._logging import logger
