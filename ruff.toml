@@ -78,7 +78,6 @@ ignore = [
 
   "PT019",  # Fixture `_bin` without value is injected as parameter (false positive?)
   "RUF009", # attrib() - remove attrs
-  "RUF068", # TODO - fix
   "S101",   # Use of `assert` detected  - TODO - replace assert statements with exception raise
   "SLF001", #  Private member accessed: `_cells`
   "T201",   #  `print` found
@@ -88,8 +87,6 @@ ignore = [
   "TC006",  #  [*] Add quotes to type expression in `typing.cast()`
   "TD",     # TODO
   "TRY003", # Avoid specifying long messages outside the exception class
-  "UP036",  # version_info >= (3, 11)
-  "UP047",
 ]
 
 [lint.per-file-ignores]

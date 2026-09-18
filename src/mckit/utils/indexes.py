@@ -52,7 +52,7 @@ class Index(dict[Key, Item]):
 
 
 # noinspection PyUnusedLocal
-def ignore(_: Key) -> Item | None:
+def ignore[Key](_: Key) -> Item | None:
     """Default factory for `IgnoringIndex`.
 
     Returns
@@ -93,7 +93,7 @@ class NumberedItemDuplicateError(ValueError):
         )
 
 
-def raise_on_duplicate_strategy(key: Key, prev: Item, curr: Item) -> None:
+def raise_on_duplicate_strategy[Key, Item](key: Key, prev: Item, curr: Item) -> None:
     """Raise error on `key` duplicate found, regardless values.
 
     Args:
@@ -108,7 +108,7 @@ def raise_on_duplicate_strategy(key: Key, prev: Item, curr: Item) -> None:
     raise NumberedItemDuplicateError(key, prev, curr)
 
 
-def ignore_equal_objects_strategy(key: Key, prev: Item, curr: Item) -> None:
+def ignore_equal_objects_strategy[Key, Item](key: Key, prev: Item, curr: Item) -> None:
     """Raise error on `key` duplicate found, if the values are not equal.
 
     Otherwise, ignore an attempt to add the same key/value pair.
