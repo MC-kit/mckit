@@ -2,29 +2,34 @@
 
 from __future__ import annotations
 
-from mckit._init_dynamic_libraries import MACOS, WIN
+import sys
+import sysconfig
+
 from mckit.body import Body, Shape
+from mckit.box import GLOBAL_BOX, Box
 from mckit.fmesh import FMesh
 from mckit.material import AVOGADRO, Composition, Element, Material
 from mckit.parser import ParseResult, from_file, from_stream, from_text, read_meshtal
 from mckit.parser.mctal_parser import read_mctal
 from mckit.surface import Cone, Cylinder, GQuadratic, Plane, Sphere, Torus, create_surface
-from mckit.transformation import Transformation
+from mckit.transformation import Transformation, calc_z_rotation
 from mckit.universe import Universe
 from mckit.version import (
-    __author__,
     __copyright__,
-    __license__,
-    __summary__,
     __title__,
     __version__,
 )
 
+WIN = sys.platform.startswith("win32") and "mingw" not in sysconfig.get_platform()
+MACOS = sys.platform.startswith("darwin")
+
 __all__: list[str] = [
     "AVOGADRO",
+    "GLOBAL_BOX",
     "MACOS",
     "WIN",
     "Body",
+    "Box",
     "Composition",
     "Cone",
     "Cylinder",
@@ -39,13 +44,10 @@ __all__: list[str] = [
     "Torus",
     "Transformation",
     "Universe",
-    "__author__",
     "__copyright__",
-    "__license__",
-    "__summary__",
     "__title__",
     "__version__",
-    "__version__",
+    "calc_z_rotation",
     "create_surface",
     "from_file",
     "from_stream",

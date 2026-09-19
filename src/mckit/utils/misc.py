@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
 import collections
 import collections.abc
@@ -17,7 +17,7 @@ from numpy import ndarray
 
 from mckit.constants import FLOAT_TOLERANCE
 
-MAX_DIGITS = np.finfo(float).precision
+MAX_DIGITS: Final[int] = np.finfo(float).precision
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -36,7 +36,8 @@ def significant_digits(
         reltol: Relative tolerance needed to represent the value.
         resolution:  The threshold value, below which numbers are believed to be zero, optional.
 
-    Returns:
+    Returns
+    -------
         The number of significant digits.
     """
     if value == 0.0 or (resolution and abs(value) < resolution):
@@ -65,10 +66,11 @@ def get_decades(value: float) -> int:
     Args:
         value: ... to check
 
-    Returns:
+    Returns
+    -------
         Number of decades.
     """
-    decimal_power = np.log10(abs(float(value))) if value != 0 else 0
+    decimal_power = np.log10(abs(value)) if value != 0 else 0
     decades = np.trunc(decimal_power)
     if decimal_power < 0:
         decades -= 1
@@ -93,7 +95,8 @@ def round_scalar(value: float, digits: int | None = None) -> float:
         value: The value to be rounded.
         digits: The number of significant digits, optional.
 
-    Returns:
+    Returns
+    -------
         Rounded value.
     """
     if digits is None:
@@ -108,7 +111,8 @@ def round_array(array: FloatArray, digits_array: IntArray | None = None) -> ndar
         array:   Array of values.
         digits_array:   Array of corresponding significant digits.
 
-    Returns:
+    Returns
+    -------
         Rounded array.
     """
     if digits_array is None:
@@ -153,7 +157,7 @@ def is_in(where, x) -> bool:
 
 @is_in.register
 def _(where: str, x) -> bool:
-    return x is where or x == where
+    return x is where or x == where or x in where
 
 
 @is_in.register
@@ -195,22 +199,26 @@ def make_hashable(x):
     raise TypeError(f"Don't know how to make {type(x).__name__} objects hashable")
 
 
-@make_hashable.register
+# pyrefly: ignore [no-matching-overload]
+@make_hashable.register  # pyright: ignore[reportCallIssue, reportArgumentType]
 def _(x: collections.abc.Hashable):
     return x
 
 
-@make_hashable.register
+# pyrefly: ignore [no-matching-overload]
+@make_hashable.register  # pyright: ignore[reportCallIssue, reportArgumentType]
 def _(x: str):
     return x
 
 
-@make_hashable.register
+# pyrefly: ignore [no-matching-overload]
+@make_hashable.register  # pyright: ignore[reportCallIssue, reportArgumentType]
 def _(x: collections.abc.Mapping) -> tuple:
     return tuple((k, make_hashable(v)) for k, v in x.items())
 
 
-@make_hashable.register
+# pyrefly: ignore [no-matching-overload]
+@make_hashable.register  # pyright: ignore[reportCallIssue, reportArgumentType]
 def _(x: collections.abc.Iterable) -> tuple:
     return tuple(map(make_hashable, x))
 
@@ -221,8 +229,11 @@ def compute_hash(*items) -> int:
     Note:
         Take care on the objects values are stable, while the hashes are in use.
     """
-    if len(items) > 1:
+    _len = len(items)
+    if _len > 1:
         return compute_hash(tuple(map(compute_hash, items)))
+    if _len == 0:
+        return 0
     return hash(make_hashable(items[0]))
 
 

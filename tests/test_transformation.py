@@ -101,7 +101,7 @@ def test_creation(args, rot, offset, options):
     ],
 )
 def test_creation_failure(args):
-    with pytest.raises(ValueError, match="wrong|is greater"):
+    with pytest.raises(ValueError, match=r"wrong|is greater"):
         Transformation(**args)
 
 

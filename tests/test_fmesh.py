@@ -14,7 +14,8 @@ from mckit.geometry import EX, EY, EZ
 from mckit.material import Material
 from mckit.surface import create_surface
 from mckit.transformation import Transformation
-from mckit.utils._resource import path_resolver
+
+# from mckit.utils._resource import path_resolver
 
 transforms = [
     None,
@@ -199,7 +200,7 @@ class TestRectMesh:
         ),
     ]
 
-    @pytest.mark.parametrize("mi, ti", product(range(len(bins)), range(len(transforms))))
+    @pytest.mark.parametrize("mi, ti", list(product(range(len(bins)), range(len(transforms)))))
     def test_get_voxel(self, mi: int, ti: int):
         tr = transforms[ti]
         _bin = bins[mi]
@@ -240,7 +241,7 @@ class TestRectMesh:
 
     @pytest.mark.parametrize(
         "mi, ti, pi, local",
-        product(range(len(bins)), range(len(transforms)), range(len(points)), [False, True]),
+        list(product(range(len(bins)), range(len(transforms)), range(len(points)), [False, True])),
     )
     def test_voxel_index(self, mi: int, ti: int, pi: int, local: bool):
         tr = transforms[ti]
@@ -343,7 +344,7 @@ class TestRectMesh:
         if expected is None:
             with pytest.raises(
                 ValueError,
-                match="Wrong number of fixed spatial variables|Specified point lies outside of the mesh",
+                match=r"Wrong number of fixed spatial variables|Specified point lies outside of the mesh",
             ):
                 mesh.slice_axis_index(**args)
         else:
@@ -354,14 +355,11 @@ class TestRectMesh:
             np.testing.assert_array_almost_equal(y, expected["y"])
 
 
-parser_test_data = path_resolver("tests")
-# dvp: On Linux access to package should be organized with resource name resolver.
-
-
 class TestFMesh:
     @pytest.fixture
-    def tallies(self):
-        file_name = parser_test_data("parser_test_data/fmesh.m")
+    def tallies(self, data):
+        file_name = data / "parser/fmesh.m"
+        assert file_name.exists()
         return read_meshtal(file_name)
 
     @pytest.mark.parametrize(

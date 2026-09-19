@@ -7,8 +7,6 @@ from zipfile import ZipFile
 
 import pytest
 
-from mckit.constants import MCNP_ENCODING
-
 if TYPE_CHECKING:
     from collections.abc import Callable
 
@@ -26,8 +24,9 @@ def data() -> Callable[[str], Path]:
 def clite_text(data) -> str:
     """C-lite model text.
 
-    Returns:
+    Returns
+    -------
         Loaded text of a C-lite model.
     """
-    with ZipFile(data("data/4M.zip")) as data_archive:
-        return data_archive.read("clite.i").decode(encoding=MCNP_ENCODING)
+    with ZipFile(data("4M.zip")) as data_archive:
+        return data_archive.read("clite.i").decode(encoding="utf8")

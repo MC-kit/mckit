@@ -2,14 +2,8 @@
 
 from __future__ import annotations
 
-from mckit.utils._io import (
-    MCNP_ENCODING,
-    check_if_all_paths_exist,
-    check_if_path_exists,
-    make_dir,
-    make_dirs,
-)
 from mckit.utils._resource import path_resolver
+from mckit.utils._text import match_comment
 from mckit.utils.accept import TVisitor, accept, on_unknown_acceptor
 from mckit.utils.misc import (
     MAX_DIGITS,
@@ -30,30 +24,67 @@ from mckit.utils.misc import (
 )
 from mckit.utils.tolerance import FLOAT_TOLERANCE
 
+from ._path import (
+    check_dir,
+    check_dirs,
+    check_file,
+    check_files,
+    check_if_all_paths_exist,
+    check_if_path_exists,
+    find_git_root_dir,
+    has_subdir,
+    join_dirs,
+    make_dir,
+    make_dirs,
+    mkdir,
+    mkdirs,
+    mkpath,
+    scan_dirs_up,
+    search_path_upward,
+)
+from .named import HasName, Name, check_name_is_int, default_name_key, map_names
+
 __all__ = [
     "FLOAT_TOLERANCE",
     "MAX_DIGITS",
-    "MCNP_ENCODING",
+    "HasName",
+    "Name",
     "TVisitor",
     "accept",
     "are_equal",
+    "check_dir",
+    "check_dirs",
+    "check_file",
+    "check_files",
     "check_if_all_paths_exist",
     "check_if_path_exists",
+    "check_name_is_int",
     "compute_hash",
     "deepcopy",
+    "default_name_key",
     "filter_dict",
+    "find_git_root_dir",
     "get_decades",
+    "has_subdir",
     "is_in",
     "is_sorted",
+    "join_dirs",
     "make_dir",
     "make_dirs",
     "make_hashable",
+    "map_names",
+    "match_comment",
     "mids",
+    "mkdir",
+    "mkdirs",
+    "mkpath",
     "on_unknown_acceptor",
     "path_resolver",
     "prettify_float",
     "round_array",
     "round_scalar",
+    "scan_dirs_up",
+    "search_path_upward",
     "significant_array",
     "significant_digits",
 ]

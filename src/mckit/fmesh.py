@@ -22,7 +22,8 @@ class RectMesh:
         zbins:  ... Z
         transform:  Transformation for the mesh. Default: None.
 
-    Methods:
+    Methods
+    -------
         shape() - gets the shape of mesh.
         get_voxel(i, j, k) - gets the voxel of RectMesh with indices i, j, k.
     """
@@ -42,7 +43,7 @@ class RectMesh:
     def bounding_box(self):
         """Gets the bounding box of the cell.
 
-        Returns:
+        Returns
         -------
         bbox : Box
             Bounding box.
@@ -83,7 +84,7 @@ class RectMesh:
         i, j, k : int
             Indices of the voxel.
 
-        Returns:
+        Returns
         -------
         voxel : Box
             The box that describes the voxel.
@@ -109,7 +110,7 @@ class RectMesh:
         local : bool
             If point is specified in local coordinate system.
 
-        Returns:
+        Returns
         -------
         i, j, k : int
             Indices along each dimension of voxel, where the point is located.
@@ -136,7 +137,7 @@ class RectMesh:
         i, j, k : int
             Indices along x, y and z dimensions.
 
-        Returns:
+        Returns
         -------
         index_tuple : tuple(int)
             A tuple of indices if such voxel exists. None otherwise.
@@ -171,7 +172,7 @@ class RectMesh:
         X, Y, Z : float
             Point of slice in local coordinate system.
 
-        Returns:
+        Returns
         -------
         axis : int
             Number of axis.
@@ -254,7 +255,7 @@ class CylMesh:
         min_volume : float
             Minimum volume for cell volume calculations
 
-        Returns:
+        Returns
         -------
         volumes : dict
             Volumes of cells for every voxel. It is dictionary cell -> vol_matrix.
@@ -270,7 +271,7 @@ class CylMesh:
         i, j, k : int
             Indices of the voxel.
 
-        Returns:
+        Returns
         -------
         voxel : Box
             The box that describes the voxel.
@@ -287,7 +288,7 @@ class CylMesh:
         local : bool
             If point is specified in local coordinate system.
 
-        Returns:
+        Returns
         -------
         i, j, k : int
             Indices along each dimension of voxel, where the point is located.
@@ -302,7 +303,7 @@ class CylMesh:
         i, j, k : int
             Indices along x, y and z dimensions.
 
-        Returns:
+        Returns
         -------
         index_tuple : tuple(int)
             A tuple of indices if such voxel exists. None otherwise.
@@ -337,7 +338,7 @@ class CylMesh:
         R, Z, T : float
             Point of slice in local coordinate system.
 
-        Returns:
+        Returns
         -------
         axis : int
             Number of axis.
@@ -383,7 +384,7 @@ class FMesh:
     modifier : None
         Data transformation.
 
-    Methods:
+    Methods
     -------
     get_slice()
         Gets specific slice of data.
@@ -452,7 +453,7 @@ class FMesh:
     def mean_flux(self):
         """Gets average flux.
 
-        Returns:
+        Returns
         -------
         ebins : np.array[float]
             Energy bin boundaries.
@@ -469,7 +470,7 @@ class FMesh:
         point : arraylike[float]
             Point energy spectrum must be get at.
 
-        Returns:
+        Returns
         -------
         energies: ndarray[float]
             Energy bins for the spectrum at the point - group boundaries.
@@ -491,7 +492,7 @@ class FMesh:
         index : tuple[int]
             Indices of spatial mesh bins.
 
-        Returns:
+        Returns
         -------
         energies: ndarray[float]
             Energy bins for the spectrum at the point - group boundaries.
@@ -516,7 +517,7 @@ class FMesh:
         X, Y, Z : float
             Spatial point which belongs to the slice plane. Other two dimensions are free.
 
-        Returns:
+        Returns
         -------
         x, y : ndarray[float]
             Centers of spatial bins in free directions.

@@ -11,9 +11,8 @@ class DummyCell(Body):
     """To substitute cell when it's not found."""
 
     def __init__(self, name: int):
+        Card.__init__(self, name=name, comment="dummy")
         self._name = name
-        options = {"name": name, "comment": "dummy"}
-        Card.__init__(self, **options)
 
     def __hash__(self):
         return Card.__hash__(self)

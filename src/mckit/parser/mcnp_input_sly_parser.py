@@ -5,13 +5,11 @@ from __future__ import annotations
 from typing import TextIO
 
 from collections.abc import Callable, Iterable, Iterator
+from dataclasses import dataclass
 from itertools import repeat
 from pathlib import Path
 
-from attr import attrib, attrs
-
 from mckit.card import Card
-from mckit.constants import MCNP_ENCODING
 from mckit.parser.cell_parser import Body
 from mckit.parser.cell_parser import parse as parse_cell
 from mckit.parser.common import (
@@ -31,32 +29,33 @@ from mckit.parser.transformation_parser import parse as parse_transformation
 from mckit.universe import Universe, produce_universes
 from mckit.utils.indexes import Index
 
+from .common.utils import extract_integer
 from .mcnp_section_parser import Card as TextCard
 from .mcnp_section_parser import InputSections, Kind, distribute_cards, parse_sections_text
 
 
-@attrs
+@dataclass
 class ParseResult:
-    universe: Universe = attrib()
-    cells: list[Body] = attrib()
-    cells_index: CellStrictIndex = attrib()
-    surfaces: list[Surface] = attrib()
-    surfaces_index: SurfaceStrictIndex = attrib()
-    compositions: list[Composition] | None = attrib()
-    compositions_index: CompositionStrictIndex | None = attrib()
-    transformations: list[Transformation] | None = attrib()
-    transformations_index: TransformationStrictIndex | None = attrib()
-    sections: InputSections = attrib()
+    universe: Universe
+    cells: list[Body]
+    cells_index: CellStrictIndex
+    surfaces: list[Surface]
+    surfaces_index: SurfaceStrictIndex
+    compositions: list[Composition] | None
+    compositions_index: CompositionStrictIndex | None
+    transformations: list[Transformation] | None
+    transformations_index: TransformationStrictIndex | None
+    sections: InputSections
 
     @property
     def title(self):
         return self.sections.title
 
 
-def from_file(path: str | Path) -> ParseResult:
+def from_file(path: str | Path, encoding="utf8") -> ParseResult:
     if isinstance(path, str):
         path = Path(path)
-    with path.open("r", encoding=MCNP_ENCODING) as fid:
+    with path.open("r", encoding=encoding) as fid:
         return from_stream(fid)
 
 
@@ -71,7 +70,7 @@ def from_text(text: str) -> ParseResult:
         # fmt: off
         text_compositions, text_transformations, _1, _2, _3 = distribute_cards(
             sections.data_cards
-        )  # type: list[TextCard], list[TextCard], list[TextCard], list[TextCard], list[TextCard],
+        )
         # fmt: on
         transformations = parse_transformations(text_transformations)
         transformations_index = TransformationStrictIndex.from_iterable(transformations)
@@ -117,9 +116,6 @@ def join_comments(text_cards: Iterable[TextCard]):
                 assert comment is None, f"Comment is already set {comment[:70]}"
                 comment = card.text
             else:
-                assert not card.is_comment, (
-                    f"Pair of comment is found, second one is: {comment[:70]}"
-                )
                 yield card, comment
                 comment = None
 
@@ -158,10 +154,6 @@ def parse_surfaces(text_cards: Iterable[TextCard], transformations: Index) -> li
     return list(parse_section(text_cards, Kind.SURFACE, parser))
 
 
-def extract_number(text_card: TextCard):
-    return int(text_card.text.split(maxsplit=1)[0])
-
-
 class MissedCellsError(RuntimeError):
     def __init__(self, missed_cells: list[int]):
         self.missed_cells = missed_cells
@@ -169,8 +161,8 @@ class MissedCellsError(RuntimeError):
         super().__init__(msg)
 
     @classmethod
-    def from_text_cards(cls, missed_cells: Iterable[TextCard]):
-        missed_cells_numbers: list[int] = list(map(extract_number, missed_cells))
+    def from_text_cards(cls, missed_cells: list[TextCard]):
+        missed_cells_numbers = [extract_integer(x.text) for x in missed_cells]
         return cls(missed_cells_numbers)
 
 

@@ -193,7 +193,7 @@ def combine_models(
 def main() -> None:
     """Add shielding box to trt-4.0 model."""
     os.chdir("/home/dvp/dev/mcnp/trt/wrk/models/2024/cabinet/stp/Model materials/edited_egor")
-    init_logger("add-sb.log", False, True)
+    init_logger("add-sb.log", verbose=True)
     logger.info("mckit/adhoc/add_sb, v{}", __version__)
     cfg = Config()
     sb_sql = cfg.sb_path.with_suffix(".sqlite")

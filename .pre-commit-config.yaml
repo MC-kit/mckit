@@ -14,17 +14,17 @@
 #     https://pre-commit.com/                   and
 #     https://github.com/pre-commit/pre-commit  for more information
 #     https://pre-commit.com/hooks.html         for more hooks
-default_language_version:
-  python: python3.13
+# default_language_version:
+#   python: python3.14
 
 repos:
 
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v5.0.0"
+    rev: "v6.0.0"
     hooks:
       - id: check-added-large-files
-        exclude: uv.lock
+        exclude: pixi.lock
       - id: check-ast
         exclude: notebooks
       - id: check-case-conflict
@@ -34,8 +34,7 @@ repos:
       - id: check-merge-conflict
         exclude: \.rst$
       - id: check-shebang-scripts-are-executable
-        exclude: notebooks  # jupytext creates python scripts with shebangs but without permissions
-      - id: check-symlinks
+      # - id: check-symlinks
       - id: check-toml
       - id: check-yaml
       - id: debug-statements
@@ -52,37 +51,56 @@ repos:
       - id: pretty-format-json
         args: [--autofix, --no-ensure-ascii, --no-sort-keys]
         exclude: data|\.ipynb$
-      - id: requirements-txt-fixer
 
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.37.4
+    hooks:
+      - id: check-dependabot
+      - id: check-github-workflows
+        args: ["--verbose"]
+      - id: check-readthedocs
+
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: "v2.26.0"
+    hooks:
+      - id: pyproject-fmt
 
   - repo: https://github.com/fredrikaverpil/creosote
-    rev: v4.0.3
+    rev: v5.2.0
     hooks:
       - id: creosote
 
+#  - repo: https://github.com/astral-sh/uv-pre-commit
+#    rev: 0.11.25
+#    hooks:
+#      - id: uv-lock
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.7.19
+    rev: 0.12.1
     hooks:
       - id: uv-lock 
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.2
+    rev: v0.16.1
     hooks:
-      # linter
       - id: ruff-check
         exclude: ^notebooks|^extern
-      # formatter 
       - id: ruff-format
         exclude: ^notebooks|^extern|ipynb$
 
 
   # Check for common shell mistakes
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: "v0.10.0.1"
+    rev: "v0.11.0.1"
     hooks:
       - id: shellcheck
         args: [ --external-sources ]
         stages: [ manual ]
+
+  # Check pre-commit config
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
 
 
   # CMake formatting
@@ -96,7 +114,7 @@ repos:
 
   # Clang format the codebase automatically
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: "v20.1.4"
+    rev: "v22.1.8"
     hooks:
       - id: clang-format
         types_or: [c++, c, cuda]

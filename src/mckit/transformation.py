@@ -2,24 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, Final
 
 # noinspection PyPackageRequirements
 import numpy as np
 
-# noinspection PyPackageRequirements
-import numpy.typing as npt
-
 # noinspection PyUnresolvedReferences,PyPackageRequirements
-from mckit.geometry import ORIGIN
+from mckit.geometry import ORIGIN  # pyright: ignore[reportMissingImports]
 
 from .card import Card
 from .utils import compute_hash
 from .utils.tolerance import DEFAULT_TOLERANCE_ESTIMATOR, EstimatorType, MaybeClose
 
-__all__ = ["IDENTITY_ROTATION", "Transformation"]
+if TYPE_CHECKING:
+    from mckit.types import NPFloatArray
 
-IDENTITY_ROTATION: npt.NDArray[float] = np.eye(3)
+__all__ = ["IDENTITY_ROTATION", "Transformation", "calc_z_rotation"]
+
+IDENTITY_ROTATION: Final[NPFloatArray] = np.eye(3, dtype=np.float64)
 
 ANGLE_TOLERANCE = 0.001
 COS_TH = np.sin(ANGLE_TOLERANCE)
@@ -55,7 +55,7 @@ class Transformation(Card, MaybeClose):
     options : dict
         Other options, like name, comment, etc.
 
-    Methods:
+    Methods
     -------
     apply2gq(m, v, k)
         Gets parameters of generic quadratic surface in the main coordinate
@@ -85,12 +85,12 @@ class Transformation(Card, MaybeClose):
         if translation is not ORIGIN:
             translation = np.asarray(translation, dtype=float)
             if translation.shape != (3,):
-                raise ValueError(f"Transaction #{self.name()}: wrong length of translation vector.")
+                raise ValueError(f"Translation #{self.name()}: wrong length of translation vector.")
 
         if rotation is None:
             u = IDENTITY_ROTATION
         else:
-            u = np.asarray(rotation, dtype=float)
+            u = np.asarray(rotation, dtype=np.float64())
             if indegrees:
                 u = np.cos(np.multiply(u, np.pi / 180.0))
             u = self._setup_rotation_matrix(u)
@@ -127,8 +127,8 @@ class Transformation(Card, MaybeClose):
         return words
 
     def apply2gq(
-        self, m1: npt.NDArray[float], v1: npt.NDArray[float], k1: float
-    ) -> tuple[np.ndarray[float], np.ndarray[float], float]:
+        self, m1: NPFloatArray, v1: NPFloatArray, k1: float
+    ) -> tuple[NPFloatArray, NPFloatArray, float]:
         """Gets parameters of generic quadratic surface in the main CS.
 
         Args:
@@ -143,7 +143,8 @@ class Transformation(Card, MaybeClose):
                 Free term of generic quadratic equation in the auxiliary coordinate
                 system.
 
-        Returns:
+        Returns
+        -------
             m, v, k
             m : numpy.ndarray
                 A 3x3 matrix which defines quadratic coefficients of GQ surface
@@ -159,9 +160,7 @@ class Transformation(Card, MaybeClose):
         k = k1 - np.dot(v, self._t) - np.dot(self._t, np.dot(m, self._t))
         return m, v, k
 
-    def apply2plane(
-        self, v1: npt.NDArray[np.float64], k1: float
-    ) -> tuple[npt.NDArray[float], float]:
+    def apply2plane(self, v1: NPFloatArray, k1: float) -> tuple[NPFloatArray, float]:
         """Gets parameters of plane surface in the main coordinate system.
 
         Args:
@@ -170,7 +169,8 @@ class Transformation(Card, MaybeClose):
             k1: Free term of plane equation in the auxiliary coordinate
                 system.
 
-        Returns:
+        Returns
+        -------
             - v, A vector of size 3 which defines vector,
                  normal to the plane surface in the main coordinate system.
             - k, Free term of plane surface equation in the main coordinate system.
@@ -179,7 +179,7 @@ class Transformation(Card, MaybeClose):
         k = k1 - np.dot(v, self._t)
         return v, k
 
-    def apply2point(self, p1: npt.NDArray[float]) -> np.ndarray[float]:
+    def apply2point(self, p1: NPFloatArray) -> NPFloatArray:
         """Gets coordinates of point p1 in the main coordinate system.
 
         Args:
@@ -187,20 +187,22 @@ class Transformation(Card, MaybeClose):
                 It has shape (3,) if there is the only point or (N, 3) - if there
                 are N points.
 
-        Returns:
+        Returns
+        -------
             Coordinates of the point(s) in the main coordinate system.
         """
         # Matrix U is transposed to change U p1 -> p1 U^T - to preserve shape
         # of p1 and p.
         return np.dot(p1, np.transpose(self._u)) + self._t
 
-    def apply2vector(self, v1: npt.NDArray[float]) -> np.ndarray[float]:
+    def apply2vector(self, v1: NPFloatArray) -> NPFloatArray:
         """Gets coordinates of vector v1 in the main coordinate system.
 
         Args:
             v1: Coordinates of the vector(s) in the auxiliary coordinate system.
 
-        Returns:
+        Returns
+        -------
             Coordinates of the vector(s) in the main coordinate system.
         """
         # In contrast with apply2point - no translation is needed.
@@ -217,7 +219,8 @@ class Transformation(Card, MaybeClose):
         Args:
             tr: Transformation to be modified.
 
-        Returns:
+        Returns
+        -------
             New transformation - the result.
         """
         rot = np.dot(self._u, tr._u)
@@ -229,7 +232,8 @@ class Transformation(Card, MaybeClose):
 
         Gets new transformation which is complement to this one.
 
-        Returns:
+        Returns
+        -------
             Reversed version of this transformation.
         """
         u1 = np.transpose(self._u)
@@ -246,7 +250,7 @@ class Transformation(Card, MaybeClose):
             return False
         return estimator((self._t, self._u), (other._t, other._u))
 
-    def _setup_rotation_matrix(self, u: npt.NDArray[float]) -> npt.NDArray[float]:
+    def _setup_rotation_matrix(self, u: NPFloatArray) -> NPFloatArray:
         zero_cosines_idx = np.abs(u) < ZERO_COS_TOLERANCE
         u[zero_cosines_idx] = 0.0
         # TODO: Implement creation from reduced rotation parameter set.
@@ -300,3 +304,27 @@ class Transformation(Card, MaybeClose):
 
     def __setitem__(self, key, value):
         self.options[key] = value
+
+
+def calc_z_rotation(theta: float) -> NPFloatArray:
+    """Compute matirix for rotation around z-axis.
+
+    Parameters
+    ----------
+    theta
+        rotation angle, radians
+
+    Returns
+    -------
+        numpy presentation of the rotation matrix
+    """
+    _cos = np.cos(theta)
+    _sin = np.sin(theta)
+    return np.array(
+        [
+            [_cos, -_sin, 0],
+            [_sin, _cos, 0],
+            [0, 0, 1],
+        ],
+        dtype=np.float64,
+    )

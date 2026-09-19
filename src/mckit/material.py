@@ -156,6 +156,9 @@ class Composition(Card):
     def __hash__(self) -> int:
         return reduce(xor, map(hash, self._composition.keys()))
 
+    def __len__(self) -> int:
+        return len(self._composition.keys())
+
     def mcnp_words(self, pretty: bool = False) -> list[str]:
         words = [f"M{self.name()} "]
         for elem, frac in self._composition.items():
@@ -165,8 +168,10 @@ class Composition(Card):
             words.append("\n")
         return words
 
-    def __getitem__(self, key: str) -> Any:
-        return self.options[key]
+    def __getitem__(self, item: int | str | Element) -> float:
+        if not isinstance(item, Element):
+            item = Element(item)
+        return self._composition[item]
 
     def __iter__(self) -> Iterator[tuple[Element, float]]:
         return iter(self._composition.items())
@@ -177,7 +182,8 @@ class Composition(Card):
         Args:
             item: Isotope. It can be either isotope name or Element instance.
 
-        Returns:
+        Returns
+        -------
             True if the composition contains the isotope, False otherwise.
         """
         if not isinstance(item, Element):
@@ -193,7 +199,8 @@ class Composition(Card):
         Args:
             _isotope: Isotope. It can be either isotope name or Element instance.
 
-        Returns:
+        Returns
+        -------
             Atomic fraction of the specified isotope.
         """
         if not isinstance(_isotope, Element):
@@ -208,7 +215,8 @@ class Composition(Card):
         Args:
             _isotope : Isotope. It can be either isotope name or Element instance.
 
-        Returns:
+        Returns
+        -------
             Weight fraction of the specified isotope.
         """
         if not isinstance(_isotope, Element):
@@ -224,7 +232,8 @@ class Composition(Card):
     def expand(self) -> Composition:
         """Expands elements with natural abundances into detailed isotope composition.
 
-        Returns:
+        Returns
+        -------
             New expanded composition or self.
         """
         composition: dict[Element, float] = {}
@@ -248,7 +257,8 @@ class Composition(Card):
         Args:
             tolerance: Relative tolerance to consider isotope fractions as equal. Default: 1.e-8
 
-        Returns:
+        Returns
+        -------
             self - if composition is reduced successfully to natural.
             None - if the composition cannot be reduced to natural, because some nuclides are
                    presented with unnatural abundance.
@@ -299,7 +309,8 @@ class Composition(Card):
         Args:
             compositions: List of pairs composition, fraction.
 
-        Returns:
+        Returns
+        -------
             Mixture.
         """
         atomics = []
@@ -321,7 +332,8 @@ def mixture_by_volume(
         fractions_spec: list of specs (Composition, density, volume_fraction)
         _number: ... to assign as composition 'name'
 
-    Returns:
+    Returns
+    -------
         Composition: the mix by atomic fractions
     """
     compositions = [t[0] for t in fractions_spec]
@@ -341,27 +353,39 @@ def mixture_by_volume(
 
 
 class Material:
-    """Represents material.
+    """Represents material - association Body -> Composition, with specfic density.
 
-    If only one of `weight` or `atomic` parameters is specified, then the Material
-    there's no need to normalize it.
+    If only one of `weight` or `atomic` parameters is specified, then
+    there's no need to normalize the Material.
 
-    Args:
-        atomic: Atomic fractions. New composition will be created.
-        weight: Weight fractions of isotopes. In this case, density or concentration must present.
-        composition: Composition instance. If it is specified, then this composition will be
+    Parameters
+    ----------
+        atomic
+            Atomic fractions. New composition will be created.
+        weight
+            Weight fractions of isotopes. In this case, density or concentration must present.
+        composition
+            Composition instance. If it is specified, then this composition will be
             used. Neither atomic nor weight must be present.
-        density: Density of the material (g/cc). It is incompatible with concentration
+        density
+            Density of the material (g/cc). It is incompatible with concentration
             parameter.
-        concentration: Sets the atomic concentration (1 / cc). It is incompatible with density
+        concentration
+            Sets the atomic concentration (1 / cc). It is incompatible with density
             parameter.
-        options:  Extra options.
+        options
+            Extra options.
 
-    Properties:
-        density: Density of the material [g/cc].
-        concentration: Concentration of the material [atoms/cc].
-        composition: Material's composition.
-        molar_mass: Material's molar mass [g/mol].
+    Properties
+    ----------
+        density
+            Density of the material [g/cc].
+        concentration
+            Concentration of the material [atoms/cc].
+        composition
+            Material's composition.
+        molar_mass
+            Material's molar mass [g/mol].
     """
 
     # Relative density tolerance. Relative difference in densities when materials
@@ -453,7 +477,8 @@ class Material:
             factor: By this factor density of material will be multiplied. If factor
                      is specified, then its value will be used, otherwise - old_vol/new_vol
 
-        Returns:
+        Returns
+        -------
             New material that takes with corrected density.
         """
         if factor is None:
@@ -490,7 +515,8 @@ class Material:
                 'volume' - volume fractions;
                 'atomic' - atomic fractions.
 
-        Returns:
+        Returns
+        -------
             New material.
         """
         if not materials:
@@ -527,7 +553,8 @@ class Material:
 class Element:
     """Represents isotope or isotope mixture for natural abundance case.
 
-    Attributes:
+    Attributes
+    ----------
         _charge: Z of the element,
         _mass_number: A of the element
         _lib:  Data library ID. Usually it is MCNP library, like '31b' for FENDL31b.
@@ -617,7 +644,8 @@ class Element:
     def __repr__(self) -> str:
         """Create str representation for debugging.
 
-        Examples:
+        Examples
+        --------
             >>> print(repr(Element("H")))
             Element("H")
             >>> print(repr(Element("Ta181", isomer=1)))
@@ -690,7 +718,8 @@ class Element:
     def expand(self) -> dict[Element, float]:
         """Expands natural element into individual isotopes.
 
-        Returns:
+        Returns
+        -------
             A dictionary of elements that are comprised by the isotopes of this one and their fractions.
         """
         result = {}
@@ -706,7 +735,8 @@ class Element:
     def _split_name(_name: str) -> tuple[str, str]:
         """Splits element's name into charge and mass number parts.
 
-        Examples:
+        Examples
+        --------
             >>> Element._split_name("1001")
             ('1', '001')
             >>> Element._split_name("H")

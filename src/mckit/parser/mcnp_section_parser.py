@@ -349,7 +349,7 @@ def distribute_cards(
 
     # fmt: off
     materials, transformations, sdef, tallies, others = \
-        [], [], [], [], []  # type: list[Card], list[Card], list[Card], list[Card], list[Card]
+        [], [], [], [], []
     # fmt: on
 
     for card in cards:

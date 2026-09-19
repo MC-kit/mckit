@@ -19,7 +19,8 @@ def path_resolver(package: Package) -> Callable[[str], Path | Traversable]:
     Args:
         package: the package below which the data is stored.
 
-    Returns:
+    Returns
+    -------
         callable which appends the argument to the package folder as Path.
     """
     return files(package).joinpath

@@ -101,7 +101,7 @@ class Parser(sly.Parser):
 
 def parse(text: str) -> Transformation:
     text = drop_c_comments(text)
-    text, comments, trailing_comments = extract_comments(text)
+    text, _comments, trailing_comments = extract_comments(text)
     lexer = Lexer()
     parser = Parser()
     result: Transformation = parser.parse(lexer.tokenize(text))

@@ -52,10 +52,11 @@ class Index(dict[Key, Item]):
 
 
 # noinspection PyUnusedLocal
-def ignore(_: Key) -> Item | None:
+def ignore[Key](_: Key) -> Item | None:
     """Default factory for `IgnoringIndex`.
 
-    Returns:
+    Returns
+    -------
         None - always.
     """
     return None
@@ -92,7 +93,7 @@ class NumberedItemDuplicateError(ValueError):
         )
 
 
-def raise_on_duplicate_strategy(key: Key, prev: Item, curr: Item) -> None:
+def raise_on_duplicate_strategy[Key, Item](key: Key, prev: Item, curr: Item) -> None:
     """Raise error on `key` duplicate found, regardless values.
 
     Args:
@@ -100,13 +101,14 @@ def raise_on_duplicate_strategy(key: Key, prev: Item, curr: Item) -> None:
         prev: the value already in `Index`.
         curr: the new value to add to `Index`.
 
-    Raises:
+    Raises
+    ------
         NumberedItemDuplicateError: exception to inform on `key`, `prev` and `curr` values.
     """
     raise NumberedItemDuplicateError(key, prev, curr)
 
 
-def ignore_equal_objects_strategy(key: Key, prev: Item, curr: Item) -> None:
+def ignore_equal_objects_strategy[Key, Item](key: Key, prev: Item, curr: Item) -> None:
     """Raise error on `key` duplicate found, if the values are not equal.
 
     Otherwise, ignore an attempt to add the same key/value pair.
@@ -116,7 +118,8 @@ def ignore_equal_objects_strategy(key: Key, prev: Item, curr: Item) -> None:
         prev: the value already in `Index`.
         curr: the new value to add to `Index`.
 
-    Raises:
+    Raises
+    ------
         NumberedItemDuplicateError: exception to inform on `key`, `prev` and `curr` values.
     """
     if prev is not curr and prev != curr:

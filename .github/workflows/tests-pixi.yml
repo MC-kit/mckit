@@ -1,0 +1,154 @@
+name: Tests with pixi
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - "master"
+      - "devel"
+      - "main"
+      - "feat/*"
+      - "pixi-2"
+    paths:
+      - "**.py"
+      - "**.c"
+      - "**.h"
+      - "**.yaml"
+      - "**.yml"
+      - "**.toml"
+      - "**/data/**"
+      - ".github/constraints.txt"
+      - "!adhoc/**"
+      - "!tools/**"
+  pull_request:
+    branches:
+      - "master"
+      - "devel"
+      - "main"
+    paths:
+      - "**.py"
+      - "**.c"
+      - "**.h"
+      - "**.yaml"
+      - "**.yml"
+      - "**.toml"
+      - "!adhoc/**"
+      - "!tools/**"
+
+# permissions:
+#   contents: read  # Minimal required permissions
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || '' }}-${{ github.base_ref || '' }}-${{ github.ref != 'refs/heads/master' || github.sha }}
+  cancel-in-progress: true
+
+env:
+  MKLROOT: "${{ github.workspace }}/.pixi/envs/default"
+  MKL_INCLUDE_PATH: "${{ github.workspace }}/.pixi/envs/default/include"
+  LD_LIBRARY_PATH: "${{ github.workspace }}/.pixi/envs/default/lib"
+  RUNNER_DEBUG: true
+  no_proxy: "pypi.org,files.pythonhosted.org,github.com,api.github.com"  # to avoid SOCKS issue on python3.14
+
+
+jobs:
+
+  lint:
+    runs-on: ubuntu-latest
+    if: |
+      !contains(github.event.head_commit.message, '[skip_ci]')
+    steps:
+      - name: ✅ Check out the repository
+        uses: actions/checkout@v7
+
+      - uses: prefix-dev/setup-pixi@v0.10.0
+        with:
+          pixi-version: v0.74.0
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
+#          auth-host: prefix.dev
+#          auth-token: ${{ secrets.PREFIX_DEV_TOKEN }}
+          activate-environment: true
+
+      - name: 📦 Run pre commit checks
+        run: |
+          pixi run pre-commit
+
+  docs:
+    runs-on: ubuntu-latest
+    if: |
+      !contains(github.event.head_commit.message, '[skip_ci]')
+    steps:
+      - name: ✅ Check out the repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          submodules: 'true'
+      - uses: prefix-dev/setup-pixi@v0.10.0
+        with:
+          pixi-version: v0.74.0
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
+          environments: docs
+          activate-environment: true
+#          auth-host: prefix.dev
+#          auth-token: ${{ secrets.PREFIX_DEV_TOKEN }}
+#          cache-dependency-glob: |
+#            **/uv.lock
+#            **/pyproject.toml
+
+#      - name: 🐍 Install the project
+#        run: |
+#          pixi install
+        env:
+          MKLROOT: "${{ github.workspace }}/.pixi/envs/docs"
+          MKL_INCLUDE_PATH: "${{ github.workspace }}/.pixi/envs/docs/include"
+          LD_LIBRARY_PATH: "${{ github.workspace }}/.pixi/envs/docs/lib"
+
+      - name: 📦 Build documentation
+        run: |
+          pixi run docs-build
+
+  tests:
+    name: "${{ matrix.environment }} on ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
+    if: |
+      !contains(github.event.head_commit.message, '[skip_ci]')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+        environment: [ 'py312', 'py313' ]  # TODO @dvp: add py314+ when ready for freethread
+        include: 
+          - os: windows-latest
+            environment: 'py313'  # Windows runner is too slow
+    env:
+      MKLROOT: "${{ github.workspace }}/.pixi/envs/${{ matrix.environment }}"
+      MKL_INCLUDE_PATH: "${{ github.workspace }}/.pixi/envs/${{ matrix.environment }}/include"
+      LD_LIBRARY_PATH: "${{ github.workspace }}/.pixi/envs/${{ matrix.environment }}/lib"
+
+    steps:
+
+      - name: ✅ Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          submodules: 'true'
+
+      - uses: prefix-dev/setup-pixi@v0.10.0
+        with:
+          pixi-version: v0.74.0
+          cache: true
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'devel' }}
+          environments: ${{ matrix.environment }}
+          activate-environment: true
+
+      - name: ✅ Run tests
+        run: |
+          pixi run coverage-xml
+
+      - name: 📤 Upload coverage report
+        uses: codecov/codecov-action@v7
+        with:
+          files: coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}

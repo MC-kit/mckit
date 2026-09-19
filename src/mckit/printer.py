@@ -9,7 +9,7 @@ from logging import getLogger
 from mckit import constants
 from mckit.utils import get_decades, prettify_float, significant_digits
 
-IMPORTANCE_FORMAT = "{0:.3f}"
+IMPORTANCE_FORMAT = "{0:.3g}"
 
 _LOG = getLogger(__name__)
 
@@ -28,7 +28,8 @@ def print_card(tokens: list[str], offset: int = 8, max_column: int = 80, sep: st
             Separator symbol. This symbol marks positions where newline character
             should be inserted even if max_column position not reached.
 
-    Returns:
+    Returns
+    -------
         MCNP code of a card.
     """
     if offset < 5:
@@ -66,7 +67,8 @@ def separate(tokens: list[str], sep: str = " ") -> list[str]:
         sep :
             Separator to be inserted between tokens. Default: single space.
 
-    Returns:
+    Returns
+    -------
         List of separated tokens.
     """
     sep_tokens = []
@@ -82,8 +84,10 @@ def print_option(option: str, value: Any) -> list[str]:
     par = option[3:]
     if name == "IMP" and (par in ("N", "P", "E")):
         return [f"IMP:{par}={IMPORTANCE_FORMAT.format(value)}"]
+    if name == "FCL" and (par in ("N", "P")):
+        return [f"FCL:{par}={IMPORTANCE_FORMAT.format(value)}"]
     if option == "VOL":
-        return [f"VOL={value}"]
+        return [f"VOL={value:.3g}"]
     if option == "U":
         return [f"U={value.name()}"]
     if option == "FILL":
@@ -102,7 +106,9 @@ def print_option(option: str, value: Any) -> list[str]:
                 words.append(str(tr_name))
                 words.append(")")
         return words
-    raise ValueError(f"Incorrect option name: {option}")
+    if option in CELL_OPTIONS:
+        return [f"{option}={value}"]  # resort to generic scalar option.
+    raise ValueError(f"Not implemented option name: {option}")
 
 
 def pretty_float(value: float, frac_digits: int | None = None) -> str:
@@ -131,11 +137,19 @@ def pretty_float(value: float, frac_digits: int | None = None) -> str:
     return text_e
 
 
-CELL_OPTION_GROUPS = (
-    ("IMPN", "IMPP", "IMPE", "VOL"),  # Importance options
-    ("TRCL",),  # Transformation options
-    ("U", "FILL"),  # Universe and fill options
-)
+CELL_OPTIONS = {
+    "IMPN",
+    "IMPP",
+    "IMPE",
+    "VOL",  # Importance options
+    "TRCL",  # Transformation options
+    "U",
+    "FILL",  # Universe and fill options
+    "FCLN",
+    "FCLP",  # Force collision
+    "PMT",
+    "TMP",
+}
 
 
 def add_float(words: list[str], v: float, pretty: bool) -> None:

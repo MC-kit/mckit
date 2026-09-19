@@ -6,5 +6,6 @@ from click.testing import CliRunner
 
 
 @pytest.fixture
-def runner():
+def runner(cd_tmpdir):
+    """Execute click runner in temporary test directory."""
     return CliRunner()

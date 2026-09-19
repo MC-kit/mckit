@@ -7,7 +7,9 @@ categories:
     label: 'build'
   - title: ':construction_worker: Continuous Integration'
     labels:
+      - 'bot'
       - 'ci'
+      - 'github_actions'
       - 'github'
   - title: ':books: Documentation'
     labels:

@@ -1,0 +1,317 @@
+import marimo
+
+__generated_with = "0.23.15"
+app = marimo.App(width="medium")
+
+with app.setup:
+    import os
+    import sqlite3 as sq
+    import sys
+
+    from pathlib import Path
+
+    import duckdb as db
+    import numpy as np
+    import polars as pl
+
+    import mckit as mc
+    import mckit.utils as mut
+    import mckit.workflow as mcw
+
+    HOST = os.uname().nodename
+    VERSION = "0.2.1"
+    MODEL_DIR = mut.check_dir(mut.mkpath("~/dev/mcnp/trt/wrk/models/2025/5.4.3").expanduser())
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Перенос данных по bounding box csv->slite
+
+    Есть файл trt-5.4.3-component-volumes.csv содержащий данные по ячейкам, включая объем, границы bounding box, путь в STP файле.
+    Есть база данных trt-5.4.sqlite, в которой есть таблица 'cells' с аналогичными полями. В CSV путь получен из STP c помощью скрипта extract-info прогоном в SpaceClaim. Файл sqlite создан mapstp командой summary2sqlite. Эта команда переносит информацию из summary файла, созданного geouned при генерации модели. Путь в summary отличается от пути найденного extract_info: в конце вместо имени тела, geouned вставляет номер. Видимо, это связано с возможной декомпозицией тела в момент генерации модели.
+
+    Нужно проверить, есть ли однозначное соответствие между путями в summary и extract_info csv. Если можно такое соответствие установить, то:
+    1) перенести информацию о bounding box
+    2) проверить соответствие объемов, измеренных extract_info (в SpaceClaim) и geouned (FreeCad).
+    """)
+    return
+
+
+@app.cell
+def _():
+    import marimo as mo
+
+    return (mo,)
+
+
+@app.cell
+def _(mo):
+    mo.md(f"""
+        - Python: {sys.version}, at {sys.prefix}
+        - host: {HOST}
+        - cwd: {Path.cwd()}
+        - mckit: {mc.__version__}
+    """).callout()
+    return
+
+
+@app.cell
+def _():
+    sql_path = mut.check_file(MODEL_DIR / "trt-5.4.3.sqlite")
+    return (sql_path,)
+
+
+@app.cell
+def _():
+    csv_path = mut.check_file(MODEL_DIR / "trt-5.4.3-component-volumes.csv")
+    return (csv_path,)
+
+
+@app.cell
+def _(csv_path):
+    csv = pl.read_csv(csv_path)
+    return (csv,)
+
+
+@app.cell
+def _(csv):
+    csv
+    return
+
+
+@app.cell
+def _(sql_path):
+    conn = db.connect(f"{sql_path.with_suffix(".db")}")
+    return (conn,)
+
+
+@app.cell
+def _(conn, sql_path):
+    conn.execute(f"attach '{sql_path}' as sq (type sqlite)")
+    return
+
+
+@app.cell
+def _(conn):
+    sum = conn.table("sq.cells").pl()
+    return (sum,)
+
+
+@app.cell
+def _(csv, sum):
+    len(csv) == len(sum)
+    return
+
+
+@app.cell(hide_code=True)
+def _(conn, csv, mo):
+    _df = mo.sql(
+        f"""
+        select csv.path, REPLACE(csv.path, 'Конструкция1/', '/trt-5.4.3/') as fixed_path from csv limit 5
+        """,
+        engine=conn
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(conn, csv, mo):
+    df = mo.sql(
+        f"""
+        with check_eq as (
+            select
+            	sq.cells.cell as cell,
+                cells.path as geouned,
+                REGEXP_REPLACE(REPLACE(csv.path, 'Конструкция1/', '/trt-5.4.3/'), '/[^/]*$', '') as mapstp
+        	from sq.cells, csv
+        	where sq.cells.cell = csv.offset
+        )
+        select
+        	check_eq.*,
+        	STARTS_WITH(geouned, mapstp) as eq,
+            LENGTH(geouned),
+            LENGTH(mapstp),
+            SUBSTR(geouned,1, LENGTH(mapstp))
+        from 
+        	check_eq
+        where not eq
+        limit 10
+        """,
+        engine=conn
+    )
+    return (df,)
+
+
+@app.cell
+def _(df):
+    geuned_str, mapstp_str = (x.item() for x in df[0].select("geouned", "mapstp"))
+    return geuned_str, mapstp_str
+
+
+@app.cell
+def _():
+    import difflib
+
+    return (difflib,)
+
+
+@app.cell
+def _(difflib, geuned_str, mapstp_str):
+    differ = difflib.Differ()
+    diff = list(differ.compare(geuned_str, mapstp_str))
+    first_diff = None
+    for i, s in enumerate(diff):
+        if s[0] in "-+":
+            print(i, ":", s)
+            if first_diff is None:
+                first_diff = i
+    return (first_diff,)
+
+
+@app.cell
+def _(first_diff, geuned_str, mapstp_str, mo):
+    mo.md(f"""\
+    geouned: {geuned_str[first_diff-5:]}
+    mapstp : {mapstp_str[first_diff-5:]}
+
+             {"-"*4+"^"}
+    """)
+    return
+
+
+@app.cell
+def _():
+    "/trt-5.4/1A_521_514_СИСТЕМА_ЭЛЕКТРОМАГНИТНАЯ[m-steel]/CS_TRT-2023_V3[m-steel]/Iz_modul_Ring_CS_SS_TRT-2023_V3-1/Iz_modul-ring2_SS_CS_TRT-2023_V32/Component51"[:-1] == \
+    "/trt-5.4/1A_521_514_СИСТЕМА_ЭЛЕКТРОМАГНИТНАЯ[m-steel]/CS_TRT-2023_V3[m-steel]/Iz_modul_Ring_CS_SS_TRT-2023_V3-1/Iz_modul-ring2_SS_CS_TRT-2023_V3/Component5"
+    # ----------------------------------------^
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    geouned зачем то добавил 2: "..._v3**2**/Component...".
+
+    extract-info ничего не меняет в пути в STP файле - там этой двойки нет, как в STP
+
+    Вместо полного пути для провязки таблиц из extract-info 'csv' и summary 'cells'
+    """)
+    return
+
+
+@app.cell
+def _(conn):
+    conn.execute(
+        """
+        select ok, count(*) as cnt from (
+            select
+                starts_with(
+                    cells.path, 
+                    REGEXP_REPLACE(REPLACE(csv.path, 'Конструкция1/', '/trt-5.4.3/'), '/[^/]*$', '')
+                ) as ok
+            from sq.cells, csv
+            where sq.cells.cell = csv.offset
+        )
+        group by ok
+        """
+    ).pl()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Начала путей не совпадают.
+
+    Проверим совпадение объемов.
+    """)
+    return
+
+
+@app.cell
+def _(conn):
+    conn.execute(
+        """
+        with r as ( 
+            select
+            abs(sq.cells.volume - csv.volume)/(sq.cells.volume + csv.volume) as ratio
+            from sq.cells, csv
+            where sq.cells.cell = csv.offset
+        )
+        select
+            min(ratio), 
+            avg(ratio),
+            max(ratio)
+        from r
+        """
+    ).pl()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Относительное совпадение объемов очень хорошее.
+
+    Перенесем инфорамцию о bounding box.
+    """)
+    return
+
+
+@app.cell
+def _(conn):
+    conn.execute(
+        """
+        create or replace table cells as
+        select
+            c.cell,
+            c.volume,
+            csv.xmin,
+            csv.ymin,
+            csv.zmin,
+            csv.xmax,
+            csv.ymax,
+            csv.zmax,
+            c.path,
+            c.material,
+            c.density,
+            c.correction,
+            c.rwcl,
+            csv.path as csv_path,
+            csv.volume as csv_volume        
+        from 
+            sq.cells as c
+            inner join csv on c.cell = csv.offset
+        """
+    )
+    return
+
+
+@app.cell
+def _(conn):
+    conn.table("cells").pl()
+    return
+
+
+@app.cell
+def _(conn):
+    conn.close()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Utils
+    """)
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+if __name__ == "__main__":
+    app.run()

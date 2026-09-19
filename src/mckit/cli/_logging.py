@@ -5,29 +5,23 @@ See https://github.com/Delgan/loguru
 
 from __future__ import annotations
 
-from typing import Final
+from typing import Final, override
 
 import logging
 import sys
 
 from os import environ
+from types import FrameType
 
 from loguru import logger
-
-# class PropagateHandler(logging.Handler):
-#     """Send events from loguru to standard logging"""
-#     def emit(self, record):
-#         logging.getLogger(record.name).handle(record)
-#
-#
-# logger.add(PropagateHandler(), format="{message}")
 
 
 class InterceptHandler(logging.Handler):
     """Send events from standard logging to loguru."""
 
+    @override
     def emit(self, record):
-        # Get corresponding Loguru level if it exists
+        # Get corresponding loguru level if it exists
         try:
             level = logger.level(record.levelname).name
         except ValueError:
@@ -35,8 +29,14 @@ class InterceptHandler(logging.Handler):
 
         # Find caller from where originated the logged message
         frame, depth = logging.currentframe(), 2
-        while frame.f_code.co_filename == logging.__file__:
-            frame = frame.f_back
+
+        def _check_frame(_frame) -> FrameType:
+            if _frame is None:
+                raise ValueError("Failed to capture logging frame")
+            return _frame
+
+        while _check_frame(frame).f_code.co_filename == logging.__file__:
+            frame = _check_frame(frame.f_back)
             depth += 1
 
         logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())

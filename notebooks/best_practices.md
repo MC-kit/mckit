@@ -1,4 +1,12 @@
-# Best practices and configuring
+# Best practices for notebooks
+
+## Marimo
+
+TBD ...
+
+## Jupyter (obsolete - use marimo)
+
+### Best practices and configuring
 * https://www.svds.com/jupyter-notebook-best-practices-for-data-science/
 * https://github.com/chrisvoncsefalvay/jupyter-best-practices
 * https://hackernoon.com/10-tips-on-using-jupyter-notebook-abc0ba7028a4
@@ -6,20 +14,20 @@
 * [Ten Simple Rules for Better Figures](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1003833): Основные принципы дизайна хороших рисунков, типичные ошибки, некоторые приемы, полезный перечень средств работы с рисунками и ссылки.
 * [Matplotlib Tutorial](http://www.labri.fr/perso/nrougier/teaching/matplotlib/matplotlib.html): Эффективный краткий учебник
 
-# Tools
+### Tools
 
-## Diff and merge
+#### Diff and merge
 
 https://nbdime.readthedocs.io/en/latest/
 
-# Examples
+### Examples
 
 * [Jupyter nbviewer](https://nbviewer.jupyter.org/): Опубликованы Jupyter масштаба книги. Темы: machine learning, signal processing, data analysis и многое другое. Множество примеров. Языки программирования: python, julia, ruby и другие.
 * [Python Data Science Handbook (book itself)](https://jakevdp.github.io/PythonDataScienceHandbook)
 * [Python Data Science Handbook (notebooks)](https://github.com/jakevdp/PythonDataScienceHandbook)
 * [A gallery of interesting Jupyter Notebooks](https://github.com/jupyter/jupyter/wiki/A-gallery-of-interesting-Jupyter-Notebooks)
 
-# Books
+### Books
 
 * [Python for Data Analysis](http://shop.oreilly.com/product/0636920023784.do): Wes McKinney's book includes a chapter that covers using IPython as a data scientist. Although much of the material overlaps what we've discussed here, another perspective is always helpful.
 

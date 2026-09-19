@@ -6,7 +6,10 @@ from collections.abc import Iterable
 
 C_COMMENT = r"(^|(?<=\n))\s{0,5}[cC]([ ][^\n]*)?\n?"
 RE_C_COMMENT = re.compile(C_COMMENT, re.MULTILINE)
-EOL_COMMENT = r"\$.*[^\n]*"
+EOL_COMMENT = r"(\&\s+)?\$.*[^\n]*"  # EOL comment starting with $ and with optional ampersand, see MCNP6.2 UM, 1.3.1
+# About ampersand, see MCNP6.2 User Manyal, 1.3.1, not present in MCNP6.3
+# TODO @dvp: implement line continuation with & (ampersand)
+# Low priority, ampersand is rarely used.
 RE_EOL_COMMENT = re.compile(EOL_COMMENT, re.MULTILINE)
 LINE = r"(?P<text>\s*[^ $][^$]*)?(?:\s*\$\s*(?P<comment>.*))?"  # text should contain at list one non-space character
 RE_LINE = re.compile(LINE)
@@ -14,6 +17,7 @@ RE_LINE = re.compile(LINE)
 FLOAT = r"[+-]?((\d+\.?\d*)|(\.\d+))(?:[ed][-+]?\d+)?"
 INTEGER = r"\d+"
 RE_EMPTY_LINE = re.compile(r"\s*")
+INTEGER_SELECT = re.compile(r"(\d+)")
 
 
 def ensure_lower(text: str):
@@ -82,7 +86,7 @@ def extract_comments(text) -> tuple[str, dict[int, tuple[str, ...]] | None, list
 
     res_comments = {k: tuple(v) for k, v in comments} if comments else None
 
-    return "\n".join(cleaned_text), res_comments, trailing_comment if trailing_comment else None
+    return "\n".join(cleaned_text), res_comments, trailing_comment or None
 
 
 class ParseError(ValueError):
@@ -95,3 +99,47 @@ def internalize(word: str, words: Iterable[str]) -> tuple[str, bool]:
         if w == word:
             return w, True
     return word, False
+
+
+def extract_optioall_integer(text: str, pos: int = 0):
+    """Extract integer from given `text.
+
+    Parameters
+    ----------
+    text
+        ... to search the integer.
+    pos
+        ... position to start search from
+
+    Returns
+    -------
+    Found integer, if found, else None.
+
+    """
+    match = INTEGER_SELECT.match(text, pos=pos)
+    return int(match.group(1)) if match else None
+
+
+def extract_integer(text: str, pos: int = 0) -> int:
+    """Extract integer from given `text.
+
+    Parameters
+    ----------
+    text
+    ... to search the integer.
+    pos
+    ... position to start search from
+
+    Returns
+    -------
+    Found integer.
+
+    Raises
+    ------
+    ValueError: if integer not found.
+    """
+
+    result = extract_optioall_integer(text, pos)
+    if result is None:
+        raise ParseError("Could not parse integer.")
+    return result

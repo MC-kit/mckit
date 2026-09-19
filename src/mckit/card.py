@@ -2,24 +2,34 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, override
 
 from abc import ABC, abstractmethod
-from functools import reduce
-from operator import xor
+from collections.abc import Callable
 
 from mckit.utils.named import Name
 
 from .printer import print_card
-from .utils import make_hashable
+from .utils import match_comment
+
+if TYPE_CHECKING:
+    from typing import Any
+
+    import re
 
 
+# noinspection PyPropertyDefinition
 class Card(ABC):
     """Features, common for all cards."""
 
-    def __init__(self, **options):
+    def __init__(self, **options: Any) -> None:
+        # TODO @dvp: rename self.options to self._options to make this attribute private
+        #            make sure that other modules don't access options directly
+        #            at least for name, comment and so on
+        #            then convert options to separate explicit attributes
         self.options: dict[str, Any] = options
 
+    @override
     def __str__(self):
         # TODO dvp: option `name` is printed twice,
         #           (second time as option)
@@ -28,7 +38,7 @@ class Card(ABC):
 
     @property
     def is_anonymous(self) -> bool:
-        """Is the card is named?"""
+        """Check if the card has name."""
         return self.name() is None
 
     @property
@@ -39,7 +49,7 @@ class Card(ABC):
     @property
     def original(self) -> str | None:
         """Original text from an MCNP model."""
-        return cast(str | None, self.options.get("original", None))
+        return self.options.get("original")
 
     @property
     def has_comment_above(self) -> bool:
@@ -49,7 +59,7 @@ class Card(ABC):
     @property
     def comment_above(self) -> str | None:
         """Comment located above this card in an MCNP model."""
-        return cast(str | None, self.options.get("comment_above", None))
+        return self.options.get("comment_above")
 
     def name(
         self,
@@ -59,7 +69,7 @@ class Card(ABC):
         """Returns card's name."""
         return self.options.get("name", None)
 
-    def rename(self, new_name) -> Card:
+    def rename(self, new_name: Name) -> Card:
         """Renames the card."""
         self.options["name"] = new_name
         self.drop_original()
@@ -70,8 +80,15 @@ class Card(ABC):
         """Gets a list of card words."""
 
     def mcnp_repr(self, pretty: bool = False) -> str:
-        """Gets str representation of the card."""
-        # TODO dvp: try to use original texts, if available - this will preserve comments
+        """Get string representation of the card.
+
+        Parameters
+        ----------
+        pretty
+            print float number in human-readable format
+        """
+        # TODO @dvp: try to use original texts, if available - this will preserve comments
+        # TODO @dvp: remove `pretty`, instead use formats for numbers from geouned, to avoid precision loss
         return print_card(self.mcnp_words(pretty))
 
     def drop_original(self) -> None:
@@ -86,8 +103,31 @@ class Card(ABC):
         """Add a comment to this card."""
         self.options.setdefault("comment", []).extend(comment)
 
+    @override
     def __hash__(self) -> int:
-        return reduce(xor, (hash(k) ^ hash(make_hashable(v)) for k, v in self.options.items()), 0)
+        _n = self.name()
+        return _n if _n is not None else 0
 
-    def __eq__(self, other) -> bool:
-        return self is other or self.options == other.options
+    @override
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Card) and (self is other or self.options == other.options)
+
+    def match_comment(self, predicate: str | re.Pattern | Callable[[str], bool]) -> bool:
+        """Check if this cell trailing comment matches `predicate`.
+
+        Parameters
+        ----------
+        predicate
+            what to search for in the comments (string, pattern or callable)
+
+        Returns
+        -------
+        Does predicate match one of the  comment lines?
+        """
+        comment = self.options.get("comment")
+        if comment is None:
+            return False
+        return match_comment(comment, predicate)
+
+
+__all__ = ["Card"]

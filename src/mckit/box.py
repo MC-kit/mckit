@@ -26,7 +26,8 @@ class Box(_Box):
         Args:
             geometry_box: source
 
-        Returns:
+        Returns
+        -------
             The new Box.
         """
         wx, wy, wz = geometry_box.dimensions
@@ -48,10 +49,12 @@ class Box(_Box):
             min_corner: min corner
             max_corner: max ...
 
-        Raises:
+        Raises
+        ------
             ValueError: if min and max corners are not in order
 
-        Returns:
+        Returns
+        -------
             The new Box.
         """
         if not np.all(min_corner < max_corner):
@@ -75,7 +78,8 @@ class Box(_Box):
             minz: min z
             maxz: max z
 
-        Returns:
+        Returns
+        -------
             A new Box.
         """
         min_corner = np.array([minx, miny, minz])

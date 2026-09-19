@@ -6,7 +6,6 @@ from pathlib import Path
 import click
 
 from mckit.cli._logging import logger
-from mckit.constants import MCNP_ENCODING
 from mckit.universe import Universe, UniverseAnalyser
 
 # This is the encoding swallowing non ascii (neither unicode) symbols happening in MCNP models code
@@ -23,11 +22,11 @@ def check_if_path_exists(path: str | Path, override: bool):
         raise click.UsageError(errmsg)
 
 
-def save_mcnp(model: Universe, path: str | Path, override: bool):
+def save_mcnp(model: Universe, path: str | Path, override: bool, encoding="utf8"):
     check_if_path_exists(path, override)
     analyser = UniverseAnalyser(model)
     if analyser.we_are_all_clear():
-        model.save(path, encoding=MCNP_ENCODING, check_clashes=False)
+        model.save(path, encoding=encoding, check_clashes=False)
     else:
         out = StringIO()
         out.write("Duplicates found:\n")
