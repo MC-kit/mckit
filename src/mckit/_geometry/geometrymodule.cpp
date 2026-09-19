@@ -231,7 +231,7 @@ static PyObject *boxobj_test_points(BoxObject *self, PyObject *points)
 
     npy_intp size = PyArray_SIZE((PyArrayObject *)pts);
     size_t npts = size > NDIM ? PyArray_DIM((PyArrayObject *)pts, 0) : 1;
-    npy_intp dims[] = {npts};
+    npy_intp dims[] = {static_cast<npy_intp>(npts)};
     PyObject *result = PyArray_EMPTY(1, dims, NPY_INT, 0);
     if (result == NULL)
     {
