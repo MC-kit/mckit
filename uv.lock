@@ -1320,11 +1320,11 @@ wheels = [
 
 [[package]]
 name = "platformdirs"
-version = "4.11.9"
+version = "4.11.11"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/58/b9/8adc4e1b422b27fd88540ec7bf1f406f77ef393ec070e26fc430e914cde8/platformdirs-4.11.9.tar.gz", hash = "sha256:e2c66a8d384596cd98e3c4aea2d761df7bac95d9d8a2cc3946daa8cdafdaebc1", size = 38345, upload-time = "2026-09-16T13:31:45.259Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/13/f870dd0b42690138e4e37a76b5138e5690ed4365a77071bb092d59037da0/platformdirs-4.11.11.tar.gz", hash = "sha256:b0befe8a90759e4a9a8b9820d434ae226a6549063210b596da0038a7a05aede4", size = 39949, upload-time = "2026-09-19T01:18:47.259Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f3/94/803ba86705257d7eedddac4b02eb88a7483b1600e9200c1fefc6f1a9a3ff/platformdirs-4.11.9-py3-none-any.whl", hash = "sha256:0a3958f58a9e30321eaef0a424dd0b77cce242886b36b8aa992f9731ef2d59c1", size = 24472, upload-time = "2026-09-16T13:31:44.049Z" },
+    { url = "https://files.pythonhosted.org/packages/39/be/3ae887e84c38c4dd1c549cd5825adc93f48069a94fe1cb8ac52a9da16f15/platformdirs-4.11.11-py3-none-any.whl", hash = "sha256:972ea6b2b387155a536226a0750e46923d731d459a387c4a255c583ed2f64547", size = 24992, upload-time = "2026-09-19T01:18:45.825Z" },
 ]
 
 [[package]]
@@ -1747,14 +1747,14 @@ wheels = [
 
 [[package]]
 name = "python-discovery"
-version = "1.6.0"
+version = "1.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/91/96/0f93e27c9f60a650838f2118159aa115fd5732c0716247917b7ba7ede665/python_discovery-1.6.0.tar.gz", hash = "sha256:6393b4eae1be8b2182670635e7baff89ac21cb9f8e86fd1ff40c7b1144febb4c", size = 82849, upload-time = "2026-08-28T17:30:02.366Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0c/57/250bd238b966cece44328235eb85290045d059265fdaf7527a3a958123db/python_discovery-1.6.1.tar.gz", hash = "sha256:cf87d3627dfb4412437fdd5b13eae402607722998d21567993aedbc59b23c15e", size = 84338, upload-time = "2026-09-18T01:31:53.971Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/43/5e/21abf578182fb15006a57faf3711a1e659e29d600d19b6e557eae908c81d/python_discovery-1.6.0-py3-none-any.whl", hash = "sha256:d4e244cf17b8b29819ed78003d55fbacf86eda23425b075454fff9271b79377a", size = 38451, upload-time = "2026-08-28T17:30:01.236Z" },
+    { url = "https://files.pythonhosted.org/packages/16/7d/e9ffbadfbf89c93848412d04594135c4ae8c1d37d9e053b9c3ed718fabc4/python_discovery-1.6.1-py3-none-any.whl", hash = "sha256:d43fcdef879fe795352bd13ccf8d185ba5a9f86f36cfcd00529f596e737442b3", size = 38664, upload-time = "2026-09-18T01:31:52.448Z" },
 ]
 
 [[package]]
@@ -2024,14 +2024,14 @@ wheels = [
 
 [[package]]
 name = "sphinx-autodoc-typehints"
-version = "3.13.6"
+version = "3.13.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "sphinx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/30/bf/860fbcc75e545b0a2cc78a0cefefa358099f41e49bb782e65f9d546d9c35/sphinx_autodoc_typehints-3.13.6.tar.gz", hash = "sha256:1d6e9897273094434ad866410d38fd442b86bcd8ffe24595a546eeb037c6cd18", size = 95235, upload-time = "2026-09-08T22:16:44.986Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2b/d1/69ddd9bad8965986d11f92f9526f81e0805936763d34aed5e5b1e80795d1/sphinx_autodoc_typehints-3.13.7.tar.gz", hash = "sha256:c090ee6cb2c9e0a86074be9c288915ea3519e0992c77c5fb3b00fbfe61d50d1f", size = 96990, upload-time = "2026-09-18T02:05:27.243Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/17/69/d3c040ef3e44937ba91e608617414546184e8b9db622eebe95bc246fddab/sphinx_autodoc_typehints-3.13.6-py3-none-any.whl", hash = "sha256:cb66ff67616a4db624360f3940cf7256020ea8b675a57a9a1ecf7bb8848c0bb7", size = 48848, upload-time = "2026-09-08T22:16:43.365Z" },
+    { url = "https://files.pythonhosted.org/packages/66/0c/3ee05b107b8c58b41e5df954a8354a9f1db5c334299be5167a5a77df6369/sphinx_autodoc_typehints-3.13.7-py3-none-any.whl", hash = "sha256:7367a6736a0d779bfee4533217fa784b6cadb4f5466b5ea47e722e9fcf0946e8", size = 49279, upload-time = "2026-09-18T02:05:25.708Z" },
 ]
 
 [[package]]
@@ -2238,7 +2238,7 @@ wheels = [
 
 [[package]]
 name = "virtualenv"
-version = "21.7.11"
+version = "21.7.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "distlib" },
@@ -2246,9 +2246,9 @@ dependencies = [
     { name = "platformdirs" },
     { name = "python-discovery" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f9/7c/4b6745cc7e3328c0d298320aca914c707ce77224fb8aa486cf8103341f83/virtualenv-21.7.11.tar.gz", hash = "sha256:f830d4ac9806704d86b50fd100aeda2ea45ea505b88c86ba7a97d994b637f496", size = 5354008, upload-time = "2026-09-17T16:31:42.96Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/45/2b/f7ec483cb56fc84cab8676971b171156111cd125d069ca02fdaf0239f3e5/virtualenv-21.7.16.tar.gz", hash = "sha256:d3fcf6954a07121c2b61efcb96419e2f40b3718d558998f13a7314e32cc42723", size = 5363081, upload-time = "2026-09-19T06:59:08.339Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b1/2b/d3fc665e1f92e3a56dbd643c388bac51ca008b64c2042ba47aaf76f16e9d/virtualenv-21.7.11-py3-none-any.whl", hash = "sha256:f8fa43dad2a2c1584eb1c94d948c7c5f50e9c73c22af3510d9b67a96a25cc273", size = 5325384, upload-time = "2026-09-17T16:31:40.636Z" },
+    { url = "https://files.pythonhosted.org/packages/c7/46/a02c0bb29e6102616aa91d68a5e3f055393d92353d94b52ad6c51d540c20/virtualenv-21.7.16-py3-none-any.whl", hash = "sha256:752fd5d5352502fbd794422983eed65a249fc6f4685c5e2122fd6052e6477a11", size = 5330278, upload-time = "2026-09-19T06:59:06.096Z" },
 ]
 
 [[package]]
