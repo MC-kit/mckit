@@ -119,6 +119,7 @@ exclude = [ "**/__pycache__", "**/*.pyc" ]
 
 [tool.cibuildwheel]
 build-frontend = "build[uv]"
+skip = ["*-musllinux_*"]
 
 [tool.mypy]
 files = "src/**/*.py"
