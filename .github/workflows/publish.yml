@@ -23,6 +23,9 @@ jobs:
         # ubuntu-20.04 is required to build wheels for older OS (clusters...)
         os: ['ubuntu-20.04', 'ubuntu-latest', 'macos-latest', 'windows-latest']
         python-version: ['3.12', '3.13', '3.14']
+        exclude:
+          - os: macos-latest
+            python-version: 3.14   # TODO 'ply' error
     steps:
       - name: Check out the repository
         uses: actions/checkout@v7
