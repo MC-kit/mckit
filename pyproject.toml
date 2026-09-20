@@ -4,7 +4,7 @@ requires = [ "numpy", "scikit-build-core>=0.12" ]
 
 [project]
 name = "mckit"
-version = "0.10.1"
+version = "0.10.2"
 description = "Tools to process MCNP models and results"
 readme = "README.rst"
 keywords = [ "mckit", "MCNP" ]
