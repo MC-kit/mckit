@@ -75,7 +75,6 @@ jobs:
       run: uv publish \
         --username=__token__ \
         --password=${{ secrets.PYPI_TOKEN }} \
-        "wheelhouse/*.whl" \
-        dist/*.tar.gz \
+        "wheelhouse/**/*.whl" \
         --check-url https://pypi.org/simple \
         --trusted-publishing always
