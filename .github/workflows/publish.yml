@@ -109,7 +109,6 @@ jobs:
       run: |
         ls -R wheelhouse
         uv publish \
-          --force \
           --check-url https://pypi.org/simple \
           --trusted-publishing always \
           "wheelhouse/*.whl" \
