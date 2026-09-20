@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     type TGeometry = list[Surface | ShapeOperationCode | Shape | Body] | Body | Shape
 
 
-__all__ = ["GLOBAL_BOX", "Body", "Card", "Shape", "TGeometry", "simplify"]
+__all__ = ["GLOBAL_BOX", "Body", "Card", "Shape", "simplify"]
 
 _LOG = getLogger(__name__)
 

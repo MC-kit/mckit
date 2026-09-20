@@ -16,36 +16,100 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  publish:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # ubuntu-20.04 is required to build wheels for older OS (clusters...)
-        os: ['ubuntu-20.04', 'ubuntu-latest', 'macos-latest', 'windows-latest']
-        python-version: ['3.12', '3.13', '3.14']
-        exclude:
-          - os: 'macos-latest'
-            python-version: '3.14'   # TODO 'ply' error
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        python-version: [ 3.14 ]
+
     steps:
-      - name: Check out the repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 1
-          submodules: 'true'
-          
-      - name: 📦 Install uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-          enable-cache: true
-          cache-dependency-glob: |
-            **/uv.lock
-            **/pyproject.toml
+    - name: ✅ Check out the repository
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 1
+        submodules: 'true'
 
-      - name: 📦 Build package
-        run: |
-          uv build --wheel
+    - name: 📦 Install uv
+      uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      with:
+        python-version: ${{ matrix.python-version }}
+        enable-cache: false
 
-      - name: 📤 Publish package on PyPI
-        if: ${{ !github.event.act }} # skip during local actions testing
-        run: uv publish --username=__token__ --password=${{ secrets.PYPI_TOKEN }}
+    - name: 🛠 Set up QEMU
+      if: runner.os == 'Linux'
+      uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+      with:
+        platforms: all
+
+    - name: 🏗️ Build wheels    
+      uses: pypa/cibuildwheel@v4.2.1
+      
+    - name: 📤 Upload wheels
+      uses: actions/upload-artifact@v7
+      with:
+        name: cibw-wheels-${{ matrix.os }}-${{ matrix.python-version }}
+        path: ./wheelhouse/*.whl          
+
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+    - name: ✅ Checkout repository
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 1
+        submodules: 'true'
+        persist-credentials: false
+    - name: 📦 Install uv
+      uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      with:
+        python-version: 3.14
+        enable-cache: false
+    - name: 📦 Build src package
+      run: |
+        uv build --sdist
+    - name: 📤 Upload sdist
+      uses: actions/upload-artifact@v7
+      with:
+        name: sdist
+        path: ./dist/*.tar.gz          
+
+  publish:
+    needs: [ build, sdist ]          
+    runs-on: 'ubuntu-latest'
+    environment: # Required for OIDC context
+      name: pypi
+      url: https://pypi.org/project/mckit
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing, but
+      # should NOT be granted anywhere else!
+      id-token: write  # Required for OIDC token generation
+    steps:
+    - name: 📦 Install uv
+      uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      with:
+        python-version: 3.14
+        enable-cache: false
+
+    - name: 📥 Download wheels
+      uses: actions/download-artifact@v8
+      with:
+        pattern: cibw-wheels-*
+        path: wheelhouse
+        merge-multiple: true          
+
+    - name: 📥 Download sdist 
+      uses: actions/download-artifact@v8
+      with:
+        name: sdist
+        path: sdist
+
+    - name: 🛳 Publish package on PyPI
+      if: ${{ !github.event.act }} # skip during local actions testing
+      run: |
+        ls -R wheelhouse
+        uv publish \
+          --check-url https://pypi.org/simple \
+          --trusted-publishing always \
+          "wheelhouse/*.whl" \
+          "sdist/*.tar.gz"
