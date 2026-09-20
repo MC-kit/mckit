@@ -53,10 +53,13 @@ jobs:
   publish:
     needs: build          
     runs-on: 'ubuntu-latest'
+    environment: # Required for OIDC context
+      name: pypi
+      url: https://pypi.org/project/mckit
     permissions:
       # IMPORTANT: this permission is mandatory for trusted publishing, but
       # should NOT be granted anywhere else!
-      id-token: write
+      id-token: write  # Required for OIDC token generation
     steps:
     - name: 📦 Install uv
       uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
@@ -80,8 +83,6 @@ jobs:
       run: |
         ls -R wheelhouse
         uv publish \
-          --username=__token__ \
-          --password=${{ secrets.PYPI_TOKEN }} \
           --check-url https://pypi.org/simple \
           --trusted-publishing always \
-          "wheelhouse/**/*.whl"
+          "wheelhouse/*.whl"
