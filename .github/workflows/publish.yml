@@ -20,11 +20,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-latest ] #, windows-latest]
-        python-version: [ 3.13 ]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        python-version: [ 3.14 ]
 
     steps:
-    - name: Check out the repository
+    - name: ✅ Check out the repository
       uses: actions/checkout@v7
       with:
         fetch-depth: 1
@@ -36,22 +36,46 @@ jobs:
         python-version: ${{ matrix.python-version }}
         enable-cache: false
 
-    - name: Set up QEMU
+    - name: 🛠 Set up QEMU
       if: runner.os == 'Linux'
       uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
       with:
         platforms: all
 
-    - name: Build wheels    
+    - name: 🏗️ Build wheels    
       uses: pypa/cibuildwheel@v4.2.1
       
-    - uses: actions/upload-artifact@v7
+    - name: 📤 Upload wheels
+      uses: actions/upload-artifact@v7
       with:
         name: cibw-wheels-${{ matrix.os }}-${{ matrix.python-version }}
         path: ./wheelhouse/*.whl          
 
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+    - name: ✅ Checkout repository
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 1
+        submodules: 'true'
+        persist-credentials: false
+    - name: 📦 Install uv
+      uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+      with:
+        python-version: 3.14
+        enable-cache: false
+    - name: 📦 Build src package
+      run: |
+        uv build --sdist
+    - name: 📤 Upload sdist
+      uses: actions/upload-artifact@v7
+      with:
+        name: sdist
+        path: ./dist/*.tar.gz          
+
   publish:
-    needs: build          
+    needs: [ build, sdist ]          
     runs-on: 'ubuntu-latest'
     environment: # Required for OIDC context
       name: pypi
@@ -67,22 +91,25 @@ jobs:
         python-version: 3.14
         enable-cache: false
 
-    - uses: actions/download-artifact@v8
+    - name: 📥 Download wheels
+      uses: actions/download-artifact@v8
       with:
         pattern: cibw-wheels-*
         path: wheelhouse
         merge-multiple: true          
 
-    # Have to checkout repository before this
-    # - name: 📦 Build src package
-    #   run: |
-    #     uv build --sdist
+    - name: 📥 Download sdist 
+      uses: actions/download-artifact@v8
+      with:
+        name: sdist
+        path: sdist
 
-    - name: 📤 Publish package on PyPI
+    - name: 🛳 Publish package on PyPI
       if: ${{ !github.event.act }} # skip during local actions testing
       run: |
         ls -R wheelhouse
         uv publish \
           --check-url https://pypi.org/simple \
           --trusted-publishing always \
-          "wheelhouse/*.whl"
+          "wheelhouse/*.whl" \
+          "sdist/*.tar.gz"

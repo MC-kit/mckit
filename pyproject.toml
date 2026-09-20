@@ -4,7 +4,7 @@ requires = [ "numpy", "scikit-build-core>=0.12" ]
 
 [project]
 name = "mckit"
-version = "0.10.1"
+version = "0.10.2"
 description = "Tools to process MCNP models and results"
 readme = "README.rst"
 keywords = [ "mckit", "MCNP" ]
@@ -123,9 +123,11 @@ packages = [ "src/mckit" ]
 exclude = [ "**/__pycache__", "**/*.pyc" ]
 
 [tool.cibuildwheel]
+skip = [ "*-win32", "*-manylinux_i686", "*-musllinux*" ]
 build-frontend = "build[uv]"
-skip = ["*-musllinux_*"]
 
+# Exclude 32-bit builds: *-win32 *-manylinux_i686
+# Exclude musllinux builds: *-musllinux*
 [tool.mypy]
 files = "src/**/*.py"
 exclude = """  (?x)(
