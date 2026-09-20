@@ -78,7 +78,7 @@ jobs:
     - name: 📤 Publish package on PyPI
       if: ${{ !github.event.act }} # skip during local actions testing
       run: |
-        ls wheelhouse/**/*.whl
+        ls -R wheelhouse
         uv publish \
           --username=__token__ \
           --password=${{ secrets.PYPI_TOKEN }} \
