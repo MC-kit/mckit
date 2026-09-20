@@ -575,30 +575,126 @@ _BIN_NAMES = {
 }
 
 
-def read_meshtal(filename: str | Path) -> dict[int, FMesh]:
-    """Reads MCNP meshtal file.
+# def read_meshtal(filename: str | Path) -> dict[int, FMesh]:
+#     """Reads MCNP meshtal file.
+#
+#     Args:
+#         filename: File that contains MCNP meshtally data.
+#
+#     Returns:
+#         tallies Index of mesh tallies contained in the file.
+#     """
+#     if isinstance(filename, str):
+#         filename = Path(filename)
+#     with filename.open() as f:
+#         text = f.read() + "\n"
+#     meshtal_lexer.begin("INITIAL")
+#     meshtal_data = meshtal_parser.parse(text, lexer=meshtal_lexer)
+#     histories = meshtal_data["histories"]
+#     tallies = {}
+#     for t in meshtal_data["tallies"]:
+#         name = t["name"]
+#         particle = t["particle"]
+#         data = t["result"]
+#         error = t["error"]
+#         kwdata = {}
+#         for k, v in t["bins"].items():
+#             kwdata[_BIN_NAMES[k]] = v
+#         tallies[name] = FMesh(name, particle, data, error, histories=histories, **kwdata)
+#     return tallies
 
-    Args:
-        filename: File that contains MCNP meshtally data.
+parser = Lark(
+    grammar,
+    parser="lalr",          # LALR is closest to PLY's yacc
+    start="start",
+    propagate_positions=True,
+)
 
-    Returns:
-        tallies Index of mesh tallies contained in the file.
-    """
-    if isinstance(filename, str):
-        filename = Path(filename)
-    with filename.open() as f:
-        text = f.read() + "\n"
-    meshtal_lexer.begin("INITIAL")
-    meshtal_data = meshtal_parser.parse(text, lexer=meshtal_lexer)
-    histories = meshtal_data["histories"]
-    tallies = {}
-    for t in meshtal_data["tallies"]:
-        name = t["name"]
-        particle = t["particle"]
-        data = t["result"]
-        error = t["error"]
-        kwdata = {}
-        for k, v in t["bins"].items():
-            kwdata[_BIN_NAMES[k]] = v
-        tallies[name] = FMesh(name, particle, data, error, histories=histories, **kwdata)
-    return tallies
+from lark import Transformer
+
+KEYWORDS = {
+    "MCNP", "VERSION", "LD", "PROBID", "NEUTRON", "PHOTON",
+    "ELECTRON", "RESULT", "RESULTS", "ERROR", "ERRORS",
+    "CYLINDER", "ORIGIN", "AXIS", "TALLY", "MPI",
+    "X", "Y", "Z", "R", "THETA", "ENERGY", "TIME", "TH", "TOTAL",
+}
+
+BIN_REC_ORDER = {"ENERGY": 0, "X": 1, "Y": 2, "Z": 3, "TIME": 0}
+BIN_CYL_ORDER = {"ENERGY": 0, "R": 1, "Z": 2, "THETA": 3, "TIME": 0}
+
+
+class FMeshTransformer(Transformer):
+    """Builds FMesh objects from a parse tree."""
+
+    def __init__(self):
+        super().__init__()
+        self.mesh = FMesh()
+        self._current_section = None
+
+    # ---------- primitives ----------
+    def SIGNED_NUMBER(self, tok):
+        return float(tok)
+
+    def NUMBER(self, tok):
+        return int(tok)
+
+    def KEYWORD(self, tok):
+        return str(tok)
+
+    def WORD(self, tok):
+        return str(tok)
+
+    # ---------- lines ----------
+    def keyword_line(self, items):
+        keyword = items[0]
+        args = items[1:]
+        self._handle_keyword(keyword, args)
+        return (keyword, args)
+
+    def number_line(self, items):
+        self._handle_numbers(items)
+        return list(items)
+
+    def newline(self, _):
+        return None
+
+    def line(self, items):
+        return items[0] if items else None
+
+    def start(self, items):
+        return self.mesh
+
+    # ---------- semantic actions (your PLY p_* equivalents) ----------
+    def _handle_keyword(self, keyword, args):
+        if keyword == "MCNP":
+            self.mesh.version = args[0] if args else None
+        elif keyword == "VERSION":
+            self.mesh.version = " ".join(str(a) for a in args)
+        elif keyword == "PROBID":
+            self.mesh.probid = " ".join(str(a) for a in args)
+        elif keyword in ("NEUTRON", "PHOTON", "ELECTRON"):
+            self.mesh.particle = keyword
+        elif keyword in ("X", "Y", "Z", "R", "THETA", "ENERGY", "TIME"):
+            self._current_section = keyword
+            self.mesh.axis = keyword
+        elif keyword == "ORIGIN":
+            self.mesh.origin = np.array(args[:3], dtype=float)
+        elif keyword == "AXIS":
+            self.mesh.axis_vec = np.array(args[:3], dtype=float)
+        elif keyword == "CYLINDER":
+            self.mesh.geometry = "cylinder"
+        elif keyword == "TALLY":
+            self.mesh.tally = int(args[0]) if args else None
+        # ... etc for RESULT, ERROR, MPI, TOTAL
+
+    def _handle_numbers(self, values):
+        if self._current_section is None:
+            return
+        arr = np.asarray(values, dtype=float)
+        self.mesh.add_data(self._current_section, arr)
+
+
+def parse_fmesh(path: str | Path) -> FMesh:
+    text = Path(path).read_text()
+    tree = parser.parse(text)
+    return FMeshTransformer().transform(tree)
