@@ -9,10 +9,6 @@ from .transformation import Transformation
 from .utils import mids
 
 
-class AbstractMesh:
-    pass
-
-
 class RectMesh:
     """Represents rectangular mesh.
 
@@ -48,11 +44,11 @@ class RectMesh:
         bbox : Box
             Bounding box.
         """
-        origin = [
-            0.5 * (self._xbins[0] + self._xbins[-1]),
-            0.5 * (self._ybins[0] + self._ybins[-1]),
-            0.5 * (self._zbins[0] + self._zbins[-1]),
-        ]
+        origin = 0.5 * np.array([
+            (self._xbins[0] + self._xbins[-1]),
+            (self._ybins[0] + self._ybins[-1]),
+            (self._zbins[0] + self._zbins[-1]),
+        ], dtype = np.float64)
         if self._tr:
             origin = self._tr.apply2point(origin)
         dimx = self._xbins[-1] - self._xbins[0]
@@ -76,7 +72,7 @@ class RectMesh:
         else:
             self._tr = tr
 
-    def get_voxel(self, i, j, k):
+    def get_voxel(self, i: int, j: int, k: int) -> Box:
         """Gets voxel.
 
         Parameters
@@ -409,7 +405,7 @@ class FMesh:
         rbins=None,
         tbins=None,
         dtbins=None,
-        transform: Transformation = None,
+        transform: Transformation | None = None,
         modifier=None,
         origin=None,
         axis=None,

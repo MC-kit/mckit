@@ -744,6 +744,40 @@ wheels = [
 ]
 
 [[package]]
+name = "lark"
+version = "1.3.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/da/34/28fff3ab31ccff1fd4f6c7c7b0ceb2b6968d8ea4950663eadcb5720591a0/lark-1.3.1.tar.gz", hash = "sha256:b426a7a6d6d53189d318f2b6236ab5d6429eaf09259f1ca33eb716eed10d2905", size = 382732, upload-time = "2025-10-27T18:25:56.653Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/82/3d/14ce75ef66813643812f3093ab17e46d3a206942ce7376d31ec2d36229e7/lark-1.3.1-py3-none-any.whl", hash = "sha256:c629b661023a014c37da873b4ff58a817398d12635d3bbb2c5a03be7fe5d1e12", size = 113151, upload-time = "2025-10-27T18:25:54.882Z" },
+]
+
+[[package]]
+name = "lark-cython"
+version = "0.0.17"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "lark" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/be/81/8f2bc16ba0a5b80dd104218d3420653befc5e1f5520f8fc242a99ba52cc8/lark_cython-0.0.17.tar.gz", hash = "sha256:a311c4dba35a8bc19f623ec6829ff5421d7ff493ea1a64f591a29fb08d90e884", size = 311761, upload-time = "2025-07-15T16:58:21.488Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/48/ac/bbe263b69a5ed1ed0d646261f9bd4149a03a2eefda7ad752ec2f7be805f7/lark_cython-0.0.17-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:edeccf56544315f1b5c88644591fb79ac109a4b1ef44ab091b92c3d8a891730b", size = 224967, upload-time = "2025-07-15T16:57:34.199Z" },
+    { url = "https://files.pythonhosted.org/packages/b7/53/8522d6e9ca4ebbd297cd439771b2547377cc64e7beee3a4e83b2e5962d0d/lark_cython-0.0.17-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ab1165a385d75dcc1b46e87fd13cb05844584391977d0d14bc6bc416e6c76623", size = 1593611, upload-time = "2025-07-15T16:57:35.401Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/4d/84209d2ceb72cb22a17dc9995efacfcbb13e7187ff7fde93c8f4d526d4f1/lark_cython-0.0.17-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:8a104ea7009ed61bd7bc87a6d526897b2d15448d548d638c1747314fc83ff9e4", size = 1488435, upload-time = "2025-07-15T16:57:36.571Z" },
+    { url = "https://files.pythonhosted.org/packages/23/82/dcb8f7c3990f05b80ec0b8f77bb825e7e097d8735b75fa3f25d6c8bd9cbf/lark_cython-0.0.17-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:b29f8c67748def4d7f0c9dddf3c0d2501399a33d6fcdea3b74f2f5f885a28ca9", size = 1476175, upload-time = "2025-07-15T16:57:37.811Z" },
+    { url = "https://files.pythonhosted.org/packages/6f/cc/7b4811677d057053edfa14b0a6cce17d9e1c31adbaccf0cd1f431e710118/lark_cython-0.0.17-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:e5518deae915be8b9c567594cee6dd7dde093ba63112b13265259f1cf75d6307", size = 1550104, upload-time = "2025-07-15T16:57:38.936Z" },
+    { url = "https://files.pythonhosted.org/packages/2e/84/dc2365766d61af6e3f5129a4561863535aab278886add1cd8bb82ec1398c/lark_cython-0.0.17-cp312-cp312-win32.whl", hash = "sha256:5237bc123291e8413fb29d709d24b1d2abfca14735a3d258860d8377a16da949", size = 167763, upload-time = "2025-07-15T16:57:40.025Z" },
+    { url = "https://files.pythonhosted.org/packages/72/a6/6dfc6c37786a736fdd774163eb97c623902c1358eeaf78a7030db22970fb/lark_cython-0.0.17-cp312-cp312-win_amd64.whl", hash = "sha256:13d507e29bb0342747a19d4f77c01f7e8f69d9b77fc26138577346b3d8e83389", size = 198641, upload-time = "2025-07-15T16:57:41.01Z" },
+    { url = "https://files.pythonhosted.org/packages/8f/fb/ec130a17a02e1db341b2bf7bcd196c225058e30dcf1de59e85a44c29a8cc/lark_cython-0.0.17-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:dce127a4b4ce9dc9ea8f42f61b5f1e68d9135733dce866cb46a7412b4446ba0b", size = 222159, upload-time = "2025-07-15T16:57:42.057Z" },
+    { url = "https://files.pythonhosted.org/packages/6c/c9/852c7220953e5acc77f3002b11575cf7468980b4453eadba7fe094b85cba/lark_cython-0.0.17-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:62019a62352ab318f6e804a4648c9e59dc783e4b5dc41e426061b0c7dc67c5b0", size = 1595736, upload-time = "2025-07-15T16:57:43.194Z" },
+    { url = "https://files.pythonhosted.org/packages/13/eb/34525255f5ff95da943bf5118e7752357d9ce8b26e7e4b6e40722b6be173/lark_cython-0.0.17-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:9cc9bbc2931992cb4d186246b9796829d84b2bbe52f5453e05ac26dd0b7c5324", size = 1489523, upload-time = "2025-07-15T16:57:44.441Z" },
+    { url = "https://files.pythonhosted.org/packages/a5/16/053a925dd300b683724d43d36272de5493d0b84e7b70c9c54ba09c52122b/lark_cython-0.0.17-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:2f8a403d70192f8f7694e69d01003177247dd17797061ca54bfdb65e4711c5cf", size = 1483209, upload-time = "2025-07-15T16:57:45.618Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/9b/5184527b524cbc1760673af0b2fdc30a3e0e613544974fbe64541de13c26/lark_cython-0.0.17-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:44c1d11d854fd6353df08a17fa93f135f8eb6167e866fd907809ad994d56ed74", size = 1543586, upload-time = "2025-07-15T16:57:46.806Z" },
+    { url = "https://files.pythonhosted.org/packages/19/28/265b82476072ccb776413e971a036dd3dea0868c6b755eae64609dcd83f2/lark_cython-0.0.17-cp313-cp313-win32.whl", hash = "sha256:1c71b4d8ac9e13f35374967bc948f139494ce3bcaaf132edaf4223113556d7e8", size = 167289, upload-time = "2025-07-15T16:57:48.227Z" },
+    { url = "https://files.pythonhosted.org/packages/45/ae/00e638aa6ca9e8a9fa19d7663a357fa0da2ecce7eb022a5f4306cdcea6cc/lark_cython-0.0.17-cp313-cp313-win_amd64.whl", hash = "sha256:f1a439b8005c14688fc14cf6206176b6651cb1fb37294aebc249fa0d12147471", size = 198129, upload-time = "2025-07-15T16:57:49.378Z" },
+]
+
+[[package]]
 name = "librt"
 version = "0.15.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1059,6 +1093,8 @@ version = "0.10.1"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
+    { name = "lark" },
+    { name = "lark-cython" },
     { name = "loguru" },
     { name = "numpy" },
     { name = "ply" },
@@ -1114,6 +1150,9 @@ mypy = [
 pre-commit = [
     { name = "pre-commit" },
 ]
+pylint = [
+    { name = "pylint-per-file-ignores" },
+]
 pyright = [
     { name = "pyright" },
 ]
@@ -1148,6 +1187,8 @@ typeguard = [
 [package.metadata]
 requires-dist = [
     { name = "click" },
+    { name = "lark", specifier = ">=1.3.1" },
+    { name = "lark-cython", specifier = ">=0.0.17" },
     { name = "loguru" },
     { name = "numpy", specifier = ">=2.4" },
     { name = "ply" },
@@ -1201,6 +1242,7 @@ mypy = [
     { name = "types-setuptools", specifier = ">=80.9.0.20250529" },
 ]
 pre-commit = [{ name = "pre-commit", specifier = ">=4.3" }]
+pylint = [{ name = "pylint-per-file-ignores", specifier = ">=3.2.1" }]
 pyright = [{ name = "pyright", specifier = ">=1.1.406" }]
 ruff = [{ name = "ruff", specifier = ">=0.0.259" }]
 style = [
