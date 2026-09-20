@@ -53,6 +53,10 @@ jobs:
   publish:
     needs: build          
     runs-on: 'ubuntu-latest'
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing, but
+      # should NOT be granted anywhere else!
+      id-token: write
     steps:
     - name: 📦 Install uv
       uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
@@ -63,7 +67,8 @@ jobs:
     - uses: actions/download-artifact@v8
       with:
         pattern: cibw-wheels-*
-        path: ./wheelhouse          
+        path: wheelhouse
+        merge-multiple: true          
 
     # Have to checkout repository before this
     # - name: 📦 Build src package
@@ -72,9 +77,11 @@ jobs:
 
     - name: 📤 Publish package on PyPI
       if: ${{ !github.event.act }} # skip during local actions testing
-      run: uv publish \
-        --username=__token__ \
-        --password=${{ secrets.PYPI_TOKEN }} \
-        "wheelhouse/**/*.whl" \
-        --check-url https://pypi.org/simple \
-        --trusted-publishing always
+      run: |
+        ls wheelhouse/**/*.whl
+        uv publish \
+          --username=__token__ \
+          --password=${{ secrets.PYPI_TOKEN }} \
+          --check-url https://pypi.org/simple \
+          --trusted-publishing always \
+          "wheelhouse/**/*.whl"
