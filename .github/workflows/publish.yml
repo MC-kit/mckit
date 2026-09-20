@@ -20,9 +20,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # ubuntu-20.04 is required to build wheels for older OS (clusters...)
-        os: ['ubuntu-20.04', 'ubuntu-latest', 'macos-latest', 'windows-latest']
-        python-version: ['3.12']
+        os: [ ubuntu-latest, macos-latest ] #, windows-latest]
+        python-version: [ 3.13 ]
 
     steps:
     - name: Check out the repository
