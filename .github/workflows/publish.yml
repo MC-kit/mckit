@@ -65,9 +65,10 @@ jobs:
         pattern: cibw-wheels-*
         path: ./wheelhouse          
 
-    - name: 📦 Build src package
-      run: |
-        uv build --sdist
+    # Have to checkout repository before this
+    # - name: 📦 Build src package
+    #   run: |
+    #     uv build --sdist
 
     - name: 📤 Publish package on PyPI
       if: ${{ !github.event.act }} # skip during local actions testing
