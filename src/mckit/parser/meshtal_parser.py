@@ -8,7 +8,7 @@ import numpy as np
 
 import lark_cython
 
-from lark import Lark, Transformer, Token
+from lark import Lark, Transformer, Token, v_args
 
 from mckit.fmesh import FMesh
 
@@ -46,15 +46,25 @@ from mckit.fmesh import FMesh
 # handled as "named terminals" with priority so they beat IDENTIFIER.
 
 grammar = r"""
-    start: line*
+    ?start: meshtal
+    
+    meshtal : header NEWLINE title NEWLINE float NEWLINE NEWLINE tallies
+    
+    header : "mcnp" "version" stamp "mpi"? "ld=" stamp "probid" stamp stamp
+    
+    stamp: STAMP
+    
+    title: /.+/
+ 
+    float: SIGNED_NUMBER   
+    integer: NUMBER
 
-    line: keyword_line
-        | number_line
-        | newline
+    tallies: tally (NEWLINE tally)*
+    
+    tally : tally_header NEWLINE boundaries NEWLINE data
 
-    keyword_line: KEYWORD (SIGNED_NUMBER | NUMBER | WORD | KEYWORD)*
-
-    number_line:  SIGNED_NUMBER+
+    tally_header : "Mesh Tally Number" integer NEWLINE particle  NEWLINE
+        | "Mesh Tally Number" integer NEWLINE mesh_comment NEWLINE particle  NEWLINE
 
     // ---------- Terminals ----------
     // Literals from PLY: "+", "-", ":", "/"
@@ -70,6 +80,10 @@ grammar = r"""
     SIGNED_NUMBER: /[+-]?(\d+\.\d*|\.\d+|\d+)([eE][+-]?\d+)?/
     NUMBER:        /\d+/
 
+   
+    // MCNP version idenficiation entry on title line
+    STAMP = r"[\d/:]+"
+    
     // A generic identifier for any non-keyword word
     WORD: /[A-Za-z_][A-Za-z0-9_]*/
 
