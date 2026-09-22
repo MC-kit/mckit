@@ -44,11 +44,14 @@ class RectMesh:
         bbox : Box
             Bounding box.
         """
-        origin = 0.5 * np.array([
-            (self._xbins[0] + self._xbins[-1]),
-            (self._ybins[0] + self._ybins[-1]),
-            (self._zbins[0] + self._zbins[-1]),
-        ], dtype = np.float64)
+        origin = 0.5 * np.array(
+            [
+                (self._xbins[0] + self._xbins[-1]),
+                (self._ybins[0] + self._ybins[-1]),
+                (self._zbins[0] + self._zbins[-1]),
+            ],
+            dtype=np.float64,
+        )
         if self._tr:
             origin = self._tr.apply2point(origin)
         dimx = self._xbins[-1] - self._xbins[0]

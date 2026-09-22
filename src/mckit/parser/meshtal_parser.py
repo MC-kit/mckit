@@ -619,7 +619,7 @@ _BIN_NAMES = {
 
 parser = Lark(
     grammar,
-    parser="lalr",          # LALR is closest to PLY's yacc
+    parser="lalr",  # LALR is closest to PLY's yacc
     start="start",
     propagate_positions=True,
 )
@@ -627,10 +627,31 @@ parser = Lark(
 from lark import Transformer
 
 KEYWORDS = {
-    "MCNP", "VERSION", "LD", "PROBID", "NEUTRON", "PHOTON",
-    "ELECTRON", "RESULT", "RESULTS", "ERROR", "ERRORS",
-    "CYLINDER", "ORIGIN", "AXIS", "TALLY", "MPI",
-    "X", "Y", "Z", "R", "THETA", "ENERGY", "TIME", "TH", "TOTAL",
+    "MCNP",
+    "VERSION",
+    "LD",
+    "PROBID",
+    "NEUTRON",
+    "PHOTON",
+    "ELECTRON",
+    "RESULT",
+    "RESULTS",
+    "ERROR",
+    "ERRORS",
+    "CYLINDER",
+    "ORIGIN",
+    "AXIS",
+    "TALLY",
+    "MPI",
+    "X",
+    "Y",
+    "Z",
+    "R",
+    "THETA",
+    "ENERGY",
+    "TIME",
+    "TH",
+    "TOTAL",
 }
 
 BIN_REC_ORDER = {"ENERGY": 0, "X": 1, "Y": 2, "Z": 3, "TIME": 0}
