@@ -55,37 +55,36 @@ def _():
     grammar = r"""
     ?start: meshtal
     
-    meshtal : header nl title nl "Number of histories used for normalizing tallies =" float nl nl tallies
+    meshtal : header nl title nl "Number of histories used for normalizing tallies =" float tallies
 
-    header : "mcnp" "version" stamp "mpi"? "ld=" stamp "probid" stamp stamp
+    header : "mcnp" "version" stamp "mpi"? "ld=" stamp "probid =" stamp stamp
 
     stamp: STAMP
 
     title: /.+/
 
-    float: SIGNED_FLOAT   
-    int: INT
+    float: SIGNED_FLOAT | INT   
 
-    tallies: tally (nl tally)*
+    tallies: (separator tally)+
 
-    tally : tally_header nl boundaries nl data
-
-    tally_header : "Mesh Tally Number" integer nl tally_header_more
-
-    tally_header_more: particle  nl -> tally_header_more_wo_comment
-        | mesh_comment nl particle nl -> tally_header_more_with_comment
-
-    mesh_comment: title
+    ?separator: nl
 
     ?nl: NEWLINE
 
-    ?particle: "This is a" KIND "tally."
+    tally : tally_header separator boundaries separator data
 
-    ?boundaries : "Tally bin boundaries:" nl boundaries_more:
+    tally_header : "Mesh Tally Number" integer nl tally_header_more
 
-    boundaries_more: "Cylinder origin at"  vector ", axis in"  vector "direction" nl bins -> boundaries_cyl
-        | bins -> boundaries_rect
+    integer: INT
 
+    tally_header_more: particle  nl -> tally_header_more_wo_comment
+        | title nl particle nl -> tally_header_more_with_comment
+
+    particle: "This is a" KIND "tally."
+
+    boundaries: "Tally bin boundaries:" nl [cylinder] bins
+
+    cylinder: "Cylinder origin at"  vector ", axis in"  vector "direction" nl
 
     vector: float+
 
@@ -93,44 +92,45 @@ def _():
 
     direction : dir_spec "direction:" vector
 
-    ?dir_spec : "X" | "Y"  | "Z" | "R" | "THETA"
+    dir_spec : "X" | "Y"  | "Z" | "R" | "THETA"
 
-    energies : "Energy bin boundaries:" vector -> energies_e
-        | "Time:" vector -> energies_t
+    energies: "Energy bin boundaries:" vector -> energies_e
+            | "Time:" vector -> energies_t
 
-    ?data : matrix_data
-       | column_data nl?
+    data: matrix_data
+         | column_data nl?
 
-    matrix_data : energy_bins total_energy_bin?
+    matrix_data: energy_bins [total_energy_bin]
 
-    column_data : column_header matrix total_matrix?
+    energy_bins: energy_bins energy_bin separator -> energy_bins_continued
+               | energy_bin separator -> energy_bins_first
 
-    energy_bins : (energy_bin nl)+
+    energy_bin: "Energy Bin:" float "-" float nl separator spatial_bins -> energy_bin_e
+              | "Time:" float nl separator spatial_bins -> energy_bin_t
 
-    energy_bin : "Energy Bin:" float "-" float nl separator spatial_bins
-         | "Time:" float nl separator spatial_bins
+    spatial_bins: spatial_bins spatial_bin separator -> spatial_bins_continued
+                | spatial_bin separator -> spatial_bins_first
 
-    spatial_bins : spatial_bin+ separator
+    spatial_bin : dir_spec ":" float "-" float nl separator /Tally Results:  .*/ nl matrix separator "Relative Errors" nl matrix separator
 
-    spatial_bin : dir_spec ':' float '-' float nl separator /Tally Results:  .*/ nl matrix separator "Relative Errors" nl matrix separator
+    total_energy_bin : "Total Energy Bin" nl separator spatial_bins separator
+
+
+    column_data : column_header matrix [total_matrix]
+
+
 
     matrix : (vector nl)+
     total_matrix : ("Total" vector nl)+
-
-    total_energy_bin : "Total Energy Bin" nl separator spatial_bins separator
 
     column_header : has_energy? dir_spec dir_spec dir_spec "Result" "Rel Error" nl
 
     ?has_energy: "Energy"
 
-    ?separator: nl
-
     KIND: "neutron"|"photon"|"electron"
-    MESH_TALLY_NUMBER : 
-    NPS_LINE_START: 
 
     // MCNP version idenficiation entry on title line
-    STAMP : r"[\d/:]+"
+    STAMP: /[0-9\/:]+/
 
     // A generic identifier for any non-keyword word
     WORD: /[A-Za-z_][A-Za-z0-9_]*/
@@ -151,38 +151,18 @@ def _():
     %ignore WS_INLINE
     """
 
-    return
+    return (grammar,)
 
 
 @app.cell
-def _():
-    gr1="""
-    ?start: particle
-    particle: "This is a" KIND "mesh tally."
-    KIND: "neutron"|"photon"
-    %import common.NEWLINE
-    %import common.WS_INLINE
-    %ignore WS_INLINE
-    """
-    return (gr1,)
-
-
-@app.cell
-def _(gr1):
-    parser = Lark(gr1)
+def _(grammar):
+    parser = Lark(grammar, debug=True)
     return (parser,)
 
 
 @app.cell
-def _():
-    txt1="""\
-    This is a photon mesh tally."""
-    return (txt1,)
-
-
-@app.cell
-def _(parser, txt1):
-    tree = parser.parse(txt1)
+def _(mesh_text, parser):
+    tree = parser.parse(mesh_text)
     rich.print(tree)
     return (tree,)
 
@@ -194,19 +174,40 @@ def _(tree):
 
 
 @app.cell
+def _(tree):
+    @v_args(inline=True)
+    class TestTransformer(Transformer):
+        float = float
+    
+        @staticmethod
+        def vector(*v):
+            return np.array(v)
+        
+    test_transformer = TestTransformer()
+    test_result = test_transformer.transform(tree)
+    rich.print("result:", test_result)  
+    return
+
+
+@app.cell
 def _():
     BIN_REC_ORDER = {"ENERGY": 0, "X": 1, "Y": 2, "Z": 3, "TIME": 0}
     BIN_CYL_ORDER = {"ENERGY": 0, "R": 1, "Z": 2, "THETA": 3, "TIME": 0}
     return
 
 
+@app.cell
+def _():
+    return
+
+
 app._unparsable_cell(
     """
+    @v_args(inline=True)
     class MeshtalTransformer(Transformer):
         int = int
         float = float
 
-        @v_args(inline=True)
         def meshtal(self, header, title, histories, tallies):
             return {
                 \"date\": header[\"PROBID\"],
@@ -215,17 +216,15 @@ app._unparsable_cell(
                 \"tallies\": tallies,
             }
 
-        @v_args(inline=True)
         def header(self, version, date, time):
             return {\"PROBID\": date + time, \"VERSION\": version}
 
-        @v_args(inline=True)
-        def title(self, _title: str)
+        def title(self, _title: str):
+            return _title.strip()
     
         def tallies(self, p):
             return p
 
-        @v_args(inline=True)
         def tally(self, tally_header, boundaries, data):
             \"\"\"tally : tally_header separator boundaries separator data\"\"\"
             tally = tally_header
@@ -269,7 +268,6 @@ app._unparsable_cell(
                 tally[\"error\"] = error
             return tally
 
-        @v_args(inline=True)
         def tallY_header(self, name: int, from_other_lines):
             from_other_lines[\"name\"] = name
             return from_other_lines
@@ -280,52 +278,84 @@ app._unparsable_cell(
         def tally_header_more_with_comment(self, comment, particle):
             return {\"comment\": comment, \"particle\": particle}
 
-        @v_args(inline=True)
-        def particle(self, kind: str):
-            return kind
-
-        @v_args(inline=True)
-        def boundaries_cyl(self, origin, axis, bins):
+        def boundaries(self, cyliner, bins):
             boundaries = bins
-            boundaries[\"ORIGIN\"] = origin
-            boundaries[\"AXIS\"] = axis
+            if cylinder is not None:
+                origin, axis = cylinder
+                boundaries[\"ORIGIN\"] = origin
+                boundaries[\"AXIS\"] = axis
             for k, v in boundaries.items():
                 boundaries[k] = np.array(v)
             return boundaries
 
-        @v_args(inline=True)
-        def boundaries_rect(self, boundaries):
-            for k, v in boundaries.items():
-                boundaries[k] = np.array(v)
-            p[0] = boundaries
+        def cylinder(self, origin, axis):
+            return origin, axis
+        
+        def vector(self, *floats: float):
+            return np.array(floats)
 
-        @v_args(inline=True)
         def bins(self, ibins, jbins, kbins, ebins):
-            \"\"\"bins : direction newline direction newline direction newline energies newline\"\"\"
             return {name: data for name, data in (ibins, jbins, kbins, ebins)}
 
-        @v_args(inline=True)
         def direction(self, dir_spec: str, vector):
             return dir_spec.upper(), vector
 
-        @v_args(inline=True)
         def energies_e(vector):
             return \"ENERGY\": vector
 
-        @v_args(inline=True)
         def energies_t(vector):
             return \"TIME\", vector
+        def matrix_data(energy_bins, total_energy_bin):
+            order, result, error = energy_bins
+            p[0] = {\"result\": result, \"error\": error, \"order\": order}
 
-        def vector(self, p):  # TODO check in debugger
-            return np.array(p)
+        def energy_bins_first(self, energy_bin):
+            order, result, error = energy_bin
+            return order, [result], [error]
 
-        def matrix(self, p):
-            return p
+        def energy_bins_continued(self, energy_bins, energy_bin):
+            order, result, error = energy_bin
+            assert order == energy_bins[0]
+            result_list = energy_bins[1]
+            error_list = energy_bins[2]
+            result_list.append(result)
+            error_list.append(error)
+            return order, result_list, error_list
 
-        def total_matrix(self, p):
-            return p
+        def spatial_bins_first(self, spatial_bin):
+            \"\"\"spatial_bins : spatial_bins spatial_bin separator
+            | spatial_bin separator
+            \"\"\"
+            order, result, error = spatial_bin
+            return order, [result], [error]
 
-        @v_args(inline=True)
+        def spatial_bins_continued(self, spatial_bins, spatial_bin):
+            order, result, error = spatial_bin
+            result_list = spatial_bins[1]
+            error_list = spatial_bins[2]
+            result_list.append(result)
+            error_list.append(error)
+            return order, result_list, error_list    
+    
+        def spatial_bin(self, dir_spec1, _from, _to, dir_spec2, dir_spec3, values, relerrs):
+            \"\"\"spatial_bin : dir_spec ':' float '-' float newline separator TALLY RESULT ':' dir_spec dir_spec newline matrix separator ERROR newline matrix separator\"\"\"
+            order = (dir_spec1, dir_spec3, dir_spec2)   # order 1, 3, 2 is intended
+            results = [line[1:] for line in values[1:]]
+            errors = [line[1:] for line in relerrs[1:]]
+            return order, results, errors
+
+
+        def total_energy_bin(spatial_bins):
+            \"\"\"total_energy_bin : TOTAL ENERGY newline separator spatial_bins separator\"\"\"
+            order = (\"TOTAL\",  *spatial_bins[0])
+            p[0] = order, spatial_bins[1], spatial_bins[2]
+    
+        def matrix(self, *vectors):
+            return list(vectors)
+
+        def total_matrix(self, *vectors):
+            return list[vectors]
+
         def column_data(self, column_header, matrix, total_matrix):
             \"\"\"column_data : column_header matrix total_matrix
             | column_header matrix
@@ -336,7 +366,6 @@ app._unparsable_cell(
                 res[\"total\"] = total_matrix
             return res
 
-        @v_args(inline=True)
         def column_header(self, has_energy, ispec, jspec, kspec):
             \"\"\"column_header : ENERGY dir_spec dir_spec dir_spec RESULT ERROR newline
             | dir_spec dir_spec dir_spec RESULT ERROR newline
@@ -346,33 +375,23 @@ app._unparsable_cell(
                 res[\"has_energy\"] = True
             return res
 
-        @v_args(inline=True)
-        def matrix_data(energy_bins, total_energy_bin):
-            order, result, error = energy_bins
-            p[0] = {\"result\": result, \"error\": error, \"order\": order}
 
-        @v_args(inline=True)
-        def energy_bins(self, energy_bins):
-            if len(p) == 3:
-                order, result, error = p[1]
-                p[0] = order, [result], [error]
-            else:
-                order, result, error = p[2]
-                p[1][1].append(result)
-                p[1][2].append(error)
-                p[0] = order, p[1][1], p[1][2]
-    
     """,
     name="_"
 )
 
 
 @app.cell
-def _(MeshtalTransformer, tree):
-    transformer = MeshtalTransformer()
-    result = transformer.transform(tree)
-    rich.print(result)
-    return (result,)
+def _():
+    # transformer = MeshtalTransformer()
+    # result = transformer.transform(tree)
+    # rich.print(result)
+    return
+
+
+@app.cell
+def _():
+    return
 
 
 @app.cell
