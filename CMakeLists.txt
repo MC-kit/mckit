@@ -5,13 +5,28 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/module/")
 
 include(CMakePrintHelpers)
 
-# to make CMake happy, if not running under skbuild
-if(NOT DEFINED SKBUILD_PROJECT_NAME AND DEFINED ENV{MCKIT_PROJECT_VERSION})
+if(NOT DEFINED SKBUILD_PROJECT_NAME)
+  # to make CMake happy, if not running under skbuild
+  if(DEFINED ENV{MCKIT_PROJECT_VERSION})
+    set(MCKIT_PROJECT_VERSION $ENV{MCKIT_PROJECT_VERSION})
+  else()
+    execute_process(
+      COMMAND uv version --short
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE MCKIT_PROJECT_VERSION
+      RESULT_VARIABLE _execution_result
+    )
+    if(NOT ${_execution_result} STREQUAL  "0")
+      message(WARNING "mckit version is not found")
+      set(MCKIT_PROJECT_VERSION "0.10.2")
+    endif()
+    string(STRIP ${MCKIT_PROJECT_VERSION} MCKIT_PROJECT_VERSION)
+  endif()
   set(SKBUILD_PROJECT_NAME mckit)
-  set(SKBUILD_PROJECT_VERSION $ENV{MCKIT_PROJECT_VERSION})
+  set(SKBUILD_PROJECT_VERSION ${MCKIT_PROJECT_VERSION})
 endif()
 
-cmake_print_variables(SKBUILD_PROJECT_NAME SKBUILD_PROJECT_VERSION SKBUIL_STATE)
+cmake_print_variables( SKBUILD_PROJECT_VERSION SKBUILD_STATE)
 
 project(
   ${SKBUILD_PROJECT_NAME}
@@ -106,7 +121,7 @@ else()
   set(origin_token "$ORIGIN")
 endif()
 set_property(TARGET geometry PROPERTY INSTALL_RPATH "${origin_token}/../../..")
-install(TARGETS geometry DESTINATION ${SKBUILD_PROJECT_NAME})
+install(TARGETS geometry LIBRARY DESTINATION ${SKBUILD_PROJECT_NAME})
 
 include(FetchContent)
 # set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/_deps")
