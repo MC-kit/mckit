@@ -1,11 +1,13 @@
 import marimo
 
-__generated_with = "0.24.2"
+__generated_with = "0.25.0"
 app = marimo.App(width="medium", auto_download=["html"])
 
 with app.setup:
+    import sys
 
     from pathlib import Path
+    from textwrap import dedent
 
     import lark_cython
     import numpy as np
@@ -14,8 +16,6 @@ with app.setup:
     from lark import Lark, Transformer, Token, v_args
 
     # from mckit.fmesh import FMesh
-
-    from config_utils import check_file, find_git_root
 
 
 @app.cell
@@ -26,14 +26,34 @@ def _():
 
 
 @app.cell
-def _():
+def _(mo):
+    mo.notebook_dir()
+    return
+
+
+@app.cell
+def _(mo):
+    if not mo.running_in_notebook():
+        nb_common_path = Path(mo.notebook_dir().parent, "nb_common").absolute()
+        assert nb_common_path.is_dir(), nb_common_path
+        nb_common_name = str(nb_common_path)
+        if not nb_common_name in sys.path:
+            sys.path.append(str(nb_common_path))
+
+    from config_utils import check_file, find_git_root
+
+    return check_file, find_git_root
+
+
+@app.cell
+def _(find_git_root):
     ROOT = find_git_root()
     ROOT
     return (ROOT,)
 
 
 @app.cell
-def _(ROOT):
+def _(ROOT, check_file):
     mesh_path = check_file(ROOT / "tests/data/parser/fmesh2.m")
     return (mesh_path,)
 
@@ -45,112 +65,27 @@ def _(mesh_path):
 
 
 @app.cell
-def _(mesh_text):
-    print(mesh_text[:1000])
-    return
-
-
-@app.cell
-def _():
-    grammar = (Path(__file__).parent / "meshtal.lark").read_text()
-    return (grammar,)
-
-
-@app.cell
-def _(grammar):
-    grammar
-    return
-
-
-@app.cell
 def _(grammar):
     parser = Lark(grammar, start="meshtal", parser="lalr", debug=True)
     return (parser,)
 
 
 @app.cell
-def _(mo):
-    def parse_with_progress(parser: Lark, text: str, start=None):
-        last = 0
-        pi = parser.parse_interactive(text, start=start)
-        with mo.status.progress_bar(
-                total=len(text),
-                title=f"Parsing {text[:10]}",
-                show_eta=True,
-                show_rate=True,
-            ) as progress:
-            for i, token in enumerate(pi.iter_parse()):
-                rich.print(i, ":", token.type, ":", token)
-                if token.end_pos is not None:
-                    progress.update(
-                        token.end_pos - last,
-                        subtitle=f"{i}: {token.type}:{token}"
-                    )
-                    last = token.end_pos
-        return pi.resume_parse()  
-
-    return (parse_with_progress,)
-
-
-@app.cell
-def _():
-    # portion="""\
-    #   mcnp   version 5     ld=09292010  probid =  05/24/18 12:21:45
-    #  fmesh test
-    #  Number of histories used for normalizing tallies =      10000000.00"""
-    return
-
-
-@app.cell
-def _():
-    # portion
-    return
-
-
-@app.cell
-def _():
-    # parse_with_progress(parser, portion, start="meshtal")
-    return
-
-
-@app.cell
-def _(mesh_text, parse_with_progress, parser):
-    parse_with_progress(parser, mesh_text, start="meshtal")
-    return
-
-
-@app.cell
 def _(mesh_text, parser):
-    tree = parser.parse(mesh_text)
-    rich.print(tree)
+    parsed_tokens = []
+    try:
+        tree = parse_with_progress(parser, mesh_text, start="meshtal", parsed_tokens=parsed_tokens)
+    finally:
+        with Path("try_lark_tokens.txt").open("w") as _f:
+            for t in parsed_tokens:
+                rich.print(t, file=_f)
     return (tree,)
 
 
 @app.cell
-def _():
-    return
-
-
-@app.cell
-def _():
-    # @v_args(inline=True)
-    # class TestTransformer(Transformer):
-    #     float = float
-
-    #     @staticmethod
-    #     def vector(*v):
-    #         return np.array(v)
-    
-    # test_transformer = TestTransformer()
-    # test_result = test_transformer.transform(tree)
-    # rich.print("result:", test_result)  
-    return
-
-
-@app.cell
 def _(tree):
-    with Path("try_lark.txt").open("w") as f:
-        rich.print(tree, file=f)
+    with Path("try_lark.txt").open("w") as _f:
+        rich.print(tree, file=_f)
     return
 
 
@@ -163,11 +98,12 @@ def _():
 
 @app.cell
 def _():
-    return
+    grammar = (Path(__file__).parent / "meshtal.lark").read_text()
+    return (grammar,)
 
 
 @app.cell
-def _(BIN_CYL_ORDER, BIN_REC_ORDER, cylinder, p):
+def _(Any, BIN_CYL_ORDER, BIN_REC_ORDER, p):
     @v_args(inline=True)
     class MeshtalTransformer(Transformer):
         int = int
@@ -189,20 +125,24 @@ def _(BIN_CYL_ORDER, BIN_REC_ORDER, cylinder, p):
             }
 
         def title(self, _title: str):
-            return _title.strip()        
+            return _title.strip() 
+
+        def nps(self, _float):
+            return _float       
 
         def tallies(self, p):
             return p
 
         def tally(self, tally_header, boundaries, data):
-            """tally : tally_header separator boundaries separator data"""
+            rich.print(tally_header)
             tally = tally_header
-            tally["geom"] = "XYZ"
             if "ORIGIN" in boundaries:
                 tally["origin"] = boundaries.pop("ORIGIN")
                 tally["geom"] = "CYL"
-            if "AXIS" in boundaries:
+                assert "AXIS" in boundaries
                 tally["axis"] = boundaries.pop("AXIS")
+            else:
+                tally["geom"] = "XYZ"
             tally["bins"] = {k: np.array(v) for k, v in boundaries.items()}
             od = BIN_CYL_ORDER if "origin" in tally else BIN_REC_ORDER
             if "result" in data:
@@ -237,17 +177,21 @@ def _(BIN_CYL_ORDER, BIN_REC_ORDER, cylinder, p):
                 tally["error"] = error
             return tally
 
-        def tallY_header(self, name: int, from_other_lines):
+        def tally_header(self, name: int, from_other_lines: dict[str, Any]) -> dict[str, str|int]:
+            rich.print("tall_header:", name, from_other_lines)
             from_other_lines["name"] = name
             return from_other_lines
 
-        def tally_header_more_wo_comment(self, particle):
+        def tally_header_more_wo_comment(self, particle: str) -> dict[str, str]:
             return {"particle": particle}
+
+        def particle(self, kind):
+            return kind.value.upper()  # to reproduce old PLY parser
 
         def tally_header_more_with_comment(self, comment, particle):
             return {"comment": comment, "particle": particle}
 
-        def boundaries(self, cyliner, bins):
+        def boundaries(self, cylinder, bins):
             boundaries = bins
             if cylinder is not None:
                 origin, axis = cylinder
@@ -259,39 +203,36 @@ def _(BIN_CYL_ORDER, BIN_REC_ORDER, cylinder, p):
 
         def cylinder(self, origin, axis):
             return origin, axis
-    
+
         def vector(self, *floats: float):
             return np.array(floats)
 
         def bins(self, ibins, jbins, kbins, ebins):
-            for i, b in enumerate((ibins, jbins, kbins, ebins)):
-                try:
-                    if not len(b == 2):
-                        rich.print(i, ":", b)
-                except:
-                    rich.print(i, ":", ibins, jbins, kbins, ebins)
-                    raise
             return {name: data for name, data in (ibins, jbins, kbins, ebins)}
 
-        def direction1(self, vector):
+        def direction_theta(self, vector):
             return "THETA", vector
 
-        def direction2(self, dir_spec: str, vector):
+        def direction_xyzr(self, dir_spec: str, vector):
             return dir_spec, vector
 
         def dir_spec(self, spec: str) -> str:
             if spec.startswith("Th"):
                 return "THETA"
-            return spec
+            return spec.value
 
         def energies_e(self, vector):
-            return {"ENERGY": vector}
+            return "ENERGY", vector
 
         def energies_t(self, vector):
             return "TIME", vector
+
+        def data(self, d):
+            return d
+
         def matrix_data(energy_bins, total_energy_bin):
             order, result, error = energy_bins
-            p[0] = {"result": result, "error": error, "order": order}
+            return {"result": result, "error": error, "order": order}
 
         def energy_bins_first(self, energy_bin):
             order, result, error = energy_bin
@@ -354,10 +295,12 @@ def _(BIN_CYL_ORDER, BIN_REC_ORDER, cylinder, p):
             """column_header : ENERGY dir_spec dir_spec dir_spec RESULT ERROR newline
             | dir_spec dir_spec dir_spec RESULT ERROR newline
             """
-            res = {"header": [ispec, jspec, jspec]}
             if has_energy:
-                res["has_energy"] = True
-            return res
+                return {"header": ["ENERGY", ispec, jspec, kspec,  "RESULT", "ERROR"]}
+            return {"header": [ispec, jspec, kspec,  "RESULT", "ERROR"]}
+                
+
+
 
     return (MeshtalTransformer,)
 
@@ -371,11 +314,6 @@ def _(MeshtalTransformer, tree):
 
 
 @app.cell
-def _():
-    return
-
-
-@app.cell
 def _(result):
     result
     return
@@ -383,7 +321,38 @@ def _(result):
 
 @app.cell
 def _():
+    # portion="""\
+    #   mcnp   version 5     ld=09292010  probid =  05/24/18 12:21:45
+    #  fmesh test
+    #  Number of histories used for normalizing tallies =      10000000.00"""
     return
+
+
+@app.cell
+def _():
+    # parse_with_progress(parser, portion, start="meshtal")
+    return
+
+
+@app.function
+def parse_with_progress(parser: Lark, text: str, start=None, parsed_tokens: list[str] | None = None):
+    last = 0
+    if parsed_tokens is not None:
+        del parsed_tokens[:]
+    pi = parser.parse_interactive(text, start=start)
+    for i, token in enumerate(pi.iter_parse()):
+        if parsed_tokens is not None:
+            parsed_tokens.append(dedent(
+                f"""\
+                {i}:
+                    tp: {token.type}
+                    vl: {token.value if token.value != "\n" else "\\n"} 
+                    ln: {token.line}
+                    ps: {token.start_pos}
+                """))
+        if token.end_pos is not None:
+            last = token.end_pos
+    return pi.resume_parse()
 
 
 if __name__ == "__main__":

@@ -76,7 +76,7 @@ analyze = [
   "marimo>=0.23.14",
   "polars>=1.43,<2",
   "pyarrow>=25,<26",
-  "rich>=15.0.0",
+  "rich>=15",
   "sqlglot>=28.10.1,<29",
 ]
 lint = [ "pylint", "pylint-per-file-ignores" ]
@@ -122,6 +122,9 @@ make-fallback = false
 # which are hidden when Py_LIMITED_API is set on
 packages = [ "src/mckit" ]
 exclude = [ "**/__pycache__", "**/*.pyc" ]
+
+[tool.uv.extra-build-dependencies]
+mckit = [ "scikit_build_core" ]
 
 [tool.cibuildwheel]
 skip = [ "*-win32", "*-manylinux_i686", "*-musllinux*" ]
@@ -198,13 +201,10 @@ formats = "ipynb,py:percent"
 [tool.creosote]
 deps-file = "pyproject.toml"
 exclude-deps = [ "intel-cmplr-lib-ur", "python-dotenv", "tomli", "tqdm", "typer" ]
-paths = [ "adhoc", "src" ]
+paths = [ "adhoc", "src", "notebooks/dvp" ]
 sections = [ "project.dependencies" ]
 venvs = [ ".pixi/envs/analyze", ".pixi/envs/default", ".pixi/envs/docs" ]
 
 [tool.rstcheck]
 ignore_messages = '(Unknown directive type "(todo.*|automodule)".$)'
 report_level = "ERROR"
-
-[tool.uv.extra-build-dependencies]
-mckit = ["scikit_build_core"]

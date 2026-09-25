@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Final, Iterable
 
-import os
+import platform
 
 from pathlib import Path
 
-HOST: Final[str] = os.uname().nodename
+HOST: Final[str] = platform.node()
 
 def find_git_root(start_from: Path = Path.cwd()) -> Path:
     for p in scan_dirs_up(start_from):

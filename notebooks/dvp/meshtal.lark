@@ -8,7 +8,7 @@ title: EVERYTHING
 
 EVERYTHING.-10: /.+/
 
-?nps: "Number of histories used for normalizing tallies =" float
+nps: "Number of histories used for normalizing tallies =" float
 
 float: SIGNED_FLOAT | INT   
 
@@ -16,11 +16,11 @@ tallies: (_NL tally)+
 
 _NL: NEWLINE
 
-tally : tally_header _NL boundaries _NL data
+tally: tally_header _NL boundaries _NL data
 
-tally_header : "Mesh Tally Number" integer _NL tally_header_more
+tally_header: "Mesh Tally Number" int _NL tally_header_more
 
-integer: INT
+int: INT  // postive only
 
 tally_header_more: particle -> tally_header_more_wo_comment
     | title _NL particle -> tally_header_more_with_comment
@@ -33,10 +33,10 @@ cylinder: "Cylinder origin at"  vector ", axis in"  vector "direction" _NL
 
 vector: float+
 
-bins : direction _NL direction _NL direction _NL energies
+bins: direction _NL direction _NL direction _NL energies
 
-direction: "Theta direction (revolutions):" vector -> direction1
-         | dir_spec "direction:" vector -> direction2
+direction: "Theta direction (revolutions):" vector -> direction_theta
+         | dir_spec "direction:" vector -> direction_xyzr
 
 dir_spec: DIR_SPEC
 
@@ -47,25 +47,25 @@ energies: "Energy bin boundaries:" vector -> energies_e
         | "Time:" vector -> energies_t
 
 data: matrix_data
-        | column_data _NL?
+    | column_data _NL?
 
 matrix_data: energy_bins [total_energy_bin]
 
 energy_bins: energy_bins energy_bin _NL -> energy_bins_continued
-            | energy_bin _NL -> energy_bins_first
+           | energy_bin _NL -> energy_bins_first
 
 energy_bin: "Energy Bin:" float "-" float _NL _NL spatial_bins -> energy_bin_e
-            | "Time:" float _NL _NL spatial_bins -> energy_bin_t
+          | "Time:" float _NL _NL spatial_bins -> energy_bin_t
 
 spatial_bins: spatial_bins spatial_bin _NL -> spatial_bins_continued
             | spatial_bin _NL -> spatial_bins_first
 
-spatial_bin : dir_spec ":" float "-" float _NL _NL /Tally Results:  .*/ _NL matrix _NL "Relative Errors" _NL matrix _NL
+spatial_bin: dir_spec ":" float "-" float _NL _NL /Tally Results:  .*/ _NL matrix _NL "Relative Errors" _NL matrix _NL
 
-total_energy_bin : "Total Energy Bin" _NL _NL spatial_bins _NL
+total_energy_bin: "Total Energy Bin" _NL _NL spatial_bins _NL
 
 
-column_data : column_header matrix [total_matrix]
+column_data: column_header matrix [total_matrix]
 
 
 

@@ -14,9 +14,8 @@ if(NOT DEFINED SKBUILD_PROJECT_NAME)
       COMMAND uv version --short
       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
       OUTPUT_VARIABLE MCKIT_PROJECT_VERSION
-      RESULT_VARIABLE _execution_result
-    )
-    if(NOT ${_execution_result} STREQUAL  "0")
+      RESULT_VARIABLE _execution_result)
+    if(NOT ${_execution_result} STREQUAL "0")
       message(WARNING "mckit version is not found")
       set(MCKIT_PROJECT_VERSION "0.10.2")
     endif()
@@ -26,7 +25,7 @@ if(NOT DEFINED SKBUILD_PROJECT_NAME)
   set(SKBUILD_PROJECT_VERSION ${MCKIT_PROJECT_VERSION})
 endif()
 
-cmake_print_variables( SKBUILD_PROJECT_VERSION SKBUILD_STATE)
+cmake_print_variables(SKBUILD_PROJECT_VERSION SKBUILD_STATE)
 
 project(
   ${SKBUILD_PROJECT_NAME}
