@@ -205,3 +205,6 @@ venvs = [ ".pixi/envs/analyze", ".pixi/envs/default", ".pixi/envs/docs" ]
 [tool.rstcheck]
 ignore_messages = '(Unknown directive type "(todo.*|automodule)".$)'
 report_level = "ERROR"
+
+[tool.uv.extra-build-dependencies]
+mckit = ["scikit_build_core"]

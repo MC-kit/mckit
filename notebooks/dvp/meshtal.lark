@@ -1,0 +1,90 @@
+meshtal : header _NL title _NL nps tallies
+
+header : "mcnp" "version" stamp "mpi"? "ld=" stamp "probid =" stamp stamp
+
+?stamp: STAMP
+
+title: EVERYTHING
+
+EVERYTHING.-10: /.+/
+
+?nps: "Number of histories used for normalizing tallies =" float
+
+float: SIGNED_FLOAT | INT   
+
+tallies: (_NL tally)+
+
+_NL: NEWLINE
+
+tally : tally_header _NL boundaries _NL data
+
+tally_header : "Mesh Tally Number" integer _NL tally_header_more
+
+integer: INT
+
+tally_header_more: particle -> tally_header_more_wo_comment
+    | title _NL particle -> tally_header_more_with_comment
+
+particle: "This is a" KIND "mesh tally."
+
+boundaries: "Tally bin boundaries:" _NL [cylinder] bins
+
+cylinder: "Cylinder origin at"  vector ", axis in"  vector "direction" _NL
+
+vector: float+
+
+bins : direction _NL direction _NL direction _NL energies
+
+direction: "Theta direction (revolutions):" vector -> direction1
+         | dir_spec "direction:" vector -> direction2
+
+dir_spec: DIR_SPEC
+
+DIR_SPEC: "X" | "Y"  | "Z" | "R" | "Th"
+
+
+energies: "Energy bin boundaries:" vector -> energies_e
+        | "Time:" vector -> energies_t
+
+data: matrix_data
+        | column_data _NL?
+
+matrix_data: energy_bins [total_energy_bin]
+
+energy_bins: energy_bins energy_bin _NL -> energy_bins_continued
+            | energy_bin _NL -> energy_bins_first
+
+energy_bin: "Energy Bin:" float "-" float _NL _NL spatial_bins -> energy_bin_e
+            | "Time:" float _NL _NL spatial_bins -> energy_bin_t
+
+spatial_bins: spatial_bins spatial_bin _NL -> spatial_bins_continued
+            | spatial_bin _NL -> spatial_bins_first
+
+spatial_bin : dir_spec ":" float "-" float _NL _NL /Tally Results:  .*/ _NL matrix _NL "Relative Errors" _NL matrix _NL
+
+total_energy_bin : "Total Energy Bin" _NL _NL spatial_bins _NL
+
+
+column_data : column_header matrix [total_matrix]
+
+
+
+matrix : (vector _NL)+
+total_matrix : ("Total" vector _NL)+
+
+column_header : has_energy? dir_spec dir_spec dir_spec "Result" "Rel Error" _NL
+
+?has_energy: "Energy"
+
+KIND: "neutron"|"photon"|"electron"
+
+// MCNP version idenficiation entry on title line
+STAMP: /[0-9\/:]+/
+
+// Numbers
+%import common.SIGNED_FLOAT
+%import common.INT
+// Separators / whitespace (ignored)
+%import common.WS_INLINE
+%import common.NEWLINE
+%ignore WS_INLINE

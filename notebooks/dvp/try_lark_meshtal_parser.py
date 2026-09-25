@@ -22,7 +22,7 @@ with app.setup:
 def _():
     import marimo as mo
 
-    return
+    return (mo,)
 
 
 @app.cell
@@ -52,112 +52,71 @@ def _(mesh_text):
 
 @app.cell
 def _():
-    grammar = r"""
-    ?start: meshtal
-    
-    meshtal : header nl title nl "Number of histories used for normalizing tallies =" float tallies
-
-    header : "mcnp" "version" stamp "mpi"? "ld=" stamp "probid =" stamp stamp
-
-    stamp: STAMP
-
-    title: /.+/
-
-    float: SIGNED_FLOAT | INT   
-
-    tallies: (separator tally)+
-
-    ?separator: nl
-
-    ?nl: NEWLINE
-
-    tally : tally_header separator boundaries separator data
-
-    tally_header : "Mesh Tally Number" integer nl tally_header_more
-
-    integer: INT
-
-    tally_header_more: particle  nl -> tally_header_more_wo_comment
-        | title nl particle nl -> tally_header_more_with_comment
-
-    particle: "This is a" KIND "tally."
-
-    boundaries: "Tally bin boundaries:" nl [cylinder] bins
-
-    cylinder: "Cylinder origin at"  vector ", axis in"  vector "direction" nl
-
-    vector: float+
-
-    bins : direction nl direction nl direction nl energies nl
-
-    direction : dir_spec "direction:" vector
-
-    dir_spec : "X" | "Y"  | "Z" | "R" | "THETA"
-
-    energies: "Energy bin boundaries:" vector -> energies_e
-            | "Time:" vector -> energies_t
-
-    data: matrix_data
-         | column_data nl?
-
-    matrix_data: energy_bins [total_energy_bin]
-
-    energy_bins: energy_bins energy_bin separator -> energy_bins_continued
-               | energy_bin separator -> energy_bins_first
-
-    energy_bin: "Energy Bin:" float "-" float nl separator spatial_bins -> energy_bin_e
-              | "Time:" float nl separator spatial_bins -> energy_bin_t
-
-    spatial_bins: spatial_bins spatial_bin separator -> spatial_bins_continued
-                | spatial_bin separator -> spatial_bins_first
-
-    spatial_bin : dir_spec ":" float "-" float nl separator /Tally Results:  .*/ nl matrix separator "Relative Errors" nl matrix separator
-
-    total_energy_bin : "Total Energy Bin" nl separator spatial_bins separator
-
-
-    column_data : column_header matrix [total_matrix]
-
-
-
-    matrix : (vector nl)+
-    total_matrix : ("Total" vector nl)+
-
-    column_header : has_energy? dir_spec dir_spec dir_spec "Result" "Rel Error" nl
-
-    ?has_energy: "Energy"
-
-    KIND: "neutron"|"photon"|"electron"
-
-    // MCNP version idenficiation entry on title line
-    STAMP: /[0-9\/:]+/
-
-    // A generic identifier for any non-keyword word
-    WORD: /[A-Za-z_][A-Za-z0-9_]*/
-
-    // Keywords (must come with higher priority so they win over WORD)
-    KEYWORD.10: "MCNP" | "VERSION" | "LD" | "PROBID" | "NEUTRON"
-              | "PHOTON" | "ELECTRON" | "RESULT" | "RESULTS"
-              | "ERROR" | "ERRORS" | "CYLINDER" | "ORIGIN" | "AXIS"
-              | "TALLY" | "MPI" | "X" | "Y" | "Z" | "R"
-              | "THETA" | "ENERGY" | "TIME" | "TH" | "TOTAL"
-
-    // Numbers
-    %import common.SIGNED_FLOAT
-    %import common.INT
-    // Separators / whitespace (ignored)
-    %import common.WS_INLINE
-    %import common.NEWLINE
-    %ignore WS_INLINE
-    """
-
+    grammar = (Path(__file__).parent / "meshtal.lark").read_text()
     return (grammar,)
 
 
 @app.cell
 def _(grammar):
-    parser = Lark(grammar, debug=True)
+    grammar
+    return
+
+
+@app.cell
+def _(grammar):
+    parser = Lark(grammar, start="meshtal", parser="lalr", debug=True)
     return (parser,)
+
+
+@app.cell
+def _(mo):
+    def parse_with_progress(parser: Lark, text: str, start=None):
+        last = 0
+        pi = parser.parse_interactive(text, start=start)
+        with mo.status.progress_bar(
+                total=len(text),
+                title=f"Parsing {text[:10]}",
+                show_eta=True,
+                show_rate=True,
+            ) as progress:
+            for i, token in enumerate(pi.iter_parse()):
+                rich.print(i, ":", token.type, ":", token)
+                if token.end_pos is not None:
+                    progress.update(
+                        token.end_pos - last,
+                        subtitle=f"{i}: {token.type}:{token}"
+                    )
+                    last = token.end_pos
+        return pi.resume_parse()  
+
+    return (parse_with_progress,)
+
+
+@app.cell
+def _():
+    # portion="""\
+    #   mcnp   version 5     ld=09292010  probid =  05/24/18 12:21:45
+    #  fmesh test
+    #  Number of histories used for normalizing tallies =      10000000.00"""
+    return
+
+
+@app.cell
+def _():
+    # portion
+    return
+
+
+@app.cell
+def _():
+    # parse_with_progress(parser, portion, start="meshtal")
+    return
+
+
+@app.cell
+def _(mesh_text, parse_with_progress, parser):
+    parse_with_progress(parser, mesh_text, start="meshtal")
+    return
 
 
 @app.cell
@@ -168,24 +127,30 @@ def _(mesh_text, parser):
 
 
 @app.cell
-def _(tree):
-    tree
+def _():
+    return
+
+
+@app.cell
+def _():
+    # @v_args(inline=True)
+    # class TestTransformer(Transformer):
+    #     float = float
+
+    #     @staticmethod
+    #     def vector(*v):
+    #         return np.array(v)
+    
+    # test_transformer = TestTransformer()
+    # test_result = test_transformer.transform(tree)
+    # rich.print("result:", test_result)  
     return
 
 
 @app.cell
 def _(tree):
-    @v_args(inline=True)
-    class TestTransformer(Transformer):
-        float = float
-    
-        @staticmethod
-        def vector(*v):
-            return np.array(v)
-        
-    test_transformer = TestTransformer()
-    test_result = test_transformer.transform(tree)
-    rich.print("result:", test_result)  
+    with Path("try_lark.txt").open("w") as f:
+        rich.print(tree, file=f)
     return
 
 
@@ -193,7 +158,7 @@ def _(tree):
 def _():
     BIN_REC_ORDER = {"ENERGY": 0, "X": 1, "Y": 2, "Z": 3, "TIME": 0}
     BIN_CYL_ORDER = {"ENERGY": 0, "R": 1, "Z": 2, "THETA": 3, "TIME": 0}
-    return
+    return BIN_CYL_ORDER, BIN_REC_ORDER
 
 
 @app.cell
@@ -201,8 +166,8 @@ def _():
     return
 
 
-app._unparsable_cell(
-    """
+@app.cell
+def _(BIN_CYL_ORDER, BIN_REC_ORDER, cylinder, p):
     @v_args(inline=True)
     class MeshtalTransformer(Transformer):
         int = int
@@ -210,47 +175,51 @@ app._unparsable_cell(
 
         def meshtal(self, header, title, histories, tallies):
             return {
-                \"date\": header[\"PROBID\"],
-                \"title\": title,
-                \"histories\": histories,
-                \"tallies\": tallies,
+                "date": header["PROBID"],
+                "title": title,
+                "histories": histories,
+                "tallies": tallies,
             }
 
-        def header(self, version, date, time):
-            return {\"PROBID\": date + time, \"VERSION\": version}
+        def header(self, version, build_date, date, time):
+            return {
+                "PROBID": date.value + time.value, 
+                "VERSION": version, 
+                "BUILD_DATE": build_date
+            }
 
         def title(self, _title: str):
-            return _title.strip()
-    
+            return _title.strip()        
+
         def tallies(self, p):
             return p
 
         def tally(self, tally_header, boundaries, data):
-            \"\"\"tally : tally_header separator boundaries separator data\"\"\"
+            """tally : tally_header separator boundaries separator data"""
             tally = tally_header
-            tally[\"geom\"] = \"XYZ\"
-            if \"ORIGIN\" in boundaries:
-                tally[\"origin\"] = boundaries.pop(\"ORIGIN\")
-                tally[\"geom\"] = \"CYL\"
-            if \"AXIS\" in boundaries:
-                tally[\"axis\"] = boundaries.pop(\"AXIS\")
-            tally[\"bins\"] = {k: np.array(v) for k, v in boundaries.items()}
-            od = BIN_CYL_ORDER if \"origin\" in tally else BIN_REC_ORDER
-            if \"result\" in data:
-                src_perm = [od[let] for let in data[\"order\"]]
-                tally[\"result\"] = np.moveaxis(np.array(data[\"result\"]), (0, 1, 2, 3), src_perm)
-                tally[\"error\"] = np.moveaxis(np.array(data[\"error\"]), (0, 1, 2, 3), src_perm)
+            tally["geom"] = "XYZ"
+            if "ORIGIN" in boundaries:
+                tally["origin"] = boundaries.pop("ORIGIN")
+                tally["geom"] = "CYL"
+            if "AXIS" in boundaries:
+                tally["axis"] = boundaries.pop("AXIS")
+            tally["bins"] = {k: np.array(v) for k, v in boundaries.items()}
+            od = BIN_CYL_ORDER if "origin" in tally else BIN_REC_ORDER
+            if "result" in data:
+                src_perm = [od[let] for let in data["order"]]
+                tally["result"] = np.moveaxis(np.array(data["result"]), (0, 1, 2, 3), src_perm)
+                tally["error"] = np.moveaxis(np.array(data["error"]), (0, 1, 2, 3), src_perm)
             else:
-                header = data[\"header\"]
-                data = np.array(data[\"data\"])
+                header = data["header"]
+                data = np.array(data["data"])
                 shape = [0, 0, 0, 0]
-                for k in tally[\"bins\"]:
+                for k in tally["bins"]:
                     v = od[k]
                     shape[v] = boundaries[k].size
-                    if k != \"TIME\":
+                    if k != "TIME":
                         shape[v] -= 1
-                if \"ENERGY\" in boundaries:
-                    boundaries[\"ENERGY\"] = 0.5 * (boundaries[\"ENERGY\"][1:] + boundaries[\"ENERGY\"][:-1])
+                if "ENERGY" in boundaries:
+                    boundaries["ENERGY"] = 0.5 * (boundaries["ENERGY"][1:] + boundaries["ENERGY"][:-1])
                 result = np.empty(shape)
                 error = np.empty(shape)
                 indices = np.empty((data.shape[0], 4), dtype=int)
@@ -259,55 +228,70 @@ app._unparsable_cell(
                         indices[:, od[k]] = np.searchsorted(boundaries[k], data[:, header.index(k)]) - 1
                     else:
                         indices[:, od[k]] = np.zeros(data.shape[0])
-                res_ind = header.index(\"RESULT\")
-                err_ind = header.index(\"ERROR\")
+                res_ind = header.index("RESULT")
+                err_ind = header.index("ERROR")
                 for i in range(indices.shape[0]):
                     result[tuple(indices[i, :])] = data[i, res_ind]
                     error[tuple(indices[i, :])] = data[i, err_ind]
-                tally[\"result\"] = result
-                tally[\"error\"] = error
+                tally["result"] = result
+                tally["error"] = error
             return tally
 
         def tallY_header(self, name: int, from_other_lines):
-            from_other_lines[\"name\"] = name
+            from_other_lines["name"] = name
             return from_other_lines
 
         def tally_header_more_wo_comment(self, particle):
-            return {\"particle\": particle}
+            return {"particle": particle}
 
         def tally_header_more_with_comment(self, comment, particle):
-            return {\"comment\": comment, \"particle\": particle}
+            return {"comment": comment, "particle": particle}
 
         def boundaries(self, cyliner, bins):
             boundaries = bins
             if cylinder is not None:
                 origin, axis = cylinder
-                boundaries[\"ORIGIN\"] = origin
-                boundaries[\"AXIS\"] = axis
+                boundaries["ORIGIN"] = origin
+                boundaries["AXIS"] = axis
             for k, v in boundaries.items():
                 boundaries[k] = np.array(v)
             return boundaries
 
         def cylinder(self, origin, axis):
             return origin, axis
-        
+    
         def vector(self, *floats: float):
             return np.array(floats)
 
         def bins(self, ibins, jbins, kbins, ebins):
+            for i, b in enumerate((ibins, jbins, kbins, ebins)):
+                try:
+                    if not len(b == 2):
+                        rich.print(i, ":", b)
+                except:
+                    rich.print(i, ":", ibins, jbins, kbins, ebins)
+                    raise
             return {name: data for name, data in (ibins, jbins, kbins, ebins)}
 
-        def direction(self, dir_spec: str, vector):
-            return dir_spec.upper(), vector
+        def direction1(self, vector):
+            return "THETA", vector
 
-        def energies_e(vector):
-            return \"ENERGY\": vector
+        def direction2(self, dir_spec: str, vector):
+            return dir_spec, vector
 
-        def energies_t(vector):
-            return \"TIME\", vector
+        def dir_spec(self, spec: str) -> str:
+            if spec.startswith("Th"):
+                return "THETA"
+            return spec
+
+        def energies_e(self, vector):
+            return {"ENERGY": vector}
+
+        def energies_t(self, vector):
+            return "TIME", vector
         def matrix_data(energy_bins, total_energy_bin):
             order, result, error = energy_bins
-            p[0] = {\"result\": result, \"error\": error, \"order\": order}
+            p[0] = {"result": result, "error": error, "order": order}
 
         def energy_bins_first(self, energy_bin):
             order, result, error = energy_bin
@@ -323,9 +307,9 @@ app._unparsable_cell(
             return order, result_list, error_list
 
         def spatial_bins_first(self, spatial_bin):
-            \"\"\"spatial_bins : spatial_bins spatial_bin separator
+            """spatial_bins : spatial_bins spatial_bin separator
             | spatial_bin separator
-            \"\"\"
+            """
             order, result, error = spatial_bin
             return order, [result], [error]
 
@@ -336,9 +320,9 @@ app._unparsable_cell(
             result_list.append(result)
             error_list.append(error)
             return order, result_list, error_list    
-    
+
         def spatial_bin(self, dir_spec1, _from, _to, dir_spec2, dir_spec3, values, relerrs):
-            \"\"\"spatial_bin : dir_spec ':' float '-' float newline separator TALLY RESULT ':' dir_spec dir_spec newline matrix separator ERROR newline matrix separator\"\"\"
+            """spatial_bin : dir_spec ':' float '-' float newline separator TALLY RESULT ':' dir_spec dir_spec newline matrix separator ERROR newline matrix separator"""
             order = (dir_spec1, dir_spec3, dir_spec2)   # order 1, 3, 2 is intended
             results = [line[1:] for line in values[1:]]
             errors = [line[1:] for line in relerrs[1:]]
@@ -346,10 +330,10 @@ app._unparsable_cell(
 
 
         def total_energy_bin(spatial_bins):
-            \"\"\"total_energy_bin : TOTAL ENERGY newline separator spatial_bins separator\"\"\"
-            order = (\"TOTAL\",  *spatial_bins[0])
+            """total_energy_bin : TOTAL ENERGY newline separator spatial_bins separator"""
+            order = ("TOTAL",  *spatial_bins[0])
             p[0] = order, spatial_bins[1], spatial_bins[2]
-    
+
         def matrix(self, *vectors):
             return list(vectors)
 
@@ -357,36 +341,33 @@ app._unparsable_cell(
             return list[vectors]
 
         def column_data(self, column_header, matrix, total_matrix):
-            \"\"\"column_data : column_header matrix total_matrix
+            """column_data : column_header matrix total_matrix
             | column_header matrix
-            \"\"\"
+            """
             res = column_header
-            res[\"data\"] = matrix
+            res["data"] = matrix
             if total_matrix:
-                res[\"total\"] = total_matrix
+                res["total"] = total_matrix
             return res
 
         def column_header(self, has_energy, ispec, jspec, kspec):
-            \"\"\"column_header : ENERGY dir_spec dir_spec dir_spec RESULT ERROR newline
+            """column_header : ENERGY dir_spec dir_spec dir_spec RESULT ERROR newline
             | dir_spec dir_spec dir_spec RESULT ERROR newline
-            \"\"\"
-            res = {\"header\": [ispec], jspec, jspec]}
+            """
+            res = {"header": [ispec, jspec, jspec]}
             if has_energy:
-                res[\"has_energy\"] = True
+                res["has_energy"] = True
             return res
 
-
-    """,
-    name="_"
-)
+    return (MeshtalTransformer,)
 
 
 @app.cell
-def _():
-    # transformer = MeshtalTransformer()
-    # result = transformer.transform(tree)
-    # rich.print(result)
-    return
+def _(MeshtalTransformer, tree):
+    transformer = MeshtalTransformer()
+    result = transformer.transform(tree)
+    rich.print(result)
+    return (result,)
 
 
 @app.cell
