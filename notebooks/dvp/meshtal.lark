@@ -1,80 +1,99 @@
-meshtal : header _NL title _NL nps tallies
+meshtal : header title nps _NL+ tallies _NL*
 
-header : "mcnp" "version" stamp "mpi"? "ld=" stamp "probid =" stamp stamp
+_NL: CR? LF
+
+header : "mcnp" "version" stamp "mpi"? "ld=" stamp "probid =" stamp stamp _NL
 
 ?stamp: STAMP
 
-title: EVERYTHING
+title: EVERYTHING _NL
 
-EVERYTHING.-10: /.+/
+EVERYTHING.-10: /[^\n]+/
 
-nps: "Number of histories used for normalizing tallies =" float
+nps: _NPS_LABEL float _NL
+
+_NPS_LABEL: "Number of histories used for normalizing tallies ="
 
 float: SIGNED_FLOAT | INT   
 
-tallies: (_NL tally)+
+tallies: tallies _NL tally -> tallies_continued
+       | tally -> tally_first
 
-_NL: NEWLINE
+tally.10: tally_header _NL boundaries _NL data _NL
 
-tally: tally_header _NL boundaries _NL data
+tally_header: _MESH_TALLY_NUMBER_LABEL int _NL [title _NL] particle
 
-tally_header: "Mesh Tally Number" int _NL tally_header_more
+_MESH_TALLY_NUMBER_LABEL: "Mesh Tally Number"
 
 int: INT  // postive only
 
-tally_header_more: particle -> tally_header_more_wo_comment
-    | title _NL particle -> tally_header_more_with_comment
+particle: _PARTICLE_LABEL KIND "mesh tally." _NL
 
-particle: "This is a" KIND "mesh tally."
+_PARTICLE_LABEL: /This is an?/
 
-boundaries: "Tally bin boundaries:" _NL [cylinder] bins
+boundaries: _BOUNDARIES_LABEL _NL [cylinder] bins
 
-cylinder: "Cylinder origin at"  vector ", axis in"  vector "direction" _NL
+_BOUNDARIES_LABEL: "Tally bin boundaries:"
+
+cylinder: _CYLINDER_LABEL  vector ", axis in"  vector "direction" _NL
+
+_CYLINDER_LABEL: "Cylinder origin at"
 
 vector: float+
 
 bins: direction _NL direction _NL direction _NL energies
 
-direction: "Theta direction (revolutions):" vector -> direction_theta
-         | dir_spec "direction:" vector -> direction_xyzr
+direction: _DIRECTION_THETA_LABEL vector -> direction_theta
+         | XYZR "direction:" vector -> direction_xyzr
 
-dir_spec: DIR_SPEC
+_DIRECTION_THETA_LABEL: "Theta direction (revolutions):"
 
-DIR_SPEC: "X" | "Y"  | "Z" | "R" | "Th"
+XYZR: "X" | "Y"  | "Z" | "R"
 
-
-energies: "Energy bin boundaries:" vector -> energies_e
+energies: _ENERGIES_LABEL vector -> energies_e
         | "Time:" vector -> energies_t
+
+_ENERGIES_LABEL: "Energy bin boundaries:"
 
 data: matrix_data
     | column_data _NL?
 
-matrix_data: energy_bins [total_energy_bin]
+matrix_data: energy_bins [_NL+ total_energy_bin]
 
-energy_bins: energy_bins energy_bin _NL -> energy_bins_continued
-           | energy_bin _NL -> energy_bins_first
+energy_bins: energy_bin (_NL+ energy_bin)*
 
-energy_bin: "Energy Bin:" float "-" float _NL _NL spatial_bins -> energy_bin_e
-          | "Time:" float _NL _NL spatial_bins -> energy_bin_t
+energy_bin: _ENERGY_BIN_LABEL float "-" float "MeV" _NL _NL spatial_bins -> energy_bin_e
+          | "Time:" float _NL+ spatial_bins -> energy_bin_t
 
-spatial_bins: spatial_bins spatial_bin _NL -> spatial_bins_continued
-            | spatial_bin _NL -> spatial_bins_first
+_ENERGY_BIN_LABEL: "Energy Bin:"
 
-spatial_bin: dir_spec ":" float "-" float _NL _NL /Tally Results:  .*/ _NL matrix _NL "Relative Errors" _NL matrix _NL
+// spatial_bins: spatial_bin (_NL _NL spatial_bin)* _NL
 
-total_energy_bin: "Total Energy Bin" _NL _NL spatial_bins _NL
+spatial_bins: spatial_bin (_NL _NL _NL spatial_bin)* _NL _NL _NL _NL
 
+spatial_bin: dir_spec "bin:" float "-" float _NL _NL \
+             /Tally Results:  .*/ _NL matrix _NL _NL  \
+             "Relative Errors" _NL matrix
+
+dir_spec.-10: DIR_SPEC
+
+DIR_SPEC: XYZR | "Th"
+
+total_energy_bin: _TOTAL_ENERGY_BIN_LABEL _NL spatial_bins _NL
+
+_TOTAL_ENERGY_BIN_LABEL: "Total Energy Bin"
 
 column_data: column_header matrix [total_matrix]
 
+matrix : matrix _NL vector -> matrix_continued
+       | vector -> matrix_first
 
+total_matrix: total_matrix _NL "Total" vector -> total_matrix_continued
+            | "Total" vector -> total_matrix_first
 
-matrix : (vector _NL)+
-total_matrix : ("Total" vector _NL)+
+column_header : [energy] dir_spec dir_spec dir_spec "Result" "Rel Error" _NL
 
-column_header : has_energy? dir_spec dir_spec dir_spec "Result" "Rel Error" _NL
-
-?has_energy: "Energy"
+?energy: "Energy"
 
 KIND: "neutron"|"photon"|"electron"
 
@@ -84,7 +103,10 @@ STAMP: /[0-9\/:]+/
 // Numbers
 %import common.SIGNED_FLOAT
 %import common.INT
+// Separators / new line (used)
+%import common.NEWLINE
+%import common.CR
+%import common.LF
 // Separators / whitespace (ignored)
 %import common.WS_INLINE
-%import common.NEWLINE
 %ignore WS_INLINE

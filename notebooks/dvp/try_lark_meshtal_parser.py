@@ -54,7 +54,7 @@ def _(find_git_root):
 
 @app.cell
 def _(ROOT, check_file):
-    mesh_path = check_file(ROOT / "tests/data/parser/fmesh2.m")
+    mesh_path = check_file(ROOT / "tests/data/parser/fmesh.m")
     return (mesh_path,)
 
 
@@ -66,6 +66,7 @@ def _(mesh_path):
 
 @app.cell
 def _(grammar):
+    # parser = Lark(grammar, start="meshtal", parser="earley", debug=True)
     parser = Lark(grammar, start="meshtal", parser="lalr", debug=True)
     return (parser,)
 
@@ -336,7 +337,6 @@ def _():
 
 @app.function
 def parse_with_progress(parser: Lark, text: str, start=None, parsed_tokens: list[str] | None = None):
-    last = 0
     if parsed_tokens is not None:
         del parsed_tokens[:]
     pi = parser.parse_interactive(text, start=start)
@@ -346,12 +346,11 @@ def parse_with_progress(parser: Lark, text: str, start=None, parsed_tokens: list
                 f"""\
                 {i}:
                     tp: {token.type}
-                    vl: {token.value if token.value != "\n" else "\\n"} 
+                    vl: {token.value if token.type not in ("_NL", "_SP") else "..."} 
                     ln: {token.line}
                     ps: {token.start_pos}
+                    {pi.pretty().replace("Parser choices", "ch")}
                 """))
-        if token.end_pos is not None:
-            last = token.end_pos
     return pi.resume_parse()
 
 
