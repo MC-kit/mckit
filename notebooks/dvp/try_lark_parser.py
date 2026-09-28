@@ -1,0 +1,396 @@
+import marimo
+
+__generated_with = "0.25.0"
+app = marimo.App(width="medium", auto_download=["html"])
+
+with app.setup:
+    import logging
+    import sys
+
+    from pathlib import Path
+    from textwrap import dedent
+
+    import lark_cython
+    import numpy as np
+    import rich
+
+    from rich.console import Console
+    from rich.logging import RichHandler
+    from rich.traceback import install
+
+
+
+    from lark import Lark, Transformer, Token, v_args
+
+
+    # Use Rich as the default traceback handler for all uncaught exceptions
+    install(show_locals=True)
+
+    logger = logging.getLogger(__name__)
+    logger.disabled = False
+    logger.setLevel(logging.DEBUG)
+
+    # # 1. Define a thread-safe handler for marimo's redirected stderr
+    # class MarimoThreadSafeHandler(logging.StreamHandler):
+    #     def __init__(self, *args, **kwargs):
+    #         self.original_stderr = sys.__stderr__
+    #         super().__init__(*args, **kwargs)
+    #         self.stream = self.original_stderr
+
+    #     def emit(self, record: logging.LogRecord):
+    #         self.stream = self.original_stderr
+    #         super().emit(record)
+
+    # Console handler using Rich (ThreadSafe to avoid deadlocks)
+    # console_handler = MarimoThreadSafeHandler()
+    # console_handler.setFormatter(logging.Formatter("%(message)s"))
+    # console_handler.setHandler(RichHandler(console=Console(stderr=True)))
+
+    console_handler = RichHandler(console=Console(), rich_tracebacks=True, show_path=False )
+    logger.addHandler(console_handler)
+
+ 
+    # File handler
+    file_handler = logging.FileHandler("try-lark-parser-debug.log")
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    logger.addHandler(file_handler)
+
+
+
+@app.cell
+def _():
+    import marimo as mo
+
+    return (mo,)
+
+
+@app.cell
+def _(mo):
+    mo.notebook_dir()
+    return
+
+
+@app.cell
+def _(mo):
+    if not mo.running_in_notebook():
+        nb_common_path = Path(mo.notebook_dir().parent, "nb_common").absolute()
+        assert nb_common_path.is_dir(), nb_common_path
+        nb_common_name = str(nb_common_path)
+        if not nb_common_name in sys.path:
+            sys.path.append(str(nb_common_path))
+
+    from config_utils import HOST, check_file, find_git_root
+    HOST
+    return (find_git_root,)
+
+
+@app.cell
+def _(find_git_root):
+    ROOT = find_git_root()
+    ROOT
+    return
+
+
+@app.cell
+def _():
+    text="""-2.80 7.18813E-03 1.06634E-02 7.17257E-03 3.47599E-03
+            -0.40 3.06754E-03 3.67344E-03 3.06150E-03 1.93182E-03
+             2.00 1.46764E-03 1.64976E-03 1.47022E-03 1.04730E-03
+             4.40 7.66660E-04 8.36825E-04 7.71489E-04 5.73177E-04
+             6.80 4.03778E-04 4.28819E-04 3.98268E-04 3.11514E-04
+
+    """
+    return (text,)
+
+
+@app.cell
+def _():
+    grammar="""
+    start: matrix _NL*
+
+    # matrix: [matrix] vector _NL
+
+    matrix: matrix _NL vector
+          | vector
+
+    _NL: CR? LF
+
+    vector: vector float
+          | float
+
+    float: SIGNED_FLOAT
+
+
+    // Numbers
+    %import common.SIGNED_FLOAT
+    %import common.INT
+    // Separators / new line (used)
+    %import common.NEWLINE
+    %import common.CR
+    %import common.LF
+    // Separators / whitespace (ignored)
+    %import common.WS_INLINE
+    %ignore WS_INLINE
+    """
+    return (grammar,)
+
+
+@app.cell
+def _(grammar):
+    parser = Lark(grammar, start="matrix", parser="lalr", debug=True)
+    return (parser,)
+
+
+@app.cell
+def _(parser, text):
+    parsed_tokens = []
+    try:
+        tree = parse_with_progress(parser, text, parsed_tokens=parsed_tokens)
+        with Path("try-lark-parser-tree.txt").open("w") as _f:
+            rich.print(tree, file=_f)
+    finally:
+        with Path("try-lark-parser-tokens.txt").open("w") as _f:
+            for t in parsed_tokens:
+                rich.print(t, file=_f)
+
+    return (tree,)
+
+
+@app.cell
+def _(Any, BIN_CYL_ORDER, BIN_REC_ORDER, p):
+    @v_args(inline=True)
+    class MeshtalTransformer(Transformer):
+        int = int
+        float = float
+
+        def meshtal(self, header, title, histories, tallies):
+            return {
+                "date": header["PROBID"],
+                "title": title,
+                "histories": histories,
+                "tallies": tallies,
+            }
+
+        def header(self, version, build_date, date, time):
+            return {
+                "PROBID": date.value + time.value, 
+                "VERSION": version, 
+                "BUILD_DATE": build_date
+            }
+
+        def title(self, _title: str):
+            return _title.strip() 
+
+        def nps(self, _float):
+            return _float       
+
+        def tallies(self, p):
+            return p
+
+        def tally(self, tally_header, boundaries, data):
+            rich.print(tally_header)
+            tally = tally_header
+            if "ORIGIN" in boundaries:
+                tally["origin"] = boundaries.pop("ORIGIN")
+                tally["geom"] = "CYL"
+                assert "AXIS" in boundaries
+                tally["axis"] = boundaries.pop("AXIS")
+            else:
+                tally["geom"] = "XYZ"
+            tally["bins"] = {k: np.array(v) for k, v in boundaries.items()}
+            od = BIN_CYL_ORDER if "origin" in tally else BIN_REC_ORDER
+            if "result" in data:
+                src_perm = [od[let] for let in data["order"]]
+                tally["result"] = np.moveaxis(np.array(data["result"]), (0, 1, 2, 3), src_perm)
+                tally["error"] = np.moveaxis(np.array(data["error"]), (0, 1, 2, 3), src_perm)
+            else:
+                header = data["header"]
+                data = np.array(data["data"])
+                shape = [0, 0, 0, 0]
+                for k in tally["bins"]:
+                    v = od[k]
+                    shape[v] = boundaries[k].size
+                    if k != "TIME":
+                        shape[v] -= 1
+                if "ENERGY" in boundaries:
+                    boundaries["ENERGY"] = 0.5 * (boundaries["ENERGY"][1:] + boundaries["ENERGY"][:-1])
+                result = np.empty(shape)
+                error = np.empty(shape)
+                indices = np.empty((data.shape[0], 4), dtype=int)
+                for k in boundaries:
+                    if k in header:
+                        indices[:, od[k]] = np.searchsorted(boundaries[k], data[:, header.index(k)]) - 1
+                    else:
+                        indices[:, od[k]] = np.zeros(data.shape[0])
+                res_ind = header.index("RESULT")
+                err_ind = header.index("ERROR")
+                for i in range(indices.shape[0]):
+                    result[tuple(indices[i, :])] = data[i, res_ind]
+                    error[tuple(indices[i, :])] = data[i, err_ind]
+                tally["result"] = result
+                tally["error"] = error
+            return tally
+
+        def tally_header(self, name: int, from_other_lines: dict[str, Any]) -> dict[str, str|int]:
+            rich.print("tall_header:", name, from_other_lines)
+            from_other_lines["name"] = name
+            return from_other_lines
+
+        def tally_header_more_wo_comment(self, particle: str) -> dict[str, str]:
+            return {"particle": particle}
+
+        def particle(self, kind):
+            return kind.value.upper()  # to reproduce old PLY parser
+
+        def tally_header_more_with_comment(self, comment, particle):
+            return {"comment": comment, "particle": particle}
+
+        def boundaries(self, cylinder, bins):
+            boundaries = bins
+            if cylinder is not None:
+                origin, axis = cylinder
+                boundaries["ORIGIN"] = origin
+                boundaries["AXIS"] = axis
+            for k, v in boundaries.items():
+                boundaries[k] = np.array(v)
+            return boundaries
+
+        def cylinder(self, origin, axis):
+            return origin, axis
+
+        def vector(self, *floats: float):
+            return np.array(floats)
+
+        def bins(self, ibins, jbins, kbins, ebins):
+            return {name: data for name, data in (ibins, jbins, kbins, ebins)}
+
+        def direction_theta(self, vector):
+            return "THETA", vector
+
+        def direction_xyzr(self, dir_spec: str, vector):
+            return dir_spec, vector
+
+        def dir_spec(self, spec: str) -> str:
+            if spec.startswith("Th"):
+                return "THETA"
+            return spec.value
+
+        def energies_e(self, vector):
+            return "ENERGY", vector
+
+        def energies_t(self, vector):
+            return "TIME", vector
+
+        def data(self, d):
+            return d
+
+        def matrix_data(energy_bins, total_energy_bin):
+            order, result, error = energy_bins
+            return {"result": result, "error": error, "order": order}
+
+        def energy_bins_first(self, energy_bin):
+            order, result, error = energy_bin
+            return order, [result], [error]
+
+        def energy_bins_continued(self, energy_bins, energy_bin):
+            order, result, error = energy_bin
+            assert order == energy_bins[0]
+            result_list = energy_bins[1]
+            error_list = energy_bins[2]
+            result_list.append(result)
+            error_list.append(error)
+            return order, result_list, error_list
+
+        def spatial_bins_first(self, spatial_bin):
+            """spatial_bins : spatial_bins spatial_bin separator
+            | spatial_bin separator
+            """
+            order, result, error = spatial_bin
+            return order, [result], [error]
+
+        def spatial_bins_continued(self, spatial_bins, spatial_bin):
+            order, result, error = spatial_bin
+            result_list = spatial_bins[1]
+            error_list = spatial_bins[2]
+            result_list.append(result)
+            error_list.append(error)
+            return order, result_list, error_list    
+
+        def spatial_bin(self, dir_spec1, _from, _to, dir_spec2, dir_spec3, values, relerrs):
+            """spatial_bin : dir_spec ':' float '-' float newline separator TALLY RESULT ':' dir_spec dir_spec newline matrix separator ERROR newline matrix separator"""
+            order = (dir_spec1, dir_spec3, dir_spec2)   # order 1, 3, 2 is intended
+            results = [line[1:] for line in values[1:]]
+            errors = [line[1:] for line in relerrs[1:]]
+            return order, results, errors
+
+
+        def total_energy_bin(spatial_bins):
+            """total_energy_bin : TOTAL ENERGY newline separator spatial_bins separator"""
+            order = ("TOTAL",  *spatial_bins[0])
+            p[0] = order, spatial_bins[1], spatial_bins[2]
+
+        def matrix(self, *vectors):
+            return list(vectors)
+
+        def total_matrix(self, *vectors):
+            return list[vectors]
+
+        def column_data(self, column_header, matrix, total_matrix):
+            """column_data : column_header matrix total_matrix
+            | column_header matrix
+            """
+            res = column_header
+            res["data"] = matrix
+            if total_matrix:
+                res["total"] = total_matrix
+            return res
+
+        def column_header(self, has_energy, ispec, jspec, kspec):
+            """column_header : ENERGY dir_spec dir_spec dir_spec RESULT ERROR newline
+            | dir_spec dir_spec dir_spec RESULT ERROR newline
+            """
+            if has_energy:
+                return {"header": ["ENERGY", ispec, jspec, kspec,  "RESULT", "ERROR"]}
+            return {"header": [ispec, jspec, kspec,  "RESULT", "ERROR"]}
+        
+
+
+
+    return (MeshtalTransformer,)
+
+
+@app.cell
+def _(MeshtalTransformer, tree):
+    transformer = MeshtalTransformer()
+    result = transformer.transform(tree)
+    rich.print(result)
+    return (result,)
+
+
+@app.cell
+def _(result):
+    result
+    return
+
+
+@app.function
+def parse_with_progress(parser: Lark, text: str, start=None, parsed_tokens: list[str] | None = None):
+    if parsed_tokens is not None:
+        del parsed_tokens[:]
+    pi = parser.parse_interactive(text, start=start)
+    for i, token in enumerate(pi.iter_parse()):
+        if parsed_tokens is not None:
+            parsed_tokens.append(dedent(
+                f"""\
+                {i}:
+                    tp: {token.type}
+                    vl: {token.value if token.type not in ("_NL", "_SP") else "..."} 
+                    ln: {token.line}
+                    ps: {token.start_pos}
+                    {pi.pretty().replace("Parser choices", "ch")}
+                """))
+    return pi.resume_parse()
+
+
+if __name__ == "__main__":
+    app.run()
