@@ -56,7 +56,6 @@ with app.setup:
     logger.addHandler(file_handler)
 
 
-
 @app.cell
 def _():
     import marimo as mo
@@ -93,37 +92,30 @@ def _(find_git_root):
 
 @app.cell
 def _():
-    text="""-2.80 7.18813E-03 1.06634E-02 7.17257E-03 3.47599E-03
-            -0.40 3.06754E-03 3.67344E-03 3.06150E-03 1.93182E-03
-             2.00 1.46764E-03 1.64976E-03 1.47022E-03 1.04730E-03
-             4.40 7.66660E-04 8.36825E-04 7.71489E-04 5.73177E-04
-             6.80 4.03778E-04 4.28819E-04 3.98268E-04 3.11514E-04
-
-    """
+    text="""
+       1 2
+       3 4"""
     return (text,)
 
 
 @app.cell
 def _():
-    grammar="""
-    start: matrix _NL*
+    grammar=r"""
+    start: _N* matrix _N*
 
-    # matrix: [matrix] vector _NL
+    _N: LF
 
-    matrix: matrix _NL vector
-          | vector
+    matrix: vector (_N vector)* [_N]
 
-    _NL: CR? LF
+    # This works but the tree is too complicated with long left branch
+    # matrix: [matrix _N] vector
 
-    vector: vector float
-          | float
+    vector: float+
 
-    float: SIGNED_FLOAT
-
+    ?float: SIGNED_NUMBER
 
     // Numbers
-    %import common.SIGNED_FLOAT
-    %import common.INT
+    %import common.SIGNED_NUMBER
     // Separators / new line (used)
     %import common.NEWLINE
     %import common.CR
@@ -137,8 +129,25 @@ def _():
 
 @app.cell
 def _(grammar):
-    parser = Lark(grammar, start="matrix", parser="lalr", debug=True)
+    parser = Lark(grammar, parser="lalr", cache=False, debug=True)
     return (parser,)
+
+
+@app.cell
+def _(parser, text):
+    list(map(lambda t: f"{t.type}: {t.value}", parser.lex(text)))
+    return
+
+
+@app.cell
+def _(parser, text):
+    parser.parse(text)
+    return
+
+
+@app.cell
+def _():
+    return
 
 
 @app.cell
@@ -152,7 +161,6 @@ def _(parser, text):
         with Path("try-lark-parser-tokens.txt").open("w") as _f:
             for t in parsed_tokens:
                 rich.print(t, file=_f)
-
     return (tree,)
 
 
@@ -352,7 +360,7 @@ def _(Any, BIN_CYL_ORDER, BIN_REC_ORDER, p):
             if has_energy:
                 return {"header": ["ENERGY", ispec, jspec, kspec,  "RESULT", "ERROR"]}
             return {"header": [ispec, jspec, kspec,  "RESULT", "ERROR"]}
-        
+    
 
 
 

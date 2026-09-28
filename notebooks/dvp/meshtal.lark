@@ -1,4 +1,4 @@
-meshtal : header title nps _NL+ tallies _NL*
+meshtal : header title nps _NL tallies
 
 _NL: CR? LF
 
@@ -16,12 +16,11 @@ _NPS_LABEL: "Number of histories used for normalizing tallies ="
 
 float: SIGNED_FLOAT | INT   
 
-tallies: tallies _NL tally -> tallies_continued
-       | tally -> tally_first
+tallies: [_NL* tally]+ _NL+
 
-tally.10: tally_header _NL boundaries _NL data _NL
+tally.10: tally_header _NL boundaries _NL data
 
-tally_header: _MESH_TALLY_NUMBER_LABEL int _NL [title _NL] particle
+tally_header: _MESH_TALLY_NUMBER_LABEL int _NL [title] particle
 
 _MESH_TALLY_NUMBER_LABEL: "Mesh Tally Number"
 
@@ -41,7 +40,7 @@ _CYLINDER_LABEL: "Cylinder origin at"
 
 vector: float+
 
-bins: direction _NL direction _NL direction _NL energies
+bins: direction _NL direction _NL direction _NL energies _NL
 
 direction: _DIRECTION_THETA_LABEL vector -> direction_theta
          | XYZR "direction:" vector -> direction_xyzr
@@ -60,19 +59,19 @@ data: matrix_data
 
 matrix_data: energy_bins [_NL+ total_energy_bin]
 
-energy_bins: energy_bin (_NL+ energy_bin)*
+energy_bins: energy_bin (_NL _NL _NL _NL energy_bin)* _NL?
 
 energy_bin: _ENERGY_BIN_LABEL float "-" float "MeV" _NL _NL spatial_bins -> energy_bin_e
           | "Time:" float _NL+ spatial_bins -> energy_bin_t
 
 _ENERGY_BIN_LABEL: "Energy Bin:"
 
-// spatial_bins: spatial_bin (_NL _NL spatial_bin)* _NL
+// spatial_bins: spatial_bin (_NL _NL spatial_bin)* (_NL _NL _NL)?
 
-spatial_bins: spatial_bin (_NL _NL _NL spatial_bin)* _NL _NL _NL _NL
+spatial_bins: spatial_bin (_NL _NL spatial_bin)* (_NL _NL)? 
 
 spatial_bin: dir_spec "bin:" float "-" float _NL _NL \
-             /Tally Results:  .*/ _NL matrix _NL _NL  \
+             /Tally Results:  .*/ _NL matrix _NL   \
              "Relative Errors" _NL matrix
 
 dir_spec.-10: DIR_SPEC
@@ -85,11 +84,11 @@ _TOTAL_ENERGY_BIN_LABEL: "Total Energy Bin"
 
 column_data: column_header matrix [total_matrix]
 
-matrix : matrix _NL vector -> matrix_continued
-       | vector -> matrix_first
+matrix : vector (_NL vector)* _NL?
 
-total_matrix: total_matrix _NL "Total" vector -> total_matrix_continued
-            | "Total" vector -> total_matrix_first
+total_matrix: _TOTAL vector ( _NL _TOTAL vector)* _NL?
+
+_TOTAL: "Total"
 
 column_header : [energy] dir_spec dir_spec dir_spec "Result" "Rel Error" _NL
 
