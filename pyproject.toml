@@ -79,23 +79,22 @@ analyze = [
   "rich>=15",
   "sqlglot>=28.10.1,<29",
 ]
-lint = [ "pylint", "pylint-per-file-ignores" ]
+pylint = [ "pylint", "pylint-per-file-ignores>=3.2.1" ]
 mypy = [ "mypy>=1.2", "pep8-naming>=0.12.1", "types-setuptools>=80.9.0.20250529" ]
 pre_commit = [ "pre-commit>=4.3" ]
-pylint = [
-  "pylint-per-file-ignores>=3.2.1",
-]
 pyright = [ "pyright>=1.1.406" ]
 ruff = [ "ruff>=0.0.259" ]
 style = [
   "basedpyright>=1.39.9",
   "pyrefly>=1.1.1",
-  { include-group = "lint" },
+  { include-group = "pylint" },
   { include-group = "mypy" },
   { include-group = "pre_commit" },
   { include-group = "pyright" },
   { include-group = "ruff" },
+  { include-group = "ty" },
 ]
+ty = [ "ty>=0.0.84" ]
 typeguard = [ "typeguard>=4.5" ]
 
 [tool.scikit-build]
