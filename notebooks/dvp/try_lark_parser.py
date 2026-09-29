@@ -22,38 +22,48 @@ with app.setup:
 
     from lark import Lark, Transformer, Token, v_args
 
+    MY_NAME = "try-lark-parser"
 
     # Use Rich as the default traceback handler for all uncaught exceptions
     install(show_locals=True)
 
-    logger = logging.getLogger(__name__)
-    logger.disabled = False
-    logger.setLevel(logging.DEBUG)
+    def get_logger(suffix: str | None = None) -> logging.Logger:
+        """Get the package specific logger.
 
-    # # 1. Define a thread-safe handler for marimo's redirected stderr
-    # class MarimoThreadSafeHandler(logging.StreamHandler):
-    #     def __init__(self, *args, **kwargs):
-    #         self.original_stderr = sys.__stderr__
-    #         super().__init__(*args, **kwargs)
-    #         self.stream = self.original_stderr
+        Parameters
+        ----------
+            suffix
+                The requested logger name, optional
 
-    #     def emit(self, record: logging.LogRecord):
-    #         self.stream = self.original_stderr
-    #         super().emit(record)
+        Returns
+        -------
+            The logger for name prepended with the package name, if provided,
+            otherwise the root MY_NAME logger
+        """
+        return logging.getLogger(MY_NAME if suffix is None else MY_NAME + "." + suffix)
 
-    # Console handler using Rich (ThreadSafe to avoid deadlocks)
-    # console_handler = MarimoThreadSafeHandler()
-    # console_handler.setFormatter(logging.Formatter("%(message)s"))
-    # console_handler.setHandler(RichHandler(console=Console(stderr=True)))
-
-    console_handler = RichHandler(console=Console(), rich_tracebacks=True, show_path=False )
-    logger.addHandler(console_handler)
-
- 
     # File handler
     file_handler = logging.FileHandler("try-lark-parser-debug.log")
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    logger.addHandler(file_handler)
+
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(message)s",
+        datefmt="[%X]",
+        handlers=[
+            RichHandler(console=Console(), rich_tracebacks=True),
+            file_handler,
+        ],
+    )
+
+    logger = logging.getLogger("lark")
+    logger.disabled = False
+    logger.setLevel(logging.DEBUG)
+
+    logger = get_logger()
+    logger.disabled = False
+    logger.setLevel(logging.DEBUG)
+
 
 
 @app.cell
@@ -103,9 +113,9 @@ def _():
     grammar=r"""
     start: _N* matrix _N*
 
-    _N: LF
+    _N: /\r?\n/
 
-    matrix: vector (_N vector)* [_N]
+    matrix: (vector _N)+
 
     # This works but the tree is too complicated with long left branch
     # matrix: [matrix _N] vector
@@ -116,10 +126,6 @@ def _():
 
     // Numbers
     %import common.SIGNED_NUMBER
-    // Separators / new line (used)
-    %import common.NEWLINE
-    %import common.CR
-    %import common.LF
     // Separators / whitespace (ignored)
     %import common.WS_INLINE
     %ignore WS_INLINE
@@ -141,7 +147,10 @@ def _(parser, text):
 
 @app.cell
 def _(parser, text):
-    parser.parse(text)
+    def _():
+        tree = parser.parse(text)
+        return tree
+    rich.print(_())
     return
 
 
@@ -161,7 +170,13 @@ def _(parser, text):
         with Path("try-lark-parser-tokens.txt").open("w") as _f:
             for t in parsed_tokens:
                 rich.print(t, file=_f)
-    return (tree,)
+    return parsed_tokens, tree
+
+
+@app.cell
+def _(parsed_tokens):
+    rich.print(parsed_tokens)
+    return
 
 
 @app.cell
