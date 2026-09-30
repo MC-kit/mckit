@@ -84,9 +84,9 @@ _TOTAL_ENERGY_BIN_LABEL: "Total Energy Bin"
 
 column_data: column_header matrix [total_matrix]
 
-matrix : vector (_NL vector)* _NL?
+matrix : (vector_NL)+
 
-total_matrix: _TOTAL vector ( _NL _TOTAL vector)* _NL?
+total_matrix: (_TOTAL vector _NL)+
 
 _TOTAL: "Total"
 

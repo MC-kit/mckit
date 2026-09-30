@@ -104,7 +104,7 @@ def _(find_git_root):
 def _():
     text="""
        1 2
-       3 4"""
+    """
     return (text,)
 
 
@@ -115,7 +115,8 @@ def _():
 
     _N: /\r?\n/
 
-    matrix: (vector _N)+
+    matrix: (matrix _N)? vector
+    # matrix: (vector _N)+
 
     # This works but the tree is too complicated with long left branch
     # matrix: [matrix _N] vector
@@ -131,6 +132,11 @@ def _():
     %ignore WS_INLINE
     """
     return (grammar,)
+
+
+@app.cell
+def _():
+    return
 
 
 @app.cell
