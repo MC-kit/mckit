@@ -1,10 +1,15 @@
-meshtal : header title nps _NL tallies
+?start: meshtal
 
-_NL: CR? LF
+meshtal : header title nps _NL tallies _NL*
+
+_NL: /\r?\n/
 
 header : "mcnp" "version" stamp "mpi"? "ld=" stamp "probid =" stamp stamp _NL
 
-?stamp: STAMP
+?stamp: STAMP 
+
+// MCNP version idenficiation entry on title line
+STAMP: /[0-9\/:]+/ | INT
 
 title: EVERYTHING _NL
 
@@ -16,9 +21,9 @@ _NPS_LABEL: "Number of histories used for normalizing tallies ="
 
 float: SIGNED_FLOAT | INT   
 
-tallies: [_NL* tally]+ _NL+
+tallies: [tallies _NL] tally
 
-tally.10: tally_header _NL boundaries _NL data
+tally: tally_header _NL boundaries _NL data
 
 tally_header: _MESH_TALLY_NUMBER_LABEL int _NL [title] particle
 
@@ -55,11 +60,11 @@ energies: _ENERGIES_LABEL vector -> energies_e
 _ENERGIES_LABEL: "Energy bin boundaries:"
 
 data: matrix_data
-    | column_data _NL?
+    | column_data
 
-matrix_data: energy_bins [_NL+ total_energy_bin]
+matrix_data: energy_bins [total_energy_bin]
 
-energy_bins: energy_bin (_NL _NL _NL _NL energy_bin)* _NL?
+energy_bins: [energy_bins _NL] energy_bin _NL?
 
 energy_bin: _ENERGY_BIN_LABEL float "-" float "MeV" _NL _NL spatial_bins -> energy_bin_e
           | "Time:" float _NL+ spatial_bins -> energy_bin_t
@@ -68,7 +73,7 @@ _ENERGY_BIN_LABEL: "Energy Bin:"
 
 // spatial_bins: spatial_bin (_NL _NL spatial_bin)* (_NL _NL _NL)?
 
-spatial_bins: spatial_bin (_NL _NL spatial_bin)* (_NL _NL)? 
+spatial_bins: (spatial_bin)+ _NL? 
 
 spatial_bin: dir_spec "bin:" float "-" float _NL _NL \
              /Tally Results:  .*/ _NL matrix _NL   \
@@ -84,7 +89,7 @@ _TOTAL_ENERGY_BIN_LABEL: "Total Energy Bin"
 
 column_data: column_header matrix [total_matrix]
 
-matrix : (vector_NL)+
+matrix : (vector _NL)+ _NL?
 
 total_matrix: (_TOTAL vector _NL)+
 
@@ -96,16 +101,9 @@ column_header : [energy] dir_spec dir_spec dir_spec "Result" "Rel Error" _NL
 
 KIND: "neutron"|"photon"|"electron"
 
-// MCNP version idenficiation entry on title line
-STAMP: /[0-9\/:]+/
-
 // Numbers
 %import common.SIGNED_FLOAT
 %import common.INT
-// Separators / new line (used)
-%import common.NEWLINE
-%import common.CR
-%import common.LF
 // Separators / whitespace (ignored)
 %import common.WS_INLINE
 %ignore WS_INLINE
