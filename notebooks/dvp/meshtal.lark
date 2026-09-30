@@ -9,7 +9,7 @@ header : "mcnp" "version" stamp "mpi"? "ld=" stamp "probid =" stamp stamp _NL
 ?stamp: STAMP 
 
 // MCNP version idenficiation entry on title line
-STAMP: /[0-9\/:]+/ | INT
+STAMP: /[0-9\/:]+/
 
 title: EVERYTHING _NL
 
