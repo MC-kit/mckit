@@ -74,7 +74,7 @@ analyze = [
   "marimo>=0.23.14",
   "polars>=1.43,<2",
   "pyarrow>=25,<26",
-  "sqlglot>=28.10.1,<29",
+  "sqlglot>=28.10.1,<31",
 ]
 lint = [ "pylint", "pylint-per-file-ignores" ]
 mypy = [ "mypy>=1.2", "pep8-naming>=0.12.1", "types-setuptools>=80.9.0.20250529" ]
