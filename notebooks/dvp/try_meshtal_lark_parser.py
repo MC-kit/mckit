@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.24.2"
+__generated_with = "0.25.1"
 app = marimo.App(width="medium", auto_download=["html"])
 
 with app.setup:
@@ -116,7 +116,7 @@ def _(mesh_path):
     return (mesh_text,)
 
 
-@app.cell
+@app.cell(disabled=True)
 def _(Iterator):
     _MESH_TALLY_NUMBER_LABEL = "Mesh Tally Number"
     _ENERGY_BIN_LABEL = "Energy Bin:"
@@ -150,7 +150,7 @@ def _(Iterator):
             logger.info("last token: %s", token2string(lookahead))
 
 
-    return (MeshtalPostLex,)
+    return
 
 
 @app.cell
@@ -162,10 +162,15 @@ def _():
 
 
 @app.cell
-def _(MeshtalPostLex, grammar):
+def _(grammar):
     # parser = Lark(grammar, parser="earley", debug=True)
-    parser = Lark(grammar, start="meshtal", parser="lalr", debug=True, postlex=MeshtalPostLex())
+    parser = Lark(grammar, parser="lalr", debug=True)
     return (parser,)
+
+
+@app.cell
+def _():
+    return
 
 
 @app.cell
@@ -378,7 +383,7 @@ def _(Any, BIN_CYL_ORDER, BIN_REC_ORDER, p):
             if has_energy:
                 return {"header": ["ENERGY", ispec, jspec, kspec,  "RESULT", "ERROR"]}
             return {"header": [ispec, jspec, kspec,  "RESULT", "ERROR"]}
-        
+    
 
 
 
