@@ -64,6 +64,8 @@ with app.setup:
     )
 
     logger = logging.getLogger("lark")
+    for _hdlr in logger.handlers:
+        logger.removeHandler(_hdlr)
     logger.disabled = False
     logger.setLevel(logging.DEBUG)
 
@@ -81,18 +83,14 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.notebook_dir()
-    return
-
-
-@app.cell
-def _(mo):
-    if not mo.running_in_notebook():
+    def _():
         nb_common_path = Path(mo.notebook_dir().parent, "nb_common").absolute()
         assert nb_common_path.is_dir(), nb_common_path
         nb_common_name = str(nb_common_path)
         if not nb_common_name in sys.path:
             sys.path.append(str(nb_common_path))
+
+    _()
 
     from config_utils import HOST, check_file, find_git_root
     HOST
