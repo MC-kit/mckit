@@ -19,7 +19,7 @@ with app.setup:
     from rich.logging import RichHandler
     from rich.traceback import install
 
-    from lark import Lark, Transformer, Token, v_args
+    from lark import Lark, Transformer, Token, v_args, UnexpectedToken, UnexpectedInput
     from lark.lark import PostLex
 
     MY_NAME = "try-lark-meshtal-parser"
@@ -67,9 +67,13 @@ with app.setup:
     logger.disabled = False
     logger.setLevel(logging.DEBUG)
 
+    logging.getLogger("parso").setLevel(logging.INFO)
+
     logger = get_logger()
     logger.disabled = False
     logger.setLevel(logging.DEBUG)
+
+    logger.info("Started " + "-"*40 )
 
     # from mckit.fmesh import FMesh
 
@@ -163,13 +167,17 @@ def _():
 
 @app.cell
 def _(grammar):
-    # parser = Lark(grammar, parser="earley", debug=True)
-    parser = Lark(grammar, parser="lalr", debug=True)
+    parser = Lark(grammar, parser="earley", debug=True)
+    # parser = Lark(grammar, parser="lalr", debug=True)
     return (parser,)
 
 
 @app.cell
-def _():
+def _(mesh_text, parser):
+    def _():
+        tree = parser.parse(mesh_text)
+        return tree
+    _()
     return
 
 
@@ -177,7 +185,7 @@ def _():
 def _(mesh_text, parser):
     parsed_tokens = []
     try:
-        tree = parse_with_progress(parser, mesh_text, start="meshtal", parsed_tokens=parsed_tokens)
+        tree = parse_with_progress(parser, mesh_text, start="start", parsed_tokens=parsed_tokens)
         with Path(f"{MY_NAME}-tree-debug.txt").open("w") as _f:
             rich.print(tree, file=_f)
     finally:
@@ -383,7 +391,7 @@ def _(Any, BIN_CYL_ORDER, BIN_REC_ORDER, p):
             if has_energy:
                 return {"header": ["ENERGY", ispec, jspec, kspec,  "RESULT", "ERROR"]}
             return {"header": [ispec, jspec, kspec,  "RESULT", "ERROR"]}
-    
+
 
 
 

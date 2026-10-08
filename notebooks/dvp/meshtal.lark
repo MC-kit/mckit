@@ -2,8 +2,7 @@
 
 meshtal : header title nps _NL tallies
 
-_SEP: /\r?\n\r?\n/
-_NL: /\r?\n/
+_NL: /\n/
 
 header : "mcnp" "version" stamp "mpi"? "ld=" stamp "probid =" stamp stamp _NL
 
@@ -16,23 +15,23 @@ title: EVERYTHING _NL
 
 EVERYTHING.-10: /[^\n]+/
 
-nps: _NPS_LABEL float
+nps: _NPS_LABEL float _NL
 
 _NPS_LABEL: "Number of histories used for normalizing tallies ="
 
 float: SIGNED_FLOAT | INT   
 
-tallies: [tallies _SEP] tally
+tallies: [tallies _NL _NL] tally
 
 tally: tally_header _NL boundaries _NL data
 
-tally_header: _MESH_TALLY_NUMBER_LABEL int _NL [title] particle
+tally_header: _MESH_TALLY_NUMBER_LABEL int _NL [title] particle _NL
 
 _MESH_TALLY_NUMBER_LABEL: "Mesh Tally Number"
 
 int: INT  // postive only
 
-particle: _PARTICLE_LABEL KIND "mesh tally." _NL
+particle: _PARTICLE_LABEL KIND "mesh tally."
 
 _PARTICLE_LABEL: /This is an?/
 
@@ -63,22 +62,24 @@ _ENERGIES_LABEL: "Energy bin boundaries:"
 data: matrix_data
     | column_data
 
-matrix_data: energy_bins [total_energy_bin]
+matrix_data: energy_bins [total_energy_bin] 
 
-energy_bins: [energy_bins _NL] energy_bin 
+// energy_bins.10: [energy_bins _NL _NL _NL ] energy_bin 
+energy_bins: energy_bin (_NL energy_bin)*
 
-energy_bin: _ENERGY_BIN_LABEL float "-" float _MEV _SEP spatial_bins
+energy_bin: _ENERGY_BIN_LABEL float "-" float _MEV _NL _NL spatial_bins
         //   -> energy_bin_e
         //   | "Time:" float _NL+ spatial_bins -> energy_bin_t
 
 _MEV: "MeV"
 _ENERGY_BIN_LABEL: "Energy Bin:"
 
-spatial_bins: [spatial_bins _NL] spatial_bin  
+// spatial_bins.10: [spatial_bins _NL] spatial_bin  
+spatial_bins.10: spatial_bin (_NL spatial_bin)* _NL
 
-spatial_bin: dir_spec "bin:" float "-" float _NL \
+spatial_bin: dir_spec "bin:" float "-" float _NL _NL\
              /Tally Results:  .*/ _NL matrix _NL   \
-             "Relative Errors" _NL matrix
+             "Relative Errors" _NL matrix _NL
 
 dir_spec.-10: DIR_SPEC
 
