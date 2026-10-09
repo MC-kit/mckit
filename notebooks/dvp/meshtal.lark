@@ -65,7 +65,7 @@ data: matrix_data
 matrix_data: energy_bins [total_energy_bin] 
 
 // energy_bins.10: [energy_bins _NL _NL _NL ] energy_bin 
-energy_bins: energy_bin (_NL energy_bin)*
+energy_bins: energy_bin (_NL _NL energy_bin)*
 
 energy_bin: _ENERGY_BIN_LABEL float "-" float _MEV _NL _NL spatial_bins
         //   -> energy_bin_e
@@ -75,11 +75,11 @@ _MEV: "MeV"
 _ENERGY_BIN_LABEL: "Energy Bin:"
 
 // spatial_bins.10: [spatial_bins _NL] spatial_bin  
-spatial_bins.10: spatial_bin (_NL spatial_bin)* _NL
+spatial_bins.10: spatial_bin (_NL spatial_bin)*
 
 spatial_bin: dir_spec "bin:" float "-" float _NL _NL\
-             /Tally Results:  .*/ _NL matrix _NL   \
-             "Relative Errors" _NL matrix _NL
+             /Tally Results:  .*/ _NL matrix _NL _NL  \
+             "Relative Errors" _NL matrix _NL _NL
 
 dir_spec.-10: DIR_SPEC
 
@@ -89,11 +89,11 @@ total_energy_bin: _TOTAL_ENERGY_BIN_LABEL _NL spatial_bins _NL
 
 _TOTAL_ENERGY_BIN_LABEL: "Total Energy Bin"
 
-column_data: column_header matrix [total_matrix]
+column_data: column_header matrix [_NL total_matrix]
 
-matrix : (vector _NL)+
+matrix : vector (_NL vector)*
 
-total_matrix: (_TOTAL vector _NL)+
+total_matrix: _TOTAL vector (_NL _TOTAL vector)*
 
 _TOTAL: "Total"
 

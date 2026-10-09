@@ -1,46 +1,25 @@
-import marimo
 
-__generated_with = "0.25.1"
-app = marimo.App(width="medium", auto_download=["html"])
+import logging
+import sys
 
-with app.setup:
-    import logging
-    import sys
+from dataclasses import dataclass
+from pathlib import Path
+from textwrap import dedent
 
-    from dataclasses import dataclass
-    from pathlib import Path
-    from textwrap import dedent
+import lark_cython
+import numpy as np
+import rich
 
-    import lark_cython
-    import numpy as np
-    import rich
+from rich.console import Console
+from rich.logging import RichHandler
+from rich.traceback import install
 
-    from rich.console import Console
-    from rich.logging import RichHandler
-    from rich.traceback import install
+from lark import Lark, Transformer, Token, v_args, UnexpectedToken, UnexpectedInput
 
-    from lark import Lark, Transformer, Token, v_args, UnexpectedToken, UnexpectedInput
-    from lark.lark import PostLex
+MY_NAME = "meshtal-lark-parser"
 
-    MY_NAME = "try-lark-meshtal-parser"
 
-    # Use Rich as the default traceback handler for all uncaught exceptions
-    install(show_locals=True)
-
-    def get_logger(suffix: str | None = None) -> logging.Logger:
-        """Get the package specific logger.
-
-        Parameters
-        ----------
-            suffix
-                The requested logger name, optional
-
-        Returns
-        -------
-            The logger for name prepended with the package name, if provided,
-            otherwise the root MY_NAME logger
-        """
-        return logging.getLogger(MY_NAME if suffix is None else MY_NAME + "." + suffix)
+DEBUG_PARSER: Final[bool] = True
 
     # File handler
     file_handler = logging.FileHandler(f"{MY_NAME}-debug.log")
@@ -167,19 +146,9 @@ def _():
 
 @app.cell
 def _(grammar):
-    # parser = Lark(grammar, parser="earley", debug=True)
-    parser = Lark(grammar, parser="lalr", debug=True)
+    parser = Lark(grammar, parser="earley", debug=True)
+    # parser = Lark(grammar, parser="lalr", debug=True)
     return (parser,)
-
-
-@app.cell(disabled=True)
-def _(mesh_text, parser):
-    def _():
-        with Path("try_meshtal_lark_parser_lex.txt").open("w") as f:
-            for t in parser.lex(mesh_text):
-                print(t.type, ":", t.value, file=f)
-    _()
-    return
 
 
 @app.cell

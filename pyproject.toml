@@ -33,6 +33,7 @@ dependencies = [
   "loguru",
   "numpy>=2.4",
   "ply",
+  "regex>=2026.9.29",
   "sly",
   "tomli-w",
 ]
