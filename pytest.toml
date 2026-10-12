@@ -21,6 +21,7 @@ addopts = [
     "--benchmark-disable",
     "--benchmark-group-by=name,fullname",
     "--benchmark-storage=.cache/benchmarks",
+    "--doctest-modules",
     "--failed-first",
     "--ignore=setup.py",
     "--numprocesses=logical",
