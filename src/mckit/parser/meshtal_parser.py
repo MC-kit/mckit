@@ -525,7 +525,7 @@ _BIN_NAMES = {
     "Z": "zbins",
     "R": "rbins",
     "THETA": "tbins",
-    "TIME": "dtbins",
+    "TIME": "dtbins"
 }
 
 
@@ -552,6 +552,10 @@ def read_meshtal(filename: str | Path) -> dict[int, FMesh]:
         data = t["result"]
         error = t["error"]
         kwdata = {}
+        if t.get("geom") == "CYL":
+            kwdata["origin"] = t["origin"]
+            kwdata["axis"] = t["axis"]
+            #TODO @dvp: vec is not provided by MCNP5 (check for MCNP6 difference)
         for k, v in t["bins"].items():
             kwdata[_BIN_NAMES[k]] = v
         tallies[name] = FMesh(name, particle, data, error, histories=histories, **kwdata)

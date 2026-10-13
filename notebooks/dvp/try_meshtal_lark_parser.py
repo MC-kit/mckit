@@ -120,43 +120,6 @@ def _(mesh_path):
     return (mesh_text,)
 
 
-@app.cell(disabled=True)
-def _(Iterator):
-    _MESH_TALLY_NUMBER_LABEL = "Mesh Tally Number"
-    _ENERGY_BIN_LABEL = "Energy Bin:"
-
-    _ADD_SEP_LABELS = {_MESH_TALLY_NUMBER_LABEL, _ENERGY_BIN_LABEL}
-
-    def token2string(token: Token | None) -> str:
-        if token is None:
-            return "None"
-        return f"[{token.type}] '{token.value}'"
-
-
-    @dataclass
-    class MeshtalPostLex(PostLex):
-        # def process(self, stream: Iterator[Token]) -> Iterator[Token]:
-        #     for token in stream:
-        #         logger.info("token: %s", token2string(token))
-        #         yield token
-
-        def process(self, stream: Iterator[Token]) -> Iterator[Token]:
-            lookahead = None
-            for token in stream:
-                logger.info("token: %s", token2string(token))
-                if lookahead is not None:
-                    # if lookahead.type == "_NL" and token.type in _ADD_SEP_LABELS:
-                    #     lookahead.type = "_SEP"
-                    yield lookahead
-                lookahead = token
-            if lookahead is not None:
-                yield lookahead
-            logger.info("last token: %s", token2string(lookahead))
-
-
-    return
-
-
 @app.cell
 def _():
     _grammar_path = Path(__file__).parent / "meshtal.lark"

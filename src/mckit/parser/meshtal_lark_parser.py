@@ -9,30 +9,11 @@ from pathlib import Path
 from textwrap import dedent
 
 import numpy as np
+import numpy.typing as npt
 
-from lark import Lark, Token, Transformer, UnexpectedInput, UnexpectedToken, v_args
+from lark import Lark, Token, Transformer, UnexpectedInput, UnexpectedToken, v_args, TextSlice
 
-DEBUG_PARSER: Final[bool] = True
-
-if DEBUG_PARSER:
-    logger = logging.getLogger("lark")
-    for _hdlr in logger.handlers:
-        logger.removeHandler(_hdlr)
-    logger.disabled = False
-    logger.setLevel(logging.DEBUG)
-
-    logging.getLogger("parso").setLevel(logging.INFO)
-
-    logger = logging.getLogger("mckit.parser.meshtal_lark_parser")
-    logger.disabled = False
-    logger.setLevel(logging.DEBUG)
-
-    logger.info("Started meshtal lark parser" + "-"*40 )
-
-def token2string(token: Token | None) -> str:
-    if token is None:
-        return "None"
-    return f"[{token.type}] '{token.value}'"
+from mckit import FMesh
 
 
 # @v_args(inline=True)
@@ -232,3 +213,108 @@ def token2string(token: Token | None) -> str:
 #
 # BIN_REC_ORDER = {"ENERGY": 0, "X": 1, "Y": 2, "Z": 3, "TIME": 0}
 # BIN_CYL_ORDER = {"ENERGY": 0, "R": 1, "Z": 2, "THETA": 3, "TIME": 0}
+
+
+@dataclass
+class TallyParseResult:
+    name: int
+    comment: str
+    result: npt.NDArray[np.float64]
+    error: npt.NDArray[np.float64]
+    bins: dict[str, npt.NDArray[np.float64]]
+    geom: str | None = None
+    axis: npt.NDArray[np.float64] | None = None
+    origin: npt.NDArray[np.float64] | None = None
+
+@dataclass
+class ParseResult:
+    code: str
+    build: str
+    date: str
+    title: str
+    histories: int
+    tallies: list[TallyParseResult]
+
+
+def parse(text: str) -> ParseResult:
+    """Parses MCNP meshtal file.
+
+    Parameters
+    ----------
+    text
+        ... of MCNP meshtal file.
+    """
+    start = 0
+    end = text.find(" Mesh Tally Number", start)
+    parse_result = parse_header(TextSlice(text, start, end))
+    while  end != -1:
+        start = end + len(" Mesh Tally Number")
+        end = text.find(" Mesh Tally Number", start);
+        parse_result.tallies.append(parse_tally(TextSlice(text, start, end)))  #TODO @dvp: use multithreading
+
+def parse_header(text: TextSlice | str) -> ParseResult:
+    """Parses MCNP meshtal file.
+
+    Parameters
+    ----------
+    text
+    ... of MCNP meshtal file header.
+    """
+    return ParseResult()
+
+def parse_tally(text: TextSlice) -> TallyParseResult:
+    """Parses MCNP meshtal file.
+
+    Parameters
+    ----------
+    text
+    ... of a tally from an MCNP meshtal file.
+    """
+    return TallyParseResult()
+
+
+_BIN_NAMES = {
+    "ENERGY": "ebins",
+    "X": "xbins",
+    "Y": "ybins",
+    "Z": "zbins",
+    "R": "rbins",
+    "THETA": "tbins",
+    "TIME": "dtbins",
+}
+
+
+def read_meshtal(filename: str | Path) -> dict[int, FMesh]:
+    """Reads MCNP meshtal file.
+
+    Parameters
+    ----------
+    filename
+        Meshtal file name.
+
+    Returns
+    -------
+    dict
+        tallies Index of mesh tallies contained in the file.
+    """
+    if isinstance(filename, str):
+        filename = Path(filename)
+    with filename.open() as f:
+        text = f.read()
+    meshtal_data = parse(text)
+    histories = meshtal_data.histories
+    tallies = {}
+    for t in meshtal_data.tallies:
+        name = t.name
+        particle = t.particle
+        data = t.result
+        error = t.error
+        kwdata = {}
+        if t.geom == "CYL":
+            kwdata["origin"] = t.origin
+            kwdata["axis"] = t.axis
+            #TODO @dvp: vec is not provided by MCNP5 (check for MCNP6 difference)
+        for k, v in t.bins.items():
+            kwdata[_BIN_NAMES[k]] = v
+        tallies[name] = FMesh(name, particle, data, error, histories=histories, **kwdata)
+    return tallies
