@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from textwrap import dedent
+
 import pytest
 
 from lark import TextSlice
@@ -50,11 +53,11 @@ def test_parse_header(
 
 
 @pytest.mark.parametrize(
-    "text, name",
+    "text, name, comment, particle, bin_sizes",
     [
         (
             dedent(
-"""\
+                """\
  Mesh Tally Number        74
  This is a neutron mesh tally.
 
@@ -128,9 +131,19 @@ def test_parse_header(
 """
             ),
             74,
+            None,
+            "NEUTRON",
+            {"X": 4, "Y": 5, "Z": 6, "ENERGY": 2},
         )
     ],
 )
-def test_parse_tally(text: str, name: int) -> None:
-    pares_result = parse_tally(TextSlice.cast_from(text))
-    assert pares_result.name == name
+def test_parse_tally(
+    text: str, name: int, comment: str | None, particle: str, bin_sizes: dict[str, int]
+) -> None:
+    parse_result = parse_tally(TextSlice.cast_from(text))
+    assert parse_result.name == name
+    assert parse_result.comment == comment or comment is None
+    assert parse_result.particle == particle
+    assert bin_sizes.keys() == parse_result.bins.keys()
+    for b, size in bin_sizes.items():
+        assert parse_result.bins[b].size == size

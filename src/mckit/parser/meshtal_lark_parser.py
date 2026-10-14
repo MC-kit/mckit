@@ -1,19 +1,17 @@
 from __future__ import annotations
 
-from typing import Final, cast
-
-import logging
+from typing import cast
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from textwrap import dedent
 
 import numpy as np
 import numpy.typing as npt
 
-from lark import Lark, Token, Transformer, UnexpectedInput, UnexpectedToken, v_args, TextSlice
+from lark import Lark, TextSlice, Token, Transformer, v_args
 
 from mckit import FMesh
+
 
 @dataclass
 class TallyParseResult:
@@ -128,7 +126,7 @@ class TallyTransformer(Transformer):
             header = data["header"]
             data = np.array(data["data"])
             shape = [0, 0, 0, 0]
-            for k in tally["bins"]:
+            for k in bins:
                 v = od[k]
                 shape[v] = boundaries[k].size
                 if k != "TIME":
@@ -160,10 +158,12 @@ class TallyTransformer(Transformer):
             vec=vec,
             result=result,
             error=error,
-            bins = bins,
+            bins=bins,
         )
 
-    def tally_header(self, name: int, comment: str | None, particle: str) -> tuple[int, str|None, str]:
+    def tally_header(
+        self, name: int, comment: str | None, particle: str
+    ) -> tuple[int, str | None, str]:
         return name, comment, particle
 
     def particle(self, kind: str) -> str:
@@ -181,20 +181,36 @@ class TallyTransformer(Transformer):
             boundaries[k] = np.array(v)
         return boundaries
 
-    def cylinder(self, origin: npt.NDArray[np.float64], axis: npt.NDArray[np.float64], vec: npt.NDArray[np.float64] | None) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.float64]|None]:
+    def cylinder(
+        self,
+        origin: npt.NDArray[np.float64],
+        axis: npt.NDArray[np.float64],
+        vec: npt.NDArray[np.float64] | None,
+    ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.float64] | None]:
         return origin, axis, vec
 
-    def vector(self, *floats: float):
+    def vector(self, *floats: float) -> npt.NDArray[np.float64]:
         return np.array(floats, dtype=np.float64)
 
-    def bins(self, ibins, jbins, kbins, ebins):
-        return {name: data for name, data in (ibins, jbins, kbins, ebins)}
+    def bins(
+        self,
+        ibins: tuple[str, npt.NDArray[np.float64]],
+        jbins: tuple[str, npt.NDArray[np.float64]],
+        kbins: tuple[str, npt.NDArray[np.float64]],
+        ebins: tuple[str, npt.NDArray[np.float64]],
+    ) -> dict[str, npt.NDArray[np.float64]]:
+        return dict((ibins, jbins, kbins, ebins))
 
     def direction_theta(self, vector):
         return "THETA", vector
 
-    def direction_xyzr(self, dir_spec: str, vector):
-        return dir_spec, vector
+    def xyzr(self, dir_spec: Token) -> str:
+        return dir_spec.value
+
+    def direction_xyzr(
+        self, xyzr: str, vector: npt.NDArray[np.float64]
+    ) -> tuple[str, npt.NDArray[np.float64]]:
+        return xyzr, vector
 
     def dir_spec(self, spec: Token) -> str:
         if spec.startswith("Th"):
@@ -244,25 +260,21 @@ class TallyTransformer(Transformer):
 
     def spatial_bin(self, dir_spec1, _from, _to, dir_spec2, dir_spec3, values, relerrs):
         """spatial_bin : dir_spec ':' float '-' float newline separator TALLY RESULT ':' dir_spec dir_spec newline matrix separator ERROR newline matrix separator"""
-        order = (dir_spec1, dir_spec3, dir_spec2)   # order 1, 3, 2 is intended
+        order = (dir_spec1, dir_spec3, dir_spec2)  # order 1, 3, 2 is intended
         results = [line[1:] for line in values[1:]]
         errors = [line[1:] for line in relerrs[1:]]
         return order, results, errors
 
-
-    def total_energy_bin(spatial_bins):
+    def total_energy_bin(self, spatial_bins):
         """total_energy_bin : TOTAL ENERGY newline separator spatial_bins separator"""
-        order = ("TOTAL",  *spatial_bins[0])
-        p[0] = order, spatial_bins[1], spatial_bins[2]
+        order = ("TOTAL", *spatial_bins[0])
+        return order, spatial_bins[1], spatial_bins[2]
 
-    def matrix(self, matrix: list[npt.NDArray[np.float64]] | None,  vector: npt.NDArray[np.float64]) -> list[npt.NDArray[np.float64]]:
-        if matrix is None:
-            return [vector]
-        matrix.append(vector)
-        return matrix
+    def matrix(self, *vectors: npt.NDArray[np.float64]) -> list[npt.NDArray[np.float64]]:
+        return list(vectors)
 
-    def total_matrix(self, *vectors):
-        return list[vectors]
+    def total_matrix(self, *vectors: npt.NDArray[np.float64]) -> list[npt.NDArray[np.float64]]:
+        return list(vectors)
 
     def column_data(self, column_header, matrix, total_matrix):
         """column_data : column_header matrix total_matrix
@@ -279,8 +291,8 @@ class TallyTransformer(Transformer):
         | dir_spec dir_spec dir_spec RESULT ERROR newline
         """
         if has_energy:
-            return {"header": ["ENERGY", ispec, jspec, kspec,  "RESULT", "ERROR"]}
-        return {"header": [ispec, jspec, kspec,  "RESULT", "ERROR"]}
+            return {"header": ["ENERGY", ispec, jspec, kspec, "RESULT", "ERROR"]}
+        return {"header": [ispec, jspec, kspec, "RESULT", "ERROR"]}
 
 
 BIN_REC_ORDER = {"ENERGY": 0, "X": 1, "Y": 2, "Z": 3, "TIME": 0}
@@ -294,6 +306,7 @@ meshtal_tally_parser = Lark.open_from_package(
     search_paths=("grammars",),
     regex=True,
 )
+
 
 def parse_tally(text: TextSlice) -> TallyParseResult:
     """Parses MCNP meshtal file.

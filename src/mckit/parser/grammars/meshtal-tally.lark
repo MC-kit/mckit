@@ -31,10 +31,11 @@ int: INT  // postive only
 bins: direction _NL direction _NL direction _NL energies _NL
 
 direction: _DIRECTION_THETA_LABEL vector -> direction_theta
-         | XYZR "direction:" vector -> direction_xyzr
+         | xyzr "direction:" vector -> direction_xyzr
 
 _DIRECTION_THETA_LABEL: "Theta direction (revolutions):"
 
+xyzr: XYZR
 XYZR: "X" | "Y"  | "Z" | "R"
 
 energies: _ENERGIES_LABEL vector -> energies_e
@@ -74,9 +75,9 @@ _TOTAL_ENERGY_BIN_LABEL: "Total Energy Bin"
 
 column_data: column_header matrix [_NL total_matrix] _NL*
 
-matrix : [matrix _NL] vector
+matrix : (vector _NL)+
 
-total_matrix: _TOTAL vector (_NL _TOTAL vector)*
+total_matrix: (_TOTAL vector _NL)+
 
 _TOTAL: "Total"
 
