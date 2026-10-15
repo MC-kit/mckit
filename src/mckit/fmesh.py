@@ -462,12 +462,14 @@ class FMesh:
         axis: npt.ArrayLike | None = None,
         vec: npt.ArrayLike | None = None,
         histories: int | None = None,
+        comment: str | None = None,
     ):
         self._data = np.asarray(data, dtype=np.float64)
         self._error = np.asarray(error, dtype=np.float64)
         self._name = name
         self._histories = histories
         self._particle = particle
+        self._comment = comment
         if ebins is not None:
             self._ebins = np.asarray(ebins, dtype=np.float64)
         else:
@@ -512,6 +514,10 @@ class FMesh:
     @property
     def particle(self) -> str:
         return self._particle
+
+    @property
+    def comment(self) -> str | None:
+        return self._comment
 
     @property
     def histories(self) -> int | None:
