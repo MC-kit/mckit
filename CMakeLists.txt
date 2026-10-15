@@ -92,8 +92,8 @@ endif()
 target_link_libraries(geometry_objs PUBLIC nlopt)
 include(Format)
 format(geometry_objs src/mckit/_geometry)
-# TODO @dvp: fix clang-tidy warnings allowing more checks in .clang-tidy
-# config, when ctest testing coverage reaches at least 80% include(ClangTidy)
+# TODO @dvp: fix clang-tidy warnings allowing more checks in .clang-tidy config,
+# when ctest testing coverage reaches at least 80% include(ClangTidy)
 # AddClangTidy(geometry_objs)
 
 python_add_library(geometry MODULE src/mckit/_geometry/geometrymodule.cpp

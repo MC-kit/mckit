@@ -499,7 +499,7 @@ class FMesh:
                 msg = "tbins not specified."
                 raise ValueError(msg)
             if vec is None:
-                #TODO @dvp: vec is not provided by MCNP5 (check for MCNP6 difference)
+                # TODO @dvp: vec is not provided by MCNP5 (check for MCNP6 difference)
                 vec = np.array([1.0, 0.0, 0.0], dtype=np.float64)
             self._mesh = CylMesh(origin, axis, vec, rbins, zbins, tbins)
         if self._data.shape[1:] != self._mesh.shape:

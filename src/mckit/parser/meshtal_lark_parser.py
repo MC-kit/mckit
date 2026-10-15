@@ -72,9 +72,7 @@ def parse(text: str) -> ParseResult:
     while end != -1:
         start = end
         end = text.find(" Mesh Tally Number", start + offset)
-        parse_result.tallies.append(
-            parse_tally(TextSlice(text, start, end))
-        )
+        parse_result.tallies.append(parse_tally(TextSlice(text, start, end)))
         # TODO @dvp: use multithreading
         # TODO @dvp: check if TextSlice works without copying of large amount of texts on multithreading
     return parse_result
@@ -142,6 +140,7 @@ class TallyTransformer(Transformer):
             axis = None
             vec = None
             od = BIN_REC_ORDER
+        bins = dict(boundaries.items())
         if "result" in data:
             src_perm = [od[let] for let in data["order"]]
             result = np.moveaxis(np.array(data["result"], dtype=np.float64), (0, 1, 2, 3), src_perm)
@@ -180,7 +179,7 @@ class TallyTransformer(Transformer):
             vec=vec,
             result=result,
             error=error,
-            bins=boundaries,
+            bins=bins,
         )
 
     def tally_header(
@@ -341,7 +340,7 @@ meshtal_tally_parser = Lark.open_from_package(
     # parser="earley",
     search_paths=("grammars",),
     regex=True,
-    debug=True,
+    transformer=TallyTransformer(),
 )
 
 
@@ -353,9 +352,7 @@ def parse_tally(text: TextSlice) -> TallyParseResult:
     text
     ... of a tally from an MCNP meshtal file.
     """
-    # tokens = [(t.type, t.value) for t in meshtal_tally_parser.lex(text)]
-    tree = meshtal_tally_parser.parse(text)
-    return TallyTransformer().transform(tree)
+    return cast(TallyParseResult, cast(object, meshtal_tally_parser.parse(text)))
 
 
 _BIN_NAMES = {
