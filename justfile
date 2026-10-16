@@ -32,8 +32,9 @@ export JUST_LOG := log
 
 # create venv, if not exists
 [group('dev')]
-@venv:
-    [ -d .venv ] || uv venv --python {{ default_python }}
+@venv *args="--python {{default_python}}":
+    #!/bin/bash
+    [ -d .venv ] || uv venv {{ args }}
 
 # build package
 [group('dev')]
