@@ -337,10 +337,12 @@ meshtal_tally_parser = Lark.open_from_package(
     "mckit.parser",
     "meshtal-tally.lark",
     parser="lalr",
-    # parser="earley",
     search_paths=("grammars",),
-    regex=True,
+    # regex=True,
     transformer=TallyTransformer(),
+    # for performance
+    propagate_positions=False,
+    keep_all_tokens=False,
 )
 
 
