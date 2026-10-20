@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import cast
 
+import re
+
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -67,7 +69,7 @@ def parse(text: str) -> ParseResult:
     """
     start = 0
     end = text.find(" Mesh Tally Number", start)
-    parse_result = parse_header(TextSlice(text, start, end))
+    parse_result = parse_header(text[:end])
     offset = len(" Mesh Tally Number")
     while end != -1:
         start = end
@@ -107,16 +109,42 @@ meshtal_header_parser = Lark.open_from_package(
     transformer=MeshtalHeaderTransformer(),
 )
 
+line_1_pattern = re.compile(r"^(?P<code>\w+)\s+version\s+(?P<version>\w+).*ld=(?P<build>\w+)\s+probid =\s+(?P<probid>[.0-9\/: ]+)\s*$")
 
-def parse_header(text: TextSlice | str) -> ParseResult:
-    """Parses MCNP meshtal file.
+def parse_header(text:  str) -> ParseResult:
+    """Parses MCNP meshtal file header.
 
     Parameters
     ----------
     text
     ... of MCNP meshtal file header.
     """
-    return cast(ParseResult, cast(object, meshtal_header_parser.parse(TextSlice.cast_from(text))))
+    lines = text.split("\n", maxsplit=3)
+    line_1 = lines[0]
+    match = line_1_pattern.match(line_q)
+    if not match:
+        msg = f"Unexpected meshtal header: {line_1}"
+        raise ValueError(msg)
+    code = match["code"]
+    version = match["version"]
+    build = match["build"]
+    date = match["probid"]
+    title = lines[1].strip()
+    nps_str = lines[2].split("=")[1].strip()
+    if nps_str.endswith(".00"):
+        nps = int(nps_str[:-3])
+    else:
+        msg = f"Unexpected NPS number: {nps_str}"
+        raise ValueError(msg)
+
+    return ParseResult(
+        code=code,
+        version=version,
+        build=build,
+        date=date,
+        title=title,
+        histories=nps
+    )
 
 
 # noinspection method-may-be-static
