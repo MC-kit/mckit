@@ -29,7 +29,6 @@ classifiers = [
 dependencies = [
   "click",
   "lark>=1.3.1",
-  "lark-cython>=0.0.17",
   "loguru",
   "numpy>=2.4",
   "ply",
