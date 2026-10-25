@@ -44,7 +44,7 @@ from mckit.parser.meshtal_lark_parser import parse, parse_header, parse_tally
 def test_parse_header(
     text: str, code: str, version: str, build: str, date: str, title: str, nps: float
 ) -> None:
-    parse_result = parse_header(TextSlice.cast_from(text))
+    parse_result = parse_header(text)
     assert parse_result.code == code
     assert parse_result.version == version
     assert parse_result.build == build

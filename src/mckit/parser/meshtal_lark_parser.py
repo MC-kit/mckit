@@ -80,38 +80,12 @@ def parse(text: str) -> ParseResult:
     return parse_result
 
 
-# noinspection method-may-be-static
-@v_args(inline=True)
-class MeshtalHeaderTransformer(Transformer):
-    int = int
-
-    def start(self, header: tuple[str, str, str, str], title: str, nps: int) -> ParseResult:
-        return ParseResult(*header, title=title, histories=nps)
-
-    def header(
-        self, code: Token, version: Token, build_date: Token, date: Token, time: Token
-    ) -> tuple[str, str, str, str]:
-        return code.value, version.value, build_date.value, date.value + " " + time.value
-
-    def title(self, _title: Token):
-        return _title.value.strip()
-
-    # def nps(self, _int):
-    #     return _int
-
-
-meshtal_header_parser = Lark.open_from_package(
-    "mckit.parser",
-    "meshtal-header.lark",
-    parser="lalr",
-    search_paths=("grammars",),
-    regex=True,
-    transformer=MeshtalHeaderTransformer(),
+line_1_pattern = re.compile(
+    r"^(?P<code>\w+)\s+version\s+(?P<version>[.0-9/:]+).*ld=(?P<build>\w+)\s+probid =\s+(?P<probid>[.0-9/: ]+)\s*$"
 )
 
-line_1_pattern = re.compile(r"^(?P<code>\w+)\s+version\s+(?P<version>\w+).*ld=(?P<build>\w+)\s+probid =\s+(?P<probid>[.0-9\/: ]+)\s*$")
 
-def parse_header(text:  str) -> ParseResult:
+def parse_header(text: str) -> ParseResult:
     """Parses MCNP meshtal file header.
 
     Parameters
@@ -121,7 +95,7 @@ def parse_header(text:  str) -> ParseResult:
     """
     lines = text.split("\n", maxsplit=3)
     line_1 = lines[0]
-    match = line_1_pattern.match(line_q)
+    match = line_1_pattern.match(line_1)
     if not match:
         msg = f"Unexpected meshtal header: {line_1}"
         raise ValueError(msg)
@@ -130,20 +104,10 @@ def parse_header(text:  str) -> ParseResult:
     build = match["build"]
     date = match["probid"]
     title = lines[1].strip()
-    nps_str = lines[2].split("=")[1].strip()
-    if nps_str.endswith(".00"):
-        nps = int(nps_str[:-3])
-    else:
-        msg = f"Unexpected NPS number: {nps_str}"
-        raise ValueError(msg)
-
+    nps_str = lines[2].split("=")[1].strip().removesuffix(".00")
+    nps = int(nps_str)
     return ParseResult(
-        code=code,
-        version=version,
-        build=build,
-        date=date,
-        title=title,
-        histories=nps
+        code=code, version=version, build=build, date=date, title=title, histories=nps
     )
 
 
