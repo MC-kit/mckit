@@ -18,7 +18,7 @@ logger.add(HERE / "result/meshtal_parsing.log")
 logger.info("Platform {}", platform.node())
 # @lenovo
 # mesh_path = HERE / "data/1534M.m"
-mesh_path = HERE / "data/62M.m"
+mesh_path = HERE / "data/64M.m"
 # @WS-TNT
 # mesh_path = HERE / "data/400k.m"
 logger.info("Mesh: {}", mesh_path)

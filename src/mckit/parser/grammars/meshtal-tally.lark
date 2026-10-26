@@ -80,11 +80,16 @@ _TOTAL_ENERGY_BIN_LABEL: "Total Energy Bin" _NL
 
 column_data: column_header matrix [total_matrix] _NL*
 
-matrix : (vector _NL?)+
+matrix: MATRIX
 
-total_matrix: (_TOTAL vector _NL?)+
+total_matrix: TOTAL_MATRIX
 
-_TOTAL: "Total"
+// Numeric blocks are intentionally tokenized as a whole rather than as one
+// token per float.  This is much faster for large mesh tallies (millions of
+// values) and lets the transformer convert the block with numpy in one go.
+MATRIX: /(?>[ \t]*[+-]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?(?:[ \t]++[+-]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?)*+[ \t]*+(?:\n|$))+/
+
+TOTAL_MATRIX: /(?>[ \t]*Total(?:[ \t]++[+-]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?)++[ \t]*+(?:\n|$))+/
 
 column_header : [energy] dir_spec dir_spec dir_spec "Result" "Rel Error" _NL
 
