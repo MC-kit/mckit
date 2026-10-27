@@ -1,32 +1,21 @@
-.. image:: https://img.shields.io/badge/Maintained%3F-yes-green.svg
-   :target: https://github.com/MC-kit/mckit/graphs/commit-activity
-
-.. image:: https://github.com/MC-kit/mckit/workflows/Tests/badge.svg
-   :target: https://github.com/MC-kit/mckit/actions
-
-.. image:: https://codecov.io/gh/MC-kit/mckit/branch/devel/graph/badge.svg?token=05OFBQS3RX
-   :target: https://codecov.io/gh/MC-kit/mckit
-
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-   :target: https://github.com/psf/black
-
-.. image:: https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336
-    :target: https://pycqa.github.io/isort/
-
-.. image:: https://img.shields.io/github/license/MC-kit/mckit
-   :target: https://github.com/MC-kit/mckit
-
-.. image:: https://img.shields.io/badge/security-bandit-yellow.svg
-    :target: https://github.com/PyCQA/bandit
-    :alt: Security Status
+*MCKIT*: MCNP model and results processing utilities
+====================================================
 
 
-MCKIT: MCNP model and results processing utilities
-==================================================
+
+|Maintained| |License| |Versions| |PyPI| |Docs|
+
+.. contents::
+
+
+Description
+-----------
 
 The mckit package provides a programming framework and command line tools to manipulate complex MCNP models.
 When a model is rather complex and its description occupies thousands of text lines it becomes hard to modify it and integrate several model manually.
 The package automates integration process.
+
+More details in documentation_.
 
 .. TODO The complete documentation is available in the following languages:
 
@@ -111,14 +100,41 @@ Installing from pypi:
 
 .. code-block:: bash
 
-    pip3 install mckit
+    pip install mckit
+    # or
+    uv pip install mckit 
 
 
 Installing from github.com:
 
 .. code-block:: bash
 
-    pip3 install git+https://github.com/MC-kit/mckit.git
+    pip install git+https://github.com/MC-kit/mckit.git
+    # or
+    uv pip install git+https://github.com/MC-kit/mckit.git
+
+Some specific: in development environment we use uv_, just_, ruff_.
+
+To setup development environment, run:
+
+.. code-block:: shell
+
+  just install | reinstall
+
+To build documentation, run:
+
+.. code-block:: shell
+
+   just docs        # - for local online docs rendering, while editing 
+   just docs-build  # - to build documentation 
+
+To release, run:
+
+.. code-block:: shell
+
+  just bump [major|minor|patch]  # - in `devel` branch
+  
+Then merge devel to master (via Pull Request) and if all the checks are passed create Release. Manually.
 
 
 Versioning
@@ -132,5 +148,32 @@ This software follows `Semantic Versioning`_
 Contributors
 ------------
 
-* `Roman Rodionov <mailto:r.rodionov@iterrf.ru>`_
+* `Roman Rodionov (@rrn)
 * `Dmitri Portnov <mailto:dmitri_portnov@yahoo.com>`_
+
+
+.. Links
+
+.. _documentation: https://mckit.readthedocs.io/en/latest
+.. _uv: https://github.com/astral-sh/uv
+.. _just: https://github.com/casey/just
+.. _ruff: https://github.com/astral-sh/ruff
+
+
+.. Substitutions
+
+.. |Maintained| image:: https://img.shields.io/badge/Maintained%3F-yes-green.svg
+   :target: https://github.com/MC-kit/mckit/graphs/commit-activity
+.. |Tests| image:: https://github.com/MC-kit/mckit/workflows/Tests/badge.svg
+   :target: https://github.com/MC-kit/mckit/actions?workflow=Tests
+   :alt: Tests
+.. |License| image:: https://img.shields.io/github/license/MC-kit/mckit
+   :target: https://github.com/MC-kit/mckit
+.. |Versions| image:: https://img.shields.io/pypi/pyversions/mckit
+   :alt: PyPI - Python Version
+.. |PyPI| image:: https://img.shields.io/pypi/v/mckit
+   :target: https://pypi.org/project/mckit/
+   :alt: PyPI
+.. |Docs| image:: https://readthedocs.org/projects/mckit/badge/?version=latest
+   :target: https://mckit.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
