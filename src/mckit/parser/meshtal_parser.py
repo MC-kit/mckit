@@ -1,529 +1,404 @@
 from __future__ import annotations
 
-import re
-import warnings
+from typing import cast
 
+import re
+
+from dataclasses import dataclass, field
+from itertools import chain
 from pathlib import Path
 
 import numpy as np
+import numpy.typing as npt
 
-from ply import lex, yacc
 
-from mckit.fmesh import FMesh
+# noinspection package-requirements
+from lark import Lark, TextSlice, Token, Transformer, v_args
 
-warnings.warn(
-    "mckit.parser.meshtal_parser is deprecated and will be removed in version 0.11. "
-    "Use mckit.parser.meshtal_lark_parser instead.",
-    DeprecationWarning,
-    stacklevel=2,
+from mckit import FMesh
+
+FloatArray = npt.NDArray[np.float64]
+Matrix = FloatArray
+Cube = list[Matrix]
+
+SpatialBin = tuple[tuple[str, str, str], Matrix, Matrix]
+SpatialBins = tuple[tuple[str, str, str], Cube, Cube]
+EnergyBin = tuple[
+    tuple[str, str, str, str],
+    Cube,
+    Cube,
+]
+EnergyBins = tuple[
+    tuple[str, str, str, str],
+    list[Cube],
+    list[Cube],
+]
+
+
+@dataclass
+class TallyParseResult:
+    name: int
+    comment: str
+    particle: str
+    result: FloatArray
+    error: FloatArray
+    bins: dict[str, FloatArray]
+    geom: str | None = None
+    axis: FloatArray | None = None
+    origin: FloatArray | None = None
+    vec: FloatArray | None = None
+
+
+@dataclass
+class ParseResult:
+    code: str
+    version: str
+    build: str
+    date: str
+    title: str
+    histories: int
+    tallies: list[TallyParseResult] = field(default_factory=list)
+
+_MTL_OFFSET = len(" Mesh Tally Number")
+
+def parse(text: str) -> ParseResult:
+    """Parses MCNP meshtal file.
+
+    Parameters
+    ----------
+    text
+        ... of MCNP meshtal file.
+    """
+    start = 0
+    end = text.find(" Mesh Tally Number", start)
+    parse_result = parse_header(text[:end])
+    while end != -1:
+        start = end
+        end = text.find(" Mesh Tally Number", start + _MTL_OFFSET)
+        parse_result.tallies.append(parse_tally(TextSlice(text, start, None if end == -1 else end)))
+        # TODO @dvp: use multithreading
+        # TODO @dvp: check if TextSlice works without copying of large amount of texts on multithreading
+    return parse_result
+
+
+line_1_pattern = re.compile(
+    r"^(?P<code>\w+)\s+version\s+(?P<version>[.0-9/:]+).*ld=(?P<build>\w+)\s+probid =\s+(?P<probid>[.0-9/: ]+)\s*$"
 )
 
-literals = ["+", "-", ":", "/"]
 
-KEYWORDS = [
-    "MCNP",
-    "VERSION",
-    "LD",
-    "PROBID",
-    "NEUTRON",
-    "PHOTON",
-    "ELECTRON",
-    "RESULT",
-    "RESULTS",
-    "ERROR",
-    "ERRORS",
-    "CYLINDER",
-    "ORIGIN",
-    "AXIS",
-    "TALLY",
-    "MPI",
-    "X",
-    "Y",
-    "Z",
-    "R",
-    "THETA",
-    "ENERGY",
-    "TIME",
-    "TH",
-    "TOTAL",
-]
+def parse_header(text: str) -> ParseResult:
+    """Parses MCNP meshtal file header.
+
+    Parameters
+    ----------
+    text
+    ... of MCNP meshtal file header.
+    """
+    lines = text.split("\n", maxsplit=3)
+    line_1 = lines[0]
+    match = line_1_pattern.match(line_1)
+    if not match:
+        msg = f"Unexpected meshtal header: {line_1}"
+        raise ValueError(msg)
+    code = match["code"]
+    version = match["version"]
+    build = match["build"]
+    date = match["probid"]
+    title = lines[1].strip()
+    nps_str = lines[2].split("=")[1].strip().removesuffix(".00")
+    nps = int(nps_str)
+    return ParseResult(
+        code=code, version=version, build=build, date=date, title=title, histories=nps
+    )
+
+
+def _block_text(block: Token | str) -> str:
+    value = block.value if isinstance(block, Token) else block
+    if isinstance(value, TextSlice):
+        return value.text[value.start : value.end]
+    return str(value)
+
+
+def _floats_from_block(block: Token | str) -> FloatArray:
+    """Convert a whitespace separated numeric block into a 2D numpy array.
+
+    The grammar captures complete matrices as a single token.  All numbers in
+    the block are converted at once by numpy, which is much faster than
+    creating a Lark token (and a Python ``float``) per value.
+    For columnar data representation we parse only the last two columns.
+
+    Note
+    ----
+    This is not suitable for mesh format with volumes and volumes*result columns.
+    But we rarely use this format, let's handle this when we need it.
+    """
+    text = _block_text(block)
+    lines = text.splitlines()
+    nrows = len(lines)
+    if nrows <= 1:
+        msg = "Empty matrix is found"
+        raise ValueError(msg)
+    width = 2
+    count = nrows * width
+    values = np.fromiter(
+        chain.from_iterable(line.rsplit(None, 2)[-2:] for line in lines),
+        dtype=np.float64,
+        count=count,
+    )
+    return values.reshape(nrows, width)
+
+
+def _spatial_bin_floats_from_block(block: Token | str) -> FloatArray:
+    """Convert a spatial-bin numeric block into a 2D numpy array.
+
+    The block has an extra header row (column captions) and each data row has
+    an extra leading column (row caption). Drop them.
+    """
+    text = _block_text(block)
+    # splitlines avoids extra allocations; we drop first line
+    lines = text.splitlines()
+    if len(lines) <= 1:
+        msg = "Empty matrix is found"
+        raise ValueError(msg)
+    data_lines = lines[1:]
+    nrows = len(data_lines)
+    width = len(data_lines[-1].split()) - 1
+    count = nrows * width
+    values = np.fromiter(
+        chain.from_iterable(line.split()[1:] for line in data_lines),
+        dtype=np.float64,
+        count=count,
+    )
+    return values.reshape(nrows, width)
+
+
+# noinspection method-may-be-static
+@v_args(inline=True)
+class TallyTransformer(Transformer):
+    int = int
+    float = float
+
+    def tally(self, tally_header, boundaries, data) -> TallyParseResult:
+        name, comment, particle = tally_header
+        if "ORIGIN" in boundaries:
+            geom = "CYL"
+            origin = boundaries.pop("ORIGIN")
+            assert "AXIS" in boundaries
+            axis = boundaries.pop("AXIS")
+            vec = boundaries.pop("VEC", None)
+            od = BIN_CYL_ORDER
+        else:
+            geom = "XYZ"
+            origin = None
+            axis = None
+            vec = None
+            od = BIN_REC_ORDER
+        bins = dict(boundaries.items())
+        if "result" in data:
+            # block data presentation (with spatial bins)
+            src_perm = [od[let] for let in data["order"]]
+            result = np.moveaxis(np.array(data["result"], dtype=np.float64), (0, 1, 2, 3), src_perm)
+            error = np.moveaxis(np.array(data["error"], dtype=np.float64), (0, 1, 2, 3), src_perm)
+        else:
+            # columnar data presentation
+            data = np.asarray(data["data"], dtype=np.float64)
+            shape = [0, 0, 0, 0]
+            for k in boundaries:
+                v = od[k]
+                shape[v] = boundaries[k].size
+                if k != "TIME":
+                    shape[v] -= 1
+            result = data[:, -2].reshape(shape)
+            error = data[:, -1].reshape(shape)
+        return TallyParseResult(
+            name=name,
+            comment=comment,
+            particle=particle,
+            geom=geom,
+            axis=axis,
+            origin=origin,
+            vec=vec,
+            result=result,
+            error=error,
+            bins=bins,
+        )
+
+    def tally_header(
+        self, name: int, comment: str | None, particle: str
+    ) -> tuple[int, str | None, str]:
+        return name, comment, particle
+
+    def title(self, _title: Token) -> str:
+        return _title.value.strip()
+
+    def particle(self, kind: Token) -> str:
+        return kind.value.upper()
+
+    def boundaries(self, cylinder, bins):
+        boundaries = bins
+        if cylinder is not None:
+            origin, axis, vec = cylinder
+            boundaries["ORIGIN"] = origin
+            boundaries["AXIS"] = axis
+            if vec is not None:
+                boundaries["VEC"] = vec
+        for k, v in boundaries.items():
+            boundaries[k] = np.array(v)
+        return boundaries
+
+    def cylinder(
+        self,
+        origin: FloatArray,
+        axis: FloatArray,
+        vec: FloatArray | None,
+    ) -> tuple[FloatArray, FloatArray, FloatArray | None]:
+        return origin, axis, vec
+
+    def vector(self, *floats: float) -> FloatArray:
+        return np.array(floats, dtype=np.float64)
+
+    def bins(
+        self,
+        ibins: tuple[str, FloatArray],
+        jbins: tuple[str, FloatArray],
+        kbins: tuple[str, FloatArray],
+        ebins: tuple[str, FloatArray],
+    ) -> dict[str, FloatArray]:
+        return dict((ibins, jbins, kbins, ebins))
+
+    def direction_theta(self, vector):
+        return "THETA", vector
+
+    def xyzr(self, dir_spec: Token) -> str:
+        return dir_spec.value
+
+    def direction_xyzr(self, xyzr: str, vector: FloatArray) -> tuple[str, FloatArray]:
+        return xyzr, vector
+
+    def dir_spec(self, spec: Token) -> str:
+        if spec.startswith("Th"):
+            return "THETA"
+        return spec.value
+
+    def energies_e(self, vector):
+        return "ENERGY", vector
+
+    def energies_t(self, vector):
+        return "TIME", vector
+
+    def data(self, d):
+        return d
+
+    def matrix_data(self, energy_bins: EnergyBins, _total_energy_bin: EnergyBins | None):
+        order, result, error = energy_bins
+        return {"result": result, "error": error, "order": order}
+
+    def energy_bins(self, *energy_bin: EnergyBin) -> EnergyBins:
+        result = []
+        error = []
+        order = energy_bin[0][0]
+        for o, r, e in energy_bin:
+            assert o == order
+            result.append(r)
+            error.append(e)
+        return order, result, error
+
+    def time(self, _time_spec: Token) -> str:
+        return "TIME"
+
+    def energy_bin_e(self, _from: float, _to: float, spatial_bins: SpatialBins) -> EnergyBin:
+        i, j, k = spatial_bins[0]
+        order = ("ENERGY", i, j, k)
+        return order, spatial_bins[1], spatial_bins[2]
+
+    def energy_bin_t(self, _time: float, spatial_bins: SpatialBins) -> EnergyBin:
+        i, j, k = spatial_bins[0]
+        order = ("TIME", i, j, k)
+        return order, spatial_bins[1], spatial_bins[2]
+
+    def spatial_bins(self, *spatial_bin: SpatialBin) -> SpatialBins:
+        result = []
+        error = []
+        order = spatial_bin[0][0]
+        for o, r, e in spatial_bin:
+            assert o == order
+            result.append(r)
+            error.append(e)
+        return order, result, error
+
+    def spatial_bin(
+        self,
+        dir_spec1: str,
+        _from: float,
+        _to: float,
+        dir_spec2: str,
+        dir_spec3: str,
+        values: FloatArray,
+        relerrs: FloatArray,
+    ) -> SpatialBin:
+        order = (dir_spec1, dir_spec3, dir_spec2)  # order 1, 3, 2 is intended
+        return order, values, relerrs
+
+    def total_energy_bin(self, spatial_bins: SpatialBins) -> EnergyBin:
+        i, j, k = spatial_bins[0]
+        order = ("TOTAL", i, j, k)
+        return order, spatial_bins[1], spatial_bins[2]
+
+    def matrix(self, block: Token) -> FloatArray:
+        return _floats_from_block(block)
+
+    def spatial_bin_matrix(self, block: Token) -> FloatArray:
+        return _spatial_bin_floats_from_block(block)
+
+    def total_matrix(self, block: Token) -> FloatArray:
+        text = _block_text(block).replace("Total", "")
+        block = text
+        return _floats_from_block(block)
+
+    def column_data(self, column_header, matrix, total_matrix):
+        """column_data : column_header matrix total_matrix
+        | column_header matrix
+        """
+        res = column_header
+        res["data"] = matrix
+        if total_matrix is not None:
+            res["total"] = total_matrix
+        return res
+
+    def column_header(self, has_energy, ispec, jspec, kspec):
+        """column_header : ENERGY dir_spec dir_spec dir_spec RESULT ERROR newline
+        | dir_spec dir_spec dir_spec RESULT ERROR newline
+        """
+        if has_energy:
+            return {"header": ["ENERGY", ispec, jspec, kspec, "RESULT", "ERROR"]}
+        return {"header": [ispec, jspec, kspec, "RESULT", "ERROR"]}
+
 
 BIN_REC_ORDER = {"ENERGY": 0, "X": 1, "Y": 2, "Z": 3, "TIME": 0}
 BIN_CYL_ORDER = {"ENERGY": 0, "R": 1, "Z": 2, "THETA": 3, "TIME": 0}
 
-# List of token names
-tokens = [
-    "separator",
-    "newline",
-    "int_number",
-    "flt_number",
-    "minus",
-    "title",
-    "stamp",
-    "MCNP",
-    "VERSION",
-    "LD",
-    "PROBID",
-    "NEUTRON",
-    "PHOTON",
-    "ELECTRON",
-    "RESULT",
-    "ERROR",
-    "CYLINDER",
-    "ORIGIN",
-    "AXIS",
-    "TALLY",
-    "MPI",
-    "X",
-    "Y",
-    "Z",
-    "R",
-    "THETA",
-    "ENERGY",
-    "TIME",
-    "TOTAL",
-]
-
-# precedence = (
-#    ('left', 'newline'),
-# )
-
-states = (("title", "exclusive"), ("norm", "exclusive"), ("tally", "exclusive"))
-
-BLANK_LINE = r"^\n"
-STAMP = r"[\d/:]+"
-NEWLINE = r"\n"
-FRACTION = r"\."
-EXPONENT = r"(E[-+]?\d+)"
-INT_NUMBER = r"(\d+)"
-MINUS = r"-(?=\d)"
-FLT_NUMBER = (
-    r"("
-    + INT_NUMBER
-    + r"?"
-    + FRACTION
-    + INT_NUMBER
-    + EXPONENT
-    + r"?|"
-    + INT_NUMBER
-    + FRACTION
-    + r"?"
-    + EXPONENT
-    + r"|"
-    + INT_NUMBER
-    + FRACTION
-    + r")(?=[ \n-+])"
+meshtal_tally_parser = Lark.open_from_package(
+    "mckit.parser",
+    "meshtal-tally.lark",
+    parser="lalr",
+    search_paths=("grammars",),
+    # regex=True,
+    transformer=TallyTransformer(),
+    # for performance
+    propagate_positions=False,
+    keep_all_tokens=False,
 )
-KEYWORD = r"[A-Z]+(/[A-Z]+)?"
-
-SKIP = r"[=,.() ]"
-
-t_ANY_ignore = SKIP
 
 
-def t_title_title(t):
-    r""".+"""
-    return t
+def parse_tally(text: TextSlice) -> TallyParseResult:
+    """Parses MCNP meshtal file.
 
-
-@lex.TOKEN(MINUS)
-def t_norm_tally_minus(t):
-    return t
-
-
-# noinspection PyPep8Naming
-@lex.TOKEN(BLANK_LINE)
-def t_ANY_separator(t):
-    t.lexer.lineno += 1
-    t.lexer.last_pos = t.lexer.lexpos
-    return t
-
-
-@lex.TOKEN(NEWLINE)
-def t_newline(t):
-    t.lexer.lineno += 1
-    t.lexer.last_pos = t.lexer.lexpos
-    t.lexer.begin("title")
-    return t
-
-
-@lex.TOKEN(NEWLINE)
-def t_title_newline(t):
-    t.lexer.lineno += 1
-    t.lexer.last_pos = t.lexer.lexpos
-    t.lexer.begin("norm")
-    return t
-
-
-@lex.TOKEN(NEWLINE)
-def t_norm_newline(t):
-    t.lexer.lineno += 1
-    t.lexer.last_pos = t.lexer.lexpos
-    t.lexer.begin("tally")
-    return t
-
-
-@lex.TOKEN(NEWLINE)
-def t_tally_newline(t):
-    t.lexer.lineno += 1
-    t.lexer.last_pos = t.lexer.lexpos
-    return t
-
-
-@lex.TOKEN(STAMP)
-def t_stamp(t):
-    return t
-
-
-@lex.TOKEN(KEYWORD)
-def t_keyword(t):
-    value = t.value.upper()
-    if value == "MCNP":
-        t.lexer.section_index = 0
-        meshtal_lexer.lineno = 1
-        t.lineno = 1
-        t.lexer.last_pos = 1
-    if value in KEYWORDS:
-        t.type = value
-        t.value = value
-        return t
-    return None
-
-
-@lex.TOKEN(KEYWORD)
-def t_norm_tally_keyword(t):
-    value = t.value.upper()
-    if value == "TIMES":
-        value = "TIME"
-    if value in KEYWORDS:
-        if value == "RESULTS":
-            value = "RESULT"
-        elif value == "ERRORS":
-            value = "ERROR"
-        elif value == "TH":
-            value = "THETA"
-        t.type = value
-        t.value = value
-        return t
-    return None
-
-
-# noinspection PyPep8Naming
-def t_ANY_error(t):
-    column = t.lexer.lexpos - t.lexer.last_pos + 1
-    msg = f"Illegal character {t.value[0]!r} at line {t.lexer.lineno} column {column}"
-    raise ValueError(msg, t.value[0], t.lexer.lineno, column)
-
-
-@lex.TOKEN(FLT_NUMBER)
-def t_norm_tally_flt_number(t):
-    t.value = float(t.value)
-    return t
-
-
-@lex.TOKEN(INT_NUMBER)
-def t_norm_tally_int_number(t):
-    t.value = int(t.value)
-    return t
-
-
-meshtal_lexer = lex.lex(reflags=re.MULTILINE + re.IGNORECASE + re.VERBOSE)
-
-
-def p_meshtal(p):
-    """meshtal : header newline title newline float newline separator tallies"""
-    p[0] = {
-        "date": p[1]["PROBID"],
-        "title": p[3].lstrip().rstrip(),
-        "histories": p[5],
-        "tallies": p[8],
-    }
-
-
-def p_header(p):
-    """header : MCNP VERSION stamp LD stamp PROBID stamp stamp
-    | MCNP VERSION stamp MPI LD stamp PROBID stamp stamp
+    Parameters
+    ----------
+    text
+    ... of a tally from an MCNP meshtal file.
     """
-    t = len(p)
-    p[0] = {"PROBID": p[t - 2] + p[t - 1], "VERSION": p[3]}
-
-
-# noinspection GrazieInspection
-def p_tallies(p):
-    """tallies : tallies tally
-    | tallies tally separator
-    | tally separator
-    | tally
-    """
-    if len(p) == 2:
-        p[0] = [p[1]]
-    elif isinstance(p[1], list):
-        p[1].append(p[2])
-        p[0] = p[1]
-    else:
-        p[0] = [p[1]]
-
-
-def p_tally(p):
-    """tally : tally_header separator boundaries separator data"""
-    tally = p[1]
-    boundaries = p[3]
-    tally["geom"] = "XYZ"
-    if "ORIGIN" in boundaries:
-        tally["origin"] = boundaries.pop("ORIGIN")
-        tally["geom"] = "CYL"
-    if "AXIS" in boundaries:
-        tally["axis"] = boundaries.pop("AXIS")
-    tally["bins"] = {k: np.array(v) for k, v in boundaries.items()}
-    data = p[5]
-    od = BIN_CYL_ORDER if "origin" in tally else BIN_REC_ORDER
-    if "result" in data:
-        src_perm = [od[let] for let in data["order"]]
-        tally["result"] = np.moveaxis(np.array(data["result"]), (0, 1, 2, 3), src_perm)
-        tally["error"] = np.moveaxis(np.array(data["error"]), (0, 1, 2, 3), src_perm)
-    else:
-        header = data["header"]
-        data = np.array(data["data"])
-        shape = [0, 0, 0, 0]
-        for k in tally["bins"]:
-            v = od[k]
-            shape[v] = boundaries[k].size
-            if k != "TIME":
-                shape[v] -= 1
-        if "ENERGY" in boundaries:
-            boundaries["ENERGY"] = 0.5 * (boundaries["ENERGY"][1:] + boundaries["ENERGY"][:-1])
-        result = np.empty(shape)
-        error = np.empty(shape)
-        indices = np.empty((data.shape[0], 4), dtype=int)
-        for k in boundaries:
-            if k in header:
-                indices[:, od[k]] = np.searchsorted(boundaries[k], data[:, header.index(k)]) - 1
-            else:
-                indices[:, od[k]] = np.zeros(data.shape[0])
-        res_ind = header.index("RESULT")
-        err_ind = header.index("ERROR")
-        for i in range(indices.shape[0]):
-            result[tuple(indices[i, :])] = data[i, res_ind]
-            error[tuple(indices[i, :])] = data[i, err_ind]
-        tally["result"] = result
-        tally["error"] = error
-    p[0] = tally
-
-
-# noinspection PyPep8Naming,GrazieInspection
-def p_tallY_header(p):
-    """tally_header : TALLY integer newline particle TALLY newline
-    | TALLY integer newline particle TALLY newline ENERGY newline
-    | TALLY integer newline particle TALLY newline TALLY newline
-    | TALLY integer newline particle TALLY newline TALLY newline ENERGY newline
-    """
-    p[0] = {"name": p[2], "particle": p[4]}
-
-
-def p_particle(p):
-    """particle : NEUTRON
-    | PHOTON
-    | ELECTRON
-    """
-    p[0] = p[1]
-
-
-def p_boundaries(p):
-    """boundaries : TALLY ':' newline CYLINDER ORIGIN vector AXIS vector newline bins
-    | TALLY ':' newline bins
-    """
-    boundaries = p[len(p) - 1]
-    if len(p) == 11:
-        boundaries["ORIGIN"] = p[6]
-        boundaries["AXIS"] = p[8]
-    for k, v in boundaries.items():
-        boundaries[k] = np.array(v)
-    p[0] = boundaries
-
-
-def p_bins(p):
-    """bins : direction newline direction newline direction newline energies newline"""
-    bins = {name: data for name, data in (p[1], p[3], p[5], p[7])}  # noqa: C416
-    p[0] = bins
-
-
-def p_dir_spec(p):
-    """dir_spec : X
-    | Y
-    | Z
-    | R
-    | THETA
-    """
-    p[0] = p[1]
-
-
-def p_direction(p):
-    """direction : dir_spec ':' vector"""
-    p[0] = p[1], p[3]
-
-
-def p_energies(p):
-    """energies : ENERGY ':' vector
-    | TIME ':' vector
-    """
-    p[0] = p[1], p[3]
-
-
-def p_float(p):
-    """float : '+' flt_number
-    | minus flt_number
-    | flt_number
-    | integer
-    """
-    if p[1] == "-":
-        p[0] = -p[2]
-    elif p[1] == "+":
-        p[0] = p[2]
-    else:
-        p[0] = p[1]
-
-
-def p_integer(p):
-    """integer : '+' int_number
-    | minus int_number
-    | int_number
-    """
-    if p[1] == "-":
-        p[0] = -p[2]
-    elif p[1] == "+":
-        p[0] = p[2]
-    else:
-        p[0] = p[1]
-
-
-def p_vector(p):
-    """vector : vector float
-    | float
-    """
-    if len(p) == 2:
-        p[0] = [p[1]]
-    else:
-        p[1].append(p[2])
-        p[0] = p[1]
-
-
-def p_matrix(p):
-    """matrix : matrix vector newline
-    | vector newline
-    """
-    if len(p) == 3:
-        p[0] = [p[1]]
-    else:
-        p[1].append(p[2])
-        p[0] = p[1]
-
-
-def p_total_matrix(p):
-    """total_matrix : total_matrix TOTAL vector newline
-    | TOTAL vector newline"""
-    if len(p) == 4:
-        p[0] = [p[2]]
-    else:
-        p[1].append(p[4])
-        p[0] = p[1]
-
-
-def p_data(p):
-    """data : matrix_data
-    | column_data separator
-    | column_data
-    """
-    p[0] = p[1]
-
-
-def p_column_data(p):
-    """column_data : column_header matrix total_matrix
-    | column_header matrix
-    """
-    p[0] = {"header": p[1], "data": p[2]}
-    if len(p) == 4:
-        p[0]["total"] = p[3]
-
-
-def p_column_header(p):
-    """column_header : ENERGY dir_spec dir_spec dir_spec RESULT ERROR newline
-    | dir_spec dir_spec dir_spec RESULT ERROR newline
-    """
-    n = len(p)
-    p[0] = p[1 : n - 1]
-
-
-def p_matrix_data(p):
-    """matrix_data : energy_bins total_energy_bin
-    | energy_bins
-    """
-    order, result, error = p[1]
-    p[0] = {"result": result, "error": error, "order": order}
-
-
-def p_energy_bins(p):
-    """energy_bins : energy_bins energy_bin separator
-    | energy_bin separator
-    """
-    if len(p) == 3:
-        order, result, error = p[1]
-        p[0] = order, [result], [error]
-    else:
-        order, result, error = p[2]
-        p[1][1].append(result)
-        p[1][2].append(error)
-        p[0] = order, p[1][1], p[1][2]
-
-
-def p_energy_bin(p):
-    """energy_bin : ENERGY ':' float '-' float newline separator spatial_bins
-    | TIME ':' float newline separator spatial_bins
-    """
-    t = len(p) - 1
-    order = [p[1]] + p[t][0]
-    p[0] = order, p[t][1], p[t][2]
-
-
-def p_total_energy_bin(p):
-    """total_energy_bin : TOTAL ENERGY newline separator spatial_bins separator"""
-    order = [p[1]] + p[5][0]
-    p[0] = order, p[5][1], p[5][2]
-
-
-def p_spatial_bins(p):
-    """spatial_bins : spatial_bins spatial_bin separator
-    | spatial_bin separator
-    """
-    if len(p) == 3:
-        order, result, error = p[1]
-        p[0] = order, [result], [error]
-    else:
-        order, result, error = p[2]
-        p[1][1].append(result)
-        p[1][2].append(error)
-        p[0] = order, p[1][1], p[1][2]
-
-
-def p_spatial_bin(p):
-    """spatial_bin : dir_spec ':' float '-' float newline separator TALLY RESULT ':' dir_spec dir_spec newline matrix separator ERROR newline matrix separator"""
-    order = [p[1], p[12], p[11]]
-    results = [line[1:] for line in p[14][1:]]
-    errors = [line[1:] for line in p[18][1:]]
-    p[0] = order, results, errors
-
-
-def p_error(p):
-    if p:
-        column = p.lexer.lexpos - p.lexer.last_pos + 1
-        print(f"Syntax error at token {p.type} {p.value}, line {p.lexer.lineno}, column {column}")
-    else:
-        print("Syntax error at EOF")
-
-
-try:
-    meshtal_parser = yacc.yacc(tabmodule="meshtal_tab", debug=False)
-except OSError as ex:
-    raise OSError("Cannot create PLY output") from ex
+    return cast(TallyParseResult, cast(object, meshtal_tally_parser.parse(text)))
 
 
 _BIN_NAMES = {
@@ -540,31 +415,41 @@ _BIN_NAMES = {
 def read_meshtal(filename: str | Path) -> dict[int, FMesh]:
     """Reads MCNP meshtal file.
 
-    Args:
-        filename: File that contains MCNP meshtally data.
+    Parameters
+    ----------
+    filename
+        Meshtal file name.
 
-    Returns:
+    Returns
+    -------
+    dict
         tallies Index of mesh tallies contained in the file.
     """
     if isinstance(filename, str):
         filename = Path(filename)
     with filename.open() as f:
-        text = f.read() + "\n"
-    meshtal_lexer.begin("INITIAL")
-    meshtal_data = meshtal_parser.parse(text, lexer=meshtal_lexer)
-    histories = meshtal_data["histories"]
+        text = f.read()
+    meshtal_data = parse(text)
+    histories = meshtal_data.histories
     tallies = {}
-    for t in meshtal_data["tallies"]:
-        name = t["name"]
-        particle = t["particle"]
-        data = t["result"]
-        error = t["error"]
+    for t in meshtal_data.tallies:
+        data = t.result
+        error = t.error
         kwdata = {}
-        if t.get("geom") == "CYL":
-            kwdata["origin"] = t["origin"]
-            kwdata["axis"] = t["axis"]
-            # TODO @dvp: vec is not provided by MCNP5 (check for MCNP6 difference)
-        for k, v in t["bins"].items():
+        for k, v in t.bins.items():
             kwdata[_BIN_NAMES[k]] = v
-        tallies[name] = FMesh(name, particle, data, error, histories=histories, **kwdata)
+        tallies[t.name] = FMesh(
+            t.name,
+            t.particle,
+            data,
+            error,
+            histories=histories,
+            transform=None,
+            modifier=None,
+            comment=t.comment,
+            origin=t.origin,
+            axis=t.axis,
+            vec=t.vec,
+            **kwdata,
+        )
     return tallies
