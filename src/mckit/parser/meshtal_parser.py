@@ -414,7 +414,9 @@ _BIN_NAMES = {
 }
 
 
-def read_meshtal(filename: str | Path, tally: int | set[int] | list[int] | tuple[int, ...] | None = None) -> dict[int, FMesh]:
+def read_meshtal(
+    filename: str | Path, tally: int | set[int] | list[int] | tuple[int, ...] | None = None
+) -> dict[int, FMesh]:
     """Reads MCNP meshtal file.
 
     Parameters
