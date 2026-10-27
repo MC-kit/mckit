@@ -59,6 +59,7 @@ class ParseResult:
     histories: int
     tallies: list[TallyParseResult] = field(default_factory=list)
 
+_MTL_OFFSET = len(" Mesh Tally Number")
 
 def parse(text: str) -> ParseResult:
     """Parses MCNP meshtal file.
@@ -71,10 +72,9 @@ def parse(text: str) -> ParseResult:
     start = 0
     end = text.find(" Mesh Tally Number", start)
     parse_result = parse_header(text[:end])
-    offset = len(" Mesh Tally Number")
     while end != -1:
         start = end
-        end = text.find(" Mesh Tally Number", start + offset)
+        end = text.find(" Mesh Tally Number", start + _MTL_OFFSET)
         parse_result.tallies.append(parse_tally(TextSlice(text, start, None if end == -1 else end)))
         # TODO @dvp: use multithreading
         # TODO @dvp: check if TextSlice works without copying of large amount of texts on multithreading
@@ -125,23 +125,27 @@ def _floats_from_block(block: Token | str) -> FloatArray:
     The grammar captures complete matrices as a single token.  All numbers in
     the block are converted at once by numpy, which is much faster than
     creating a Lark token (and a Python ``float``) per value.
+    For columnar data representation we parse only the last two columns.
+
+    Note
+    ----
+    This is not suitable for mesh format with volumes and volumes*result columns.
+    But we rarely use this format, let's handle this when we need it.
     """
     text = _block_text(block)
     lines = text.splitlines()
-    width = len(lines[-1].split())
-    values = np.array(text.split(), dtype=np.float64)
-    if len(lines) == 1:
-        return values.reshape(1, -1)
-    first_width = len(lines[0].split())
-    if first_width == width:
-        return values.reshape(len(lines), width)
-    # In spatial-bin matrices the first line contains only column captions,
-    # while data lines are prefixed with a row caption.  Pad the caption line
-    # on the left; it is discarded by the transformer anyway.
-    matrix = np.zeros((len(lines), width), dtype=values.dtype)
-    matrix[0, width - first_width :] = values[:first_width]
-    matrix[1:] = values[first_width:].reshape(len(lines) - 1, width)
-    return matrix
+    nrows = len(lines)
+    if nrows <= 1:
+        msg = "Empty matrix is found"
+        raise ValueError(msg)
+    width = 2
+    count = nrows * width
+    values = np.fromiter(
+        chain.from_iterable(line.rsplit(None, 2)[-2:] for line in lines),
+        dtype=np.float64,
+        count=count,
+    )
+    return values.reshape(nrows, width)
 
 
 def _spatial_bin_floats_from_block(block: Token | str) -> FloatArray:
@@ -154,7 +158,8 @@ def _spatial_bin_floats_from_block(block: Token | str) -> FloatArray:
     # splitlines avoids extra allocations; we drop first line
     lines = text.splitlines()
     if len(lines) <= 1:
-        return np.empty((0, 0), dtype=np.float64)
+        msg = "Empty matrix is found"
+        raise ValueError(msg)
     data_lines = lines[1:]
     nrows = len(data_lines)
     width = len(data_lines[-1].split()) - 1
@@ -196,7 +201,6 @@ class TallyTransformer(Transformer):
             error = np.moveaxis(np.array(data["error"], dtype=np.float64), (0, 1, 2, 3), src_perm)
         else:
             # columnar data presentation
-            header = data["header"]
             data = np.asarray(data["data"], dtype=np.float64)
             shape = [0, 0, 0, 0]
             for k in boundaries:
@@ -204,20 +208,8 @@ class TallyTransformer(Transformer):
                 shape[v] = boundaries[k].size
                 if k != "TIME":
                     shape[v] -= 1
-            if "ENERGY" in boundaries:
-                boundaries["ENERGY"] = 0.5 * (boundaries["ENERGY"][1:] + boundaries["ENERGY"][:-1])
-            result = np.empty(shape, dtype=np.float64)
-            error = np.empty(shape, dtype=np.float64)
-            indices = np.empty((data.shape[0], 4), dtype=int)
-            for k in boundaries:
-                if k in header:
-                    indices[:, od[k]] = np.searchsorted(boundaries[k], data[:, header.index(k)]) - 1
-                else:
-                    indices[:, od[k]] = np.zeros(data.shape[0])
-            res_ind = header.index("RESULT")
-            err_ind = header.index("ERROR")
-            result[indices[:, 0], indices[:, 1], indices[:, 2], indices[:, 3]] = data[:, res_ind]
-            error[indices[:, 0], indices[:, 1], indices[:, 2], indices[:, 3]] = data[:, err_ind]
+            result = data[:, -2].reshape(shape)
+            error = data[:, -1].reshape(shape)
         return TallyParseResult(
             name=name,
             comment=comment,
@@ -359,7 +351,9 @@ class TallyTransformer(Transformer):
         return _spatial_bin_floats_from_block(block)
 
     def total_matrix(self, block: Token) -> FloatArray:
-        return _floats_from_block(_block_text(block).replace("Total", ""))
+        text = _block_text(block).replace("Total", "")
+        block = text
+        return _floats_from_block(block)
 
     def column_data(self, column_header, matrix, total_matrix):
         """column_data : column_header matrix total_matrix

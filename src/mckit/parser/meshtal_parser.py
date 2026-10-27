@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import warnings
 
 from pathlib import Path
 
@@ -9,6 +10,13 @@ import numpy as np
 from ply import lex, yacc
 
 from mckit.fmesh import FMesh
+
+warnings.warn(
+    "mckit.parser.meshtal_parser is deprecated and will be removed in version 0.11. "
+    "Use mckit.parser.meshtal_lark_parser instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 literals = ["+", "-", ":", "/"]
 
