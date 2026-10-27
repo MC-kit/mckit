@@ -63,12 +63,7 @@ _ENERGY_BIN_LABEL: "Energy Bin:"
 
 spatial_bins: (spatial_bin _NL?)+
 
-spatial_bin: dir_spec "bin:" float "-" float _NL \
-             _NL \
-             "Tally Results:"  dir_spec "(across) by" dir_spec "(down)" _NL \
-             spatial_bin_matrix _NL   \
-             "Relative Errors" _NL \
-             spatial_bin_matrix _NL?
+spatial_bin: dir_spec "bin:" float "-" float _NL _NL "Tally Results:"  dir_spec "(across) by" dir_spec "(down)" _NL spatial_bin_matrix _NL "Relative Errors" _NL spatial_bin_matrix _NL?
 
 dir_spec.-10: DIR_SPEC
 
