@@ -66,9 +66,9 @@ spatial_bins: (spatial_bin _NL?)+
 spatial_bin: dir_spec "bin:" float "-" float _NL \
              _NL \
              "Tally Results:"  dir_spec "(across) by" dir_spec "(down)" _NL \
-             matrix _NL   \
+             spatial_bin_matrix _NL   \
              "Relative Errors" _NL \
-             matrix _NL?
+             spatial_bin_matrix _NL?
 
 dir_spec.-10: DIR_SPEC
 
@@ -81,6 +81,7 @@ _TOTAL_ENERGY_BIN_LABEL: "Total Energy Bin" _NL
 column_data: column_header matrix [total_matrix] _NL*
 
 matrix: MATRIX
+spatial_bin_matrix: SPATIAL_BIN_MATRIX
 
 total_matrix: TOTAL_MATRIX
 
@@ -88,6 +89,8 @@ total_matrix: TOTAL_MATRIX
 // token per float.  This is much faster for large mesh tallies (millions of
 // values) and lets the transformer convert the block with numpy in one go.
 MATRIX: /(?>[ \t]*[+-]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?(?:[ \t]++[+-]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?)*+[ \t]*+(?:\n|$))+/
+
+SPATIAL_BIN_MATRIX: /(?>[ \t]*[+-]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?(?:[ \t]++[+-]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?)*+[ \t]*+(?:\n|$))+/
 
 TOTAL_MATRIX: /(?>[ \t]*Total(?:[ \t]++[+-]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?)++[ \t]*+(?:\n|$))+/
 

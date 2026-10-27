@@ -5,6 +5,7 @@ from typing import cast
 import re
 
 from dataclasses import dataclass, field
+from itertools import chain
 from pathlib import Path
 
 import numpy as np
@@ -143,6 +144,29 @@ def _floats_from_block(block: Token | str) -> FloatArray:
     return matrix
 
 
+def _spatial_bin_floats_from_block(block: Token | str) -> FloatArray:
+    """Convert a spatial-bin numeric block into a 2D numpy array.
+
+    The block has an extra header row (column captions) and each data row has
+    an extra leading column (row caption). Drop them.
+    """
+    text = _block_text(block)
+    # splitlines avoids extra allocations; we drop first line
+    lines = text.splitlines()
+    if len(lines) <= 1:
+        return np.empty((0, 0), dtype=np.float64)
+    data_lines = lines[1:]
+    nrows = len(data_lines)
+    width = len(data_lines[-1].split()) - 1
+    count = nrows * width
+    values = np.fromiter(
+        chain.from_iterable(line.split()[1:] for line in data_lines),
+        dtype=np.float64,
+        count=count,
+    )
+    return values.reshape(nrows, width)
+
+
 # noinspection method-may-be-static
 @v_args(inline=True)
 class TallyTransformer(Transformer):
@@ -166,10 +190,12 @@ class TallyTransformer(Transformer):
             od = BIN_REC_ORDER
         bins = dict(boundaries.items())
         if "result" in data:
+            # block data presentation (with spatial bins)
             src_perm = [od[let] for let in data["order"]]
             result = np.moveaxis(np.array(data["result"], dtype=np.float64), (0, 1, 2, 3), src_perm)
             error = np.moveaxis(np.array(data["error"], dtype=np.float64), (0, 1, 2, 3), src_perm)
         else:
+            # columnar data presentation
             header = data["header"]
             data = np.asarray(data["data"], dtype=np.float64)
             shape = [0, 0, 0, 0]
@@ -319,9 +345,7 @@ class TallyTransformer(Transformer):
         relerrs: FloatArray,
     ) -> SpatialBin:
         order = (dir_spec1, dir_spec3, dir_spec2)  # order 1, 3, 2 is intended
-        results = values[1:, 1:]
-        errors = relerrs[1:, 1:]
-        return order, results, errors
+        return order, values, relerrs
 
     def total_energy_bin(self, spatial_bins: SpatialBins) -> EnergyBin:
         i, j, k = spatial_bins[0]
@@ -330,6 +354,9 @@ class TallyTransformer(Transformer):
 
     def matrix(self, block: Token) -> FloatArray:
         return _floats_from_block(block)
+
+    def spatial_bin_matrix(self, block: Token) -> FloatArray:
+        return _spatial_bin_floats_from_block(block)
 
     def total_matrix(self, block: Token) -> FloatArray:
         return _floats_from_block(_block_text(block).replace("Total", ""))
