@@ -7,7 +7,7 @@ import pytest
 
 from lark import TextSlice
 
-from mckit.parser.meshtal_lark_parser import parse, parse_header, parse_tally
+from mckit.parser.meshtal_lark_parser import parse, parse_header, parse_tally, read_meshtal
 
 
 @pytest.mark.parametrize(
@@ -5574,3 +5574,16 @@ def test_meshtal_parser(mesh_file, expected, data):
             np.testing.assert_array_almost_equal(t.bins[k], v)
         np.testing.assert_array_almost_equal(t.result, a["result"])
         np.testing.assert_array_almost_equal(t.error, a["error"])
+
+
+def test_read_meshtal_tally_selection(data):
+
+    mesh_file = data / "parser" / "fmesh.m"
+    tallies = read_meshtal(mesh_file, tally=14)
+    assert list(tallies.keys()) == [14]
+    tallies = read_meshtal(mesh_file, tally=[14])
+    assert list(tallies.keys()) == [14]
+    tallies = read_meshtal(mesh_file, tally={14})
+    assert list(tallies.keys()) == [14]
+    tallies = read_meshtal(mesh_file)
+    assert len(tallies) == 7

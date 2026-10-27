@@ -59,7 +59,9 @@ class ParseResult:
     histories: int
     tallies: list[TallyParseResult] = field(default_factory=list)
 
+
 _MTL_OFFSET = len(" Mesh Tally Number")
+
 
 def parse(text: str) -> ParseResult:
     """Parses MCNP meshtal file.
@@ -412,13 +414,17 @@ _BIN_NAMES = {
 }
 
 
-def read_meshtal(filename: str | Path) -> dict[int, FMesh]:
+def read_meshtal(filename: str | Path, tally: int | set[int] | list[int] | tuple[int, ...] | None = None) -> dict[int, FMesh]:
     """Reads MCNP meshtal file.
 
     Parameters
     ----------
     filename
         Meshtal file name.
+    tally
+        Predicate to select mesh tallies by number. If ``None``, all tallies
+        are loaded. If an integer or a collection of integers is passed, only
+        tallies with numbers matching the selection are loaded.
 
     Returns
     -------
@@ -429,10 +435,38 @@ def read_meshtal(filename: str | Path) -> dict[int, FMesh]:
         filename = Path(filename)
     with filename.open() as f:
         text = f.read()
-    meshtal_data = parse(text)
-    histories = meshtal_data.histories
-    tallies = {}
-    for t in meshtal_data.tallies:
+
+    if tally is None:
+        selected = None
+    elif isinstance(tally, int):
+        selected = {tally}
+    else:
+        selected = set(tally)
+
+    start = 0
+    end = text.find(" Mesh Tally Number", start)
+    parse_result = parse_header(text[:end])
+    offset = len(" Mesh Tally Number")
+    histories = parse_result.histories
+    tallies: dict[int, FMesh] = {}
+    while end != -1:
+        start = end
+        end = text.find(" Mesh Tally Number", start + offset)
+        segment = TextSlice(text, start, None if end == -1 else end)
+        # Extract tally number from segment
+        num_start = segment.text.find(" Mesh Tally Number", segment.start) + offset
+        # skip whitespace
+        i = num_start
+        while i < segment.end and segment.text[i].isspace():
+            i += 1
+        # read number
+        j = i
+        while j < segment.end and segment.text[j].isdigit():
+            j += 1
+        tally_num = int(segment.text[i:j]) if i < j else None
+        if selected is not None and tally_num not in selected:
+            continue
+        t = parse_tally(segment)
         data = t.result
         error = t.error
         kwdata = {}
