@@ -4,6 +4,7 @@ from typing import cast
 
 import re
 
+from collections.abc import Container
 from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
@@ -384,7 +385,7 @@ meshtal_tally_parser = Lark.open_from_package(
     "meshtal-tally.lark",
     parser="lalr",
     search_paths=("grammars",),
-    # regex=True,
+    regex=True,
     transformer=TallyTransformer(),
     # for performance
     propagate_positions=False,
@@ -415,7 +416,7 @@ _BIN_NAMES = {
 
 
 def read_meshtal(
-    filename: str | Path, tally: int | set[int] | list[int] | tuple[int, ...] | None = None
+    filename: str | Path, tally: int | Container[int] | None = None
 ) -> dict[int, FMesh]:
     """Reads MCNP meshtal file.
 
@@ -440,34 +441,35 @@ def read_meshtal(
 
     if tally is None:
         selected = None
+        filtering = False
     elif isinstance(tally, int):
         selected = {tally}
+        filtering = True
     else:
         selected = set(tally)
+        filtering = True
+
+    if filtering and selected is not None and len(selected) == 0:
+        return {}
 
     start = 0
     end = text.find(" Mesh Tally Number", start)
     parse_result = parse_header(text[:end])
-    offset = len(" Mesh Tally Number")
     histories = parse_result.histories
     tallies: dict[int, FMesh] = {}
     while end != -1:
         start = end
-        end = text.find(" Mesh Tally Number", start + offset)
+        end = text.find(" Mesh Tally Number", start + _MTL_OFFSET)
         segment = TextSlice(text, start, None if end == -1 else end)
-        # Extract tally number from segment
-        num_start = segment.text.find(" Mesh Tally Number", segment.start) + offset
-        # skip whitespace
-        i = num_start
-        while i < segment.end and segment.text[i].isspace():
-            i += 1
-        # read number
-        j = i
-        while j < segment.end and segment.text[j].isdigit():
-            j += 1
-        tally_num = int(segment.text[i:j]) if i < j else None
-        if selected is not None and tally_num not in selected:
-            continue
+        if filtering and selected is not None:
+            # Extract tally number - it's the last number/token on the first line of segment
+            first_nl = segment.text.find("\n", segment.start)
+            if first_nl == -1 or first_nl > segment.end:
+                first_nl = segment.end
+            first_line = segment.text[segment.start : first_nl]
+            tally_num = int(first_line.rsplit(None, 1)[-1])
+            if tally_num not in selected:
+                continue
         t = parse_tally(segment)
         data = t.result
         error = t.error

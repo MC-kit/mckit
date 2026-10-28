@@ -6,38 +6,41 @@ import platform
 from pathlib import Path
 from time import time
 
-from loguru import logger
-
-from mckit.parser.meshtal_lark_parser import read_meshtal as read_lark_meshtal
-from mckit.parser.meshtal_parser import read_meshtal
+from mckit import __version__
+from mckit.parser import read_meshtal
+from mckit.utils import get_last_line
 
 HERE = Path(__file__).parent
 
-logger.add(HERE / "result/meshtal_parsing.log")
 
-logger.info("Platform {}", platform.node())
-# @lenovo
-# mesh_path = HERE / "data/1534M.m"
+node = platform.node()
 mesh_path = HERE / "data/64M.m"
-# @WS-TNT
-# mesh_path = HERE / "data/400k.m"
-logger.info("Mesh: {}", mesh_path)
-logger.info("Mesh size: {}", mesh_path.stat().st_size)
+mesh_size = mesh_path.stat().st_size
 start = time()
 read_meshtal(mesh_path)
 end = time()
-elapsed_old = end - start
-logger.info("Old meshtal ET: {:.3g}", elapsed_old)
-# lenovo: 373 s
-start = time()
-read_lark_meshtal(mesh_path)
-end = time()
-elapsed_new = end - start
-logger.info("New meshtal ET: {:.3g}", elapsed_new)
-logger.info("Ratio: {:.2g}", elapsed_new / elapsed_old)
+elapsed = end - start
+results_csv = HERE / "results/mestal_parsing.csv"
+elapsed_old = None
+if results_csv.exists():
+    last_line = get_last_line(results_csv, chunk_size=256)
+    assert len(last_line) < 256
+    if last_line:
+        elapsed_old = float(last_line.rsplit(",", maxsplit=2)[-2])
 
-# prof.run("read_meshtal(mesh_path)", "results/read_meshtal.prof")
-prof.run("read_lark_meshtal(mesh_path)", "results/lark_meshtal.prof")
+with results_csv.open(mode="a", encoding="utf8") as fid:
+    print(
+        __version__,
+        node,
+        mesh_path.relative_to(HERE),
+        mesh_size,
+        elapsed,
+        elapsed / elapsed_old if elapsed_old else 1.0,
+        file=fid,
+        sep=",",
+    )
+
+prof.run("read_meshtal(mesh_path)", "results/lark_meshtal.prof")
 
 # View results (in results dir) with snakeviz:
 # uvx snakeviz lark_meshtal.prof
