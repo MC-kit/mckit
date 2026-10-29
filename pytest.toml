@@ -24,8 +24,8 @@ addopts = [
     "--doctest-modules",
     "--failed-first",
     "--ignore=setup.py",
-#    "--numprocesses=logical",
-    "--numprocesses=0",  # for debugging
+    "--numprocesses=logical",
+  #    "--numprocesses=0",  # for debugging
     "--quiet",
     "--strict-markers",
     "--tb=short",
