@@ -78,7 +78,10 @@ analyze = [
   "rich>=15",
   "sqlglot>=28.10.1,<31",
 ]
-mypy = [ "mypy>=1.2", "pep8-naming>=0.12.1", "types-setuptools>=80.9.0.20250529" ]
+mypy = [
+  "mypy>=1.2",
+  "types-setuptools>=80.9.0.20250529",
+]
 pre_commit = [ "pre-commit>=4.3" ]
 pylint = [ "pylint", "pylint-per-file-ignores>=3.2.1" ]
 pyright = [ "pyright>=1.1.406" ]
