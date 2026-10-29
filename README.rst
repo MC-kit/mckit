@@ -148,7 +148,7 @@ This software follows `Semantic Versioning`_
 Contributors
 ------------
 
-* `Roman Rodionov (@rrn)
+* `Roman Rodionov <https://github.com/rorni>`_
 * `Dmitri Portnov <mailto:dmitri_portnov@yahoo.com>`_
 
 
