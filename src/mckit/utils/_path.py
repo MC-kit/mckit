@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import os
+
 from collections.abc import Callable, Generator
+from os import PathLike
 from pathlib import Path
 
 
@@ -71,7 +74,7 @@ def mkpath(path: str | Path) -> Path:
 
 def check_file(path: str | Path, *, follow_symlinks: bool = True) -> Path:
     path = mkpath(path)
-    if not path.is_file(follow_symlinks=follow_symlinks):
+    if not path.is_file(follow_symlinks=follow_symlinks):  # ty: ignore[unknown-argument]
         msg = f"Not a file: {path}"
         raise ValueError(msg)
     return path
@@ -162,3 +165,75 @@ def join_dirs(root_dir: Path, *subdirectories: str) -> Generator[Path]:
     Generator for Joined path to subdirectories
     """
     return (root_dir / sub for sub in subdirectories)
+
+
+_16M = 1 << 24
+
+
+def get_last_line(
+    file_path: PathLike, chunk_size: int = 1024, encoding="utf-8", errors="strict"
+) -> str:
+    r"""Read last line of a file.
+
+    The last line is the text between the last "\n" and end of file or,
+    if "\n" is the last character in the file, between the previous "\n"
+    and the last one (including it). The "\r" character, if present,
+    is removed to mimic text reading.
+
+    Parameters
+    ----------
+    file_path
+        ... to the file to read from
+    chunk_size
+        where to start to search fro the last line
+
+    Returns
+    -------
+    str
+        the last line from the file
+    """
+    with Path(file_path).open("rb") as f:
+        f.seek(0, os.SEEK_END)
+        file_size = f.tell()
+
+        if file_size == 0:
+            return ""
+
+        position = file_size
+        last_line = b""
+
+        while position > 0:
+            chunk_size = min(chunk_size, position)
+            position -= chunk_size
+            f.seek(position)
+            chunk = f.read(chunk_size)
+
+            # Check for newline in the chunk
+            end = len(chunk)
+
+            if chunk[-1] == 10:
+                if last_line:
+                    break
+                end -= 1
+
+            newline_pos = chunk.rfind(b"\n", 0, end)
+
+            if newline_pos != -1:
+                last_line = chunk[newline_pos + 1 :] + last_line
+                break
+
+            last_line = chunk + last_line
+
+            if chunk_size < _16M:  # pragma: no cover
+                chunk_size *= 2
+
+        # Handle case where file has no newlines or single line
+        if not last_line and position == 0:  # pragma: no cover
+            f.seek(0)
+            last_line = f.read()
+
+    if len(last_line) > 2 and last_line[-1] == 10 and last_line[-2] == 13:
+        # mimic text reading
+        last_line = last_line[:-2] + b"\n"
+
+    return last_line.decode(encoding=encoding, errors=errors)

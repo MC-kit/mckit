@@ -32,8 +32,9 @@ export JUST_LOG := log
 
 # create venv, if not exists
 [group('dev')]
-@venv:
-    [ -d .venv ] || uv venv --python {{ default_python }}
+@venv *args="--python {{default_python}}":
+    #!/bin/bash
+    [ -d .venv ] || uv venv {{ args }}
 
 # build package
 [group('dev')]
@@ -192,7 +193,7 @@ typeguard *args:
 
 [group('style')]
 @pylint:
-    uv run --no-dev --group lint pylint --recursive=y --output-format colorized src tests
+    uv run --no-dev --group pylint pylint --recursive=y --output-format colorized src tests
 
 [group('style')]
 @pyright:
@@ -201,7 +202,7 @@ typeguard *args:
 # Lint with ty
 [group('style')]
 @ty:
-    uv run --no-dev --group style ty check 
+    uv run --no-dev --group ty ty check 
 
 [group('style')]
 @basedpyright:

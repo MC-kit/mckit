@@ -61,7 +61,7 @@ jobs:
       - name: ✅ Check out the repository
         uses: actions/checkout@v7
 
-      - uses: prefix-dev/setup-pixi@v0.10.0
+      - uses: prefix-dev/setup-pixi@v0.10.2
         with:
           pixi-version: v0.74.0
           cache: true
@@ -84,7 +84,7 @@ jobs:
         with:
           fetch-depth: 1
           submodules: 'true'
-      - uses: prefix-dev/setup-pixi@v0.10.0
+      - uses: prefix-dev/setup-pixi@v0.10.2
         with:
           pixi-version: v0.74.0
           cache: true
@@ -135,7 +135,7 @@ jobs:
           fetch-depth: 1
           submodules: 'true'
 
-      - uses: prefix-dev/setup-pixi@v0.10.0
+      - uses: prefix-dev/setup-pixi@v0.10.2
         with:
           pixi-version: v0.74.0
           cache: true

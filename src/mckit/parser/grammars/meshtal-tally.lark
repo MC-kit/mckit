@@ -1,0 +1,104 @@
+?start: tally
+
+tally: tally_header _NL boundaries _NL data
+
+_NL: /\n/
+
+tally_header: _MESH_TALLY_NUMBER_LABEL int _NL [title] particle _NL _TALLY_IS_MODIFIED? _USED_AS_USER_BIN~0..2
+
+_MESH_TALLY_NUMBER_LABEL: "Mesh Tally Number"
+
+title: EVERYTHING _NL
+
+EVERYTHING.-10: /[^\n]+/
+
+particle: _PARTICLE_LABEL? KIND "mesh tally."
+
+_PARTICLE_LABEL: /This is (?:a decay|an|a)/
+
+_TALLY_IS_MODIFIED: "This mesh tally is modified by a dose response function." _NL
+_USED_AS_USER_BIN: /(?:Energy|Time) binning is used as user bin./ _NL
+
+boundaries: _BOUNDARIES_LABEL _NL [cylinder] bins
+
+_BOUNDARIES_LABEL: "Tally bin boundaries:"
+
+cylinder: _CYLINDER_LABEL  vector ", axis in"  vector "direction" [", VEC direction"   vector] _NL
+
+_CYLINDER_LABEL: "Cylinder origin at"
+
+vector: float+
+float: SIGNED_FLOAT | INT
+int: INT  // postive only
+
+bins: direction _NL direction _NL direction _NL energies _NL
+
+direction: _DIRECTION_THETA_LABEL vector -> direction_theta
+         | xyzr "direction:" vector -> direction_xyzr
+
+_DIRECTION_THETA_LABEL: "Theta direction (revolutions):"
+
+xyzr: XYZR
+XYZR: "X" | "Y"  | "Z" | "R"
+
+energies: _ENERGIES_LABEL vector -> energies_e
+        | _TIME ":" vector -> energies_t
+
+_ENERGIES_LABEL: "Energy bin boundaries:"
+
+_TIME: /Decay? [Tt]ime(?:s)?/
+
+data: matrix_data
+    | column_data
+
+matrix_data: energy_bins [total_energy_bin] 
+
+energy_bins: (energy_bin _NL?)+
+
+energy_bin: _ENERGY_BIN_LABEL float "-" float _MEV _NL _NL spatial_bins -> energy_bin_e
+          | _TIME ":" float _NL _NL spatial_bins -> energy_bin_t
+
+_MEV: "MeV"
+_ENERGY_BIN_LABEL: "Energy Bin:"
+
+spatial_bins: (spatial_bin _NL?)+
+
+spatial_bin: dir_spec "bin:" float "-" float _NL _NL "Tally Results:"  dir_spec "(across) by" dir_spec "(down)" _NL spatial_bin_matrix _NL "Relative Errors" _NL spatial_bin_matrix _NL?
+
+dir_spec.-10: DIR_SPEC
+
+DIR_SPEC: XYZR | /Th(?:eta)?/
+
+total_energy_bin: _TOTAL_ENERGY_BIN_LABEL _NL spatial_bins _NL?
+
+_TOTAL_ENERGY_BIN_LABEL: "Total Energy Bin" _NL
+
+column_data: column_header matrix [total_matrix] _NL*
+
+matrix: MATRIX
+spatial_bin_matrix: SPATIAL_BIN_MATRIX
+
+total_matrix: TOTAL_MATRIX
+
+// Numeric blocks are intentionally tokenized as a whole rather than as one
+// token per float.  This is much faster for large mesh tallies (millions of
+// values) and lets the transformer convert the block with numpy in one go.
+MATRIX: /(?>[ \t]*[+-]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?(?:[ \t]++[+-]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?)*+[ \t]*+(?:\n|$))+/
+
+SPATIAL_BIN_MATRIX: /(?>[ \t]*[+-]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?(?:[ \t]++[+-]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?)*+[ \t]*+(?:\n|$))+/
+
+TOTAL_MATRIX: /(?>[ \t]*Total(?:[ \t]++[+-]?(?:\d[\d.]*|\.\d+)(?:[eE][+-]?\d+)?)++[ \t]*+(?:\n|$))+/
+
+column_header : [energy] dir_spec dir_spec dir_spec "Result" "Rel Error" _NL
+
+?energy: ENERGY
+ENERGY: "Energy"
+
+KIND: "neutron"|"photon"|"electron"
+
+// Numbers
+%import common.SIGNED_FLOAT
+%import common.INT
+// Separators / whitespace (ignored)
+%import common.WS_INLINE
+%ignore WS_INLINE
