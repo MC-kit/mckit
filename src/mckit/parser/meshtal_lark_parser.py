@@ -1,18 +1,13 @@
 from __future__ import annotations
 
-from typing import cast
-
 import re
-
-from collections.abc import Container
 from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
+from typing import cast, Iterable
 
 import numpy as np
 import numpy.typing as npt
-
-
 # noinspection package-requirements
 from lark import Lark, TextSlice, Token, Transformer, v_args
 
@@ -78,7 +73,7 @@ def parse(text: str) -> ParseResult:
     while end != -1:
         start = end
         end = text.find(" Mesh Tally Number", start + _MTL_OFFSET)
-        parse_result.tallies.append(parse_tally(TextSlice(text, start, None if end == -1 else end)))
+        parse_result.tallies.append(parse_tally(TextSlice(text, start, len(text) if end == -1 else end)))
         # TODO @dvp: use multithreading
         # TODO @dvp: check if TextSlice works without copying of large amount of texts on multithreading
     return parse_result
@@ -416,7 +411,7 @@ _BIN_NAMES = {
 
 
 def read_meshtal(
-    filename: str | Path, tally: int | Container[int] | None = None
+    filename: str | Path, tally: int | set[int] | Iterable[int] | None = None
 ) -> dict[int, FMesh]:
     """Reads MCNP meshtal file.
 
@@ -442,12 +437,14 @@ def read_meshtal(
     if tally is None:
         selected = None
         filtering = False
-    elif isinstance(tally, int):
-        selected = {tally}
-        filtering = True
     else:
-        selected = set(tally)
         filtering = True
+        if isinstance(tally, int):
+            selected = {tally}
+        elif isinstance(tally, set):
+            selected = tally
+        else:
+            selected = set(tally)
 
     if filtering and selected is not None and len(selected) == 0:
         return {}
@@ -460,7 +457,7 @@ def read_meshtal(
     while end != -1:
         start = end
         end = text.find(" Mesh Tally Number", start + _MTL_OFFSET)
-        segment = TextSlice(text, start, None if end == -1 else end)
+        segment = TextSlice(text, start, len(text) if end == -1 else end)
         if filtering and selected is not None:
             # Extract tally number - it's the last number/token on the first line of segment
             first_nl = segment.text.find("\n", segment.start)
