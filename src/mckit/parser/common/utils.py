@@ -33,14 +33,13 @@ def ensure_upper(text: str):
 
 
 def drop_c_comments(text: str) -> str:
-    has_comments = RE_C_COMMENT.search(text)
-    if has_comments:
+    if RE_C_COMMENT.search(text):
         return RE_C_COMMENT.sub("", text)
     return text
 
 
 def drop_eol_comments(text: str) -> str:
-    if RE_EOL_COMMENT.search(text) is not None:
+    if RE_EOL_COMMENT.search(text):
         return RE_EOL_COMMENT.sub("", text)
     return text
 
