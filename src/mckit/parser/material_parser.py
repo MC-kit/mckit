@@ -1,99 +1,100 @@
 from __future__ import annotations
 
-import re
 from typing import Any
+
+import re
 
 import mckit.parser.common.utils as cmn
 
+from mckit import Composition, Element
 from mckit.material import Composition, Element
 from mckit.parser.common.utils import drop_comments
 
 
-def parse(text) -> Composition:
-    """Simple parser for MCNP material specification."""
+def parse(text: str) -> Composition:
+    """Parse  MCNP material specification.
 
-    # Drop comments (already done by drop_comments)
+    Parameters
+    ----------
+    text : str
+        Material specification.
+
+    Returns
+    -------
+    Composition: representation of an MCNP material.
+
+    Raises
+    ------
+    ValueError: on invalid material definition.
+    """
     text = drop_comments(text).strip()
-
-    material_match = re.match(r"^[mM](\d+)", text)
-    if not material_match:
-        raise ValueError("Material definition must start with 'm<number>'")
-    name = int(material_match.group(1))  # Extract number after 'm'
-    text = text[material_match.end():]
-
-    # Parse the first line to get material name
-    lines = text.strip().splitlines()
-    if not lines:
-        raise ValueError("Empty material definition")
-
-    # Process all lines
-    fractions = []
-    options = {}
-
-    # Process each line (skip first one which is the material definition)
-    for _line in lines:
-        line = _line.strip()
-
-        # Check for option (gas, estep, cond, nlib, plib, etc.)
-        # Handle format like "gas=1" or "gas 1"
-        _collect_options(line, options)
+    name, pos = _extract_number(text)
+    options = _collect_options(text, pos, name)
+    return _create_composition(_extract_fractions(text, pos), options)
 
 
-        # Try to match isotope numbers with optional libraries and fractions
-        # Pattern to find pairs of (isotope, fraction)
-        pattern = r"(\d+(?:\.\d+[cdepuy])?)\s+([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)"
-
-        # Find all matches in the line
-        matches = re.findall(pattern, line)
-
-        for isotope_str, frac_str in matches:
-            try:
-                frac = float(frac_str)
-
-                # Check for library specification (isotope.number format)
-                if "." in isotope_str:
-                    isotope_part, lib = isotope_str.split(".")
-                    isotope = int(isotope_part)  # This is the full ZAID
-                    fractions.append((Element(isotope, lib=lib), frac))
-                else:
-                    isotope = int(isotope_str)
-                    fractions.append((Element(isotope, lib=None), frac))
-            except (ValueError, TypeError):
-                # Skip invalid matches
-                continue
-
-    # Build composition both from atomic and weight fractions
+def _create_composition(
+    fractions: list[tuple[Element, float]], options: dict[str, int | str]
+) -> Composition:
     atomic = []
     weight = []
-
     for el, fraction in fractions:
         if fraction > 0.0:
             atomic.append((el, fraction))
         else:
-            # This shouldn't happen in simple format but let's be defensive
             weight.append((el, -fraction))
-
-    if not options:
-        options = {}
-
-    options["name"] = name
-
-    # For the specific test cases that were failing with multiple isotopes on same line,
-    # we can handle them by processing each line properly and parsing them correctly.
-    # The Composition constructor expects a list of tuples, so let's just pass it
     return Composition(atomic=atomic, weight=weight, **options)
 
 
-def _collect_options(line: str, options: dict[Any, Any]):
-    option_match = re.findall(r"(gas|estep|cond)\s*=?\s*(\d+)", line, re.IGNORECASE)
-    if option_match:
-        for option_key, value in option_match:
-            option_key = cmn.ensure_upper(option_key)
-            options[option_key] = int(value)
+_FRACTION_PATTERN = re.compile(
+    r"(?P<zai>\d+)(?:\.(?P<lib>\S+))?\s+(?P<frac>[-+0-9eE.]+)", re.DOTALL
+)
 
-    # Check for nlib, plib, pnlib, elib
-    lib_match = re.findall(r"((?:n|p|pn|e)lib)\s*[= ]?\s*(\S+)", line, re.IGNORECASE)
-    if lib_match:
-        for option_key, value in lib_match:
-            option_key = cmn.ensure_upper(option_key)
+
+def _extract_fractions(text: str, pos: int) -> list[tuple[Element, float]]:
+    return [_create_element(match) for match in _FRACTION_PATTERN.finditer(text, pos=pos)]
+
+
+def _create_element(match: re.Match) -> tuple[Element, float]:
+    isotope = match.group("zai")
+    lib = match.group("lib")
+    frac_str = match.group("frac")
+    return Element(int(isotope), lib=lib), float(frac_str)
+
+
+_MATERIAL_LABEL_PATTERN = re.compile(r"^[mM](\d+)")
+
+
+def _extract_number(text: str) -> tuple[int, int]:
+    if material_match := _MATERIAL_LABEL_PATTERN.match(text):
+        name = int(material_match.group(1))
+        return name, material_match.end() + 1
+    raise ValueError("Material definition must start with 'm<number>'")
+
+
+def _collect_options(text: str, pos: int, name: int) -> dict[str, str | int]:
+    options: dict[str, int | str] = {"name": name}
+    _collect_int_option(text, pos, options)
+    _collect_str_option(text, pos, options)
+    return options
+
+
+_STR_OPTION_PATTERN = re.compile(r"((?:n|p|pn|e)lib)\s*=?\s*(\S+)", re.IGNORECASE)
+
+
+def _collect_str_option(text: str, pos: int, options: dict[Any, Any]):
+    """Check for nlib, plib, pnlib, elib."""
+    if lib_match := _STR_OPTION_PATTERN.findall(text, pos=pos):
+        for _option_key, value in lib_match:
+            option_key = cmn.ensure_upper(_option_key)
             options[option_key] = value
+
+
+_INT_OPTION_PATTERN = re.compile(r"(gas|estep|cond)\s*=?\s*(\d+)", re.IGNORECASE)
+
+
+def _collect_int_option(text: str, pos: int, options: dict[Any, Any]):
+    if option_match := _INT_OPTION_PATTERN.findall(text, pos=pos):
+        for _option_key, value in option_match:
+            option_key = cmn.ensure_upper(_option_key)
+            options[option_key] = int(value)

@@ -97,5 +97,6 @@ def test_material_with_ampersand(data):
     assert len(actual) == 34
 
 
-if __name__ == "__main__":
-    pytest.main()
+def test_bad_spec() -> None:
+    with pytest.raises(ValueError, match="Material definition must start with"):
+        mp.parse("xxx")

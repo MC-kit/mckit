@@ -1,13 +1,18 @@
 from __future__ import annotations
 
+from typing import cast
+
 import re
+
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
-from typing import cast, Iterable
 
 import numpy as np
 import numpy.typing as npt
+
+
 # noinspection package-requirements
 from lark import Lark, TextSlice, Token, Transformer, v_args
 
@@ -73,7 +78,9 @@ def parse(text: str) -> ParseResult:
     while end != -1:
         start = end
         end = text.find(" Mesh Tally Number", start + _MTL_OFFSET)
-        parse_result.tallies.append(parse_tally(TextSlice(text, start, len(text) if end == -1 else end)))
+        parse_result.tallies.append(
+            parse_tally(TextSlice(text, start, len(text) if end == -1 else end))
+        )
         # TODO @dvp: use multithreading
         # TODO @dvp: check if TextSlice works without copying of large amount of texts on multithreading
     return parse_result
