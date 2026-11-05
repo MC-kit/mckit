@@ -199,10 +199,10 @@ typeguard *args:
 @pyright:
     uv run --no-dev --group pyright pyright src tests
 
-# Lint with ty
+# Check typing with ty
 [group('style')]
 @ty:
-    uv run --no-dev --group ty ty check 
+    uv run --no-dev --group ty ty check
 
 [group('style')]
 @basedpyright:
