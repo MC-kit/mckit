@@ -7,30 +7,6 @@ import mckit.parser.transformation_parser as trp
 from mckit.transformation import Transformation
 
 
-@pytest.mark.parametrize(
-    "text,expected_types,expected_values",
-    [
-        (
-            "tr1 0 0 1.0",
-            ["NAME", "INTEGER", "INTEGER", "FLOAT"],
-            [(1, False), 0, 0, 1.0],
-        ),
-        (
-            "*tr1 0 0 1.0",
-            ["NAME", "INTEGER", "INTEGER", "FLOAT"],
-            [(1, True), 0, 0, 1.0],
-        ),
-    ],
-)
-def test_transformation_lexer(text, expected_types, expected_values):
-    lexer = trp.Lexer()
-    tokens = list(lexer.tokenize(text))
-    actual_types = [t.type for t in tokens]
-    assert actual_types == expected_types
-    actual_values = [t.value for t in tokens]
-    assert actual_values == expected_values
-
-
 # noinspection PyTypeChecker
 @pytest.mark.parametrize(
     "text,expected",

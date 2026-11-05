@@ -31,7 +31,7 @@ mckit.parser.material\_parser module
 mckit.parser.mcnp\_input\_sly\_parser module
 --------------------------------------------
 
-.. automodule:: mckit.parser.mcnp_input_sly_parser
+.. automodule:: mckit.parser.mcnp_input_parser
    :members:
    :undoc-members:
    :show-inheritance:

@@ -15,7 +15,7 @@ import tomli_w as tw
 
 from mckit import Universe
 from mckit.cli._logging import logger
-from mckit.parser.mcnp_input_sly_parser import ParseResult, from_file
+from mckit.parser.mcnp_input_parser import ParseResult, from_file
 from mckit.universe import collect_transformations
 
 from .common import save_mcnp

@@ -13,7 +13,7 @@ import mckit as mk
 
 from mckit import Transformation
 from mckit.cli._logging import logger
-from mckit.parser.mcnp_input_sly_parser import ParseResult, from_file
+from mckit.parser.mcnp_input_parser import ParseResult, from_file
 from mckit.utils import filter_dict
 
 from .common import save_mcnp

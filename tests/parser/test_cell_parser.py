@@ -1,6 +1,3 @@
-# Set output for parser debugging before importing Parser classes.
-# from sly import Parser as SlyParser
-# SlyParser.debugfile = "sly-debug.out"
 from __future__ import annotations
 
 import pytest
@@ -49,22 +46,6 @@ def create_cell(
         options["TRCL"] = transformation
 
     return Body(geometry, **options)
-
-
-@pytest.mark.parametrize(
-    "text,expected_types,expected_values",
-    [
-        ("1 0", ["INTEGER", "ZERO"], [1, 0]),
-        ("1 1 -0.083", ["INTEGER", "INTEGER", "FLOAT"], [1, 1, -0.083]),
-    ],
-)
-def test_cell_lexer(text, expected_types, expected_values):
-    lexer = clp.Lexer()
-    tokens = list(lexer.tokenize(text))
-    actual_types = [f.type for f in tokens]
-    actual_values = [f.value for f in tokens]
-    assert actual_types == expected_types
-    assert actual_values == expected_values
 
 
 @pytest.mark.parametrize(

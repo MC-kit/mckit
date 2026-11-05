@@ -32,7 +32,6 @@ dependencies = [
   "loguru",
   "numpy>=2.4",
   "regex>=2026.9.29",
-  "sly",
   "tomli-w",
 ]
 [[project.authors]]
