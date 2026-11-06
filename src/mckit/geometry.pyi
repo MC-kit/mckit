@@ -1,5 +1,3 @@
-
-
 import numpy as np
 
 from numpy.typing import ArrayLike
@@ -9,7 +7,6 @@ from .types import NPFloatArray, NPInt8Array, NPInt32Array
 class Surface:
     def test_points(self, points: ArrayLike) -> NPInt8Array: ...
     def test_box(self, box: Box) -> int: ...
-
 
 class Box:
     def __init__(
@@ -45,7 +42,6 @@ class Box:
     def split(self, *, dir: str = ..., ratio: float = ...) -> tuple[Box, Box]: ...  # noqa: A002
     def test_points(self, points: ArrayLike) -> NPInt32Array: ...
 
-
 class Shape:
     # Operation codes, see enum Operation in _geometry/shape.h:
     # "I" - intersection of Shapes, "C" - complement of a Surface,
@@ -65,7 +61,6 @@ class Shape:
     def collect_statistics(self, box: Box, min_vol: float) -> None: ...
     def get_stat_table(self) -> np.ndarray[tuple[int, int], np.dtype[np.uint8]]: ...
 
-
 class Plane(Surface):
     def __init__(self, norm: ArrayLike, offset: float, /) -> None: ...
     @property
@@ -73,14 +68,12 @@ class Plane(Surface):
     @property
     def _k(self) -> float: ...
 
-
 class Sphere(Surface):
     def __init__(self, center: ArrayLike, radius: float, /) -> None: ...
     @property
     def _center(self) -> NPFloatArray: ...
     @property
     def _radius(self) -> float: ...
-
 
 class Cylinder(Surface):
     def __init__(self, point: ArrayLike, axis: ArrayLike, radius: float, /) -> None: ...
@@ -90,7 +83,6 @@ class Cylinder(Surface):
     def _axis(self) -> NPFloatArray: ...
     @property
     def _radius(self) -> float: ...
-
 
 class Cone(Surface):
     def __init__(self, apex: ArrayLike, axis: ArrayLike, ta: float, sheet: int, /) -> None: ...
@@ -103,7 +95,6 @@ class Cone(Surface):
     @property
     def _sheet(self) -> int: ...
 
-
 class GQuadratic(Surface):
     def __init__(self, m: ArrayLike, v: ArrayLike, k: float, factor: float, /) -> None: ...
     @property
@@ -114,7 +105,6 @@ class GQuadratic(Surface):
     def _k(self) -> float: ...
     @property
     def _factor(self) -> float: ...
-
 
 class Torus(Surface):
     def __init__(
@@ -131,18 +121,24 @@ class Torus(Surface):
     @property
     def _b(self) -> float: ...
 
-
 class RCC(Surface):
     def __init__(self, cylinder: Cylinder, top: Plane, bot: Plane, /) -> None: ...
     @property
     def surfaces(self) -> tuple[Surface, ...]: ...
 
-
 class BOX(Surface):
-    def __init__(self, plane1: Plane, plane2: Plane, plane3: Plane, plane4: Plane, plane5: Plane, plane6: Plane, /) -> None: ...
+    def __init__(
+        self,
+        plane1: Plane,
+        plane2: Plane,
+        plane3: Plane,
+        plane4: Plane,
+        plane5: Plane,
+        plane6: Plane,
+        /,
+    ) -> None: ...
     @property
     def surfaces(self) -> tuple[Surface, ...]: ...
-
 
 EX: NPFloatArray
 EY: NPFloatArray

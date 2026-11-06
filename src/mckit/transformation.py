@@ -9,8 +9,7 @@ import numpy as np
 
 from numpy import dtype, float64, ndarray
 
-# noinspection PyUnresolvedReferences,PyPackageRequirements
-from mckit.geometry import ORIGIN  # pyright: ignore[reportMissingImports, reportMissingModuleSource]
+from mckit.geometry import ORIGIN
 
 from .card import Card
 from .utils import compute_hash
