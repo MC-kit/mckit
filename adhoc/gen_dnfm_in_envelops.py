@@ -7,7 +7,7 @@ from pathlib import Path
 import dotenv
 
 from mckit.cli._logging import logger as LOG
-from mckit.parser.mcnp_input_sly_parser import Card, Universe, from_file
+from mckit.parser.mcnp_input_parser import Card, Universe, from_file
 from mckit.utils import check_if_all_paths_exist, get_root_dir
 
 dotenv.load_dotenv(dotenv_path=".env", verbose=True)

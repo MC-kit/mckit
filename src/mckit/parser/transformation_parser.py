@@ -1,110 +1,106 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-import sly
+import re
 
 import mckit.parser.common.utils as cmn
 
-from mckit.parser.common import Lexer as LexerBase
 from mckit.parser.common.utils import drop_c_comments, extract_comments
 from mckit.transformation import Transformation
 
-if TYPE_CHECKING:
-    from typing import ClassVar
-
-
-# noinspection PyPep8Naming,PyUnboundLocalVariable,PyUnresolvedReferences,SpellCheckingInspection
-class Lexer(LexerBase):
-    tokens: ClassVar = {NAME, FLOAT, INTEGER}
-
-    NAME = r"\s{0,5}\*?tr\d+"
-
-    @_(r"\s{0,5}\*?tr\d+")
-    def NAME(self, t):
-        if t.value[0].isspace():
-            t.value = t.value.lstrip()
-        if t.value[0] == "*":
-            in_degrees = True
-            name = int(t.value[3:])
-        else:
-            in_degrees = False
-            name = int(t.value[2:])
-        t.value = name, in_degrees
-        return t
-
-    @_(cmn.FLOAT)
-    def FLOAT(self, t):
-        return LexerBase.on_float(t, use_zero=False)
-
-    @_(cmn.INTEGER)
-    def INTEGER(self, t):
-        return LexerBase.on_integer(t, use_zero=False)
-
-
-# noinspection PyUnresolvedReferences
-class Parser(sly.Parser):
-    tokens = Lexer.tokens
-
-    @_("NAME transform_params")
-    def transformation(self, p):
-        name, in_degrees = p.NAME
-        translation, rotation, inverted = p.transform_params
-        return Transformation(
-            translation=translation,
-            rotation=rotation,
-            indegrees=in_degrees,
-            inverted=inverted,
-            name=name,
-        )
-
-    @_("translation rotation")
-    def transform_params(self, p):
-        rotation, inverted = p.rotation
-        return p.translation, rotation, inverted
-
-    @_("translation")
-    def transform_params(self, p):
-        return p.translation, None, False
-
-    @_("float float float")
-    def translation(self, p):
-        return list(p)
-
-    # TODO dvp: check what to do, if transformation is specified with default values using the MCNP J shortcuts?
-
-    @_("float float float float float float float float float INTEGER")
-    def rotation(self, p):
-        m = p[9]
-        if m not in {-1, 1}:
-            msg = f"Invalid M option value {m}"
-            raise ValueError(msg)
-        return list(p)[:-1], m == -1
-
-    @_(
-        "float float float float float float float float float",
-        "float float float float float float",
-        "float float float float float",
-        "float float float",
-    )
-    def rotation(self, p):
-        return list(p), False
-
-    @_("FLOAT")
-    def float(self, p):
-        return p.FLOAT
-
-    @_("INTEGER")
-    def float(self, p):
-        return float(p.INTEGER)
-
 
 def parse(text: str) -> Transformation:
+    """Parse MCNP transformation specification.
+
+    Parameters
+    ----------
+    text : str
+        Transformation specification.
+
+    Returns
+    -------
+    Transformation: representation of an MCNP transformation.
+
+    Raises
+    ------
+    ValueError: on invalid transformation definition.
+    """
     text = drop_c_comments(text)
     text, _comments, trailing_comments = extract_comments(text)
-    lexer = Lexer()
-    parser = Parser()
-    result: Transformation = parser.parse(lexer.tokenize(text))
+    result = _parse_transformation(text)
     if trailing_comments:
         result.options["comment"] = trailing_comments
     return result
+
+
+def _parse_transformation(text: str) -> Transformation:
+    header_match = _TRANSFORMATION_CARD_PATTERN.match(text)
+    if header_match is None:
+        raise cmn.ParseError(
+            f"Transformation specification must start with 'tr<number>', got: '{text.strip()}'"
+        )
+    name = int(header_match.group("name"))
+    indegrees = header_match.group("star") is not None
+    translation, rotation, inverted = _collect_params(_collect_numbers(text, header_match.end()))
+    return Transformation(
+        translation=translation,
+        rotation=rotation,
+        indegrees=indegrees,
+        inverted=inverted,
+        name=name,
+    )
+
+
+_TRANSFORMATION_CARD_PATTERN = re.compile(
+    r"""^\s{0,5}(?P<star>\*)?tr(?P<name>\d+)   # transformation label, like *tr2
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+_NUMBER_PATTERN = re.compile(cmn.FLOAT, re.IGNORECASE)
+
+_PURE_INTEGER_PATTERN = re.compile(r"[-+]?\d+$")
+
+
+def _collect_numbers(text: str, pos: int) -> list[tuple[float, bool]]:
+    """Find numbers in the rest of the card.
+
+    Returns
+    -------
+        List of pairs: value and flag, whether the number is written as a plain integer.
+    """
+    matches = _NUMBER_PATTERN.finditer(text, pos=pos)
+    return [
+        (float(match.group()), _PURE_INTEGER_PATTERN.match(match.group()) is not None)
+        for match in matches
+    ]
+
+
+_ROTATION_LENGTHS = frozenset({3, 5, 6, 9})
+
+
+def _collect_params(
+    numbers: list[tuple[float, bool]],
+) -> tuple[list[float], list[float] | None, bool]:
+    """Extract translation and rotation vectors from found numbers.
+
+    The first 3 numbers are translation, the rest are rotation,
+    optionally followed with an integer M option (only -1 or 1).
+    """
+    if len(numbers) < 3:
+        raise cmn.ParseError(
+            "Transformation specification requires a translation vector of 3 numbers"
+        )
+    translation = [value for value, _is_int in numbers[:3]]
+    tail = numbers[3:]
+    if not tail:
+        return translation, None, False
+    if len(tail) not in _ROTATION_LENGTHS | {10}:
+        raise cmn.ParseError(f"Invalid number of transformation rotation parameters: {len(tail)}")
+    if len(tail) == 10:  # 9 rotation numbers followed with the M option
+        value, is_int = tail[-1]
+        if not is_int:
+            raise cmn.ParseError("The M option should be specified as an integer")
+        if value not in {-1.0, 1.0}:
+            raise ValueError(f"Invalid M option value {int(value)}")
+        return translation, [value for value, _is_int in tail[:-1]], value == -1.0
+    return translation, [value for value, _is_int in tail], False

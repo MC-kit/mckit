@@ -7,23 +7,27 @@ from typing import TYPE_CHECKING, Any, Final
 # noinspection PyPackageRequirements
 import numpy as np
 
-# noinspection PyUnresolvedReferences,PyPackageRequirements
-from mckit.geometry import ORIGIN  # pyright: ignore[reportMissingImports]
+from numpy import dtype, float64, ndarray
+
+from mckit.geometry import ORIGIN
 
 from .card import Card
 from .utils import compute_hash
 from .utils.tolerance import DEFAULT_TOLERANCE_ESTIMATOR, EstimatorType, MaybeClose
 
 if TYPE_CHECKING:
+    from numpy.typing import ArrayLike
+
     from mckit.types import NPFloatArray
 
 __all__ = ["IDENTITY_ROTATION", "Transformation", "calc_z_rotation"]
 
 IDENTITY_ROTATION: Final[NPFloatArray] = np.eye(3, dtype=np.float64)
-
 ANGLE_TOLERANCE = 0.001
 COS_TH = np.sin(ANGLE_TOLERANCE)
 ZERO_COS_TOLERANCE = 2.0e-16
+DEEGRES_TO_RADIANS = np.pi / 180.0
+RADIANS_TO_DEGREES = 180.0 / np.pi
 
 
 # noinspection GrazieInspection
@@ -32,10 +36,10 @@ class Transformation(Card, MaybeClose):
 
     Parameters
     ----------
-    translation : array_like[float]
+    translation
         Translation vector of the transformation. Default: zero vector - no
         translation.
-    rotation : array_like[float]
+    rotation
         Represents rotation matrix of the transformation. It can be either
         matrix itself with shape 3x3 or a list of transformation parameters.
         In the last case the parameters are treated as follows: 1-3 - ex', 4-6 -
@@ -43,16 +47,16 @@ class Transformation(Card, MaybeClose):
         coordinate system. Basis vectors should be pairwise orthogonal. If there
         is a small non-orthogonality - less than 0.001 radian - vectors are
         corrected. Default: identity matrix - non rotation.
-    indegrees : bool
+    indegrees
         How rotation parameters should be treated. If True - rotation matrix
         parameters are given in degrees. Otherwise, rotation parameters are basis
         vectors of local coordinate system. Default: False.
-    inverted : bool
+    inverted
         How translation vector should be interpreted. If True - it is the origin
         of local coordinate system defined in the global one. Otherwise - the
         origin of global coordinate system defined in the local one.
         Default: False
-    options : dict
+    options
         Other options, like name, comment, etc.
 
     Methods
@@ -74,35 +78,39 @@ class Transformation(Card, MaybeClose):
 
     def __init__(
         self,
-        translation=ORIGIN,
-        rotation=None,
-        indegrees=False,
-        inverted=False,
-        **options: Any,
-    ):
+        translation: ArrayLike = ORIGIN,
+        rotation: ArrayLike | None = None,
+        indegrees: bool = False,
+        inverted: bool = False,
+        **options: dict[str, Any],
+    ) -> None:
         Card.__init__(self, **options)
+        translation = _get_translation_as_array(translation)
+        self._u = self._setup_rotation(rotation, indegrees)
+        self._setup_translation(inverted, translation)
+        self._hash = compute_hash(self._t, self._u)
 
-        if translation is not ORIGIN:
-            translation = np.asarray(translation, dtype=float)
-            if translation.shape != (3,):
-                raise ValueError(f"Translation #{self.name()}: wrong length of translation vector.")
-
-        if rotation is None:
-            u = IDENTITY_ROTATION
-        else:
-            u = np.asarray(rotation, dtype=np.float64())
-            if indegrees:
-                u = np.cos(np.multiply(u, np.pi / 180.0))
-            u = self._setup_rotation_matrix(u)
-        self._u = u
+    def _setup_translation(self, inverted: bool, translation: NPFloatArray) -> None:
+        self._check_translation(translation)
         if inverted:
-            if u is IDENTITY_ROTATION:
+            if self._u is IDENTITY_ROTATION:
                 self._t = -translation
             else:
-                self._t = -np.dot(u, translation)
+                self._t = -np.dot(self._u, translation)
         else:
             self._t = translation.copy()
-        self._hash = compute_hash(self._t, self._u)
+
+    def _check_translation(self, translation: ndarray[tuple[Any, ...], dtype[float64]]):
+        if translation.shape != (3,):
+            raise ValueError(f"Translation #{self.name()}: wrong length of translation vector.")
+
+    def _setup_rotation(self, rotation: ArrayLike | None, indegrees: bool) -> NPFloatArray:
+        if rotation is None:
+            return IDENTITY_ROTATION
+        u = np.asarray(rotation, dtype=np.float64())
+        if indegrees:
+            u = np.cos(np.multiply(u, DEEGRES_TO_RADIANS))
+        return self._setup_rotation_matrix(u)
 
     def mcnp_words(self, pretty: bool = False) -> list[str]:
         """Prepare words to output this Transformation with MCNP label."""
@@ -120,10 +128,9 @@ class Transformation(Card, MaybeClose):
             words.append(" ")
             words.append(f"{v:.10g}")  # TODO dvp: check if precision 13 is necessary
         if self._u is not IDENTITY_ROTATION:
-            for v in self._u.transpose().ravel():
+            for v in np.arccos(self._u.transpose().ravel()) * RADIANS_TO_DEGREES:
                 words.append(" ")
-                _value = np.arccos(v) * 180 / np.pi
-                words.append(f"{_value:.10g}")
+                words.append(f"{v:.10g}")
         return words
 
     def apply2gq(
@@ -304,6 +311,12 @@ class Transformation(Card, MaybeClose):
 
     def __setitem__(self, key, value):
         self.options[key] = value
+
+
+def _get_translation_as_array(translation: ArrayLike) -> NPFloatArray:
+    if translation is ORIGIN:
+        return ORIGIN
+    return np.asarray(translation, dtype=np.float64)
 
 
 def calc_z_rotation(theta: float) -> NPFloatArray:

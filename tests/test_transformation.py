@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from mckit.geometry import ORIGIN
-from mckit.transformation import IDENTITY_ROTATION, Transformation
+from mckit.transformation import IDENTITY_ROTATION, Transformation, calc_z_rotation
 
 
 @pytest.mark.parametrize(
@@ -371,3 +371,39 @@ def test_set_item(trtr, tr_no, options):
         tr[k] = v
     for k, v in options.items():
         assert tr[k] == v
+
+
+class TestIsCloseTo:
+    def test_self(self):
+        tr = Transformation(translation=[1, 0, 0])
+        assert tr.is_close_to(tr)
+
+    def test_not_a_transformation(self):
+        tr = Transformation(translation=[1, 0, 0])
+        assert not tr.is_close_to(np.array([1, 0, 0]))
+
+    def test_close(self):
+        tr1 = Transformation(translation=[1, 0, 0])
+        tr2 = Transformation(translation=[1.0 + 1.0e-15, 0, 0])
+        assert tr1.is_close_to(tr2)
+
+    def test_not_close(self):
+        tr1 = Transformation(translation=[1, 0, 0])
+        tr2 = Transformation(translation=[1.0 + 1.0e-9, 0, 0])
+        assert not tr1.is_close_to(tr2)
+
+
+def test_calc_z_rotation():
+    theta = np.pi / 6
+    actual = calc_z_rotation(theta)
+    expected = np.array(
+        [
+            [np.cos(theta), -np.sin(theta), 0],
+            [np.sin(theta), np.cos(theta), 0],
+            [0, 0, 1],
+        ],
+        dtype=np.float64,
+    )
+    np.testing.assert_array_almost_equal(actual, expected)
+    # Zero rotation angle gives the identity matrix
+    np.testing.assert_array_almost_equal(calc_z_rotation(0.0), IDENTITY_ROTATION)

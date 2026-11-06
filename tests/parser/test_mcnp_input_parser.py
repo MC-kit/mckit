@@ -4,7 +4,7 @@ from typing import NamedTuple
 
 import pytest
 
-from mckit.parser.mcnp_input_sly_parser import ParseResult, from_file, from_text
+from mckit.parser.mcnp_input_parser import ParseResult, from_file, from_text
 
 
 class TExpected(NamedTuple):

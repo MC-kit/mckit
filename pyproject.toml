@@ -4,7 +4,7 @@ requires = [ "numpy", "scikit-build-core>=0.13" ]
 
 [project]
 name = "mckit"
-version = "0.10.4"
+version = "0.10.5"
 description = "Tools to process MCNP models and results"
 readme = "README.rst"
 keywords = [ "mckit", "MCNP" ]
@@ -32,7 +32,6 @@ dependencies = [
   "loguru",
   "numpy>=2.4",
   "regex>=2026.9.29",
-  "sly",
   "tomli-w",
 ]
 [[project.authors]]
@@ -54,12 +53,12 @@ Repository = "https://github.com/MC-kit/mckit"
 dev = [ { include-group = "style" }, { include-group = "test" } ]
 test = [
   "psutil>=7.2.2",
-  "pytest>=9.0.3",
+  "pytest>=9",
   "pytest-benchmark>=5.2.3",
   "pytest-cov>=7.1",
-  "pytest-mock>=3.15.1",
+  "pytest-mock>=3.15",
   "pytest-xdist>=3.8",
-  "xdoctest>=1.3.2",
+  "xdoctest>=1.3",
 ]
 docs = [
   "esbonio>=2",
@@ -71,17 +70,14 @@ docs = [
   "sphinx-togglebutton>=0.4",
 ]
 analyze = [
-  "duckdb>=1.5.5,<3",
+  "duckdb>=1.5.5",
   "marimo>=0.23.14",
-  "polars>=1.43,<3",
-  "pyarrow>=25,<27",
+  "polars>=2",
+  "pyarrow>=26",
   "rich>=15",
-  "sqlglot>=28.10.1,<31",
+  "sqlglot>=30",
 ]
-mypy = [
-  "mypy>=1.2",
-  "types-setuptools>=80.9.0.20250529",
-]
+mypy = [ "mypy>=1.2", "pep8-naming>=0.12.1", "types-setuptools>=80.9.0.20250529" ]
 pre_commit = [ "pre-commit>=4.3" ]
 pylint = [ "pylint", "pylint-per-file-ignores>=3.2.1" ]
 pyright = [ "pyright>=1.1.406" ]

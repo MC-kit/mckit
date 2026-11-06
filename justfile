@@ -167,7 +167,7 @@ export JUST_LOG := log
 # coverage to html
 [group('test')]
 @coverage-html:
-    uv run --no-dev --group test pytest --cov --cov-report html:htmlcov
+    -uv run --no-dev --group test pytest --cov --cov-report html:htmlcov
     open htmlcov/index.html
 
 # check correct typing at runtime
@@ -199,10 +199,10 @@ typeguard *args:
 @pyright:
     uv run --no-dev --group pyright pyright src tests
 
-# Lint with ty
+# Check typing with ty
 [group('style')]
 @ty:
-    uv run --no-dev --group ty ty check 
+    uv run --no-dev --group ty ty check
 
 [group('style')]
 @basedpyright:
@@ -215,12 +215,12 @@ typeguard *args:
 # Draw UML diagrams
 [group('style')]
 @pyreverse:
-    uv run --no-dev --group lint pyreverse --project mckit-nuclides --colorized --output puml --output-directory .pyreverse --ignore data --source-roots src/**/*.py
+    uv run --no-dev --group pylint pyreverse --project mckit-nuclides --colorized --output puml --output-directory .pyreverse --ignore data --source-roots src/**/*.py
 
 # Find code duplicates
 [group('style')]
 @symilar:
-    uv run --no-dev --group lint symilar src/**/*.py
+    uv run --no-dev --group pylint symilar src/**/*.py
 
 # Check rst-texts
 [group('docs')]

@@ -9,6 +9,9 @@ from mckit.utils import (
     compute_hash,
     filter_dict,
     get_decades,
+    is_in,
+    is_sorted,
+    make_hashable,
     prettify_float,
     significant_digits,
 )
@@ -113,3 +116,46 @@ def test_make_hash(values):
 def test_prettify_float(value, expected):
     actual = prettify_float(value)
     assert actual == expected
+
+
+def test_are_equal_iterables_vs_not_iterable():
+    assert are_equal([1, 2, 3], 3) is False
+    assert are_equal([1, 2, 3], (1, 2, 3)) is True
+
+
+def test_is_in():
+    assert is_in(None, 1) is False
+    assert is_in(3, 3) is True
+    assert is_in(3, 4) is False
+
+
+def test_is_in_with_different_containers():
+    assert is_in("abc", "b") is True
+    assert is_in((1, 2), 2) is True
+    assert is_in({1, 2}, 2) is True
+    assert is_in(lambda x: x > 0, 1) is True
+    assert is_in(lambda x: x > 0, -1) is False
+
+
+def test_make_hashable_unsupported_type():
+    class Unhashable:
+        __hash__ = None
+
+    with pytest.raises(TypeError, match="hashable"):
+        make_hashable(Unhashable())
+
+
+def test_compute_hash_of_nothing():
+    assert compute_hash() == 0
+
+
+@pytest.mark.parametrize(
+    "array, expected",
+    [
+        (np.array([1.0, 2.0, 3.0]), True),
+        (np.array([1.0, 3.0, 2.0]), False),
+        (np.array([1.0, 1.0]), False),
+    ],
+)
+def test_is_sorted(array, expected):
+    assert is_sorted(array) == expected

@@ -2,33 +2,10 @@ from __future__ import annotations
 
 import pytest
 
+import mckit.parser.common.utils as cmn
 import mckit.parser.transformation_parser as trp
 
 from mckit.transformation import Transformation
-
-
-@pytest.mark.parametrize(
-    "text,expected_types,expected_values",
-    [
-        (
-            "tr1 0 0 1.0",
-            ["NAME", "INTEGER", "INTEGER", "FLOAT"],
-            [(1, False), 0, 0, 1.0],
-        ),
-        (
-            "*tr1 0 0 1.0",
-            ["NAME", "INTEGER", "INTEGER", "FLOAT"],
-            [(1, True), 0, 0, 1.0],
-        ),
-    ],
-)
-def test_transformation_lexer(text, expected_types, expected_values):
-    lexer = trp.Lexer()
-    tokens = list(lexer.tokenize(text))
-    actual_types = [t.type for t in tokens]
-    assert actual_types == expected_types
-    actual_values = [t.value for t in tokens]
-    assert actual_values == expected_values
 
 
 # noinspection PyTypeChecker
@@ -59,6 +36,25 @@ def test_transformation_lexer(text, expected_types, expected_values):
 def test_transformation_parser(text, expected):
     actual = trp.parse(text)
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "text,msg",
+    [
+        ("2 0 0 1", "Transformation specification must start with 'tr<number>'"),
+        ("tr2", "Transformation specification requires a translation vector of 3 numbers"),
+        ("tr2 1 2 3 4", "Invalid number of transformation rotation parameters: 1"),
+        ("tr2 1 2 3 1 2 3 4 5 6 7 8 9 1.5", "The M option should be specified as an integer"),
+    ],
+)
+def test_bad_transformation_spec(text, msg):
+    with pytest.raises(cmn.ParseError, match=msg):
+        trp.parse(text)
+
+
+def test_wrong_m_option_value():
+    with pytest.raises(ValueError, match="Invalid M option value 10"):
+        trp.parse("tr2 1 2 3 1 2 3 4 5 6 7 8 9 10")
 
 
 if __name__ == "__main__":

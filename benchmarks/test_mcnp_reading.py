@@ -12,10 +12,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from mckit.parser.mcnp_input_sly_parser import from_text
+from mckit.parser.mcnp_input_parser import from_text
 
 if TYPE_CHECKING:
-    from mckit.parser.mcnp_input_sly_parser import ParseResult
+    from mckit.parser.mcnp_input_parser import ParseResult
 
 
 def test_sly_mcnp_reading(benchmark, clite_text) -> None:

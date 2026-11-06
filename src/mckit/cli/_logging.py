@@ -24,14 +24,14 @@ class InterceptHandler(logging.Handler):
         # Get corresponding loguru level if it exists
         try:
             level = logger.level(record.levelname).name
-        except ValueError:
+        except ValueError:  # pragma: no cover
             level = record.levelno
 
         # Find caller from where originated the logged message
         frame, depth = logging.currentframe(), 2
 
         def _check_frame(_frame) -> FrameType:
-            if _frame is None:
+            if _frame is None:  # pragma: no cover
                 raise ValueError("Failed to capture logging frame")
             return _frame
 
@@ -67,5 +67,5 @@ def init_logger(logfile, quiet, verbose, *, stderr_format: str = MCKIT_CONSOLE_L
             backtrace=False,
             diagnose=False,
         )
-    if logfile:
+    if logfile:  # pragma: no cover
         logger.add(logfile, rotation="1d", retention=3, level="TRACE")

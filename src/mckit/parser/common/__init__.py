@@ -8,7 +8,6 @@ from .composition_index import (
     DummyComposition,
     DummyMaterial,
 )
-from .lexer import Lexer
 from .surface_index import DummySurface, SurfaceDummyIndex, SurfaceNotFoundError, SurfaceStrictIndex
 from .transformation_index import (
     DummyTransformation,
@@ -46,7 +45,6 @@ __all__ = [
     "DummyMaterial",
     "DummySurface",
     "DummyTransformation",
-    "Lexer",
     "ParseError",
     "SurfaceDummyIndex",
     "SurfaceNotFoundError",

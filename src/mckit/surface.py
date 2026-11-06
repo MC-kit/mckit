@@ -43,6 +43,8 @@ from .utils.tolerance import DEFAULT_TOLERANCE_ESTIMATOR, FLOAT_TOLERANCE, Maybe
 if TYPE_CHECKING:
     from numpy.typing import ArrayLike
 
+    from mckit.types import NPFloatArray
+
 
 # noinspection PyUnresolvedReferences,PyPackageRequirements
 __all__ = [
@@ -232,7 +234,7 @@ def _create_sphere(axis, kind, options, params) -> Sphere:
     return Sphere(r0, R, **options)
 
 
-def _create_sq(options: dict[str, Any], params: npt.NDArray) -> GQuadratic:
+def _create_sq(options: dict[str, Any], params: NPFloatArray) -> GQuadratic:
     A, B, C, D, E, F, G, x0, y0, z0 = params
     m = np.diag([A, B, C])
     v = 2 * np.array([D - A * x0, E - B * y0, F - C * z0])
@@ -244,7 +246,7 @@ def _create_plane(
     axis: np.ndarray,
     kind: str,
     options: dict[str, Any],
-    params: npt.NDArray,
+    params: NPFloatArray,
 ) -> Plane:
     if len(kind) == 2:
         return Plane(axis, -params[0], **options)
@@ -287,11 +289,6 @@ def create_replace_dictionary(
     return replace
 
 
-def _drop_empty_transformation(options: dict[str, Any]) -> None:
-    if "transform" in options and not options["transform"]:  # empty transformation option
-        del options["transform"]
-
-
 class Surface(Card, MaybeClose):
     """Base class for all surface classes.
 
@@ -313,7 +310,6 @@ class Surface(Card, MaybeClose):
         Args:
             options: kwargs - properties for the `Surface` card.
         """
-        _drop_empty_transformation(options)
         Card.__init__(self, **options)
 
     @abstractmethod

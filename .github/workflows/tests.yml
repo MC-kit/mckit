@@ -43,7 +43,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DEFAULT_PYTHON: "3.13"
+  DEFAULT_PYTHON: "3.14"
   UV_LINK_MODE: "copy"
   UV_LOCKED: 1
 

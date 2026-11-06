@@ -16,5 +16,6 @@
   "reportMissingTypeStubs": false,
   "pythonVersion": "3.14",
   "pythonPlatform": "Linux",
+  "stubPath": "src/mckit",
   "useLibraryCodeForTypes": true
 }

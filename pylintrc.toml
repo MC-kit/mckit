@@ -73,14 +73,14 @@ jobs = 0
 
 # List of plugins (as comma separated values of python module names) to load,
 # usually to register additional checkers.
-# load-plugins = [ "pylint_per_file_ignores" ]
+load-plugins = [ "pylint_per_file_ignores" ]
 
 # Pickle collected data for later comparisons.
 #persistent = true
 
 # Resolve imports to .pyi stubs if available. May reduce no-member messages and
 # increase not-an-iterable messages.
-# prefer-stubs =
+prefer-stubs = "yes"
 
 # Minimum Python version to use for version dependent checks. Will default to the
 # version used to run pylint.
