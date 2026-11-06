@@ -1,0 +1,25 @@
+// Grammar for cell geometry specification - a surface combination in
+// constructive solid geometry terms.
+// Elements are surface references with an optional sign:
+// positive references keep space on the positive surface side,
+// negative - on the negative side.
+// Bodies can be referenced with a '#' (complement) prefix.
+
+%ignore /[ \t\n,=]+/
+
+start: expr
+
+// Union of intersected terms, binds lower than implicit intersection.
+expr: term (":" term)*
+
+// Implicit intersection of factors.
+term: factor+
+
+factor: element
+      | "(" expr ")"
+
+element: "#" "(" expr ")" -> element_complement
+       | "#" SIGNED_INT   -> element_complement_num
+       | SIGNED_INT       -> element_num
+
+SIGNED_INT: /[+-]?[0-9]+/
