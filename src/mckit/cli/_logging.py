@@ -67,5 +67,5 @@ def init_logger(logfile, quiet, verbose, *, stderr_format: str = MCKIT_CONSOLE_L
             backtrace=False,
             diagnose=False,
         )
-    if logfile:   # pragma: no cover
+    if logfile:  # pragma: no cover
         logger.add(logfile, rotation="1d", retention=3, level="TRACE")

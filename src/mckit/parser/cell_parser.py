@@ -153,7 +153,7 @@ def _collect_attributes(text: str, pos: int, transformations: Index) -> dict[str
         keyword_match = _CELL_KEYWORD_PATTERN.search(text, pos)
         if keyword_match is None:
             junk = text[pos:]
-            if junk.strip(): # pragma: no cover
+            if junk.strip():  # pragma: no cover
                 raise cmn.ParseError(
                     f"Could not parse cell attributes specification: '{junk.strip()}'"
                 )

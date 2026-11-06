@@ -75,13 +75,17 @@ def test_parser_geometry(text, expected, surfaces):
 @pytest.mark.parametrize(
     "text, message, surfaces, compositions",
     [
-        pytest.param("m1 0 1", "Cell specification must start with a cell number", [], [], id="bad-name"),
+        pytest.param(
+            "m1 0 1", "Cell specification must start with a cell number", [], [], id="bad-name"
+        ),
         pytest.param("1 x 1", "Cell specification must define material", [], [], id="no-material"),
         pytest.param("1 1.5 1", "Invalid material specification '1.5'", [], [], id="bad-material"),
         pytest.param(
             "1 1", "Composition #1: missed density specification", [], [1], id="no-density"
         ),
-        pytest.param("1 0 U=1", "Cell specification must define geometry", [], [], id="no-geometry"),
+        pytest.param(
+            "1 0 U=1", "Cell specification must define geometry", [], [], id="no-geometry"
+        ),
         pytest.param(
             "1 0 (1",
             "Could not parse cell geometry specification '\\(1'",
@@ -124,9 +128,7 @@ def test_parser_geometry(text, expected, surfaces):
             [],
             id="imp-no-values",
         ),
-        pytest.param(
-            "1 0 1 TRCL=x", "TRCL attribute '=x' is not valid", [1], [], id="bad-trcl"
-        ),
+        pytest.param("1 0 1 TRCL=x", "TRCL attribute '=x' is not valid", [1], [], id="bad-trcl"),
         pytest.param(
             "1 0 1 trcl (1 2)",
             "Cell transformation requires a translation vector of 3 numbers",
