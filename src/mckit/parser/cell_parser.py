@@ -33,6 +33,7 @@ def intern_cell_word(word: str):
     return word
 
 
+# noinspection bad-argument-type
 def parse(
     text: str,
     cells: Index | None = None,
@@ -82,6 +83,7 @@ def parse(
     text, _comments, trailing_comments = cmn.extract_comments(text)
     name, pos = _extract_name(text)
     if like_match := _LIKE_HEADER_PATTERN.match(text, pos):
+        # noinspection unresolved-references
         reference_body = cells[int(like_match.group("reference"))]
         options = filter_dict(reference_body.options, "original", "comment", "comment_above")
         options.update(_collect_attributes(text, like_match.end(), transformations))
@@ -151,7 +153,7 @@ def _collect_attributes(text: str, pos: int, transformations: Index) -> dict[str
         keyword_match = _CELL_KEYWORD_PATTERN.search(text, pos)
         if keyword_match is None:
             junk = text[pos:]
-            if junk.strip():
+            if junk.strip(): # pragma: no cover
                 raise cmn.ParseError(
                     f"Could not parse cell attributes specification: '{junk.strip()}'"
                 )
@@ -191,7 +193,7 @@ def _float_attribute(
 def _fcl_attribute(_key: str, segment: str, _star: bool, _transformations: Index) -> dict[str, Any]:
     #
     #  FCL card: Forced Collision
-    #  See MCNP 6.3.1 Theory.. , 5.12.9, p.566
+    #  See MCNP 6.3.1 Theory... 5.12.9, p.566
     #  Example: FCL:N=0.5
     #
     number_matches = list(_NUMBER_PATTERN.finditer(segment))
@@ -293,10 +295,7 @@ def _collect_numbers(text: str, pos: int) -> list[tuple[float, bool]]:
         List of pairs: value and flag, whether the number is written as a plain integer.
     """
     matches = _NUMBER_PATTERN.finditer(text, pos=pos)
-    return [
-        (float(match.group()), _PURE_INTEGER_PATTERN.match(match.group()) is not None)
-        for match in matches
-    ]
+    return [_clean_number(match.group()) for match in matches]
 
 
 def _clean_number(raw: str) -> tuple[float, bool]:
@@ -304,6 +303,7 @@ def _clean_number(raw: str) -> tuple[float, bool]:
     return value, _PURE_INTEGER_PATTERN.match(raw) is not None
 
 
+# noinspection method-may-be-static
 @v_args(inline=True)
 class GeometryTransformer(Transformer):
     """Builds reverse Polish notation for a cell geometry specification.

@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 import mckit.parser.common.transformation_index as ti
+import mckit.parser.common.utils as cmn
 import mckit.parser.surface_parser as srp
 
 from mckit.surface import create_surface
@@ -69,6 +70,19 @@ def test_absent_surface_with_raise_strategy(text, msg_contains):
 def test_absent_surface_with_dummy_strategy(text, expected):
     actual = srp.parse(text, transformations=ti.TransformationDummyIndex())
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "text,msg",
+    [
+        ("kjk", "Surface specification must start with"),
+        ("*1 P", "Surface parameters are not specified in '\\*1 P'"),
+        ("1 2 NN", "NN is not a valid surface type"),
+    ],
+)
+def test_bad_surface_spec(text, msg):
+    with pytest.raises(cmn.ParseError, match=msg):
+        srp.parse(text)
 
 
 if __name__ == "__main__":

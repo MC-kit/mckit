@@ -81,6 +81,7 @@ def test_float_pattern(text, expected):
         ("1 $ zzz\n $ ttt", "1 ", {1: ("zzz",)}, ["ttt"]),
         ("1\n $ ttt", "1", None, ["ttt"]),
         ("1 $ zzz\n $ ttt\n2", "1 \n2", {1: ("zzz", "ttt")}, None),
+        ("$ comment above\n1 0 1", "1 0 1", {1: ("comment above",)}, None),
         (
             """M1000
 1001.21c -1.0
@@ -102,3 +103,46 @@ def test_extract_comments(text, expected_new_text, expected_comments, expected_t
     assert actual_new_text == expected_new_text
     assert actual_comments == expected_comments
     assert actual_trailing_comment == expected_trailing_comment
+
+
+@pytest.mark.parametrize(
+    "word,expected",
+    [
+        ("ABC", "abc"),
+        ("abc", "abc"),
+    ],
+)
+def test_ensure_lower(word, expected):
+    assert m.ensure_lower(word) == expected
+
+
+@pytest.mark.parametrize(
+    "word,words,expected",
+    [
+        ("PMT", ("PMT", "TMP"), ("PMT", True)),
+        ("LAT", ("PMT", "TMP"), ("LAT", False)),
+    ],
+)
+def test_internalize(word, words, expected):
+    assert m.internalize(word, words) == expected
+
+
+@pytest.mark.parametrize(
+    "text,pos,expected",
+    [
+        ("a12b", 1, 12),
+        ("x 3", 0, None),
+    ],
+)
+def test_extract_optioall_integer(text, pos, expected):
+    assert m.extract_optioall_integer(text, pos) == expected
+
+
+@pytest.mark.parametrize("text,expected", [("345", 345), ("12\n", 12)])
+def test_extract_integer(text, expected):
+    assert m.extract_integer(text) == expected
+
+
+def test_extract_integer_error():
+    with pytest.raises(m.ParseError, match=r"Could not parse integer\."):
+        m.extract_integer(" no digits here ")

@@ -21,6 +21,7 @@ from mckit.parser import from_file
         ("cli/simple_cubes.universes/envelopes.i", 3),
         ("cli/simple_cubes.universes/u1.i", 2),
         ("cli/simple_cubes.universes/u2.i", 2),
+        ("cli/two_cubes_with_the_same_filler.mcnp", 3),
     ],
 )
 def test_input_files_reading(path, expected_cells, data):
@@ -98,7 +99,7 @@ def test_when_output_is_specified(runner, source, output, expected, data):
 
 
 def test_when_output_file_exists_and_override_is_not_specified(runner, data):
-    source = data / "simple_cubes.mcnp"
+    source = data / "cli/simple_cubes.mcnp"
     with runner.isolated_filesystem() as prefix:
         output = Path(prefix) / "simple_cubes.universes/envelopes.i"
         output.parent.mkdir(parents=True)
@@ -111,7 +112,7 @@ def test_when_output_file_exists_and_override_is_not_specified(runner, data):
 
 def test_when_output_file_exists_and_override_is_specified(runner, data):
     source = data / "cli/simple_cubes.mcnp"
-    output = Path.cwd() / "simple_cubes./envelopes.i"
+    output = Path.cwd() / "simple_cubes.universes/envelopes.i"
     output.parent.mkdir(parents=True)
     output.touch(exist_ok=False)
     result = runner.invoke(

@@ -4,7 +4,12 @@ from typing import NoReturn
 
 import pytest
 
-from mckit.utils.indexes import Index
+from mckit.utils.indexes import (
+    Index,
+    NumberedItemDuplicateError,
+    NumberedItemNotFoundError,
+    ignore_equal_objects_strategy,
+)
 
 
 def dummy_strategy(c: int) -> int:
@@ -50,3 +55,21 @@ def test_index_with_strict_strategy(
         else:
             with pytest.raises(MyKeyError):
                 _ = dictionary[k]
+
+
+def test_index_without_default_factory() -> None:
+    dictionary = Index()
+    assert dictionary.default_factory is None
+    with pytest.raises(NumberedItemNotFoundError, match="#3 is not found"):
+        dictionary[3]
+
+
+def test_index_with_default_factory_is_stored() -> None:
+    dictionary = Index(dummy_strategy)
+    assert dictionary.default_factory is dummy_strategy
+
+
+def test_ignore_equal_objects_strategy() -> None:
+    assert ignore_equal_objects_strategy("key", 1, 1) is None
+    with pytest.raises(NumberedItemDuplicateError, match="#key is duplicated"):
+        ignore_equal_objects_strategy("key", 1, 2)
