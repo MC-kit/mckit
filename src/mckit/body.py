@@ -22,7 +22,8 @@ from mckit.card import Card
 from mckit.constants import MIN_BOX_VOLUME
 
 # pyrefly: ignore [missing-import]
-from mckit.geometry import Shape as _Shape  # pyright: ignore[reportMissingImports]
+# pyright: reportMissingModuleSource=false
+from mckit.geometry import Shape as _Shape
 from mckit.printer import CELL_OPTIONS, print_option
 from mckit.surface import Surface
 from mckit.transformation import Transformation
@@ -698,7 +699,7 @@ class Body(Card):
         """
         # noinspection PyTypeChecker
         # pyrefly: ignore[bad-argument-type]
-        return all(self.importance(c) == 0.0 for c in ["N", "P", "E"])
+        return all(self.importance(c) == 0.0 for c in ["N", "P", "E"])  # pyright: ignore[reportArgumentType]
 
     def importance(self, particle: Literal["N", "P", "E"] = "N") -> float:
         """Retrieve importance of a cell for a particle kind.

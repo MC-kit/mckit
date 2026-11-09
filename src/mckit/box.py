@@ -1,5 +1,7 @@
 """Python subclass for geometry.Box."""
 
+# pyright: reportMissingModuleSource=false
+
 from __future__ import annotations
 
 import numpy as np

@@ -9,6 +9,7 @@ import numpy as np
 
 from numpy import dtype, float64, ndarray
 
+# pyright: reportMissingModuleSource=false
 from mckit.geometry import ORIGIN
 
 from .card import Card

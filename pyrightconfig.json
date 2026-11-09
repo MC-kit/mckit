@@ -7,11 +7,12 @@
   ],
   "exclude": [
     "**/data",
-    "**/parser",
     "**/__pycache__",
     "**/.*",
     "wrk"
   ],
+  "extraPaths": ["src/mckit"],
+  "reportGeneralTypeIssues": "none",
   "reportMissingImports": "error",
   "reportMissingTypeStubs": false,
   "pythonVersion": "3.14",
