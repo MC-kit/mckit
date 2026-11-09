@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TextIO
+from typing import TextIO, cast
 
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
@@ -39,8 +39,8 @@ class ParseResult:
     universe: Universe
     cells: list[Body]
     cells_index: CellStrictIndex
-    surfaces: list[Surface]
-    surfaces_index: SurfaceStrictIndex
+    surfaces: list[Surface] | None
+    surfaces_index: SurfaceStrictIndex | None
     compositions: list[Composition] | None
     compositions_index: CompositionStrictIndex | None
     transformations: list[Transformation] | None
@@ -88,6 +88,9 @@ def from_text(text: str) -> ParseResult:
         else parse_surfaces(sections.surface_cards, transformations_index)
     )
     surfaces_index = None if surfaces is None else SurfaceStrictIndex.from_iterable(surfaces)
+    if sections.cell_cards is None:
+        msg = "No cell cards"
+        raise ValueError(msg)
     cells, cells_index = parse_cells(
         sections.cell_cards, surfaces_index, compositions_index, transformations_index
     )
@@ -122,9 +125,9 @@ def join_comments(text_cards: Iterable[TextCard]):
     return list(_iter())
 
 
-def parse_section(
-    text_cards: Iterable[TextCard], expected_kind: Kind, parser: Callable[[str], Card]
-) -> Iterator[Card]:
+def parse_section[T: Card](
+    text_cards: Iterable[TextCard], expected_kind: Kind, parser: Callable[[str], T]
+) -> Iterator[T]:
     text_cards_with_comments = join_comments(text_cards)
 
     for text_card, comment in text_cards_with_comments:
@@ -147,7 +150,9 @@ def parse_compositions(text_cards: Iterable[TextCard]) -> list[Composition]:
     return list(parse_section(text_cards, Kind.MATERIAL, parse_composition))
 
 
-def parse_surfaces(text_cards: Iterable[TextCard], transformations: Index) -> list[Surface] | None:
+def parse_surfaces(
+    text_cards: Iterable[TextCard], transformations: Index | None
+) -> list[Surface]:
     def parser(text: str):
         return parse_surface(text, transformations=transformations)
 
@@ -168,15 +173,15 @@ class MissedCellsError(RuntimeError):
 
 def parse_cells(
     text_cards: list[TextCard],
-    surfaces: Index,
-    compositions: Index,
-    transformations: Index,
+    surfaces: SurfaceStrictIndex | None,
+    compositions: CompositionStrictIndex | None,
+    transformations: TransformationStrictIndex | None,
 ) -> tuple[list[Body], CellStrictIndex]:
     text_cards_with_comments = join_comments(text_cards)
     size = len(text_cards_with_comments)
     cells_index = CellStrictIndex()
     cells_to_process = list(range(size))
-    cells = list(repeat(None, size))
+    cells: list[Body | None] = list(repeat(None, size))
 
     def parser(text: str):
         return parse_cell(
@@ -210,6 +215,7 @@ def parse_cells(
         cells_to_process = new_cells_to_process
 
     if any(c is None for c in cells):
-        cells = list(filter(lambda c: c is not None, cells))
+        cells = [c for c in cells if c is not None]
 
-    return cells, cells_index
+    # All cell cards are processed by the while-loop above, so no Nones remain.
+    return cast("list[Body]", cells), cells_index

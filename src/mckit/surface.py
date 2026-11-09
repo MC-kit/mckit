@@ -255,42 +255,6 @@ def _create_plane(
     return Plane(params[:3], -params[3], **options)
 
 
-def create_replace_dictionary(
-    surfaces: set[Surface],
-    unique: set[Surface] | None = None,
-    box=GLOBAL_BOX,
-    tol: float = 1.0e-10,
-) -> dict[Surface, tuple[Surface, int]]:
-    """Creates surface replace dictionary for equal surfaces removing.
-
-    Args:
-        surfaces : A set of surfaces to be checked.
-        unique:  A set of surfaces that are assumed to be unique. If not None, then
-                `surfaces` are checked for coincidence with one of them.
-        box : Box
-            A box, which is used for comparison.
-        tol : float
-            Tolerance
-
-    Returns
-    -------
-        A replacement dictionary. surface -> (replace_surface, sense). Sense is +1
-        if surfaces have the same direction of normals. -1 otherwise.
-    """
-    replace = {}
-    unique_surfaces = set() if unique is None else unique
-    for s in surfaces:
-        for us in unique_surfaces:
-            # noinspection PyUnresolvedReferences
-            t = s.equals(us, box=box, tol=tol)  # type: ignore[attr-defined]
-            if t != 0:
-                replace[s] = (us, t)
-                break
-        else:
-            unique_surfaces.add(s)
-    return replace
-
-
 class Surface(Card, MaybeClose):
     """Base class for all surface classes.
 

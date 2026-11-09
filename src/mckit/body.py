@@ -31,7 +31,7 @@ from mckit.utils import filter_dict
 if TYPE_CHECKING:
     from typing import ClassVar
 
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Iterable, Iterator, Sequence
 
     from mckit import Universe
     from mckit.types import NPIntArray
@@ -130,6 +130,11 @@ class Shape(_Shape):
         _Shape.__init__(self, opc, *args)
         self._calculate_hash(opc, *args)
 
+    @property
+    def args(self) -> tuple[Shape | Surface, ...]:  # ty: ignore[invalid-property-type-override]
+        """Gets the shape's arguments as the wrapper objects defined in this module."""
+        return cast("tuple[Shape | Surface, ...]", super().args)
+
     # TODO @dvp: remove this method (it's logically wrong), check usage in accept/visit
     def __iter__(self):
         return iter(self.args)
@@ -159,16 +164,16 @@ class Shape(_Shape):
         """
         words = []
         if self.opc == "S":
-            words.append(f"{self.args[0].options['name']}")
+            words.append(f"{cast(Surface, self.args[0]).options['name']}")
         elif self.opc == "C":
-            words.append(f"-{self.args[0].options['name']}")
+            words.append(f"-{cast(Surface, self.args[0]).options['name']}")
         elif self.opc == "E":
             words.append("EMPTY_SET")
         elif self.opc == "R":
             words.append("UNIVERSE_SET")
         else:
             sep = " " if self.opc == "I" else ":"
-            args = self.args
+            args = cast("tuple[Shape, ...]", self.args)
             need_parentheses = self.opc == "U" and parent_opc == "I"
             if need_parentheses:
                 words.append("(")
@@ -241,7 +246,7 @@ class Shape(_Shape):
         if opc == "R":
             return Shape("E")
         opc = self.invert_opc
-        c_args = (a.complement() for a in args)
+        c_args = (cast(Shape, a).complement() for a in args)
         return Shape(opc, *c_args)
 
     def is_complement(self, other: Shape) -> bool:
@@ -260,8 +265,8 @@ class Shape(_Shape):
         if len(self.args) == 1:
             return self.args[0] == other.args[0]
         if len(self.args) > 1:
-            for a in self.args:
-                for b in other.args:
+            for a in cast("tuple[Shape, ...]", self.args):
+                for b in cast("tuple[Shape, ...]", other.args):
                     if a.is_complement(b):
                         break
                 else:
@@ -308,11 +313,7 @@ class Shape(_Shape):
 
     def apply_transformation(self):
         opc = self.opc
-        args = []
-        for a in self.args:
-            if hasattr(a, "apply_transformation"):
-                a = a.apply_transformation()  # noqa: PLW2901 - `a` is to be reassigned
-            args.append(a)
+        args = [a.apply_transformation() for a in self.args]
         return Shape(opc, *args)
 
     def complexity(self) -> int:
@@ -330,7 +331,7 @@ class Shape(_Shape):
         if len(args) > 1:
             result = 0
             for a in args:
-                result += a.complexity()
+                result += cast(Shape, a).complexity()
             return result
         return 0
 
@@ -343,9 +344,9 @@ class Shape(_Shape):
         args = self.args
         _len = len(args)
         if _len == 1:
-            yield args[0]
+            yield cast(Surface, args[0])
         elif _len > 1:
-            for a in args:
+            for a in cast("tuple[Shape, ...]", args):
                 yield from a.scan_surfaces()
 
     def is_empty(self) -> bool:
@@ -365,7 +366,7 @@ class Shape(_Shape):
                     args = (self.args[i] for i in index)
                     yield Shape("U", *args)
             elif self.opc == "I":
-                arg_groups = (arg.split_shape() for arg in self.args)
+                arg_groups = (cast(Shape, arg).split_shape() for arg in self.args)
                 for args in product(*arg_groups):
                     yield Shape("I", *args)
             else:
@@ -433,7 +434,7 @@ class Shape(_Shape):
             # return None  # TODO dvp: what's the logic here?
         unique = reduce(lambda a, b: a.union(b), (set(x) for x in final_cases))
         args = self.args
-        node_variants = {i: args[i].get_simplest(trim_size) for i in unique}
+        node_variants = {i: cast(Shape, args[i]).get_simplest(trim_size) for i in unique}
         for indices in final_cases:
             variants = [node_variants[i] for i in indices]
             for args in product(*variants):
@@ -509,11 +510,11 @@ class Shape(_Shape):
         """
         # TODO @dvp: dict[Surface, ...] is inefficient (hash is expensive), change to dict[Name, ...] mapping
         if self.opc in {"C", "S"}:  # complement or 'no operation'
-            arg = self.args[0]
+            arg = cast(Surface, self.args[0])
             surf = replace_dict.get(arg)
             return Shape(self.opc, surf or arg)
         if self.opc in {"I", "U"}:  # intersection or union
-            args = [arg.replace_surfaces(replace_dict) for arg in self.args]
+            args = [cast(Shape, arg).replace_surfaces(replace_dict) for arg in self.args]
             return Shape(self.opc, *args)
         return self
 
@@ -548,7 +549,9 @@ class Shape(_Shape):
         return operands.pop()
 
 
-def _clean_args(opc: ShapeOperationCode, *_args: Shape | Surface | Body) -> tuple[str, list[Shape]]:
+def _clean_args(
+    opc: ShapeOperationCode, *_args: Shape | Surface | Body
+) -> tuple[ShapeOperationCode, Sequence[Shape]]:
     """Clean input arguments.
 
     If arg is a Body, extracts its shape.
@@ -573,7 +576,7 @@ def _clean_args(opc: ShapeOperationCode, *_args: Shape | Surface | Body) -> tupl
         while i < len(shapes):
             if shapes[i].opc == opc:
                 a = shapes.pop(i)
-                shapes.extend(a.args)
+                shapes.extend(cast("tuple[Shape, ...]", a.args))
             else:
                 i += 1
 
@@ -597,10 +600,10 @@ def _clean_args(opc: ShapeOperationCode, *_args: Shape | Surface | Body) -> tupl
             opc = "E" if opc == "U" else "R"
     if len(shapes) == 1 and isinstance(shapes[0], Shape):
         if opc in {"S", "I", "U"}:
-            return shapes[0].opc, shapes[0].args
+            return shapes[0].opc, cast("tuple[Shape, ...]", shapes[0].args)
         if opc == "C":
             item = shapes[0].complement()
-            return item.opc, item.args
+            return item.opc, cast("tuple[Shape, ...]", item.args)
 
     return opc, shapes
 
@@ -896,17 +899,23 @@ class Body(Card):
                     universe = universe.transform(tr)
             else:
                 return [self]
-        # TODO @dvp: fix the following: universe.fill is not implemented
+        # Note: `recurrent` is implemented by filling cells of the filling universe first.
         if recurrent:
-            universe = universe.fill(
-                recurrent=True,
-                simplify=simplify,
-                split_disjoint=split_disjoint,
-                min_volume=min_volume,
-                trim_size=trim_size,
-            )
+            source_cells: Iterable[Body] = [
+                filled_cell
+                for filling_cell in universe
+                for filled_cell in filling_cell.fill(
+                    recurrent=True,
+                    simplify=simplify,
+                    split_disjoint=split_disjoint,
+                    min_volume=min_volume,
+                    trim_size=trim_size,
+                )
+            ]
+        else:
+            source_cells = universe
         cells = []
-        for c in universe:
+        for c in source_cells:
             new_cell = c.intersection(self)  # because properties like MAT, etc
             # must be as in filling cell.
             if "U" in self.options:

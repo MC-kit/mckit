@@ -1,5 +1,7 @@
 import numpy as np
 
+from typing import Literal
+
 from numpy.typing import ArrayLike
 
 from .types import NPFloatArray, NPInt8Array, NPInt32Array
@@ -47,8 +49,8 @@ class Shape:
     # "I" - intersection of Shapes, "C" - complement of a Surface,
     # "E" - empty shape, "U" - union of Shapes, "S" - identity of a Surface,
     # "R" - universe shape.
-    opc: str
-    invert_opc: str
+    opc: Literal["I", "U", "E", "R", "S", "C"]
+    invert_opc: Literal["I", "U", "E", "R", "S", "C"]
     args: tuple[Shape | Surface, ...]
     def __init__(self, _opc: str, *_args: Shape | Surface) -> None: ...
     def test_points(self, points: ArrayLike) -> NPInt8Array: ...
