@@ -6,4 +6,4 @@ include = [ "src" ]  # TODO @dvp: add "tests" to typing checks
 output-format = "concise"
 
 [rules]
-unresolved-import = "ignore"
+import-not-found = "ignore"

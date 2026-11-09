@@ -67,7 +67,7 @@ __all__ = [
 
 
 # noinspection PyPep8Naming
-def create_surface(kind: str, *_params: float, **options) -> Surface | None:
+def create_surface(kind: str, *_params: float, **options) -> Surface:
     """Create new surface.
 
     Parameters

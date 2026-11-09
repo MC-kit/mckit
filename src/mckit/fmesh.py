@@ -113,7 +113,7 @@ class RectMesh:
 
     def voxel_index(
         self, point: npt.ArrayLike, local: bool = False
-    ) -> tuple[int, int, int] | list[tuple[int, int, int]] | None:
+    ) -> tuple[int, int, int] | None | list[tuple[int, int, int] | None]:
         """Gets index of voxel that contains specified point.
 
         Parameters

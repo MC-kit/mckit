@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TypeVar
+from typing import Any, TypeVar, cast
 
 from collections.abc import Callable, Iterable
 from functools import reduce
@@ -52,7 +52,7 @@ class Index(dict[Key, Item]):
 
 
 # noinspection PyUnusedLocal
-def ignore[Key](_: Key) -> Item | None:
+def ignore[Key, Item](_: Key) -> Item | None:
     """Default factory for `IgnoringIndex`.
 
     Returns
@@ -151,25 +151,25 @@ class StatisticsCollector(dict[Key, int]):
             self[key] += 1
 
 
-class IndexOfNamed(Index[Key, Item]):
+class IndexOfNamed(Index[Name, Item]):
     """Index of items from a key can be extracted."""
 
     @classmethod
     def from_iterable(
-        cls: type[IndexOfNamed[Key, Item]],
+        cls: type[IndexOfNamed[Item]],
         items: Iterable[Item],
         *,
-        key: Callable[[Item], Name] = default_name_key,
-        default_factory: Callable[[Key], Item] | None = None,
-        on_duplicate: Callable[[Key, Item, Item], None] | None = None,
-    ) -> IndexOfNamed:
+        key: Callable[[Any], Name] = default_name_key,
+        default_factory: Callable[[Name], Item | None] | None = None,
+        on_duplicate: Callable[[Name, Item, Item], None] | None = None,
+    ) -> IndexOfNamed[Item]:
         """Construct `IndexOfNamed` from `items`."""
         index = cls(default_factory)
 
         def _reducer(a, b):
             name = key(b)
             if on_duplicate is not None and name in a:
-                on_duplicate(name, a[name], b)
+                on_duplicate(name, cast(Item, a[name]), b)
             a[name] = b
             return a
 

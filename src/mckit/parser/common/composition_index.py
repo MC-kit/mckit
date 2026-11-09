@@ -14,15 +14,18 @@ class DummyMaterial(Material):
         density: float | None = None,
         concentration: float | None = None,
     ) -> None:
-        if (density is None) == (concentration is None):
-            msg = "Specify only one of the parameters"
-            raise ValueError(msg)
         if density is None:
+            if concentration is None:
+                msg = "Specify only one of the parameters"
+                raise ValueError(msg)
             # noinspection PyTypeChecker
             super().__init__(
                 composition=DummyComposition(name), concentration=concentration * 1.0e24
             )
         else:
+            if concentration is not None:
+                msg = "Specify only one of the parameters"
+                raise ValueError(msg)
             super().__init__(composition=DummyComposition(name), density=density)
 
 

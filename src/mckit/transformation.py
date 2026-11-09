@@ -82,7 +82,7 @@ class Transformation(Card, MaybeClose):
         rotation: ArrayLike | None = None,
         indegrees: bool = False,
         inverted: bool = False,
-        **options: dict[str, Any],
+        **options: Any,
     ) -> None:
         Card.__init__(self, **options)
         translation = _get_translation_as_array(translation)

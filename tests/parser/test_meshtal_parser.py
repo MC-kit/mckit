@@ -7,7 +7,7 @@ import pytest
 
 from lark import TextSlice
 
-from mckit.parser.meshtal_lark_parser import parse, parse_header, parse_tally, read_meshtal
+from mckit.parser.meshtal_parser import parse, parse_header, parse_tally, read_meshtal
 
 
 @pytest.mark.parametrize(

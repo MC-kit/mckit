@@ -492,7 +492,7 @@ class Shape(_Shape):
             c.sort()
         return cases
 
-    def replace_surfaces(self, replace_dict: dict[Surface, Surface]) -> Shape:
+    def replace_surfaces(self, replace_dict: dict[Surface, Surface | Shape]) -> Shape:
         """Creates new Shape instance by replacing surfaces.
 
         If shape's surface is in replace dict, it is replaced by surface in
@@ -697,7 +697,8 @@ class Body(Card):
         True, if all cell is of zero importance for all the kinds of particles, otherwise - False
         """
         # noinspection PyTypeChecker
-        return all(self.importance(cast(Literal["N", "P", "E"], c)) == 0.0 for c in ["N", "P", "E"])
+        # pyrefly: ignore[bad-argument-type]
+        return all(self.importance(c) == 0.0 for c in ["N", "P", "E"])
 
     def importance(self, particle: Literal["N", "P", "E"] = "N") -> float:
         """Retrieve importance of a cell for a particle kind.

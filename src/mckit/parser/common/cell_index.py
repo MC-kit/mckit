@@ -4,6 +4,7 @@ from collections.abc import Iterable
 
 from mckit.body import GLOBAL_BOX, Body, Card
 from mckit.constants import MIN_BOX_VOLUME
+from mckit.transformation import Transformation
 from mckit.utils.indexes import Index, NumberedItemNotFoundError
 
 
@@ -45,7 +46,7 @@ class DummyCell(Body):
     def fill(self, universe=None, recurrent=False, simplify=False, **kwargs):
         raise NotImplementedError("The method is not available in dummy object")
 
-    def transform(self, tr):
+    def transform(self, transformation: Transformation) -> Body:
         raise NotImplementedError("The method is not available in dummy object")
 
 

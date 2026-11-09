@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from typing import cast
 
 import tomli_w as tw
 
@@ -17,6 +18,7 @@ from mckit import Universe
 from mckit.cli._logging import logger
 from mckit.parser.mcnp_input_parser import ParseResult, from_file
 from mckit.universe import collect_transformations
+from mckit.utils.named import Name
 
 from .common import save_mcnp
 
@@ -89,7 +91,7 @@ def decompose(output, fill_descriptor_path, source, override, encoding):
                 already_processed_universes.add(universe_name)
 
     named_transformations_descriptor = {}
-    named_transformations = sorted(named_transformations, key=lambda x: x.name())
+    named_transformations = sorted(named_transformations, key=lambda x: cast(Name, x.name()))
     for t in named_transformations:
         named_transformations_descriptor[f"tr{t.name()}"] = t.mcnp_words()[2:][1::2]
     fill_descriptor["named_transformations"] = named_transformations_descriptor

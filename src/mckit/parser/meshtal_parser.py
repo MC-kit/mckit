@@ -77,7 +77,7 @@ def parse(text: str) -> ParseResult:
     while end != -1:
         start = end
         end = text.find(" Mesh Tally Number", start + _MTL_OFFSET)
-        parse_result.tallies.append(parse_tally(TextSlice(text, start, None if end == -1 else end)))
+        parse_result.tallies.append(parse_tally(TextSlice(text, start, len(text) if end == -1 else end)))
         # TODO @dvp: use multithreading
         # TODO @dvp: check if TextSlice works without copying of large amount of texts on multithreading
     return parse_result
@@ -354,8 +354,7 @@ class TallyTransformer(Transformer):
 
     def total_matrix(self, block: Token) -> FloatArray:
         text = _block_text(block).replace("Total", "")
-        block = text
-        return _floats_from_block(block)
+        return _floats_from_block(text)
 
     def column_data(self, column_header, matrix, total_matrix):
         """column_data : column_header matrix total_matrix
@@ -459,7 +458,7 @@ def read_meshtal(
     while end != -1:
         start = end
         end = text.find(" Mesh Tally Number", start + _MTL_OFFSET)
-        segment = TextSlice(text, start, None if end == -1 else end)
+        segment = TextSlice(text, start, len(text) if end == -1 else end)
         if filtering and selected is not None:
             # Extract tally number - it's the last number/token on the first line of segment
             first_nl = segment.text.find("\n", segment.start)

@@ -255,7 +255,7 @@ class Universe:
             cells = [cells]
 
         surfs = self.get_surfaces()
-        surf_replace = {s: s for s in surfs}
+        surf_replace: dict[Surface, Surface | Shape] = {s: s for s in surfs}
         comps = self._common_materials.union(self.get_compositions())
         comp_replace = {c: c for c in comps}
         cell_names: set[Name] = {default_name_key(c) for c in self}
@@ -328,11 +328,11 @@ class Universe:
     @staticmethod
     def _get_cell_replaced_shape(
         cell: Body,
-        surf_replace: dict[Surface, Surface],
+        surf_replace: dict[Surface, Surface | Shape],
         surf_names: set[Name],
         name_rule: Literal["keep", "new", "clash"],
     ) -> Shape:
-        replace_dict: dict[Surface, Surface] = {}
+        replace_dict: dict[Surface, Surface | Shape] = {}
         for s in cell.shape.scan_surfaces():
             if isinstance(s, Plane):
                 rev_s = s.reverse()  #  Plane(-s._v, -s._k)
@@ -1110,13 +1110,13 @@ class UniverseAnalyser:
         )
         self.cell_duplicates: StatisticsCollector = StatisticsCollector()
         cells: list[Body] = list(chain(*universes))
-        self.cell_index = IndexOfNamed[Name, Body].from_iterable(
+        self.cell_index = IndexOfNamed.from_iterable(
             cells,
             on_duplicate=self.cell_duplicates,
         )
         self.cell_to_universe_map = collect_shared_entities(cells_to_universe_mapper, universes)
         self.surface_duplicates: StatisticsCollector = StatisticsCollector(ignore_equal=True)
-        self.surface_index = IndexOfNamed[Name, Surface].from_iterable(
+        self.surface_index = IndexOfNamed.from_iterable(
             universe.get_surfaces_list(inner=True),
             on_duplicate=self.surface_duplicates,
         )
@@ -1124,7 +1124,7 @@ class UniverseAnalyser:
             surfaces_to_universe_mapper, universes
         )
         self.composition_duplicates: StatisticsCollector = StatisticsCollector(ignore_equal=True)
-        self.composition_index = IndexOfNamed[Name, Composition].from_iterable(
+        self.composition_index = IndexOfNamed.from_iterable(
             universe.get_compositions(),
             on_duplicate=self.composition_duplicates,
         )
@@ -1132,7 +1132,7 @@ class UniverseAnalyser:
             compositions_to_universe_mapper, universes
         )
         self.transformation_duplicates: StatisticsCollector = StatisticsCollector(ignore_equal=True)
-        self.transformation_index = IndexOfNamed[Name, Transformation].from_iterable(
+        self.transformation_index = IndexOfNamed.from_iterable(
             collect_transformations(universe, recursive=True),
             on_duplicate=self.transformation_duplicates,
         )

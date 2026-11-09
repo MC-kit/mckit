@@ -10,6 +10,7 @@ from mckit.parser.mcnp_section_parser import clean_mcnp_cards, split_to_cards
 from mckit.parser.transformation_parser import parse as parse_transformation
 from mckit.universe import Universe
 from mckit.utils.indexes import IndexOfNamed, raise_on_duplicate_strategy
+from mckit.utils.named import Name
 
 from .common import save_mcnp
 
@@ -37,9 +38,10 @@ def transform(
         transformations_list,
         on_duplicate=raise_on_duplicate_strategy,
     )
-    if transformation not in transformations_index:
+    name = Name(transformation)
+    if name not in transformations_index:
         raise ValueError(f"Transformation {transformation} is not found in {transformations}")
-    the_transformation = transformations_index[transformation]
+    the_transformation = transformations_index[name]
     dst = src.transform(the_transformation)
     save_mcnp(dst, output, override)
     logger.success("Transformed model is saved to {}", output)

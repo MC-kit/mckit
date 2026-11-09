@@ -6,6 +6,7 @@ import tomllib
 
 from functools import reduce
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -49,7 +50,8 @@ def compose(output, fill_descriptor_path, source, override, encoding: str = "utf
         universe.set_common_materials(common)
         cell = cells_index[i]
         cell.options = filter_dict(cell.options, "original")
-        cell.options["FILL"] = {"universe": universe}
+        fill_options: dict[str, Any] = {"universe": universe}
+        cell.options["FILL"] = fill_options
         if transformation is not None:
             # if isinstance(transformation, tk_items.Array):
             if isinstance(transformation, list):
@@ -66,14 +68,14 @@ def compose(output, fill_descriptor_path, source, override, encoding: str = "utf
                     raise ValueError(
                         f"Failed to process FILL transformation in cell #{cell.name()} of universe #{universe.name()}"
                     ) from ex
-                cell.options["FILL"]["transform"] = transformation2
+                fill_options["transform"] = transformation2
             # elif isinstance(transformation, tk_items.Integer):
             elif isinstance(transformation, int):
                 assert named_transformations is not None, (
                     "There are no named transformations in the fill descriptor file"
                 )
                 transformation1 = named_transformations[int(transformation)]
-                cell.options["FILL"]["transform"] = transformation1
+                fill_options["transform"] = transformation1
             else:
                 raise NotImplementedError(
                     f"Unexpected type of transformation parameter {type(transformation)}"

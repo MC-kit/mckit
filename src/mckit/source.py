@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from itertools import pairwise
 
 import numpy as np
 
-from numpy.typing import ArrayLike
+from numpy.typing import NDArray
 
 from .printer import print_card, separate
 
@@ -41,8 +43,8 @@ class Distribution:
     def __init__(
         self,
         name: int,
-        values: ArrayLike | list[Distribution],
-        probs: ArrayLike | Distribution,
+        values: Sequence[float | Distribution] | NDArray[np.float64],
+        probs: Sequence[float] | Distribution | NDArray[np.float64],
         distribution_variable: str | None = None,
         is_discrete: bool = False,
     ) -> None:
@@ -52,7 +54,7 @@ class Distribution:
         self._is_discrete = is_discrete
         self._values = np.asarray(values)
         if isinstance(probs, Distribution):
-            self._probs: ArrayLike | Distribution = probs
+            self._probs: Sequence[float] | Distribution | NDArray[np.float64] = probs
         else:
             self._probs = np.asarray(probs)
         self._is_pdf = (
@@ -89,7 +91,7 @@ class Distribution:
 
     @staticmethod
     def check_distr(
-        bins_or_distrs: ArrayLike | list[Distribution],
+        bins_or_distrs: Sequence[float | Distribution] | NDArray[np.float64],
         size: int,
         is_discrete: bool,
     ) -> None:
@@ -229,7 +231,7 @@ class Source:
             can be either float (int) value or Distribution instance.
     """
 
-    def __init__(self, **variables: dict[int, int | float | Distribution]) -> None:
+    def __init__(self, **variables: int | float | Distribution) -> None:
         self._variables = variables
 
     def mcnp_repr(self) -> str:
