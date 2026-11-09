@@ -150,9 +150,7 @@ def parse_compositions(text_cards: Iterable[TextCard]) -> list[Composition]:
     return list(parse_section(text_cards, Kind.MATERIAL, parse_composition))
 
 
-def parse_surfaces(
-    text_cards: Iterable[TextCard], transformations: Index | None
-) -> list[Surface]:
+def parse_surfaces(text_cards: Iterable[TextCard], transformations: Index | None) -> list[Surface]:
     def parser(text: str):
         return parse_surface(text, transformations=transformations)
 

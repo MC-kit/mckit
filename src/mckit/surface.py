@@ -12,7 +12,6 @@ import numpy as np
 
 import mckit
 
-from mckit.box import GLOBAL_BOX
 
 # noinspection PyUnresolvedReferences,PyPackageRequirements
 from mckit.geometry import BOX as _BOX
