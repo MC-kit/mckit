@@ -11,7 +11,9 @@
     "**/.*",
     "wrk"
   ],
-  "extraPaths": ["src/mckit"],
+  "extraPaths": [
+    "src/mckit"
+  ],
   "reportGeneralTypeIssues": "none",
   "reportMissingImports": "error",
   "reportMissingTypeStubs": false,

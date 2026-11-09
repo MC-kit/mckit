@@ -8,9 +8,10 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from datetime import datetime
 from pathlib import Path
-from typing import cast
 
 import tomli_w as tw
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-
 from itertools import pairwise
 
 import numpy as np
@@ -231,7 +230,7 @@ class Source:
             can be either float (int) value or Distribution instance.
     """
 
-    def __init__(self, **variables: int | float | Distribution) -> None:
+    def __init__(self, **variables: float | Distribution) -> None:
         self._variables = variables
 
     def mcnp_repr(self) -> str:
