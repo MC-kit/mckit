@@ -41,6 +41,8 @@ from .utils import (
 from .utils.tolerance import DEFAULT_TOLERANCE_ESTIMATOR, FLOAT_TOLERANCE, MaybeClose
 
 if TYPE_CHECKING:
+    import numpy.typing as npt
+
     from numpy.typing import ArrayLike
 
     from mckit.types import NPFloatArray
@@ -561,7 +563,7 @@ class BOX(Surface, _BOX):
         return args_this == args_other
 
     @staticmethod
-    def _get_plane_intersection(s1, s2, s3) -> NDArray[np.float64]:
+    def _get_plane_intersection(s1, s2, s3) -> npt.NDArray[np.float64]:
         matrix = np.zeros((3, 3))
         matrix[0, :] = -s1._v
         matrix[1, :] = -s2._v
@@ -638,7 +640,7 @@ class Plane(Surface, _Plane):
                   transform = transformation to be applied to this plane.
     """
 
-    def __init__(self, normal: npt.ArrayLike, offset: float, **options: dict[str, Any]) -> None:
+    def __init__(self, normal: ArrayLike, offset: float, **options: Any) -> None:
         v = np.asarray(normal, dtype=np.float64)
         k = offset
         tr = options.pop("transform", None)
@@ -684,7 +686,7 @@ class Plane(Surface, _Plane):
         -------
             New copy of self
         """
-        instance = Plane.__new__(Plane, self._v, self._k)
+        instance = Plane.__new__(Plane)
         instance._k_digits = self._k_digits
         instance._v_digits = self._v_digits
         options = filter_dict(self.options)
@@ -710,7 +712,7 @@ class Plane(Surface, _Plane):
 
     def reverse(self):
         """Gets the surface with reversed normal."""
-        instance = Plane.__new__(Plane, -self._v, -self._k)
+        instance = Plane.__new__(Plane)
         instance._k_digits = self._k_digits
         instance._v_digits = self._v_digits
         options = self.clean_options()
@@ -729,7 +731,7 @@ class Plane(Surface, _Plane):
             words.append("PZ")
         else:
             words.append("P")
-            for v, p in zip(_v, self._v_digits, strict=False):
+            for v, p in zip(_v.tolist(), self._v_digits.tolist(), strict=False):
                 words.append(" ")
                 words.append(pretty_float(v, p))
         words.append(" ")
@@ -799,9 +801,7 @@ class Sphere(Surface, _Sphere):
                              created. Transformation instance.
     """
 
-    def __init__(
-        self, center: npt.NDArray[float], radius: float, **options: dict[str, Any]
-    ) -> None:
+    def __init__(self, center: npt.NDArray[np.float64], radius: float, **options: Any) -> None:
         tr: Transformation | None = options.pop("transform", None)
         center = tr.apply2point(center) if tr else np.asarray(center, dtype=float)
         radius = float(radius)
@@ -822,7 +822,7 @@ class Sphere(Surface, _Sphere):
         self.__init__(c, r, **options)
 
     def copy(self):
-        instance = Sphere.__new__(Sphere, self._center, self._radius)
+        instance = Sphere.__new__(Sphere)
         instance._center_digits = self._center_digits
         instance._radius_digits = self._radius_digits
         Surface.__init__(instance, **self.options)
@@ -848,7 +848,7 @@ class Sphere(Surface, _Sphere):
 
     def is_close_to(
         self,
-        other: Sphere,
+        other: Surface,
         estimator: Callable[[Any, Any], bool] = DEFAULT_TOLERANCE_ESTIMATOR,
     ) -> bool:
         if self is other:
@@ -918,7 +918,7 @@ class Sphere(Surface, _Sphere):
             words.append(pretty_float(v, p))
         else:
             words.append("S")
-            for v, p in zip(self._center, self._center_digits, strict=False):
+            for v, p in zip(self._center.tolist(), self._center_digits.tolist(), strict=False):
                 words.append(" ")
                 words.append(pretty_float(v, p))
         words.append(" ")
@@ -951,7 +951,7 @@ class Cylinder(Surface, _Cylinder):
         pt: ArrayLike,
         axis: ArrayLike,
         radius: float,
-        **options: dict[str, Any],
+        **options: Any,
     ) -> None:
         pt = np.asarray(pt, dtype=np.float64)
         axis = np.asarray(axis, dtype=np.float64)
@@ -979,7 +979,7 @@ class Cylinder(Surface, _Cylinder):
         _Cylinder.__init__(self, pt, axis, radius)
 
     def copy(self):
-        instance = Cylinder.__new__(Cylinder, self._pt, self._axis, self._radius)
+        instance = Cylinder.__new__(Cylinder)
         instance._axis_digits = self._axis_digits
         instance._pt_digits = self._pt_digits
         instance._radius_digits = self._radius_digits
@@ -1018,7 +1018,7 @@ class Cylinder(Surface, _Cylinder):
     ) -> bool:
         if self is other:
             return True
-        if not isinstance(other, Cone):
+        if not isinstance(other, Cylinder):
             return False
         return estimator(
             (self._radius, self._pt, self._axis, self.transformation),
@@ -1105,7 +1105,7 @@ class Cylinder(Surface, _Cylinder):
         options = self.clean_options()
         return Cylinder(pt, axis, radius, transform=None, **options)
 
-    def apply_transformation(self) -> Surface:
+    def apply_transformation(self) -> Cylinder:
         tr = self.transformation
         if tr is None:
             return self
@@ -1193,7 +1193,7 @@ class Cone(Surface, _Cone):
 
     def copy(self):
         t2 = self._t2
-        instance = Cone.__new__(Cone, self._apex, self._axis, t2, self._sheet)
+        instance = Cone.__new__(Cone)
         instance._axis_digits = self._axis_digits
         instance._apex_digits = self._apex_digits
         instance._t2_digits = self._t2_digits
@@ -1263,7 +1263,7 @@ class Cone(Surface, _Cone):
                 words.append(pretty_float(v, p))
             else:
                 words.append("K/X")
-                for v, p in zip(self._apex, self._apex_digits, strict=False):
+                for v, p in zip(self._apex.tolist(), self._apex_digits.tolist(), strict=False):
                     words.append(" ")
                     words.append(pretty_float(v, p))
         elif np.all(self._get_axis() == np.array([0.0, 1.0, 0.0])):
@@ -1275,7 +1275,7 @@ class Cone(Surface, _Cone):
                 words.append(pretty_float(v, p))
             else:
                 words.append("K/Y")
-                for v, p in zip(self._apex, self._apex_digits, strict=False):
+                for v, p in zip(self._apex.tolist(), self._apex_digits.tolist(), strict=False):
                     words.append(" ")
                     words.append(pretty_float(v, p))
         elif np.all(self._get_axis() == np.array([0.0, 0.0, 1.0])):
@@ -1287,7 +1287,7 @@ class Cone(Surface, _Cone):
                 words.append(pretty_float(v, p))
             else:
                 words.append("K/Z")
-                for v, p in zip(self._apex, self._apex_digits, strict=False):
+                for v, p in zip(self._apex.tolist(), self._apex_digits.tolist(), strict=False):
                     words.append(" ")
                     words.append(pretty_float(v, p))
         else:
@@ -1367,7 +1367,7 @@ class GQuadratic(Surface, _GQuadratic):
         _GQuadratic.__init__(self, m, v, k, factor)
 
     def copy(self) -> GQuadratic:
-        instance = GQuadratic.__new__(GQuadratic, self._m, self._v, self._k, self._factor)
+        instance = GQuadratic.__new__(GQuadratic)
         instance._m_digits = self._m_digits
         instance._v_digits = self._v_digits
         instance._k_digits = self._k_digits
@@ -1511,7 +1511,7 @@ class Torus(Surface, _Torus):
         _Torus.__init__(self, center, axis, r, a, b)
 
     def copy(self):
-        instance = Torus.__new__(Torus, self._center, self._axis, self._R, self._a, self._b)
+        instance = Torus.__new__(Torus)
         instance._axis_digits = self._axis_digits
         instance._center_digits = self._center_digits
         instance._R_digits = self._R_digits
@@ -1598,7 +1598,7 @@ class Torus(Surface, _Torus):
         options = temp.clean_options()
         return Torus(center, axis, r, a, b, **options)
 
-    def apply_transformation(self) -> Surface:
+    def apply_transformation(self) -> Torus:
         tr = self.transformation
         if tr is None:
             return self

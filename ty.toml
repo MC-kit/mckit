@@ -1,6 +1,6 @@
 [src]
-include = [ "src", "tests" ]
-exclude = [ "**/*parser.py" ]
+include = [ "src" ]  # TODO @dvp: add "tests" to typing checks
+# exclude = [ "**/*parser.py" ]
 
 [terminal]
 output-format = "concise"

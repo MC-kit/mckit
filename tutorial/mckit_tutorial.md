@@ -66,7 +66,7 @@ print(cell_1.simplify.__doc__)
 ```
 
 ```python
-cell_1s = cell_1.simplify(min_volume=1.e-3)
+cell_1s = cell_1.simplify(min_volume=1.0e-3)
 print(cell_1s.mcnp_repr())
 ```
 
@@ -84,7 +84,7 @@ for c in model1:
 ```
 
 ```python
-model1.simplify(min_volume=1.e-3)
+model1.simplify(min_volume=1.0e-3)
 ```
 
 ```python
@@ -109,16 +109,16 @@ sphere = create_surface("SO", 4, name=20)
 ```
 
 ```python
-new_cells = []   # new cells
-mask_shape = Shape("S", sphere) # mask shape: only intersections with mask shape will
-                                # be presented in new model
+new_cells = []  # new cells
+mask_shape = Shape("S", sphere)  # mask shape: only intersections with mask shape will
+# be presented in new model
 for c in model1:
     nc = c.intersection(mask_shape)  # get intersection cell
-    nc = nc.simplify(min_volume=0.1) # simplify intersection cell.
-    new_cells.append(nc)             # append truncated cell to cell list.
-new_cells.append(Body(Shape("C", sphere), name=20)) # finally append new body, which is
-                                     # the sphere.
-new_u = Universe(new_cells)          # And create new universe.
+    nc = nc.simplify(min_volume=0.1)  # simplify intersection cell.
+    new_cells.append(nc)  # append truncated cell to cell list.
+new_cells.append(Body(Shape("C", sphere), name=20))  # finally append new body, which is
+# the sphere.
+new_u = Universe(new_cells)  # And create new universe.
 ```
 
 ```python
@@ -168,7 +168,7 @@ print(comp.mcnp_repr())
 ```
 
 ```python
-comp_e = comp.expand()   # Get isotope composition
+comp_e = comp.expand()  # Get isotope composition
 print(comp_e.mcnp_repr())
 ```
 
