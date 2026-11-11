@@ -7,7 +7,7 @@ from copy import deepcopy
 # noinspection PyPackageRequirements
 import pytest
 
-from mckit.material import Composition, Element, Material
+from mckit.material import Composition, Element, Material, mixture_by_volume
 
 
 class TestElement:
@@ -520,6 +520,20 @@ class TestElement:
         elem2 = TestElement.elements[arg2]
         test_result = elem1 == elem2
         assert test_result == bool(self.equality[arg1][arg2])
+
+    def test_eq_rejects_non_element(self):
+        assert Element("H") != "H"
+        assert Element("H") != None  # noqa: E711
+
+    def test_str_of_isomer_level_greater_than_one(self):
+        elem = Element("Ta181", isomer=2)
+        assert str(elem) == "Ta-181m1"
+        assert elem.fispact_repr() == "Ta181m1"
+
+    def test_comment(self):
+        elem = Element("H", comment="Plain hydrogen")
+        assert elem.comment == "Plain hydrogen"
+        assert Element("H").comment is None
 
 
 class TestComposition:
@@ -1440,6 +1454,51 @@ class TestComposition:
             ans = {k: pytest.approx(v, rel=1.0e-3) for k, v in Composition(**expected)}
             assert nat._composition == ans
 
+    def test_natural_of_same_charge_isotopes(self):
+        """Reduction succeeds if isotope fractions match the natural abundances."""
+        # The fractions are taken from the natural abundance table for uranium.
+        # All the isotopes of the charge must be present, otherwise normalization
+        # of the fractions shifts them and the tolerance check fails.
+        comp = Composition(atomic=[("U-234", 0.000055), ("U-235", 0.0072), ("U-238", 0.992745)])
+        nat = comp.natural()
+        assert nat is not None
+        assert list(nat) == [(Element("U"), 1.0)]
+        altered = Composition(atomic=[("U-235", 0.5), ("U-238", 0.5)])
+        assert altered.natural() is None
+
+    def test_natural_of_isomeric_states(self):
+        """Isomers merge into the natural element when it is mono-isotopic."""
+        comp = Composition(atomic=[(Element("F-19"), 0.5), (Element("F-19", isomer=1), 0.5)])
+        nat = comp.natural()
+        assert nat is not None
+        assert list(nat) == [(Element("F"), 1.0)]
+
+    def test_eq_rejects_non_composition(self):
+        comp = Composition(atomic=[("H", 1)])
+        assert comp != "H"
+
+    def test_getitem(self):
+        """Elements can be referenced by name, by zaid and by Element instance.
+
+        Note that zaid 1000 addresses natural hydrogen (A=0), while zaid 1001
+        addresses the H-1 isotope (A=1) which is a different composition key.
+        """
+        comp = Composition(atomic=[("H", 0.25), ("O", 0.75)], name=3)
+        assert comp["H"] == 0.25
+        assert comp[1000] == 0.25
+        assert comp[Element("O")] == 0.75
+        with pytest.raises(KeyError):
+            _ = comp["U-235"]
+
+    def test_elements(self):
+        comp = Composition(atomic=[("H", 0.25), ("O", 0.75)], name=3)
+        assert list(comp.elements()) == [Element("H"), Element("O")]
+
+    def test_weight_of_repeated_element(self):
+        """Fractions of repeated elements are accumulated."""
+        comp = Composition(weight=[("H", 0.5), ("H", 0.5)])
+        assert list(comp) == [(Element("H"), 1.0)]
+
     eq_matrix: Final = [
         [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1825,3 +1884,39 @@ class TestMaterial:
         ans_mat = Material(**expected)
         mix = Material.mixture(*materials, fraction_type=fraction_type)
         assert ans_mat == mix
+
+    def test_getitem(self):
+        """Options are accessed by key, but derived values like density are not options."""
+        mat = Material(atomic=[("N", 1)], density=1.251e-3, name=5)
+        assert mat["name"] == 5
+        with pytest.raises(KeyError):
+            _ = mat["density"]
+
+    @pytest.mark.parametrize(
+        "kwargs, msg",
+        [({}, "'old_vol' is not specified"), ({"old_vol": 2.0}, "'new_vol' is not specified")],
+    )
+    def test_correct_failures(self, kwargs, msg):
+        mat = Material(atomic=[("N", 1)], density=1.251e-3)
+        with pytest.raises(ValueError, match=msg):
+            mat.correct(**kwargs)
+
+    def test_mixture_of_no_materials(self):
+        with pytest.raises(ValueError, match="At least one material must be specified"):
+            Material.mixture(fraction_type="weight")
+
+    def test_mixture_of_unknown_fraction_type(self):
+        mat = Material(atomic=[("N", 1)], density=1.251e-3)
+        with pytest.raises(ValueError, match="Unknown fraction type"):
+            Material.mixture((mat, 1.0), fraction_type="junk")
+
+    def test_mixture_by_volume(self):
+        """The mix density is the weighted mean, and fractions follow the molar amounts."""
+        comp_h = Composition(atomic=[("H", 1)])
+        comp_o = Composition(atomic=[("O", 1)])
+        density, mix = mixture_by_volume((comp_h, 0.5, 0.5), (comp_o, 2.0, 0.5), _number=7)
+        assert density == pytest.approx(1.25)
+        fractions = dict(mix)
+        assert fractions[Element("H")] == pytest.approx(0.7987255237063993)
+        assert fractions[Element("O")] == pytest.approx(0.20127447629360082)
+        assert mix.options["name"] == 7
