@@ -212,8 +212,5 @@ def parse_cells(
             raise MissedCellsError.from_text_cards(missed_cells_cards)
         cells_to_process = new_cells_to_process
 
-    if any(c is None for c in cells):
-        cells = [c for c in cells if c is not None]
-
     # All cell cards are processed by the while-loop above, so no Nones remain.
     return cast("list[Body]", cells), cells_index

@@ -2,9 +2,18 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
+import re
+
 import pytest
 
-from mckit.parser.mcnp_input_parser import ParseResult, from_file, from_text
+from mckit.parser.mcnp_input_parser import (
+    MissedCellsError,
+    ParseResult,
+    from_file,
+    from_text,
+    parse_transformations,
+)
+from mckit.parser.mcnp_section_parser import split_to_cards
 
 
 class TExpected(NamedTuple):
@@ -292,3 +301,32 @@ def test_mcnp_parser(parse_file, expected, data):
     # assert expected['cells'] == result.cells
     # assert expected['surfaces'] == result.surfaces
     # assert expected['data'] == result.data
+
+
+def test_from_text_continue_mode_raises() -> None:
+    with pytest.raises(ValueError, match="No cell cards"):
+        _ = from_text("continue\nm100\n      1001 0.1\n")
+
+
+def test_parse_transformations_invalid_card() -> None:
+    text_cards = list(split_to_cards("tr1 0 0 0 1"))
+    with pytest.raises(ValueError, match=re.escape("Failed to parse card 'tr1 0 0 0 1'")):
+        _ = parse_transformations(text_cards)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "test\n1 LIKE 3 BUT imp:n=1\n",
+        "test\n1 LIKE 3 BUT imp:n=1\n2 0 1 imp:n=1\n\n1 so 10\n",
+    ],
+)
+def test_missed_cells_error(text: str) -> None:
+    with pytest.raises(MissedCellsError, match=re.escape("Not found cells: [1]")) as exc_info:
+        _ = from_text(text)
+    assert exc_info.value.missed_cells == [1]
+
+
+def test_forward_cell_reference_resolved_in_second_pass() -> None:
+    result = from_text("test\n1 LIKE 2 BUT imp:n=1\n2 0 1 imp:n=1\n\n1 so 10\n")
+    assert [c.name() for c in result.cells] == [1, 2]

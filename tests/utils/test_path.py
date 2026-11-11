@@ -6,11 +6,17 @@ from pathlib import Path
 import pytest
 
 from mckit.utils import (
+    check_dir,
+    check_dirs,
+    check_file,
+    check_files,
     check_if_all_paths_exist,
     check_if_path_exists,
     find_git_root_dir,
     get_last_line,
+    join_dirs,
     make_dirs,
+    mkpath,
     search_path_upward,
 )
 
@@ -73,3 +79,60 @@ def test_get_last_line(cd_tmpdir):
     assert actual == line_with_nl, "Two lines -> the last line"
     actual = get_last_line(test_path, chunk_size=2)
     assert actual == line_with_nl, "Two lines, small chunk -> the last line"
+
+
+def test_search_path_upward_with_start(tmp_path):
+    assert search_path_upward(lambda p: p == tmp_path, start=tmp_path) == tmp_path
+    assert search_path_upward(lambda _: False, start=tmp_path) is None
+
+
+def test_mkpath():
+    assert mkpath("abc") == Path("abc")
+    p = Path("abc")
+    assert mkpath(p) == p
+
+
+def test_check_file(cd_tmpdir):
+    path = Path("a_file.txt")
+    path.touch()
+    assert check_file(path) == path
+    assert check_file(str(path)) == path
+    with pytest.raises(ValueError, match="Not a file:"):
+        check_file("not-existing.and.never-should-exist")
+
+
+def test_check_files(cd_tmpdir):
+    paths = [Path("a.txt"), Path("b.txt")]
+    for p in paths:
+        p.touch()
+    assert [*check_files(*paths)] == paths
+    with pytest.raises(ValueError, match="Not a file:"):
+        _ = [*check_files(paths[0], Path("not-existing.and.never-should-exist"))]
+
+
+def test_check_dir(cd_tmpdir):
+    assert check_dir(Path()) == Path()
+    with pytest.raises(ValueError, match="Not a dir:"):
+        check_dir(Path("not-existing.and.never-should-exist"))
+
+
+def test_check_dirs(cd_tmpdir):
+    dirs = [Path("a"), Path("b")]
+    for d in dirs:
+        d.mkdir()
+    assert [*check_dirs(*dirs)] == dirs
+    with pytest.raises(ValueError, match="Not a dir:"):
+        _ = [*check_dirs(dirs[0], Path("not-existing.and.never-should-exist"))]
+
+
+def test_join_dirs(tmp_path):
+    actual = [*join_dirs(tmp_path, "a", "b")]
+    assert actual == [tmp_path / "a", tmp_path / "b"]
+
+
+@pytest.mark.parametrize("chunk_size", [1, 1024])
+def test_get_last_line_blank_last_line(cd_tmpdir, chunk_size):
+    test_path = Path("test_get_last_line_blank.txt")
+    test_path.write_bytes(b"a\n\n")
+    actual = get_last_line(test_path, chunk_size=chunk_size)
+    assert actual == "\n", "Blank last line -> the line with just the newline"
