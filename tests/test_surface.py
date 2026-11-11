@@ -3190,28 +3190,9 @@ class TestRCC:
     @pytest.mark.parametrize(
         "center, axis, rad, ans",
         [
-            # pytest.param(
-            #     [-2, 0, 0],
-            #     [4, 0, 0],
-            #     0.5,
-            #     0,
-            #     marks=pytest.mark.skipif(
-            #         sys.platform == "darwin"
-            #         or sys.platform == "linux"
-            #         and sys.version_info[0:2] < (3, 9),
-            #         reason="Fails on MacOS and Linux with python 3.8",
-            #     ),
-            # ),
+            ([-2, 0, 0], [4, 0, 0], 0.5, 0),
             ([-2, 0, 0], [4, 0, 0], 3, -1),
-            pytest.param(
-                [-0.75, 0, 0],
-                [1.5, 0, 0],
-                0.75,
-                0,
-                marks=pytest.mark.skip(
-                    reason="Fails on MacOS and occasionally on Linux and Windows",
-                ),
-            ),
+            ([-0.75, 0, 0], [1.5, 0, 0], 0.75, 0),
             ([-2, 6, 0], [4, 0, 0], 3, +1),
         ],
     )
@@ -3344,3 +3325,257 @@ class TestRCC:
 def test_plane_is_close(a: Plane, b: Plane, expected: bool) -> None:
     assert a.is_close_to(b) == expected
     assert b.is_close_to(a) == expected
+
+
+#  Model surfaces with the transformation delayed in options:
+#  __init__ of every surface kind applies its "transform" kwarg immediately and pops it,
+#  so `apply_transformation`/`combine_transformations`/`is_close_to` see it only then.
+_tr_1 = Transformation(translation=[0, 1, 0])
+_tr_2 = Transformation(translation=[0, 2, 0])
+
+
+def _delayed_transform(surface, tr):
+    surface.options["transform"] = tr
+    return surface
+
+
+@pytest.mark.parametrize(
+    "surface",
+    [
+        create_surface("PX", 5.0),
+        create_surface("SO", 1.0),
+        create_surface("CY", 1.0),
+        create_surface("KZ", 4, 0.25),
+        create_surface("GQ", 1, 2, 3, 4, 5, 6, 7, 8, 9, -10),
+        create_surface("TX", 0, 0, 0, 2, 1, 0.5),
+    ],
+    ids=["plane", "sphere", "cylinder", "cone", "gq", "torus"],
+)
+def test_is_close_to_self(surface):
+    assert surface.is_close_to(surface) is True
+
+
+@pytest.mark.parametrize(
+    "a, b",
+    [
+        (create_surface("PX", 5.0), create_surface("SO", 1.0)),
+        (create_surface("SO", 1.0), create_surface("PX", 5.0)),
+        (create_surface("CY", 1.0), create_surface("SO", 1.0)),
+        (create_surface("KZ", 4, 0.25), create_surface("CY", 1.0)),
+        (create_surface("GQ", 1, 2, 3, 4, 5, 6, 7, 8, 9, -10), create_surface("KZ", 4, 0.25)),
+        (
+            create_surface("TX", 0, 0, 0, 2, 1, 0.5),
+            create_surface("GQ", 1, 2, 3, 4, 5, 6, 7, 8, 9, -10),
+        ),
+    ],
+)
+def test_is_close_to_other_type(a, b):
+    assert a.is_close_to(b) is False
+
+
+@pytest.mark.parametrize(
+    "a, b, expected",
+    [
+        (Sphere([0, 0, 0], 1.0), Sphere([0, 0, 0], 1.0 + 5e-13), True),
+        (Sphere([0, 0, 0], 1.0), Sphere([0, 0, 0], 1.0 + 5e-12), False),
+        (
+            _delayed_transform(Sphere([0, 0, 0], 1.0), _tr_1),
+            _delayed_transform(Sphere([0, 0, 0], 1.0), _tr_1),
+            True,
+        ),
+        (
+            _delayed_transform(Sphere([0, 0, 0], 1.0), _tr_1),
+            _delayed_transform(Sphere([0, 0, 0], 1.0), _tr_2),
+            False,
+        ),
+        (
+            # absent transformations considered equal, see utils.tolerance._call
+            _delayed_transform(Sphere([0, 0, 0], 1.0), _tr_1),
+            Sphere([0, 0, 0], 1.0),
+            True,
+        ),
+        (Cylinder([0, 0, 0], [0, 0, 1], 2.0), Cylinder([0, 0, 0], [0, 0, 1], 2.0 + 1e-12), True),
+        (Cylinder([0, 0, 0], [0, 0, 1], 2.0), Cylinder([0, 0, 0], [0, 0, 1], 2.0 + 1e-11), False),
+        (Cone([0, 0, 0], [0, 0, 1], 0.25), Cone([0, 0, 0], [0, 0, 1], 0.25 + 1e-12), True),
+        (Cone([0, 0, 0], [0, 0, 1], 0.25), Cone([0, 0, 0], [0, 0, 1], 0.25 + 1e-11), False),
+        (
+            GQuadratic([[1, 0, 0], [0, 1, 0], [0, 0, 1]], [0, 0, 1], 1.0),
+            GQuadratic([[1, 0, 0], [0, 1, 0], [0, 0, 1]], [0, 0, 1], 1.0 + 5e-13),
+            True,
+        ),
+        (
+            GQuadratic([[1, 0, 0], [0, 1, 0], [0, 0, 1]], [0, 0, 1], 1.0),
+            GQuadratic([[1, 0, 0], [0, 1, 0], [0, 0, 1]], [0, 0, 1], 1.0 + 5e-12),
+            False,
+        ),
+        (
+            Torus([0, 0, 0], [0, 0, 1], 2.0, 1.0, 0.5),
+            Torus([0, 0, 0], [0, 0, 1], 2.0 + 1e-12, 1.0, 0.5),
+            True,
+        ),
+        (
+            Torus([0, 0, 0], [0, 0, 1], 2.0, 1.0, 0.5),
+            Torus([0, 0, 0], [0, 0, 1], 2.0 + 1e-11, 1.0, 0.5),
+            False,
+        ),
+    ],
+)
+def test_surfaces_is_close(a, b, expected):
+    assert a.is_close_to(b) is expected
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        lambda **options: Plane([1, 0, 0], 5.0, **options),
+        lambda **options: Sphere([0, 0, 0], 1.0, **options),
+        lambda **options: Cylinder([0, 0, 0], [0, 0, 1], 2.0, **options),
+        lambda **options: Cone([0, 0, 0], [0, 0, 1], 0.25, **options),
+        lambda **options: GQuadratic([[1, 0, 0], [0, 1, 0], [0, 0, 1]], [0, 0, 1], 1.0, **options),
+        lambda **options: Torus([0, 0, 0], [0, 0, 1], 2.0, 1.0, 0.5, **options),
+    ],
+    ids=["plane", "sphere", "cylinder", "cone", "gq", "torus"],
+)
+def test_apply_transformation_of_delayed_transform(factory):
+    tr = Transformation(translation=[0, 1, 0])
+    surface = factory()
+    surface.options["transform"] = tr
+    transformed = surface.apply_transformation()
+    expected = factory(transform=tr)
+    assert transformed == expected
+    assert "transform" not in transformed.options
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        lambda **options: Plane([1, 0, 0], 5.0, **options),
+        lambda **options: Sphere([0, 0, 0], 1.0, **options),
+        lambda **options: Cylinder([0, 0, 0], [0, 0, 1], 2.0, **options),
+        lambda **options: Cone([0, 0, 0], [0, 0, 1], 0.25, **options),
+        lambda **options: GQuadratic([[1, 0, 0], [0, 1, 0], [0, 0, 1]], [0, 0, 1], 1.0, **options),
+        lambda **options: Torus([0, 0, 0], [0, 0, 1], 2.0, 1.0, 0.5, **options),
+    ],
+    ids=["plane", "sphere", "cylinder", "cone", "gq", "torus"],
+)
+def test_apply_transformation_by_default(factory):
+    #  Transformation is implemented already at __init__, and no transformation is left in options
+    surface = factory()
+    assert surface.apply_transformation() is surface
+
+
+def test_rcc_apply_transformation():
+    rcc = RCC([-1, 1, -2], [2, 0, 0], 4.0)
+    rcc.options["transform"] = _tr_1
+    assert rcc.apply_transformation() is rcc
+    assert rcc.options["transform"] is _tr_1
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        lambda **options: Plane([1, 0, 0], 5.0, **options),
+        lambda **options: Cylinder([0, 0, 0], [0, 0, 1], 2.0, **options),
+    ],
+    ids=["plane", "cylinder"],
+)
+def test_wrong_transformation_type(factory):
+    with pytest.raises(TypeError):
+        factory(transform="1 2 3")
+
+
+def test_plane_transform_no_transformation():
+    plane = create_surface("PX", 5.0)
+    assert plane.transform(None) is plane
+
+
+def test_combine_transformations():
+    plain = create_surface("PX", 5.0)
+    assert plain.combine_transformations(_tr_1) is _tr_1
+    plane = create_surface("PX", 5.0)
+    plane.options["transform"] = _tr_1
+    combined = plane.combine_transformations(_tr_2)
+    assert combined.mcnp_repr() == _tr_2.apply2transform(_tr_1).mcnp_repr()
+
+
+def test_macrobody_surface_index_error():
+    rcc = create_surface("RCC", -1, 1, -2, 2, 0, 0, 4)
+    with pytest.raises(ValueError, match="There is no such surface in macrobody"):
+        rcc.surface(0)
+    box = create_surface("BOX", -1, -2, -3, 2, 0, 0, 0, 4, 0, 0, 0, 6)
+    with pytest.raises(ValueError, match="There is no such surface in macrobody"):
+        box.surface(7)
+
+
+def test_surface_eq_mismatches():
+    rcc = create_surface("RCC", -1, 1, -2, 2, 0, 0, 4)
+    box = create_surface("BOX", -1, -2, -3, 2, 0, 0, 0, 4, 0, 0, 0, 6)
+    gq = create_surface("GQ", 1, 2, 3, 4, 5, 6, 7, 8, 9, -10)
+    cone = create_surface("KZ", 4, 0.25)
+    torus = create_surface("TX", 0, 0, 0, 2, 1, 0.5)
+    assert (rcc == create_surface("PX", 5.0)) is False
+    assert (box == create_surface("RCC", -1, 1, -2, 2, 0, 0, 3)) is False
+    assert (gq == create_surface("PX", 5.0)) is False
+    assert (gq == create_surface("GQ", 1, 2, 3, 4, 5, 6, 7, 8.5, 9, -10)) is False
+    assert (gq == create_surface("GQ", 2, 2, 3, 4, 5, 6, 7, 8, 9, -10)) is False
+    assert (cone == cone) is True  # noqa: PLR0124 - covers the `self is other` shortcut in __eq__
+    assert (cone == create_surface("CY", 1.0)) is False
+    assert (torus == torus) is True  # noqa: PLR0124 - covers the `self is other` shortcut in __eq__
+    assert (torus == create_surface("CX", 1.0)) is False
+    assert (torus == create_surface("TX", 0, 0, 1, 2, 1, 0.5)) is False
+
+
+def test_cylinder_with_tilted_axis_mcnp_repr():
+    #  Non-axis-aligned cylinder is represented as a generic quadratic surface
+    surface = Cylinder([1, 2, 3], [0.3, 0.4, 0.5], 2.0)
+    assert surface.mcnp_repr() == "None GQ 0.82 0.68 0.5 -0.48 -0.8 -0.6 1.12 0.16 -0.8 -3.52"
+
+
+def test_cone_with_tilted_axis_mcnp_repr():
+    #  Non-axis-aligned cone is represented as a generic quadratic surface
+    surface = Cone([1, 2, 3], [0.3, 0.4, 0.5], 0.25)
+    assert surface.mcnp_repr() == "None GQ 0.775 0.6 0.375 -0.6 -1 -0.75 1.9 1.2 0.5 -2.9"
+
+
+@pytest.mark.parametrize(
+    "axis, answer",
+    [
+        ([0, 1, 0], "None TY 0 0 0 2 1 0.5"),
+        ([0, 0, 1], "None TZ 0 0 0 2 1 0.5"),
+        (
+            [0.3, 0.4, 0.5],
+            "None  0 0 0 2 1 0.5",
+        ),  # non-axis-aligned: no dedicated kind token is emitted
+    ],
+    ids=["ty", "tz", "tilted"],
+)
+def test_torus_mcnp_repr_yz(axis, answer):
+    surface = Torus([0, 0, 0], axis, 2.0, 1.0, 0.5)
+    assert surface.mcnp_repr() == answer
+
+
+def test_create_surface_unknown_kind_without_axis():
+    with pytest.raises(ValueError, match="Cannot define axis"):
+        create_surface("Q", 1.0)
+
+
+def test_create_surface_error_points_on_different_sheets():
+    #  Axis-symmetric surface specified with two points on different cone sheets
+    with pytest.raises(ValueError, match="Points must belong to the one sheet"):
+        create_surface("QZ", 1.0, 1.0, 2.0, -1.0)
+
+
+@pytest.mark.parametrize(
+    "params, answer",
+    [
+        ((1.0, 1.0, 1.0, 2.0), "None PZ 1"),  # points with the same height -> plane
+        ((1.0, 2.0, 3.0, 2.0), "None CZ 2"),  # points with the same radius -> cylinder
+        ((1.0, 2.0, 3.0, 4.0), "None KZ -1 1 1"),  # points on the same cone sheet
+    ],
+    ids=["plane", "cylinder", "cone"],
+)
+def test_create_surface_by_points(params, answer):
+    #  "QZ" is a stand-in for an axis-symmetric surface kind with no dedicated
+    #  spec handler, which makes create_surface fall back to the by-points logic
+    #  (see TODO "test and document the following code" in surface.py)
+    assert create_surface("QZ", *params).mcnp_repr() == answer

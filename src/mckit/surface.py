@@ -281,7 +281,7 @@ class Surface(Card, MaybeClose):
 
     @abstractmethod
     def copy(self) -> Surface:
-        pass
+        pass  # pragma: no cover - abstract scaffolding
 
     @property
     def transformation(self) -> Transformation | None:
@@ -598,11 +598,12 @@ class BOX(Surface, _BOX):
 class Plane(Surface, _Plane):
     """Plane surface class.
 
-    Args:
-        normal: The normal to the plane being created.
-        offset: Free term.
-        options:  Dictionary of surface's options. Possible values:
-                  transform = transformation to be applied to this plane.
+    Parameters
+    ----------
+    normal: The normal to the plane being created.
+    offset: Free term.
+    options:  Dictionary of surface's options. Possible values:
+              transform = transformation to be applied to this plane.
     """
 
     def __init__(self, normal: ArrayLike, offset: float, **options: Any) -> None:
@@ -649,7 +650,7 @@ class Plane(Surface, _Plane):
 
         Returns
         -------
-            New copy of self
+        New copy of self
         """
         instance = Plane.__new__(Plane)
         instance._k_digits = self._k_digits
@@ -1122,8 +1123,8 @@ class Cone(Surface, _Cone):
             axis = tr.apply2vector(axis)
         axis = np.asarray(axis, dtype=float)
         axis /= np.linalg.norm(axis)
-        maxdir = np.argmax(np.abs(axis))
-        if axis[maxdir] < 0:
+        max_dir = np.argmax(np.abs(axis))
+        if axis[max_dir] < 0:
             axis *= -1
             sheet *= -1
         apex = np.asarray(apex, dtype=float)
@@ -1460,8 +1461,8 @@ class Torus(Surface, _Torus):
             center = tr.apply2point(center)
             axis = tr.apply2vector(axis)
         axis /= np.linalg.norm(axis)
-        maxdir = np.argmax(np.abs(axis))
-        if axis[maxdir] < 0:
+        max_dir = np.argmax(np.abs(axis))
+        if axis[max_dir] < 0:
             axis *= -1
         self._axis_digits = significant_array(
             axis, constants.FLOAT_TOLERANCE, resolution=constants.FLOAT_TOLERANCE

@@ -2,14 +2,18 @@ from __future__ import annotations
 
 from typing import Final
 
+import io
+import sys
+
 import numpy as np
 import pytest
 
-from mckit.body import Body, Shape
+from mckit.body import Body, Shape, Simplifier, simplify, simplify_mp, simplify_mpp
 from mckit.box import Box
 from mckit.material import Material
 from mckit.surface import create_surface
 from mckit.transformation import Transformation
+from mckit.universe import Universe
 
 from tests import pass_through_pickle
 
@@ -2293,3 +2297,296 @@ class TestBody:
         new_results = new_body.shape.test_points(points2)
         # TODO: Check testing of FILL without 'transform' case
         np.testing.assert_array_equal(results, new_results)
+
+
+def _make_fill_envelope():
+    """Creates a body bounded by PY planes, intended to be filled with universes."""
+    py0 = create_surface("PY", 0, name=3)
+    py2 = create_surface("PY", 2, name=4)
+    fill_shape = Shape("I", py0, Shape("C", py2))
+    return Body(fill_shape, name=1), py0, py2
+
+
+def _make_fill_universe():
+    """Creates a universe with a single x-slab cell to use as a filler."""
+    px0 = create_surface("PX", 0, name=1)
+    px2 = create_surface("PX", 2, name=2)
+    filler = Body(Shape("I", px0, Shape("C", px2)), name=10)
+    return Universe([filler], name=2), px0, px2
+
+
+class TestFill:
+    """Tests of the Body.fill method."""
+
+    def test_fill_without_universe_and_fill_option(self):
+        cell, _, _ = _make_fill_envelope()
+        assert cell.options.get("FILL") is None
+        result = cell.fill()
+        assert result == [cell]
+        assert result[0] is cell
+
+    def test_fill_with_universe_argument(self):
+        cell, py0, py2 = _make_fill_envelope()
+        universe, px0, px2 = _make_fill_universe()
+        result = cell.fill(universe)
+        assert len(result) == 1
+        expected = Shape("I", Shape("S", px0), Shape("C", px2), Shape("S", py0), Shape("C", py2))
+        assert result[0].shape == expected
+
+    def test_fill_from_fill_option(self):
+        cell, py0, py2 = _make_fill_envelope()
+        universe, px0, px2 = _make_fill_universe()
+        cell.options["FILL"] = {"universe": universe}
+        result = cell.fill()
+        assert len(result) == 1
+        expected = Shape("I", Shape("S", px0), Shape("C", px2), Shape("S", py0), Shape("C", py2))
+        assert result[0].shape == expected
+
+    def test_fill_with_transform(self):
+        cell, py0, py2 = _make_fill_envelope()
+        universe, _, _ = _make_fill_universe()
+        cell.options["FILL"] = {
+            "universe": universe,
+            "transform": Transformation(translation=[1, 0, 0]),
+        }
+        result = cell.fill()
+        assert len(result) == 1
+        px1 = create_surface("PX", 1)
+        px3 = create_surface("PX", 3)
+        expected = Shape("I", Shape("S", px1), Shape("C", px3), Shape("S", py0), Shape("C", py2))
+        assert result[0].shape == expected
+
+    def test_fill_recurrent(self):
+        so = create_surface("SO", 1.0, name=9)
+        u_deep = Universe([Body(Shape("S", so), name=7)], name=4)
+        px0 = create_surface("PX", 0, name=1)
+        px2 = create_surface("PX", 2, name=2)
+        mid = Body(Shape("I", px0, Shape("C", px2)), name=8)
+        mid.options["FILL"] = {"universe": u_deep}
+        u_mid = Universe([mid], name=6)
+        cell, py0, py2 = _make_fill_envelope()
+        cell.options["FILL"] = {"universe": u_mid}
+        expected = Shape("I", Shape("S", px0), Shape("C", px2), Shape("S", py0), Shape("C", py2))
+        # Without the recurrent flag the deep universe is not expanded.
+        result = cell.fill()
+        assert len(result) == 1
+        assert result[0].shape == expected
+        # With the flag the mid cell is filled with the deep universe first.
+        result = cell.fill(recurrent=True)
+        assert len(result) == 1
+        expected = Shape(
+            "I",
+            Shape("S", so),
+            Shape("S", px0),
+            Shape("C", px2),
+            Shape("S", py0),
+            Shape("C", py2),
+        )
+        assert result[0].shape == expected
+
+    def test_fill_propagates_universe_option(self):
+        cell, _py0, _py2 = _make_fill_envelope()
+        universe, _, _ = _make_fill_universe()
+        cell.options["FILL"] = {"universe": universe}
+        cell.options["U"] = 8
+        result = cell.fill()
+        assert len(result) == 1
+        assert result[0].options.get("U") == 8
+
+    def test_fill_simplify(self):
+        cell, py0, py2 = _make_fill_envelope()
+        universe, px0, px2 = _make_fill_universe()
+        cell.options["FILL"] = {"universe": universe}
+        result = cell.fill(universe=universe, simplify=True)
+        assert len(result) == 1
+        expected = Shape("I", Shape("S", px0), Shape("C", px2), Shape("S", py0), Shape("C", py2))
+        assert result[0].shape == expected
+        # The 'U' option is inherited from the filling cell, not from the envelope.
+        assert result[0].options.get("U") is universe
+
+
+def _axes():
+    """Creates fresh basis planes for the internals tests (names don't matter for equality)."""
+    return (
+        create_surface("PX", 0, name=1),
+        create_surface("PY", 0, name=2),
+        create_surface("PZ", 0, name=3),
+    )
+
+
+class TestShapeInternals:
+    """Tests of Shape internals left uncovered by the general shape and body suites."""
+
+    def test_get_words_of_degenerate_shapes(self):
+        assert Shape("E").get_words() == ["EMPTY_SET"]
+        assert Shape("R").get_words() == ["UNIVERSE_SET"]
+        # A degenerate shape is not wrapped in parentheses whatever parent's operation is.
+        assert Shape("E").get_words("I") == ["EMPTY_SET"]
+
+    def test_complexity_of_degenerate_shapes(self):
+        assert Shape("E").complexity() == 0
+        assert Shape("R").complexity() == 0
+
+    def test_get_simplest_of_non_boolean_shape(self):
+        px, _py, _pz = _axes()
+        shape = Shape("C", px)
+        assert shape.get_simplest() == [shape]
+
+    def test_get_simplest_without_statistics(self):
+        """Without box statistics the shape degenerates to the inverse of its operation."""
+        px, py, _pz = _axes()
+        shape_i = Shape("I", px, py)
+        assert shape_i.get_simplest() == [Shape("E")]
+        shape_u = Shape("U", px, py)
+        assert shape_u.get_simplest() == [Shape("R")]
+
+    def test_get_simplest_trims_variants_beyond_min_complexity(self):
+        """Variants with complexity greater than the minimal one more than trim_size are dropped."""
+        px0 = create_surface("PX", 0, name=1)
+        py0 = create_surface("PY", 0, name=3)
+        py2 = create_surface("PY", 2, name=4)
+        shape = Shape("I", px0, py0, Shape("U", py2, Shape("I", px0, py0)))
+        shape.collect_statistics(Box([0, 0, 0], 4, 4, 4), 0.05)
+        variants = shape.get_simplest(0)
+        assert [v.complexity() for v in variants] == [2, 4]
+        assert variants[0] == Shape("I", px0, py0)
+
+    def test_equality_with_mismatched_args_groups(self):
+        """Shapes with unequal hash group composition are never equal."""
+        px, py, _pz = _axes()
+        px2 = create_surface("PX", 2, name=4)
+        py2 = create_surface("PY", 2, name=5)
+        shape = Shape("I", px, py)
+        # args numbers differ, duplicated args are kept
+        assert shape != Shape("I", px, py, py)
+        # the other shape misses the first hash group entirely
+        assert shape != Shape("I", px2, py2)
+        # a hash group repeated twice compared to a group of different size
+        assert Shape("I", px, px) != Shape("I", px, px2)
+
+    def test_is_complement_of_halfspaces(self):
+        px, py, _pz = _axes()
+        assert Shape("C", px).is_complement(Shape("S", px))
+        assert not Shape("C", px).is_complement(Shape("S", py))
+        # The empty set and the whole space are complements too.
+        assert Shape("E").is_complement(Shape("R"))
+
+    def test_is_complement_of_multiple_args(self):
+        """Every argument of the shape must have its complement in the other shape."""
+        px, py, pz = _axes()
+        shape = Shape("U", Shape("C", px), Shape("C", py))
+        assert shape.is_complement(Shape("I", px, py))
+        # one of the arguments is not complemented
+        assert not shape.is_complement(Shape("I", px, px))
+        shape_pz = Shape("U", Shape("C", px), Shape("C", pz))
+        assert not shape_pz.is_complement(Shape("I", px, py))
+
+    def test_is_complement_rejects_mismatched_args_numbers(self):
+        """Different args numbers reject the complement even with complementary hashes."""
+        # No naturally built pair of shapes has complementary hashes and different
+        # args numbers, so the hash match is forced to exercise the defensive check.
+        px, py, _pz = _axes()
+        shape = Shape("U", Shape("C", px), Shape("C", py))
+        other = Shape("I", px, py, py)
+        other._hash = ~hash(shape)
+        assert not shape.is_complement(other)
+
+    def test_from_polish_notation_accepts_bodies(self):
+        """A Body operand is unwrapped to its shape."""
+        px, py, _pz = _axes()
+        body = Body(Shape("I", px, py))
+        assert Shape.from_polish_notation([body]) == body.shape
+        assert Shape.from_polish_notation([body, "C"]) == body.shape.complement()
+
+
+class TestBodyInternals:
+    """Tests of Body internals left uncovered by the general body suites."""
+
+    def test_create_rejects_unsuitable_geometry(self):
+        with pytest.raises(TypeError, match="Geometry list or Shape is expected"):
+            Body("abc")
+
+    def test_hash_depends_on_name(self):
+        px, py, _pz = _axes()
+        shape = Shape("I", px, py)
+        body = Body(shape, name=1)
+        assert hash(Body(shape, name=1)) == hash(body)
+        assert hash(body) != hash(Body(shape, name=2))
+
+    def test_is_empty(self):
+        px, py, _pz = _axes()
+        assert Body(Shape("E")).is_empty
+        assert not Body(Shape("I", px, py)).is_empty
+
+    def test_is_graveyard(self):
+        px, py, _pz = _axes()
+        assert Body(Shape("I", px, py)).is_graveyard
+        positive = Body(Shape("I", px, py), IMPN=2.0, IMPP=2.0, IMPE=2.0)
+        assert not positive.is_graveyard
+
+    def test_importance_defaults_to_zero(self):
+        px, py, _pz = _axes()
+        body = Body(Shape("I", px, py))
+        assert body.importance() == 0.0
+        assert body.importance("P") == 0.0
+        assert body.importance("E") == 0.0
+        positive = Body(Shape("I", px, py), IMPN=2.5)
+        assert positive.importance("N") == 2.5
+
+    def test_is_equivalent_to_with_fill(self):
+        """Only the FILL presence matters beyond the shape, the universe value doesn't."""
+        px, py, _pz = _axes()
+        shape = Shape("I", px, py)
+        filled = Body(shape, FILL={"universe": "u"})
+        assert not filled.is_equivalent_to(Body(shape))
+        assert Body(shape).is_equivalent_to(Body(shape))
+
+    def test_material_rejects_unexpected_type(self):
+        px, py, _pz = _axes()
+        body = Body(Shape("I", px, py), MAT="dummy")
+        with pytest.raises(ValueError, match="Unexpected type of composition"):
+            body.material()
+
+
+class TestSimplifyHelpers:
+    """Tests of the top level simplification helpers."""
+
+    def test_simplify_skips_empty_simplification(self):
+        px, py, _pz = _axes()
+        cells = [Body(Shape("I", px, py)), Body(Shape("I", px, Shape("C", px)))]
+        result = list(simplify(cells))
+        assert len(result) == 1  # the body simplifies to empty and is skipped
+        assert result[0].shape == Shape("I", px, py)
+
+    def test_simplifier_roundtrip(self):
+        box = Box([0, 0, 0], 100.0, 100.0, 100.0)
+        simplifier = Simplifier(box=box, min_volume=1.0)
+        restored = pass_through_pickle(simplifier)
+        assert restored.box == simplifier.box
+        assert restored.min_volume == simplifier.min_volume
+        px, py, _pz = _axes()
+        cell = Body(Shape("I", px, py))
+        assert restored(cell).shape == cell.shape
+
+    @pytest.mark.slow
+    def test_multiprocess_simplification(self, monkeypatch):
+        """Tests both multiprocessing variants in one test to spare pool startup cost.
+
+        A Pool requires importable main like under pytest and is not probed in bare scripts.
+        """
+        px, py, _pz = _axes()
+        cells = [Body(Shape("I", px, py)), Body(Shape("U", px, Shape("C", px)))]
+        result = list(simplify_mp(cells, chunk_size=1))
+        assert len(result) == 2
+        assert result[0].shape == cells[0].shape
+
+        # A tty-like stdout makes the progress bar render its items, so its
+        # item formatting function gets exercised too.
+        class FakeOut(io.StringIO):
+            def isatty(self):
+                return True
+
+        monkeypatch.setattr(sys, "stdout", FakeOut())
+        result = list(simplify_mpp(cells, chunk_size=1))
+        assert len(result) == 2
+        assert result[0].shape == cells[0].shape

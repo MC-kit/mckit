@@ -411,24 +411,24 @@ class Shape(_Shape):
             val = -1
         elif self.opc == "U":
             val = +1
-        else:
+        else:  # pragma: no cover - self.opc is restricted to "I"/"U" by the check above
             return [self]
 
         drop_index = np.nonzero(np.all(stat == -val, axis=1))[0]
         if len(drop_index) == 0:
             if self.opc == "I":
                 return [Shape("E")]
-            if self.opc == "U":
+            if self.opc == "U":  # pragma: no branch - only "U" gets here, "I" returned above
                 return [Shape("R")]
         arg_results = np.delete(stat, drop_index, axis=0)
         if arg_results.shape[0] == 0:
             if self.opc == "I":
                 return [Shape("R")]
-            if self.opc == "U":
+            if self.opc == "U":  # pragma: no branch - only "U" gets here, "I" returned above
                 return [Shape("E")]
         cases = self._find_coverages(arg_results, value=val)
         final_cases = {tuple(c) for c in cases}
-        if len(final_cases) == 0:
+        if len(final_cases) == 0:  # pragma: no cover - every stat row keeps a `val` entry
             msg = "No final cases found"
             raise ValueError(msg)
             # _LOG.debug(self)
@@ -602,7 +602,7 @@ def _clean_args(
     if len(shapes) == 1 and isinstance(shapes[0], Shape):
         if opc in {"S", "I", "U"}:
             return shapes[0].opc, cast("tuple[Shape, ...]", shapes[0].args)
-        if opc == "C":
+        if opc == "C":  # pragma: no branch - opc is restricted here, E/R args rejected above
             item = shapes[0].complement()
             return item.opc, cast("tuple[Shape, ...]", item.args)
 
