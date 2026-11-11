@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Final
 
+import re
+
 from itertools import product
 
 import numpy as np
@@ -9,7 +11,7 @@ import pytest
 
 from mckit import read_meshtal
 from mckit.body import Body
-from mckit.fmesh import CylMesh, RectMesh
+from mckit.fmesh import CylMesh, FMesh, RectMesh
 from mckit.geometry import EX, EY, EZ
 from mckit.material import Material
 from mckit.surface import create_surface
@@ -353,6 +355,44 @@ class TestRectMesh:
             assert index == expected["index"]
             np.testing.assert_array_almost_equal(x, expected["x"])
             np.testing.assert_array_almost_equal(y, expected["y"])
+
+    def test_transform(self):
+        """Applying a second transformation combines it with the first one."""
+        tr1 = Transformation(translation=[2, -1, 3])
+        tr2 = Transformation(translation=[1, 2, -3])
+        mesh = RectMesh([0, 1, 2], [0, 1], [0, 1, 2], transform=tr1)
+        mesh.transform(tr2)
+        np.testing.assert_array_almost_equal(mesh._origin, [3, 1, 0])
+        # Axis vectors are translated too.
+        np.testing.assert_array_almost_equal(mesh._ex, [1, 0, 0])
+        np.testing.assert_array_almost_equal(mesh._ey, [0, 1, 0])
+        np.testing.assert_array_almost_equal(mesh._ez, [0, 0, 1])
+        assert mesh._tr is not None
+
+
+class TestCylMesh:
+    origin, axis, vec = [0, 0, 0], [0, 0, 1], [1, 0, 0]
+
+    def create_mesh(self):
+        return CylMesh(self.origin, self.axis, self.vec, [0, 1, 2], [0, 1, 2], [0, 1, 2])
+
+    @pytest.mark.parametrize(
+        "index, answer",
+        [
+            ((0, 1, 1), (0, 1, 1)),
+            ((1, 0, 1), (1, 0, 1)),
+            ((1, 1, 0), (1, 1, 0)),
+            ((-1, 0, 0), None),
+            ((2, 0, 0), None),
+            ((0, -1, 0), None),
+            ((0, 2, 0), None),
+            ((0, 0, -1), None),
+            ((0, 0, 2), None),
+        ],
+    )
+    def test_check_indices(self, index, answer):
+        mesh = self.create_mesh()
+        assert mesh.check_indices(*index) == answer
 
 
 class TestFMesh:
@@ -735,3 +775,83 @@ class TestFMesh:
         e, mf = tallies[name].mean_flux()
         np.testing.assert_array_almost_equal(e, ebins)
         np.testing.assert_array_almost_equal(mf, expected)
+
+
+_rect_bins = {"xbins": [0, 1, 2], "ybins": [0, 1], "zbins": [0, 1, 2]}
+_cyl_bins = {
+    "origin": [0, 0, 0],
+    "axis": [0, 0, 1],
+    "vec": [1, 0, 0],
+    "rbins": [0, 1, 2],
+    "zbins": [0, 1, 2],
+    "tbins": [0, 1, 2],
+}
+
+
+class TestFMeshCreationErrors:
+    @pytest.mark.parametrize(
+        "kwargs, message",
+        [
+            ({}, "Bins are not specified."),
+            (_cyl_bins | {"origin": None}, "Origin not specified."),
+            (_cyl_bins | {"axis": None}, "Axis not specified."),
+            (_cyl_bins | {"rbins": None}, "rbins not specified."),
+            (_cyl_bins | {"zbins": None}, "zbins not specified."),
+            (_cyl_bins | {"tbins": None}, "tbins not specified."),
+            (_cyl_bins | _rect_bins, "Both rectangular and cylindrical mesh bins are specified."),
+        ],
+    )
+    def test_invalid_bins(self, kwargs, message):
+        data = np.zeros((1, 2, 2, 2))
+        with pytest.raises(ValueError, match=re.escape(message)):
+            FMesh(1, "NEUTRON", data, data.copy(), **kwargs)
+
+    @pytest.mark.parametrize(
+        "bad_data, message",
+        [
+            (True, "Incorrect data shape"),
+            (False, "Incorrect error shape"),
+        ],
+    )
+    def test_incorrect_shapes(self, bad_data, message):
+        data = np.zeros((1, 2, 2, 2))
+        bad = np.zeros((1, 2, 2, 3))
+        with pytest.raises(ValueError, match=re.escape(message)):
+            FMesh(
+                1,
+                "NEUTRON",
+                bad if bad_data else data,
+                bad if not bad_data else data.copy(),
+                **_cyl_bins,
+            )
+
+    def test_default_ebins_and_dtbins(self):
+        data = np.zeros((1, 2, 1, 2))
+        mesh_kwargs = {"xbins": [0, 1, 2], "ybins": [0, 1], "zbins": [0, 1, 2]}
+        fm = FMesh(1, "NEUTRON", data, data.copy(), **mesh_kwargs)
+        ebins, _flux = fm.mean_flux()
+        np.testing.assert_array_almost_equal(ebins, [0.0, 1e36])
+        fm2 = FMesh(1, "NEUTRON", data, data.copy(), dtbins=[0, 1, 2], **mesh_kwargs)
+        np.testing.assert_array_almost_equal(fm2._dtbins, [0.0, 1.0, 2.0])
+
+    def test_comment(self):
+        data = np.zeros((1, 2, 1, 2))
+        mesh_kwargs = {"xbins": [0, 1, 2], "ybins": [0, 1], "zbins": [0, 1, 2]}
+        fm = FMesh(1, "NEUTRON", data, data.copy(), comment="hello", **mesh_kwargs)
+        assert fm.comment == "hello"
+
+
+class TestFMeshSlices:
+    @pytest.fixture
+    def tallies(self, data):
+        file_name = data / "parser/fmesh.m"
+        assert file_name.exists()
+        return read_meshtal(file_name)
+
+    def test_slice_of_cylindrical_mesh_is_not_implemented(self, tallies):
+        with pytest.raises(NotImplementedError):
+            tallies[24].get_slice(R=1.0)
+
+    def test_slice_with_energy_outside_bins(self, tallies):
+        with pytest.raises(ValueError, match=r"Specified energy lies outside of energy bins\."):
+            tallies[34].get_slice(E=25.0, X=0.5)

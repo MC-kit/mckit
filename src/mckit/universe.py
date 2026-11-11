@@ -966,7 +966,7 @@ def collect_transformations(universe: Universe, recursive: bool = True) -> set[T
             add_surface_transformation(aggregator, s)
         elif isinstance(s, Shape):
             aggregator.update(accept(s, visit_shape))
-        else:
+        else:  # pragma: no cover - at_surface only receives items of a Shape, never a Body
             assert isinstance(s, Body)
             aggregator.update(accept(s, visit_body))
         return aggregator
@@ -979,7 +979,7 @@ def collect_transformations(universe: Universe, recursive: bool = True) -> set[T
     ]:
         if isinstance(s, Surface | Body | Shape):
             yield at_surface, set()
-        else:
+        else:  # pragma: no cover - visit_shape is entered only with Surface or Shape wrappers
             on_unknown_acceptor(s)  # type: ignore[unreachable]
 
     def at_shape(aggregator: set[Transformation], s: Surface | Body | Shape) -> set[Transformation]:
@@ -993,7 +993,7 @@ def collect_transformations(universe: Universe, recursive: bool = True) -> set[T
     def visit_body(b: Body):
         if isinstance(b, Body):
             yield at_shape, set()
-        else:
+        else:  # pragma: no cover - visit_body is entered only with Body instances
             on_unknown_acceptor(b)  # type: ignore[unreachable]
 
     def at_body(aggregator: set[Transformation], b: Body) -> set[Transformation]:
@@ -1021,7 +1021,7 @@ def collect_transformations(universe: Universe, recursive: bool = True) -> set[T
             yield at_body, set()
             # TODO dvp:  set() is not a valid choice as aggregator considering
             #        cases when names differ but transformations are equal by values
-        else:
+        else:  # pragma: no cover - visit_universe is entered only with a Universe
             on_unknown_acceptor(u)  # type: ignore[unreachable]
 
     return cast(set[Transformation], accept(universe, visit_universe))

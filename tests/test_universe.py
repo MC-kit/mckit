@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import io
+import sys
 import textwrap
 
 from copy import deepcopy
@@ -1177,3 +1179,139 @@ def test_collect_transformations(case: str, expected: list[int]) -> None:
     u = from_text(case).universe
     actual = sorted(map(int, map(Card.name, collect_transformations(u))))
     assert actual == expected
+
+
+def test_str(universe) -> None:
+    assert str(universe(1)) == "Universe(name=0)"
+
+
+def test_has_equivalent_cells_of_different_length() -> None:
+    s1 = create_surface("PX", 0, name=1)
+    s2 = create_surface("PY", 0, name=2)
+    u1 = Universe([Body(Shape("S", s1), name=1)], name=1)
+    u2 = Universe([Body(Shape("S", s1), name=2), Body(Shape("S", s2), name=3)], name=2)
+    assert not u1.has_equivalent_cells(u2)
+    assert not u2.has_equivalent_cells(u1)
+
+
+def test_surface_selector_rejects_invalid_type() -> None:
+    with pytest.raises(TypeError, match="Invalid type of surface_names parameter"):
+        surface_selector(1.5)
+
+
+def test_name_clash_error_message() -> None:
+    """The dict form of the exception formats one line per clashed entity."""
+    u1 = Universe([], name=1)
+    u2 = Universe([], name=2)
+    err = NameClashError({"Cell": {1: {u1, u2}}, "Surface": {2: {u1}}})
+    lines = str(err).strip().splitlines()
+    assert len(lines) == 2
+    assert lines[0].startswith("Cell 1 is found in universes ")
+    # The order of universe names follows set iteration, so compare as a set.
+    names = lines[0].rsplit("[", 1)[1].rsplit("]", 1)[0]
+    assert {int(x) for x in names.split(", ")} == {1, 2}
+    assert lines[1] == "Surface 2 is found in universes [1]"
+
+
+def test_rename_rejects_negative_name(universe) -> None:
+    u = universe(1)
+    with pytest.raises(ValueError, match="Universe name -1 < 0"):
+        u.rename(name=-1)
+
+
+def test_check_clashes(universe) -> None:
+    u = universe(2)
+    universes_idx = {x.name(): x for x in u.get_universes()}
+    universes_idx[2].rename(start_cell=2)
+    with pytest.raises(NameClashError) as exc_info:
+        u.check_clashes()
+    assert "cell 2 is found in universes" in str(exc_info.value)
+    # A universe without clashes passes the check.
+    universe(1).check_clashes()
+
+
+def test_verbose_name_setter() -> None:
+    u = Universe([], name=1)
+    with pytest.raises(ValueError, match="Cannot use multiple lines"):
+        u.verbose_name = "a\nb"
+    with pytest.raises(ValueError, match="Too long universe verbose name"):
+        u.verbose_name = "x" * 81
+    u.verbose_name = "fine"
+    assert u.verbose_name == "fine"
+
+
+def test_apply_fill_by_cell_body(universe) -> None:
+    u = universe(2)
+    cell = next(c for c in u if c.name() == 1)
+    u.apply_fill(cell=cell)
+    ua = universe(1012)
+    points = Box([0, 0, 0], 20, 20, 20).generate_random_points(100000)
+    np.testing.assert_array_equal(u.test_points(points), ua.test_points(points))
+
+
+def test_apply_fill_by_universe_object(universe) -> None:
+    u = universe(2)
+    filler = next(x for x in u.get_universes() if x.name() == 1)
+    u.apply_fill(universe=filler)
+    ua = universe(1022)
+    points = Box([0, 0, 0], 20, 20, 20).generate_random_points(100000)
+    np.testing.assert_array_equal(u.test_points(points), ua.test_points(points))
+
+
+def test_bounding_box_skips_graveyard_cells(universe) -> None:
+    u = universe(2)
+    bb = u.bounding_box(skip_graveyard_cells=True)
+    u_without_graveyard = Universe([c for c in u if not c.is_graveyard], name=0)
+    expected = u_without_graveyard.bounding_box()
+    np.testing.assert_allclose(bb.center, expected.center)
+    np.testing.assert_allclose(bb.dimensions, expected.dimensions)
+
+
+def test_simplify_drops_cells_that_become_empty() -> None:
+    """Cells turned empty within the simplification box are dropped."""
+    s0 = create_surface("PX", 0, name=1)
+    s30 = create_surface("PX", 30, name=2)
+    s40 = create_surface("PX", 40, name=3)
+    # The union of the half-spaces is empty within the simplification box,
+    # but not empty by construction, so the universe keeps the cell at start.
+    u = Universe(
+        [
+            Body(Shape("U", Shape("S", s30), Shape("S", s40)), name=5),
+            Body(Shape("S", s0), name=6),
+        ],
+        name=0,
+    )
+    assert [c.name() for c in u] == [5, 6]
+    u.simplify(box=Box([0, 0, 0], 20, 20, 20), min_volume=0.1, verbose=False)
+    assert [c.name() for c in u] == [6]
+
+
+@pytest.mark.slow
+def test_simplify_verbose_output(universe, monkeypatch) -> None:
+    """A tty-like stdout makes the progress bar render items, exercising fmt_fun."""
+
+    class FakeOut(io.StringIO):
+        def isatty(self):
+            return True
+
+    monkeypatch.setattr(sys, "stdout", FakeOut())
+    u = universe(1)
+    u.simplify(min_volume=0.1, verbose=True)
+    assert len(u._cells) == 4
+    assert "Simplifying cell #" in sys.stdout.getvalue()
+
+
+def test_collect_transformations_of_named_surface_and_body_transformations() -> None:
+    """Named transformations of surfaces and cells are collected too."""
+    surface_tr = Transformation([1, 1, 1], name=1)
+    surface = create_surface("PX", 0, name=21)
+    surface.options["transform"] = surface_tr
+    body_tr = Transformation([-1, -1, -1], name=2)
+    s1 = create_surface("PX", 0, name=1)
+    cells = [
+        Body(Shape("S", surface), name=1),
+        Body(Shape("S", s1), name=2, TRCL=body_tr),
+    ]
+    u = Universe(cells, name=0)
+    actual = sorted(map(int, map(Card.name, collect_transformations(u))))
+    assert actual == [1, 2]

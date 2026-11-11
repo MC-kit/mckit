@@ -228,7 +228,7 @@ class RectMesh:
             index = self._check_y(np.searchsorted(self._ybins, Y).item() - 1)
         elif Z is not None:
             index = self._check_z(np.searchsorted(self._zbins, Z).item() - 1)
-        else:
+        else:  # pragma: no cover - the guard above ensures one of X/Y/Z is not None
             index = None
 
         if index is None:
@@ -502,6 +502,9 @@ class FMesh:
                 # TODO @dvp: vec is not provided by MCNP5 (check for MCNP6 difference)
                 vec = np.array([1.0, 0.0, 0.0], dtype=np.float64)
             self._mesh = CylMesh(origin, axis, vec, rbins, zbins, tbins)
+        else:
+            msg = "Both rectangular and cylindrical mesh bins are specified."
+            raise ValueError(msg)
         if self._data.shape[1:] != self._mesh.shape:
             raise ValueError("Incorrect data shape")
         if self._error.shape[1:] != self._mesh.shape:

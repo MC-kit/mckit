@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from io import StringIO
 
 import pytest
@@ -368,3 +370,169 @@ def test_print(text, expected):
         expected = text.strip()
     actual = out.getvalue().strip()
     assert actual == expected
+
+
+def test_card_is_cell_and_is_surface() -> None:
+    cell = Card("1 0 1", kind=Kind.CELL)
+    surface = Card("1 so 100", kind=Kind.SURFACE)
+    assert cell.is_cell
+    assert not cell.is_surface
+    assert surface.is_surface
+    assert not surface.is_cell
+
+
+def test_card_str() -> None:
+    assert str(Card("1 0 1")) == "1 0 1"
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("1 0 1", "1"),
+        ("*2 so 100", "*2"),
+        ("tr5", "tr5"),
+    ],
+)
+def test_card_name(text: str, expected: str) -> None:
+    assert Card(text).name == expected
+
+
+def test_card_name_raises_for_comment() -> None:
+    with pytest.raises(AssertionError, match="Comment cannot have name"):
+        _ = Card("c hello", kind=Kind.COMMENT).name
+
+
+@pytest.mark.parametrize(
+    "text,kind,expected",
+    [
+        ("1 0 1", Kind.CELL, 1),
+        ("1 so 100", Kind.SURFACE, 1),
+        ("*2 so 100", Kind.SURFACE, 2),
+        ("m100", Kind.MATERIAL, 100),
+        ("tr5", Kind.TRANSFORMATION, 5),
+        ("*tr5", Kind.TRANSFORMATION, 5),
+    ],
+)
+def test_card_number(text: str, kind: Kind, expected: int) -> None:
+    assert Card(text, kind=kind).number == expected
+
+
+def test_card_number_raises_for_sdef() -> None:
+    with pytest.raises(
+        NotImplementedError,
+        match=re.escape("Cannot define number for 5 card 'sdef'"),
+    ):
+        _ = Card("sdef", kind=Kind.SDEF).number
+
+
+@pytest.mark.parametrize(
+    "kwargs,message",
+    [
+        (
+            {"cell_cards": [Card("1 0 1")], "data_cards": [Card("sdef")]},
+            "Cells and Surfaces shouldn't present in 'continue' mode model",
+        ),
+        (
+            {},
+            "At least one data card should present in 'continue' mode model",
+        ),
+    ],
+)
+def test_input_sections_continue_mode_validation(kwargs: dict, message: str) -> None:
+    with pytest.raises(ValueError, match=re.escape(message)):
+        sp.InputSections("t", is_continue=True, **kwargs)
+
+
+def test_input_sections_print_without_cell_cards() -> None:
+    sections = sp.InputSections(title="t", surface_cards=[Card("1 so 1")])
+    with pytest.raises(ValueError, match="No cell cards"):
+        sections.print(StringIO())
+
+
+def test_input_sections_print_without_surface_cards() -> None:
+    sections = sp.InputSections(title="t", cell_cards=[Card("1 0 1")])
+    with pytest.raises(ValueError, match="No surface cards"):
+        sections.print(StringIO())
+
+
+@pytest.mark.parametrize(
+    "kwargs,expected",
+    [
+        (
+            {
+                "title": None,
+                "cell_cards": [Card("1 0 1")],
+                "surface_cards": [Card("1 so 1")],
+                "data_cards": None,
+                "remainder": "c tail",
+            },
+            "1 0 1\n\n1 so 1\n\nc tail\n",
+        ),
+        (
+            {
+                "title": "t",
+                "cell_cards": [Card("1 0 1")],
+                "surface_cards": [Card("1 so 1")],
+                "data_cards": [Card("sdef")],
+                "message": "msg block",
+                "remainder": "c tail",
+            },
+            "msg block\n\nt\n1 0 1\n\n1 so 1\n\nsdef\n\nc tail\n",
+        ),
+    ],
+)
+def test_input_sections_print_optional_parts(kwargs: dict, expected: str) -> None:
+    out = StringIO()
+    sp.InputSections(**kwargs).print(out)
+    assert out.getvalue() == expected
+
+
+def test_parse_sections_with_message_block() -> None:
+    sections = sp.parse_sections_text(
+        "message: some\nmsg lines\n\ntitle here\n1 0 1\n\n1 so 1\n\nsdef\n\nthe end\n"
+    )
+    assert sections.message == "message: some\nmsg lines"
+    assert sections.title == "title here"
+    assert [c.text for c in sections.cell_cards] == ["1 0 1"]
+    assert [c.text for c in sections.surface_cards] == ["1 so 1"]
+    assert [c.text for c in sections.data_cards] == ["sdef"]
+    assert sections.remainder == "the end\n"
+    assert not sections.is_continue
+
+
+def test_parse_sections_empty_title_raises() -> None:
+    with pytest.raises(ValueError, match="Cannot find the MCNP model title"):
+        _ = sp.parse_sections_text("\n1 so 1")
+
+
+def test_parse_continue_sections_with_remainder() -> None:
+    sections = sp.parse_sections_text("continue\nm100\n\nextra stuff\n")
+    assert sections.is_continue
+    assert sections.title == "continue"
+    assert [c.text for c in sections.data_cards] == ["m100"]
+    assert sections.cell_cards is None
+    assert sections.surface_cards is None
+    assert sections.remainder == "extra stuff\n"
+
+
+def test_parse_sections_cells_only() -> None:
+    sections = sp.parse_sections_text("title\n1 0 1")
+    assert [c.text for c in sections.cell_cards] == ["1 0 1"]
+    assert sections.surface_cards is None
+    assert sections.data_cards is None
+    assert sections.remainder is None
+
+
+def test_parse_sections_with_remainder() -> None:
+    sections = sp.parse_sections_text("title\n1 0 1\n\n1 so 1\n\nsdef\n\nleftover\nmore")
+    assert sections.remainder == "leftover\nmore"
+
+
+def test_distribute_cards_trailing_comment() -> None:
+    cards = [Card("m100", kind=Kind.MATERIAL), Card("c trailing", kind=Kind.COMMENT)]
+    materials, transformations, sdef, tallies, others = sp.distribute_cards(cards)
+    assert [c.text for c in materials] == ["m100"]
+    assert not transformations
+    assert not sdef
+    assert not tallies
+    assert [c.text for c in others] == ["c trailing"]
