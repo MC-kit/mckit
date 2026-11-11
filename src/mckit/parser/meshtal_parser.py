@@ -307,9 +307,6 @@ class TallyTransformer(Transformer):
             error.append(e)
         return order, result, error
 
-    def time(self, _time_spec: Token) -> str:
-        return "TIME"
-
     def energy_bin_e(self, _from: float, _to: float, spatial_bins: SpatialBins) -> EnergyBin:
         i, j, k = spatial_bins[0]
         order = ("ENERGY", i, j, k)

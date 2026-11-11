@@ -7,7 +7,15 @@ import pytest
 
 from lark import TextSlice
 
-from mckit.parser.meshtal_parser import parse, parse_header, parse_tally, read_meshtal
+from mckit.parser.meshtal_parser import (
+    _block_text,
+    _floats_from_block,
+    _spatial_bin_floats_from_block,
+    parse,
+    parse_header,
+    parse_tally,
+    read_meshtal,
+)
 
 
 @pytest.mark.parametrize(
@@ -5587,3 +5595,111 @@ def test_read_meshtal_tally_selection(data):
     assert list(tallies.keys()) == [14]
     tallies = read_meshtal(mesh_file)
     assert len(tallies) == 7
+
+
+_MESHTAL_HEADER = """\
+mcnp   version 5     ld=09292010  probid =  05/24/18 12:21:45
+ fmesh test
+ Number of histories used for normalizing tallies =      10000000.00
+
+"""
+
+_CYL_VEC_TALLY = """\
+ Mesh Tally Number        94
+ This is a neutron mesh tally.
+
+ Tally bin boundaries:
+  Cylinder origin at  0.00E+00 0.00E+00 0.00E+00, axis in  0.000E+00 0.000E+00 1.000E+00 direction, VEC direction 1.000E+00 0.000E+00 0.000E+00
+    R direction:      0.00      2.00
+    Z direction:     -1.00      1.00
+    Theta direction (revolutions):     0.000     1.000
+    Energy bin boundaries: 0.00E+00 1.00E+36 2.00E+36
+
+    R         Z         Th    Result     Rel Error
+     1.000     0.000     0.500 1.00000E-04 1.00000E-02
+     1.000     0.000     0.500 2.00000E-04 2.00000E-02
+"""
+
+_TIME_COLUMNAR_TALLY = """\
+ Mesh Tally Number        84
+ This is a neutron mesh tally.
+
+ Tally bin boundaries:
+    X direction:     -3.00      3.00
+    Y direction:     -3.00      3.00
+    Z direction:     -3.00      3.00
+    Decay Time: 0.00E+00 1.00E+36
+
+    X         Y         Z    Result     Rel Error
+    -1.000    -1.000    -1.000 1.00000E-04 1.00000E-02
+    -1.000    -1.000    -1.000 2.00000E-04 2.00000E-02
+"""
+
+
+def test_parse_header_unexpected_header() -> None:
+    with pytest.raises(ValueError, match="Unexpected meshtal header: junk header"):
+        _ = parse_header("junk header\nline2\nhist=1\n")
+
+
+def test_block_text_with_text_slice() -> None:
+    assert _block_text(TextSlice("abcdef", 1, 3)) == "bc"
+
+
+def test_floats_from_block_empty_matrix() -> None:
+    with pytest.raises(ValueError, match="Empty matrix is found"):
+        _ = _floats_from_block("single line")
+
+
+def test_spatial_bin_floats_from_block_empty_matrix() -> None:
+    with pytest.raises(ValueError, match="Empty matrix is found"):
+        _ = _spatial_bin_floats_from_block("one line")
+
+
+def test_parse_tally_with_vec() -> None:
+    parse_result = parse_tally(TextSlice.cast_from(_CYL_VEC_TALLY))
+    assert parse_result.geom == "CYL"
+    np.testing.assert_array_equal(parse_result.vec, [1.0, 0.0, 0.0])
+    np.testing.assert_array_equal(parse_result.origin, [0.0, 0.0, 0.0])
+    np.testing.assert_array_equal(parse_result.axis, [0.0, 0.0, 1.0])
+    assert sorted(parse_result.bins) == ["ENERGY", "R", "THETA", "Z"]
+    assert parse_result.result.shape == (2, 1, 1, 1)
+
+
+def test_parse_tally_with_time_bins() -> None:
+    parse_result = parse_tally(TextSlice.cast_from(_TIME_COLUMNAR_TALLY))
+    assert parse_result.geom == "XYZ"
+    assert sorted(parse_result.bins) == ["TIME", "X", "Y", "Z"]
+    np.testing.assert_array_equal(parse_result.bins["TIME"], [0.0, 1e36])
+    assert parse_result.result.shape == (2, 1, 1, 1)
+    np.testing.assert_array_almost_equal(parse_result.result.ravel(), [1e-4, 2e-4])
+    np.testing.assert_array_almost_equal(parse_result.error.ravel(), [1e-2, 2e-2])
+
+
+def test_read_meshtal_str_path(tmp_path):
+    mesh_file = tmp_path / "cyl_vec.m"
+    mesh_file.write_text(_MESHTAL_HEADER + _CYL_VEC_TALLY)
+    tallies = read_meshtal(str(mesh_file))
+    assert list(tallies.keys()) == [94]
+    mesh = tallies[94]
+    assert mesh.mesh.__class__.__name__ == "CylMesh"
+    np.testing.assert_array_equal(mesh.mesh._vec, [1.0, 0.0, 0.0])
+
+
+def test_read_meshtal_empty_selection(tmp_path):
+    mesh_file = tmp_path / "cyl_vec.m"
+    mesh_file.write_text(_MESHTAL_HEADER + _CYL_VEC_TALLY)
+    assert read_meshtal(mesh_file, tally=set()) == {}
+
+
+def test_read_meshtal_filtering_segment_without_trailing_newline(tmp_path):
+    """A last tally line without the trailing newline still gets filtered by number."""
+    mesh_file = tmp_path / "cyl_vec_no_nl.m"
+    mesh_file.write_text((_MESHTAL_HEADER + _CYL_VEC_TALLY).rstrip("\n"))
+    assert read_meshtal(mesh_file, tally=99) == {}
+
+
+def test_read_meshtal_truncated_tally_segment_filtered_out(tmp_path):
+    """A truncated file ending with a bare tally label is skipped gracefully."""
+    mesh_file = tmp_path / "truncated.m"
+    mesh_file.write_text(_MESHTAL_HEADER + " Mesh Tally Number        94")
+    assert read_meshtal(mesh_file, tally=99) == {}

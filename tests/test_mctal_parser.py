@@ -692,3 +692,8 @@ def test_mctal_parser(mctal_file, expected, data):
         assert tally["bins"] == expected[name]["bins"]
         np.testing.assert_array_almost_equal(tally["data"], expected[name]["data"], decimal=2)
         np.testing.assert_array_almost_equal(tally["error"], expected[name]["error"])
+
+
+def test_read_mctal_with_str_path(data):
+    tallies = read_mctal(str(data / "parser" / "mctal.t"))
+    assert list(tallies.keys()) == [4, 5, 14, 24]
