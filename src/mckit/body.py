@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 
     from mckit import Universe
     from mckit.types import NPIntArray
+    from mckit.utils.named import Name
 
     ShapeOperationCode = Literal["I", "U", "E", "R", "S", "C"]
     type TGeometry = list[Surface | ShapeOperationCode | Shape | Body] | Body | Shape
@@ -165,9 +166,9 @@ class Shape(_Shape):
         """
         words = []
         if self.opc == "S":
-            words.append(f"{cast(Surface, self.args[0]).options['name']}")
+            words.append(f"{cast(Surface, self.args[0]).name()}")
         elif self.opc == "C":
-            words.append(f"-{cast(Surface, self.args[0]).options['name']}")
+            words.append(f"-{cast(Surface, self.args[0]).name()}")
         elif self.opc == "E":
             words.append("EMPTY_SET")
         elif self.opc == "R":
@@ -644,14 +645,14 @@ class Body(Card):
         Returns a union of this cell with the other.
     """
 
-    def __init__(self, geometry: TGeometry, **options) -> None:
+    def __init__(self, geometry: TGeometry, name: Name | int | None = None, **options) -> None:
         if isinstance(geometry, list):
             geometry = Shape.from_polish_notation(geometry)
         elif isinstance(geometry, Body):
             geometry = geometry.shape
         elif not isinstance(geometry, Shape):
             raise TypeError("Geometry list or Shape is expected.")
-        Card.__init__(self, **options)
+        Card.__init__(self, name, **options)
         self._shape = geometry
 
     def __repr__(self):
@@ -791,7 +792,7 @@ class Body(Card):
         """
         geometry = self._shape.intersection(other)
         options = filter_dict(self.options, "original")
-        return Body(geometry, **options)
+        return Body(geometry, name=self._name, **options)
 
     def union(self, other: Body) -> Body:
         """Gets a union if this cell with the other.
@@ -807,7 +808,7 @@ class Body(Card):
         """
         geometry = self._shape.union(other)
         options = filter_dict(self.options, "original")
-        return Body(geometry, **options)
+        return Body(geometry, name=self._name, **options)
 
     def simplify(
         self,
@@ -840,7 +841,7 @@ class Body(Card):
         variants = self._shape.get_simplest(trim_size)
         options = filter_dict(self.options, "original")
 
-        return Body(variants[0], **options)
+        return Body(variants[0], name=self._name, **options)
 
     def split(self, box: Box = GLOBAL_BOX, min_volume: float = MIN_BOX_VOLUME) -> list[Body]:
         """Splits cell into disjoint cells.
@@ -851,7 +852,7 @@ class Body(Card):
         """
         self.shape.collect_statistics(box, min_volume)
         shape_groups = self.shape.split_shape()
-        return [Body(shape, **self.options) for shape in shape_groups]
+        return [Body(shape, name=self._name, **self.options) for shape in shape_groups]
 
     # noinspection PyShadowingNames
     def fill(
@@ -942,7 +943,7 @@ class Body(Card):
         """
         geometry = self._shape.transform(transformation)
         options = filter_dict(self.options, "original")
-        cell = Body(geometry, **options)
+        cell = Body(geometry, name=self._name, **options)
         fill = cell.options.get("FILL", None)
         if fill is not None:
             tr_in = fill.get("transform")
@@ -954,7 +955,7 @@ class Body(Card):
         """Actually apply transformation to this cell."""
         geometry = self._shape.apply_transformation()
         options = filter_dict(self.options, "original")
-        cell = Body(geometry, **options)
+        cell = Body(geometry, name=self._name, **options)
         fill = cell.options.get("FILL")
         if fill is not None:
             tr_in = fill.get("transform")

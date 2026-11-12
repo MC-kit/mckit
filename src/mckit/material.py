@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, Union, cast
+from typing import TYPE_CHECKING, Any, Literal, Union, cast
 
 import importlib.resources as rs
 import math
@@ -13,6 +13,9 @@ from operator import xor
 import numpy as np
 
 from .card import Card
+
+if TYPE_CHECKING:
+    from mckit.utils.named import Name
 
 __all__ = ["AVOGADRO", "Composition", "Element", "Material"]
 
@@ -60,7 +63,11 @@ class Composition(Card):
 
     # TODO dvp: are there specs using both atomic and weight definitions?
     def __init__(
-        self, atomic: TFractions | None = None, weight: TFractions | None = None, **options: Any
+        self,
+        atomic: TFractions | None = None,
+        weight: TFractions | None = None,
+        name: Name | int | None = None,
+        **options: Any,
     ):
         """Initialize a Composition.
 
@@ -68,9 +75,10 @@ class Composition(Card):
             atomic: list of tuples representing atomic fractions [(element, fraction)...]
                     The elements can be specified as `int` zid, `str` name or `Element` object.
             weight: the list for weight fractions, the content is same as `atomic`
+            name: the optional name of the composition, e.g. material number.
             options: Dictionary of composition options.
         """
-        Card.__init__(self, **options)
+        Card.__init__(self, name, **options)
         self._composition: dict[Element, float] = {}
         elem_w = []
         frac_w = []
@@ -118,7 +126,9 @@ class Composition(Card):
 
     def copy(self) -> Composition:
         """Create full copy of self."""
-        return Composition(atomic=cast(TFractions, self._composition.items()), **self.options)
+        return Composition(
+            atomic=cast(TFractions, self._composition.items()), name=self._name, **self.options
+        )
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Composition):
@@ -247,7 +257,7 @@ class Composition(Card):
                 composition[_isotope] += concentration * frac
         if already:
             return self
-        return Composition(atomic=composition.items(), **self.options)
+        return Composition(atomic=composition.items(), name=self._name, **self.options)
 
     def natural(self, tolerance: float = 1.0e-8) -> Composition | None:
         """Tries to replace detailed isotope composition by natural elements.
@@ -296,7 +306,9 @@ class Composition(Card):
             composition[elem] = tot_frac
             if frac_0:
                 composition[elem] += frac_0
-        return Composition(atomic=cast(TFractions, composition.items()), **self.options)
+        return Composition(
+            atomic=cast(TFractions, composition.items()), name=self._name, **self.options
+        )
 
     def elements(self) -> Iterable[Element]:
         """Gets iterator over composition's elements."""
@@ -347,7 +359,7 @@ def mixture_by_volume(
     total_moles = moles.sum()
     atomic_fractions = moles / total_moles
     mix = Composition.mixture(*zip(compositions, atomic_fractions, strict=False))
-    mix.options["name"] = _number
+    mix._name = _number
     density = sum(density * volume_fraction for _, density, volume_fraction in fractions_spec)
     return density, mix
 

@@ -47,6 +47,7 @@ if TYPE_CHECKING:
     from numpy.typing import ArrayLike
 
     from mckit.types import NPFloatArray
+    from mckit.utils.named import Name
 
 
 # noinspection PyUnresolvedReferences,PyPackageRequirements
@@ -112,9 +113,7 @@ def create_surface(kind: str, *_params: float, **options) -> Surface:
         msg = f"Cannot define axis for surface {kind}"
         raise ValueError(msg)
 
-    # TODO @dvp: test and document the following code
-    # TODO @dvp: define use cases in MCNP manual and tests
-    # TODO @dvp: why kind is not used in the following code?
+    # @dvp: is this code to create some sketch models?
     if len(params) == 2:
         return Plane(axis, -params[0], **options)  # TODO @dvp: check what is params[1] here?
     if len(params) == 4:
@@ -240,7 +239,7 @@ def _create_sphere(axis, kind, options, params) -> Sphere:
 def _create_sq(options: dict[str, Any], params: NPFloatArray) -> GQuadratic:
     A, B, C, D, E, F, G, x0, y0, z0 = params
     m = np.diag([A, B, C])
-    v = 2 * np.array([D - A * x0, E - B * y0, F - C * z0])
+    v = 2 * np.array([D - A * x0, E - B * y0, F - C * z0], dtype=np.float64)
     k = A * x0**2 + B * y0**2 + C * z0**2 - 2 * (D * x0 + E * y0 + F * z0) + G
     return GQuadratic(m, v, k, **options)
 
@@ -271,13 +270,18 @@ class Surface(Card, MaybeClose):
             Gets projection of point p on the surface.
     """
 
-    def __init__(self, **options) -> None:
+    def __init__(self, name: Name | int | None = None, **options) -> None:
         """Create :class:`Surface` with the options.
 
-        Args:
-            options: kwargs - properties for the `Surface` card.
+        Parameters
+        ----------
+        name
+            name of the `Surface` card, if any.
+
+        options
+            properties for the `Surface` card.
         """
-        Card.__init__(self, **options)
+        Card.__init__(self, name, **options)
 
     @abstractmethod
     def copy(self) -> Surface:
@@ -307,8 +311,10 @@ class Surface(Card, MaybeClose):
     def transform(self, tr: Transformation) -> Surface:
         """Applies transformation to this surface.
 
-        Args:
-            tr: Transformation to be applied.
+        Parameters
+        ----------
+        tr
+            Transformation instance to be applied.
 
         Returns
         -------
@@ -342,10 +348,12 @@ class Surface(Card, MaybeClose):
         return result
 
     def __getstate__(self):
-        return self.options
+        return self._name, self.options
 
     def __setstate__(self, state):
-        self.options = state
+        name, options = state
+        self.options = options
+        self._name = name
 
 
 def internalize_ort(v: np.ndarray) -> tuple[np.ndarray, bool]:
@@ -455,7 +463,7 @@ class RCC(Surface, _RCC):
 
     def copy(self):
         center, direction, radius = self.get_params()
-        return RCC(center, direction, radius, **self.options)
+        return RCC(center, direction, radius, name=self._name, **self.options)
 
 
 # noinspection PyProtectedMember
@@ -592,7 +600,7 @@ class BOX(Surface, _BOX):
 
     def copy(self):
         center, dir_x, dir_y, dir_z = self.get_params()
-        return BOX(center, dir_x, dir_y, dir_z, **self.options)
+        return BOX(center, dir_x, dir_y, dir_z, name=self._name, **self.options)
 
 
 class Plane(Surface, _Plane):
@@ -640,7 +648,7 @@ class Plane(Surface, _Plane):
         )
         k = round_scalar(result._k, k_digits)
         v = round_array(result._v, v_digits)
-        return Plane(v, k, **result.options)
+        return Plane(v, k, name=self._name, **result.options)
 
     def copy(self) -> Plane:
         """Create a copy of self.
@@ -656,7 +664,7 @@ class Plane(Surface, _Plane):
         instance._k_digits = self._k_digits
         instance._v_digits = self._v_digits
         options = filter_dict(self.options)
-        Surface.__init__(instance, **options)
+        Surface.__init__(instance, self._name, **options)
         _Plane.__init__(instance, self._v, self._k)
         return instance
 
@@ -666,7 +674,7 @@ class Plane(Surface, _Plane):
             return self
         v, k = tr.apply2plane(self._v, self._k)
         options = self.clean_options()
-        return Plane(v, k, **options)
+        return Plane(v, k, name=self._name, **options)
 
     def transform(self, tr: Transformation) -> Plane:
         if tr is None:
@@ -674,7 +682,7 @@ class Plane(Surface, _Plane):
         tr = self.combine_transformations(tr)
         options = self.clean_options()
         options["transform"] = tr
-        return Plane(self._v, self._k, **options)
+        return Plane(self._v, self._k, name=self._name, **options)
 
     def reverse(self):
         """Gets the surface with reversed normal."""
@@ -682,7 +690,7 @@ class Plane(Surface, _Plane):
         instance._k_digits = self._k_digits
         instance._v_digits = self._v_digits
         options = self.clean_options()
-        Surface.__init__(instance, **options)
+        Surface.__init__(instance, self._name, **options)
         _Plane.__init__(instance, -self._v, -self._k)
         return instance
 
@@ -738,8 +746,9 @@ class Plane(Surface, _Plane):
         return self._v, self._k, Surface.__getstate__(self)
 
     def __setstate__(self, state):
-        v, k, options = state
-        self.__init__(v, k, **options)
+        v, k, surf_state = state
+        name, options = surf_state
+        self.__init__(v, k, name=name, **options)
 
     def __repr__(self):
         return f"Plane({self._v}, {self._k}, {self.options or ''})"
@@ -784,14 +793,15 @@ class Sphere(Surface, _Sphere):
         return self._center, self._radius, Surface.__getstate__(self)
 
     def __setstate__(self, state):
-        c, r, options = state
-        self.__init__(c, r, **options)
+        c, r, surf_state = state
+        name, options = surf_state
+        self.__init__(c, r, name=name, **options)
 
     def copy(self):
         instance = Sphere.__new__(Sphere)
         instance._center_digits = self._center_digits
         instance._radius_digits = self._radius_digits
-        Surface.__init__(instance, **self.options)
+        Surface.__init__(instance, self._name, **self.options)
         _Sphere.__init__(instance, self._center, self._radius)
         return instance
 
@@ -841,7 +851,7 @@ class Sphere(Surface, _Sphere):
         )
         radius = round_scalar(temp._radius, radius_digits)
         options = temp.clean_options()
-        return Sphere(center, radius, transform=None, **options)
+        return Sphere(center, radius, transform=None, name=temp._name, **options)
 
     def apply_transformation(self) -> Sphere:
         tr = self.transformation
@@ -849,7 +859,7 @@ class Sphere(Surface, _Sphere):
             return self
         center = tr.apply2point(self._center)
         options = self.clean_options()
-        return Sphere(center, self._radius, transform=None, **options)
+        return Sphere(center, self._radius, transform=None, name=self._name, **options)
 
     def _get_center(self):
         return round_array(self._center, self._center_digits)
@@ -858,7 +868,7 @@ class Sphere(Surface, _Sphere):
         return round_scalar(self._radius, self._radius_digits)
 
     def transform(self, tr):
-        return Sphere(self._center, self._radius, transform=tr, **self.options)
+        return Sphere(self._center, self._radius, transform=tr, name=self._name, **self.options)
 
     def mcnp_words(self, pretty: bool = False):
         words = Surface.mcnp_words(self)
@@ -949,7 +959,7 @@ class Cylinder(Surface, _Cylinder):
         instance._axis_digits = self._axis_digits
         instance._pt_digits = self._pt_digits
         instance._radius_digits = self._radius_digits
-        Surface.__init__(instance, **self.options)
+        Surface.__init__(instance, self._name, **self.options)
         _Cylinder.__init__(instance, self._pt, self._axis, self._radius)
         return instance
 
@@ -1001,7 +1011,9 @@ class Cylinder(Surface, _Cylinder):
         return round_scalar(self._radius, self._radius_digits)
 
     def transform(self, tr):
-        return Cylinder(self._pt, self._axis, self._radius, transform=tr, **self.options)
+        return Cylinder(
+            self._pt, self._axis, self._radius, transform=tr, name=self._name, **self.options
+        )
 
     def mcnp_words(self, pretty: bool = False):
         words = Surface.mcnp_words(self)
@@ -1056,7 +1068,7 @@ class Cylinder(Surface, _Cylinder):
             v = np.zeros(3)
             k = -(self._radius**2)
             m, v, k = Transformation(translation=self._pt).apply2gq(m, v, k)
-            return GQuadratic(m, v, k, **self.options).mcnp_repr()
+            return GQuadratic(m, v, k, name=self._name, **self.options).mcnp_repr()
         words.append(" ")
         v = self._get_radius()
         p = self._radius_digits
@@ -1069,7 +1081,7 @@ class Cylinder(Surface, _Cylinder):
         axis = round_array(temp._axis)
         radius = round_scalar(temp._radius)
         options = self.clean_options()
-        return Cylinder(pt, axis, radius, transform=None, **options)
+        return Cylinder(pt, axis, radius, transform=None, name=self._name, **options)
 
     def apply_transformation(self) -> Cylinder:
         tr = self.transformation
@@ -1079,14 +1091,15 @@ class Cylinder(Surface, _Cylinder):
         axis = tr.apply2vector(self._axis)
         options = self.clean_options()
         # TODO dvp: actually may create Generic Quadratic. Should we use __new__() for this?
-        return Cylinder(pt, axis, self._radius, **options)
+        return Cylinder(pt, axis, self._radius, name=self._name, **options)
 
     def __getstate__(self):
         return self._pt, self._axis, self._radius, Surface.__getstate__(self)
 
     def __setstate__(self, state):
-        pt, axis, radius, options = state
-        self.__init__(pt, axis, radius, **options)
+        pt, axis, radius, surf_state = state
+        name, options = surf_state
+        self.__init__(pt, axis, radius, name=name, **options)
 
 
 # noinspection PyProtectedMember,PyUnresolvedReferences,DuplicatedCode,PyTypeChecker
@@ -1146,7 +1159,7 @@ class Cone(Surface, _Cone):
         axis = tr.apply2vector(self._axis)
         sheet = self._sheet
         options = self.clean_options()
-        return Cone(apex, axis, self._t2, sheet, **options)
+        return Cone(apex, axis, self._t2, sheet, name=self._name, **options)
 
     def round(self) -> Cone:
         res = self.apply_transformation()
@@ -1155,7 +1168,7 @@ class Cone(Surface, _Cone):
         t2 = round_scalar(self._t2)
         sheet = self._sheet
         options = self.clean_options()
-        return Cone(apex, axis, t2, sheet, **options)
+        return Cone(apex, axis, t2, sheet, name=self._name, **options)
 
     def copy(self):
         t2 = self._t2
@@ -1163,7 +1176,7 @@ class Cone(Surface, _Cone):
         instance._axis_digits = self._axis_digits
         instance._apex_digits = self._apex_digits
         instance._t2_digits = self._t2_digits
-        Surface.__init__(instance, **self.options)
+        Surface.__init__(instance, self._name, **self.options)
         _Cone.__init__(instance, self._apex, self._axis, t2, self._sheet)
         return instance
 
@@ -1174,8 +1187,9 @@ class Cone(Surface, _Cone):
         return self._apex, self._axis, self._t2, self._sheet, Surface.__getstate__(self)
 
     def __setstate__(self, state):
-        apex, axis, t2, sheet, options = state
-        self.__init__(apex, axis, t2, sheet, **options)
+        apex, axis, t2, sheet, surf_state = state
+        name, options = surf_state
+        self.__init__(apex, axis, t2, sheet, name=name, **options)
 
     def __hash__(self):
         result = hash(self._get_t2()) ^ hash(self._sheet)
@@ -1211,7 +1225,15 @@ class Cone(Surface, _Cone):
         return round_scalar(self._t2, self._t2_digits)
 
     def transform(self, tr):
-        cone = Cone(self._apex, self._axis, self._t2, sheet=0, transform=tr, **self.options)
+        cone = Cone(
+            self._apex,
+            self._axis,
+            self._t2,
+            sheet=0,
+            transform=tr,
+            name=self._name,
+            **self.options,
+        )
         if self._sheet != 0:
             plane = Plane(self._axis, -np.dot(self._axis, self._apex), name=1, transform=tr)
             op = "C" if self._sheet == +1 else "S"
@@ -1269,7 +1291,7 @@ class Cone(Surface, _Cone):
             v = np.zeros(3)
             k = 0
             m, v, k = Transformation(translation=self._apex).apply2gq(m, v, k)
-            return GQuadratic(m, v, k, **self.options).mcnp_words()
+            return GQuadratic(m, v, k, name=self._name, **self.options).mcnp_words()
         words.append(" ")
         v = self._t2
         p = self._t2_digits
@@ -1337,7 +1359,7 @@ class GQuadratic(Surface, _GQuadratic):
         instance._m_digits = self._m_digits
         instance._v_digits = self._v_digits
         instance._k_digits = self._k_digits
-        Surface.__init__(instance, **self.options)
+        Surface.__init__(instance, self._name, **self.options)
         _GQuadratic.__init__(instance, self._m, self._v, self._k, self._factor)
         return instance
 
@@ -1373,11 +1395,12 @@ class GQuadratic(Surface, _GQuadratic):
         return self._m, self._v, self._k, Surface.__getstate__(self)
 
     def __setstate__(self, state) -> None:
-        m, v, k, options = state
-        GQuadratic.__init__(self, m, v, k, **options)
+        m, v, k, surf_state = state
+        name, options = surf_state
+        GQuadratic.__init__(self, m, v, k, name=name, **options)
 
     def transform(self, tr) -> GQuadratic:
-        return GQuadratic(self._m, self._v, self._k, transform=tr, **self.options)
+        return GQuadratic(self._m, self._v, self._k, transform=tr, name=self._name, **self.options)
 
     def mcnp_words(self, pretty: bool = False) -> list[str]:
         words = Surface.mcnp_words(self)
@@ -1401,14 +1424,14 @@ class GQuadratic(Surface, _GQuadratic):
             return self
         m, v, k = tr.apply2gq(self._m, self._v, self._k)
         options = self.clean_options()
-        return GQuadratic(m, v, k, **options)
+        return GQuadratic(m, v, k, name=self._name, **options)
 
     def round(self) -> GQuadratic:
         temp = self.apply_transformation()
         m, v = map(round_array, [temp._m, temp._v])
         k = round_scalar(temp._k)
         # TODO dvp: handle cases when the surface can be represented with specialized quadratic surface: Cone etc.
-        return GQuadratic(m, v, k, **self.clean_options())
+        return GQuadratic(m, v, k, name=self._name, **self.clean_options())
 
     def __repr__(self) -> str:
         options = str(self.options) if self.options else ""
@@ -1483,7 +1506,7 @@ class Torus(Surface, _Torus):
         instance._R_digits = self._R_digits
         instance._a_digits = self._a_digits
         instance._b_digits = self._b_digits
-        Surface.__init__(instance, **self.options)
+        Surface.__init__(instance, self._name, **self.options)
         _Torus.__init__(instance, self._center, self._axis, self._R, self._a, self._b)
         return instance
 
@@ -1529,12 +1552,20 @@ class Torus(Surface, _Torus):
         return self._center, self._axis, self._R, self._a, self._b, Surface.__getstate__(self)
 
     def __setstate__(self, state):
-        center, axis, R, a, b, options = state
-        self.__init__(center, axis, R, a, b, **options)
+        center, axis, R, a, b, surf_state = state
+        name, options = surf_state
+        self.__init__(center, axis, R, a, b, name=name, **options)
 
     def transform(self, tr: Transformation) -> Torus:
         return Torus(
-            self._center, self._axis, self._R, self._a, self._b, transform=tr, **self.options
+            self._center,
+            self._axis,
+            self._R,
+            self._a,
+            self._b,
+            transform=tr,
+            name=self._name,
+            **self.options,
         )
 
     def mcnp_words(self, pretty: bool = False) -> list[str]:
@@ -1562,7 +1593,7 @@ class Torus(Surface, _Torus):
 
         r, a, b = map(r, [temp._R, temp._a, temp._b])  # type: ignore[attr-defined]
         options = temp.clean_options()
-        return Torus(center, axis, r, a, b, **options)
+        return Torus(center, axis, r, a, b, name=self._name, **options)
 
     def apply_transformation(self) -> Torus:
         tr = self.transformation
@@ -1577,6 +1608,7 @@ class Torus(Surface, _Torus):
             self._R,
             self._a,
             self._b,
+            name=self._name,
             **self.clean_options(),
         )
 

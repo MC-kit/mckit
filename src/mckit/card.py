@@ -22,18 +22,16 @@ if TYPE_CHECKING:
 class Card(ABC):
     """Features, common for all cards."""
 
-    def __init__(self, **options: Any) -> None:
+    def __init__(self, name: Name | int | None = None, **options: Any) -> None:
         # TODO @dvp: rename self.options to self._options to make this attribute private
         #            make sure that other modules don't access options directly
-        #            at least for name, comment and so on
+        #            at least for comment and so on
         #            then convert options to separate explicit attributes
         self.options: dict[str, Any] = options
+        self._name: Name | int | None = name
 
     @override
     def __str__(self):
-        # TODO dvp: option `name` is printed twice,
-        #           (second time as option)
-        #           This should be explicit property of this class instance
         return f'{self.name()}: "{self.options}"'
 
     @property
@@ -63,15 +61,13 @@ class Card(ABC):
 
     def name(
         self,
-    ) -> (
-        Name | None
-    ):  # TODO dvp: we'd better have special property name, don't use options for that
+    ) -> Name | int | None:
         """Returns card's name."""
-        return self.options.get("name", None)
+        return self._name
 
     def rename(self, new_name: Name) -> Card:
         """Renames the card."""
-        self.options["name"] = new_name
+        self._name = new_name
         self.drop_original()
         return self
 
@@ -110,7 +106,9 @@ class Card(ABC):
 
     @override
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, Card) and (self is other or self.options == other.options)
+        return isinstance(other, Card) and (
+            self is other or (self.options == other.options and self._name == other._name)
+        )
 
     def match_comment(self, predicate: str | re.Pattern | Callable[[str], bool]) -> bool:
         """Check if this cell trailing comment matches `predicate`.

@@ -2061,6 +2061,18 @@ class TestShape:
         assert ids == ids_ans
 
 
+def assert_options(body: Body, options: dict) -> None:
+    """Assert options of a body.
+
+    The name moved from the options dictionary to the explicit `name` attribute.
+    """
+    for k, v in options.items():
+        if k == "name":
+            assert body.name() == v
+        else:
+            assert body.options[k] == v
+
+
 class TestBody:
     kwarg_data: Final = [
         {"name": 1},
@@ -2075,8 +2087,7 @@ class TestBody:
         shape = geometry[case_no]
         body = Body(shape, **kwargs)
         assert body.shape == shape
-        for k, v in kwargs.items():
-            assert body.options[k] == v
+        assert_options(body, kwargs)
         assert body.material() == kwargs.get("MAT", None)
 
     @pytest.mark.parametrize("case_no, polish", list(enumerate(TestShape.polish_cases)))
@@ -2095,8 +2106,7 @@ class TestBody:
         body2 = Body(geometry[no2], name="1001")
         body = body1.intersection(body2)
         assert body.shape == body1.shape.intersection(body2.shape)
-        for k, v in kwargs.items():
-            assert body.options[k] == v
+        assert_options(body, kwargs)
 
     @pytest.mark.parametrize("kwargs", kwarg_data)
     @pytest.mark.parametrize(
@@ -2108,8 +2118,7 @@ class TestBody:
         body2 = Body(geometry[no2], name="1001")
         body = body1.union(body2)
         assert body.shape == body1.shape.union(body2.shape)
-        for k, v in kwargs.items():
-            assert body.options[k] == v
+        assert_options(body, kwargs)
 
     @pytest.mark.slow
     @pytest.mark.parametrize("kwarg", kwarg_data)
@@ -2145,8 +2154,7 @@ class TestBody:
         gb = Box([3, 0, 0], 26, 20, 20)
         simple_body = body.simplify(min_volume=0.001, box=gb)
         assert simple_body.shape == expected_shape
-        for k, v in kwarg.items():
-            assert simple_body.options[k] == v
+        assert_options(simple_body, kwarg)
         assert simple_body.material() == kwarg.get("MAT", None), (
             "Material value should be preserved on simplification"
         )
@@ -2220,8 +2228,7 @@ class TestBody:
         split_shapes = {b.shape for b in split_bodies}
         assert split_shapes == expected
         for b in split_bodies:
-            for k, v in kwarg.items():
-                assert b.options[k] == v
+            assert_options(b, kwarg)
             assert b.material() == kwarg.get("MAT", None)
 
     @pytest.mark.parametrize(

@@ -40,7 +40,7 @@ def test_eq(a, b, expected_eq, expected_hash):
 
 def test_str():
     card = DummyCard(name=1, a=2)
-    assert str(card) == "1: \"{'name': 1, 'a': 2}\""
+    assert str(card) == "1: \"{'a': 2}\""
 
 
 def test_anonymous():

@@ -74,7 +74,10 @@ def test_creation(args, rot, offset, options):
     np.testing.assert_array_almost_equal(tr._u, rot)
     np.testing.assert_array_almost_equal(tr._t, offset)
     for k, v in options.items():
-        assert tr[k] == v
+        if k == "name":
+            assert tr.name() == v
+        else:
+            assert tr[k] == v
 
 
 @pytest.mark.parametrize(

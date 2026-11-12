@@ -128,7 +128,7 @@ def test_when_transform_happy_path(runner, source, transformation, transformatio
     actual_surfaces = list(actual_universe[0])
 
     def key(a):
-        return a.args[0].options["name"]
+        return a.args[0].name()
 
     assert sorted(actual_surfaces, key=key) == sorted(expected_surfaces, key=key)
 

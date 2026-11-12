@@ -87,19 +87,17 @@ def parse(
         reference_body = cells[int(like_match.group("reference"))]
         options = filter_dict(reference_body.options, "original", "comment", "comment_above")
         options.update(_collect_attributes(text, like_match.end(), transformations))
-        options["name"] = name
         geometry: list[Any] | Body = reference_body
     else:
         material_options, pos = _extract_material(text, pos, compositions)
         geometry, pos = _extract_geometry(text, pos, surfaces, cells)
         options = {**material_options}
         options.update(_collect_attributes(text, pos, transformations))
-        options["name"] = name
     if trailing_comments:
         options["comment"] = trailing_comments
     if original:
         options["original"] = original
-    return Body(geometry, **options)
+    return Body(geometry, name, **options)
 
 
 def _extract_name(text: str) -> tuple[int, int]:

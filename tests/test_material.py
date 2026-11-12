@@ -1919,4 +1919,4 @@ class TestMaterial:
         fractions = dict(mix)
         assert fractions[Element("H")] == pytest.approx(0.7987255237063993)
         assert fractions[Element("O")] == pytest.approx(0.20127447629360082)
-        assert mix.options["name"] == 7
+        assert mix.name() == 7

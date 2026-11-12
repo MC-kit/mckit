@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from numpy.typing import ArrayLike
 
     from mckit.types import NPFloatArray
+    from mckit.utils.named import Name
 
 __all__ = ["IDENTITY_ROTATION", "Transformation", "calc_z_rotation"]
 
@@ -83,9 +84,10 @@ class Transformation(Card, MaybeClose):
         rotation: ArrayLike | None = None,
         indegrees: bool = False,
         inverted: bool = False,
+        name: Name | int | None = None,
         **options: Any,
     ) -> None:
-        Card.__init__(self, **options)
+        Card.__init__(self, name, **options)
         translation = _get_translation_as_array(translation)
         self._u = self._setup_rotation(rotation, indegrees)
         self._setup_translation(inverted, translation)

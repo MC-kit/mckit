@@ -268,7 +268,7 @@ class Universe:
 
             new_shape = self._get_cell_replaced_shape(cell, surf_replace, surf_names, name_rule)
 
-            new_cell = Body(new_shape, **cell.options)
+            new_cell = Body(new_shape, cell.name(), **cell.options)
             mat = new_cell.material()
 
             if mat:
@@ -406,7 +406,7 @@ class Universe:
 
         for c in self:
             options = {k: v for k, v in c.options.items() if k != "FILL"}
-            cells.append(Body(c.shape, **options))
+            cells.append(Body(c.shape, c.name(), **options))
 
         return Universe(cells)
 

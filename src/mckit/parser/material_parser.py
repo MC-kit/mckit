@@ -29,12 +29,12 @@ def parse(text: str) -> Composition:
     """
     text = drop_comments(text).strip()
     name, pos = _extract_number(text)
-    options = _collect_options(text, pos, name)
-    return _create_composition(_extract_fractions(text, pos), options)
+    options = _collect_options(text, pos)
+    return _create_composition(_extract_fractions(text, pos), name, options)
 
 
 def _create_composition(
-    fractions: list[tuple[Element, float]], options: dict[str, int | str]
+    fractions: list[tuple[Element, float]], name: int, options: dict[str, int | str]
 ) -> Composition:
     atomic = []
     weight = []
@@ -43,7 +43,7 @@ def _create_composition(
             atomic.append((el, fraction))
         else:
             weight.append((el, -fraction))
-    return Composition(atomic=atomic, weight=weight, **options)
+    return Composition(atomic=atomic, weight=weight, name=name, **options)
 
 
 _FRACTION_PATTERN = re.compile(
@@ -72,8 +72,8 @@ def _extract_number(text: str) -> tuple[int, int]:
     raise ValueError("Material definition must start with 'm<number>'")
 
 
-def _collect_options(text: str, pos: int, name: int) -> dict[str, str | int]:
-    options: dict[str, int | str] = {"name": name}
+def _collect_options(text: str, pos: int) -> dict[str, str | int]:
+    options: dict[str, str | int] = {}
     _collect_int_option(text, pos, options)
     _collect_str_option(text, pos, options)
     return options
