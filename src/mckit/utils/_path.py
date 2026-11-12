@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     # noinspection protected-member
     from os import PathLike
 
+
 def scan_dirs_up(start_from: Path) -> Generator[Path]:
     while start_from != start_from.parent:
         yield start_from
@@ -76,7 +77,9 @@ def mkpath(path: str | Path) -> Path:
         path = Path(path)
     return path
 
-if sys.version_info >= (3, 13):   # pragma: no cover
+
+if sys.version_info >= (3, 13):  # pragma: no cover
+
     def check_file(path: str | Path, *, follow_symlinks: bool = True) -> Path:
         path = mkpath(path)
         if not path.is_file(follow_symlinks=follow_symlinks):
@@ -97,6 +100,7 @@ if sys.version_info >= (3, 13):   # pragma: no cover
 
 
 else:
+
     def check_file(path: str | Path) -> Path:
         path = mkpath(path)
         if not path.is_file():
@@ -112,11 +116,8 @@ else:
             return p
         raise FileNotFoundError(f'Path "{p}" does not exist')
 
-
     def check_if_all_paths_exist(*paths: Path) -> Generator[Path]:
         return (check_if_path_exists(x) for x in paths)
-
-
 
 
 def make_dir(d: str | Path, *, parents=True, exist_ok=True) -> Path:
