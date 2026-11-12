@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import os
+import sys
 
 from collections.abc import Callable, Generator
-from os import PathLike
 from pathlib import Path
 
+if TYPE_CHECKING:
+    # noinspection protected-member
+    from os import PathLike
 
 def scan_dirs_up(start_from: Path) -> Generator[Path]:
     while start_from != start_from.parent:
@@ -71,17 +76,47 @@ def mkpath(path: str | Path) -> Path:
         path = Path(path)
     return path
 
+if sys.version_info >= (3, 13):   # pragma: no cover
+    def check_file(path: str | Path, *, follow_symlinks: bool = True) -> Path:
+        path = mkpath(path)
+        if not path.is_file(follow_symlinks=follow_symlinks):
+            msg = f"Not a file: {path}"
+            raise ValueError(msg)
+        return path
 
-def check_file(path: str | Path, *, follow_symlinks: bool = True) -> Path:
-    path = mkpath(path)
-    if not path.is_file(follow_symlinks=follow_symlinks):  # ty: ignore[unknown-argument]
-        msg = f"Not a file: {path}"
-        raise ValueError(msg)
-    return path
+    def check_files(*files: str | Path, follow_symlinks: bool = True) -> Generator[Path]:
+        return (check_file(path, follow_symlinks=follow_symlinks) for path in files)
+
+    def check_if_path_exists(p: Path, *, follow_symlinks: bool = True) -> Path:
+        if p.exists(follow_symlinks=follow_symlinks):
+            return p
+        raise FileNotFoundError(f'Path "{p}" does not exist')
+
+    def check_if_all_paths_exist(*paths: Path, follow_symlinks: bool = True) -> Generator[Path]:
+        return (check_if_path_exists(x, follow_symlinks=follow_symlinks) for x in paths)
 
 
-def check_files(*files: str | Path) -> Generator[Path]:
-    return (check_file(path) for path in files)
+else:
+    def check_file(path: str | Path) -> Path:
+        path = mkpath(path)
+        if not path.is_file():
+            msg = f"Not a file: {path}"
+            raise ValueError(msg)
+        return path
+
+    def check_files(*files: str | Path) -> Generator[Path]:
+        return (check_file(path) for path in files)
+
+    def check_if_path_exists(p: Path) -> Path:
+        if p.exists():
+            return p
+        raise FileNotFoundError(f'Path "{p}" does not exist')
+
+
+    def check_if_all_paths_exist(*paths: Path) -> Generator[Path]:
+        return (check_if_path_exists(x) for x in paths)
+
+
 
 
 def make_dir(d: str | Path, *, parents=True, exist_ok=True) -> Path:
@@ -124,16 +159,6 @@ def make_dirs(*dirs: str | Path) -> Generator[Path]:
 
 
 mkdirs = make_dirs
-
-
-def check_if_path_exists(p: Path, *, follow_symlinks: bool = True) -> Path:
-    if p.exists(follow_symlinks=follow_symlinks):
-        return p
-    raise FileNotFoundError(f'Path "{p}" does not exist')
-
-
-def check_if_all_paths_exist(*paths: Path, follow_symlinks: bool = True) -> Generator[Path]:
-    return (check_if_path_exists(x, follow_symlinks=follow_symlinks) for x in paths)
 
 
 def check_dir(path: Path) -> Path:
@@ -185,7 +210,11 @@ def get_last_line(
     file_path
         ... to the file to read from
     chunk_size
-        where to start to search fro the last line
+        where to start to search from the last line
+    encoding
+        ... of the file
+    errors
+        strategy to handle encoding errors, see :py:meth:`bytes.decode`
 
     Returns
     -------

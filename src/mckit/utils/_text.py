@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import re
 
-from collections.abc import Callable
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def match_comment(comment: list[str], predicate: str | re.Pattern | Callable[[str], bool]) -> bool:
@@ -25,7 +28,7 @@ def match_comment(comment: list[str], predicate: str | re.Pattern | Callable[[st
         return any(predicate in line for line in comment)
     if isinstance(predicate, re.Pattern):
         return any(predicate.search(line) for line in comment)
-    if isinstance(predicate, Callable):
+    if callable(predicate):
         return any(predicate(line) for line in comment)
     msg = f"Predicate of unknown type: {predicate}"
     raise ValueError(msg)

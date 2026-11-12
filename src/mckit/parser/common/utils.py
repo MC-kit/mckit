@@ -7,7 +7,7 @@ from collections.abc import Iterable
 C_COMMENT = r"(^|(?<=\n))\s{0,5}[cC]([ ][^\n]*)?\n?"
 RE_C_COMMENT = re.compile(C_COMMENT, re.MULTILINE)
 EOL_COMMENT = r"(\&\s+)?\$.*[^\n]*"  # EOL comment starting with $ and with optional ampersand, see MCNP6.2 UM, 1.3.1
-# About ampersand, see MCNP6.2 User Manyal, 1.3.1, not present in MCNP6.3
+# About ampersand, see MCNP6.2 User Manual, 1.3.1, not present in MCNP6.3
 # TODO @dvp: implement line continuation with & (ampersand)
 # Low priority, ampersand is rarely used.
 RE_EOL_COMMENT = re.compile(EOL_COMMENT, re.MULTILINE)

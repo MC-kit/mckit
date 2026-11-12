@@ -50,7 +50,6 @@ _LOG = getLogger(__name__)
 # It is not possible to separate them due to unavoidable cyclic dependency.
 
 
-# noinspection PyProtectedMember
 class Shape(_Shape):
     """Shape class.
 
@@ -360,7 +359,6 @@ class Shape(_Shape):
                 stat = self.get_stat_table()
                 drop_index = np.nonzero(np.all(stat == -1, axis=1))[0]
                 arg_results = np.delete(stat, drop_index, axis=0)
-                # noinspection PyTypeChecker
                 index_groups = self._find_groups(arg_results == +1)
                 for ig in index_groups:
                     index = np.nonzero(ig)[0]
@@ -956,7 +954,6 @@ class Body(Card):
             cells.append(new_cell)
         return cells
 
-    # noinspection PyUnresolvedReferences
     def transform(self, transformation: Transformation) -> Body:
         """Applies transformation to this cell.
 
