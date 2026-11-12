@@ -9,8 +9,10 @@ from mckit.utils.indexes import Index, NumberedItemNotFoundError
 class DummyTransformation(Transformation):
     """To substitute transformation when it's not found."""
 
+    __slots__ = ()
+
     def __init__(self, name: int):
-        super().__init__(name=name, comment="dummy")
+        super().__init__(name=name, comment=["dummy"])
 
 
 def raise_on_absent_transformation_strategy(name: int) -> DummyTransformation | None:

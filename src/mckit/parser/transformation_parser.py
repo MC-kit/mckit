@@ -28,7 +28,7 @@ def parse(text: str) -> Transformation:
     text, _comments, trailing_comments = extract_comments(text)
     result = _parse_transformation(text)
     if trailing_comments:
-        result.options["comment"] = trailing_comments
+        result.comment = trailing_comments
     return result
 
 

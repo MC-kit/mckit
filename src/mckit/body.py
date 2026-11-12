@@ -18,7 +18,7 @@ from click import progressbar
 import mckit.material as mm
 
 from mckit.box import GLOBAL_BOX, Box
-from mckit.card import Card
+from mckit.card import CARD_SLOTS, Card
 from mckit.constants import MIN_BOX_VOLUME
 
 # pyrefly: ignore [missing-import]
@@ -27,10 +27,9 @@ from mckit.geometry import Shape as _Shape
 from mckit.printer import CELL_OPTIONS, print_option
 from mckit.surface import Surface
 from mckit.transformation import Transformation
-from mckit.utils import filter_dict
 
 if TYPE_CHECKING:
-    from typing import ClassVar
+    from typing import Any, ClassVar
 
     from collections.abc import Iterable, Iterator, Sequence
 
@@ -645,6 +644,8 @@ class Body(Card):
         Returns a union of this cell with the other.
     """
 
+    __slots__ = (*CARD_SLOTS, "_shape", "options")
+
     def __init__(self, geometry: TGeometry, name: Name | int | None = None, **options) -> None:
         if isinstance(geometry, list):
             geometry = Shape.from_polish_notation(geometry)
@@ -652,8 +653,13 @@ class Body(Card):
             geometry = geometry.shape
         elif not isinstance(geometry, Shape):
             raise TypeError("Geometry list or Shape is expected.")
-        Card.__init__(self, name, **options)
+        Card.__init__(self, name, **Card._split_options(options))
+        self.options = options
         self._shape = geometry
+
+    def _options_state(self) -> dict[str, Any]:
+        """Transitional: options compared on equality until they get explicit attributes."""
+        return self.options
 
     def __repr__(self):
         options = str(self.options) if self.options else ""
@@ -742,7 +748,7 @@ class Body(Card):
         words.append("\n")
         # insert options printing
         words.extend(self._options_list())
-        for line in self.options.get("comment", []):
+        for line in self.comment or []:
             words.append("$ " + str(line))
             words.append("\n")
         return words
@@ -791,8 +797,12 @@ class Body(Card):
             The cell representing the intersection.
         """
         geometry = self._shape.intersection(other)
-        options = filter_dict(self.options, "original")
-        return Body(geometry, name=self._name, **options)
+        return Body(
+            geometry,
+            name=self._name,
+            **self._card_options(drop_original=True),
+            **self.options,
+        )
 
     def union(self, other: Body) -> Body:
         """Gets a union if this cell with the other.
@@ -807,8 +817,12 @@ class Body(Card):
             cell: The result.
         """
         geometry = self._shape.union(other)
-        options = filter_dict(self.options, "original")
-        return Body(geometry, name=self._name, **options)
+        return Body(
+            geometry,
+            name=self._name,
+            **self._card_options(drop_original=True),
+            **self.options,
+        )
 
     def simplify(
         self,
@@ -839,9 +853,13 @@ class Body(Card):
         """
         self._shape.collect_statistics(box, min_volume)
         variants = self._shape.get_simplest(trim_size)
-        options = filter_dict(self.options, "original")
 
-        return Body(variants[0], name=self._name, **options)
+        return Body(
+            variants[0],
+            name=self._name,
+            **self._card_options(drop_original=True),
+            **self.options,
+        )
 
     def split(self, box: Box = GLOBAL_BOX, min_volume: float = MIN_BOX_VOLUME) -> list[Body]:
         """Splits cell into disjoint cells.
@@ -852,7 +870,15 @@ class Body(Card):
         """
         self.shape.collect_statistics(box, min_volume)
         shape_groups = self.shape.split_shape()
-        return [Body(shape, name=self._name, **self.options) for shape in shape_groups]
+        return [
+            Body(
+                shape,
+                name=self._name,
+                **self._card_options(),
+                **self.options,
+            )
+            for shape in shape_groups
+        ]
 
     # noinspection PyShadowingNames
     def fill(
@@ -942,8 +968,12 @@ class Body(Card):
             The result of this cell transformation.
         """
         geometry = self._shape.transform(transformation)
-        options = filter_dict(self.options, "original")
-        cell = Body(geometry, name=self._name, **options)
+        cell = Body(
+            geometry,
+            name=self._name,
+            **self._card_options(drop_original=True),
+            **self.options,
+        )
         fill = cell.options.get("FILL", None)
         if fill is not None:
             tr_in = fill.get("transform")
@@ -954,8 +984,12 @@ class Body(Card):
     def apply_transformation(self) -> Body:
         """Actually apply transformation to this cell."""
         geometry = self._shape.apply_transformation()
-        options = filter_dict(self.options, "original")
-        cell = Body(geometry, name=self._name, **options)
+        cell = Body(
+            geometry,
+            name=self._name,
+            **self._card_options(drop_original=True),
+            **self.options,
+        )
         fill = cell.options.get("FILL")
         if fill is not None:
             tr_in = fill.get("transform")

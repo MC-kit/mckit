@@ -9,8 +9,10 @@ from mckit.utils.indexes import Index, NumberedItemNotFoundError
 class DummySurface(Plane):
     """Dummy surface to substitute surface when it's not found in a ``IgnoringIndex``."""
 
+    __slots__ = ()
+
     def __init__(self, name: int):
-        super().__init__(EX, 0.0, name=name, comment="dummy")
+        super().__init__(EX, 0.0, name=name, comment=["dummy"])
 
     def __str__(self) -> str:
         return str(self.name())

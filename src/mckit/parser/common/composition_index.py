@@ -34,7 +34,7 @@ class DummyComposition(Composition):
     """To substitute composition when it's not found."""
 
     def __init__(self, name: int):
-        super().__init__(name=name, weight=[(1001, 1.0)], comment="dummy")
+        super().__init__(name=name, weight=[(1001, 1.0)], comment=["dummy"])
 
 
 def raise_on_absent_composition_strategy(name: int) -> DummyComposition | None:

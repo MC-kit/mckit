@@ -11,9 +11,11 @@ from mckit.utils.indexes import Index, NumberedItemNotFoundError
 class DummyCell(Body):
     """To substitute cell when it's not found."""
 
+    __slots__ = ()
+
     def __init__(self, name: int):
-        Card.__init__(self, name=name, comment="dummy")
-        self._name = name
+        Card.__init__(self, name=name, comment=["dummy"])
+        self.options = {}
 
     def __hash__(self):
         return Card.__hash__(self)

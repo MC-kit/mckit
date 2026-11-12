@@ -32,9 +32,7 @@ def move_universe_attribute_to_comments(universe):
     no = universe.name()
     for cell in universe:
         cell.options.pop("U", None)
-        comm = cell.options.get("comment", [])
-        comm.append(f"U={no}")
-        cell.options["comment"] = comm
+        cell.add_comment(f"U={no}")
 
 
 def decompose(output, fill_descriptor_path, source, override, encoding):
@@ -68,9 +66,7 @@ def decompose(output, fill_descriptor_path, source, override, encoding):
                 words.append("(")
                 words.extend(transform.get_words())
                 words.append(")")
-            comm = c.options.get("comment", [])
-            comm.append("".join(words))
-            c.options["comment"] = comm
+            c.add_comment("".join(words))
             descriptor = {}
             universe_name = universe.name()
             fn = f"u{universe_name}.i"

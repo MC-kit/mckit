@@ -68,7 +68,7 @@ def create_cell(
 def test_parser_geometry(text, expected, surfaces):
     surfaces_index = create_dummy_surface_index(surfaces)
     actual = clp.parse(text, surfaces=surfaces_index)
-    expected.options["original"] = text
+    expected.original = text
     assert actual == expected
 
 
@@ -201,7 +201,7 @@ def test_parser_with_materials(text, expected, surfaces, compositions):
     surfaces_index = create_dummy_surface_index(surfaces)
     composition_index = create_dummy_composition_index(compositions)
     actual = clp.parse(text, surfaces=surfaces_index, compositions=composition_index)
-    expected.options["original"] = text
+    expected.original = text
     assert actual == expected
 
 
@@ -239,7 +239,7 @@ def test_parser_with_materials(text, expected, surfaces, compositions):
 def test_parser_with_attributes(text, expected, surfaces):
     surfaces_index = create_dummy_surface_index(surfaces)
     actual = clp.parse(text, surfaces=surfaces_index)
-    expected.options["original"] = text
+    expected.original = text
     assert actual == expected
 
 
@@ -258,7 +258,7 @@ def test_parser_with_like_spec(text, expected, surfaces, cells):
     surfaces_index = create_dummy_surface_index(surfaces)
     cells_index = CellStrictIndex.from_iterable(cells)
     actual = clp.parse(text, cells=cells_index, surfaces=surfaces_index)
-    expected.options["original"] = text
+    expected.original = text
     assert actual == expected
 
 

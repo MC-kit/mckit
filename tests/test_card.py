@@ -9,7 +9,7 @@ from mckit.card import Card
 
 class DummyCard(Card):
     def mcnp_words(self, pretty=False):
-        return [f"{k}: {v}" for k, v in self.options]
+        return [f"{k}: {v}" for k, v in (self._extra or {}).items()]
 
 
 @pytest.mark.parametrize(
@@ -65,7 +65,7 @@ def test_add_comment_and_match_comment():
     card = DummyCard(name=1)
     assert not card.match_comment("zzz")  # no comments yet
     card.add_comment("some text here")
-    assert card.options["comment"] == ["some text here"]
+    assert card.comment == ["some text here"]
     assert card.match_comment("some text")
     assert not card.match_comment("absent")
     assert card.match_comment(re.compile(r"text\s+here"))

@@ -12,7 +12,7 @@ from operator import xor
 # noinspection PyPackageRequirements
 import numpy as np
 
-from .card import Card
+from .card import CARD_SLOTS, Card
 
 if TYPE_CHECKING:
     from mckit.utils.named import Name
@@ -61,6 +61,8 @@ class Composition(Card):
     _tolerance = 1.0e-3
     """Relative composition element concentration equality tolerance."""
 
+    __slots__ = (*CARD_SLOTS, "_composition", "_molar_mass", "options")
+
     # TODO dvp: are there specs using both atomic and weight definitions?
     def __init__(
         self,
@@ -78,7 +80,8 @@ class Composition(Card):
             name: the optional name of the composition, e.g. material number.
             options: Dictionary of composition options.
         """
-        Card.__init__(self, name, **options)
+        Card.__init__(self, name, **Card._split_options(options))
+        self.options = options
         self._composition: dict[Element, float] = {}
         elem_w = []
         frac_w = []
@@ -127,7 +130,10 @@ class Composition(Card):
     def copy(self) -> Composition:
         """Create full copy of self."""
         return Composition(
-            atomic=cast(TFractions, self._composition.items()), name=self._name, **self.options
+            atomic=cast(TFractions, self._composition.items()),
+            name=self._name,
+            **self.options,
+            **self._card_options(),
         )
 
     def __eq__(self, other) -> bool:
@@ -257,7 +263,12 @@ class Composition(Card):
                 composition[_isotope] += concentration * frac
         if already:
             return self
-        return Composition(atomic=composition.items(), name=self._name, **self.options)
+        return Composition(
+            atomic=composition.items(),
+            name=self._name,
+            **self.options,
+            **self._card_options(),
+        )
 
     def natural(self, tolerance: float = 1.0e-8) -> Composition | None:
         """Tries to replace detailed isotope composition by natural elements.
@@ -307,7 +318,10 @@ class Composition(Card):
             if frac_0:
                 composition[elem] += frac_0
         return Composition(
-            atomic=cast(TFractions, composition.items()), name=self._name, **self.options
+            atomic=cast(TFractions, composition.items()),
+            name=self._name,
+            **self.options,
+            **self._card_options(),
         )
 
     def elements(self) -> Iterable[Element]:

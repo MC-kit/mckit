@@ -376,6 +376,19 @@ def test_set_item(trtr, tr_no, options):
         assert tr[k] == v
 
 
+def test_eq():
+    """Transformation equality follows the geometry, not the name or comment."""
+    tr1 = Transformation(translation=[1, 0, 0], name=1, comment=["a note"])
+    tr2 = Transformation(translation=[1, 0, 0], name=1, comment=["a note"])
+    tr3 = Transformation(translation=[0, 1, 0], name=1)
+    tr4 = Transformation(translation=[1, 0, 0], name=2, comment=["a note"])
+    assert tr1 == tr2
+    assert hash(tr1) == hash(tr2)
+    assert tr1 != tr3
+    assert tr1 == tr4
+    assert tr1 != "not a transformation"
+
+
 class TestIsCloseTo:
     def test_self(self):
         tr = Transformation(translation=[1, 0, 0])

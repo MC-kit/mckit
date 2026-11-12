@@ -27,7 +27,7 @@ from mckit.geometry import Sphere as _Sphere
 from mckit.geometry import Torus as _Torus
 
 from . import constants
-from .card import Card
+from .card import CARD_SLOTS, Card
 from .constants import DROP_OPTIONS
 from .printer import pretty_float
 from .transformation import Transformation
@@ -270,6 +270,8 @@ class Surface(Card, MaybeClose):
             Gets projection of point p on the surface.
     """
 
+    __slots__ = ()
+
     def __init__(self, name: Name | int | None = None, **options) -> None:
         """Create :class:`Surface` with the options.
 
@@ -281,7 +283,8 @@ class Surface(Card, MaybeClose):
         options
             properties for the `Surface` card.
         """
-        Card.__init__(self, name, **options)
+        Card.__init__(self, name, **Card._split_options(options))
+        self.options = options
 
     @abstractmethod
     def copy(self) -> Surface:
@@ -348,12 +351,14 @@ class Surface(Card, MaybeClose):
         return result
 
     def __getstate__(self):
-        return self._name, self.options
+        card_kwargs = self._card_options()
+        if self._extra:  # pragma: no cover - surfaces never receive extra kwargs
+            card_kwargs.update(self._extra)
+        return self._name, card_kwargs, self.options
 
     def __setstate__(self, state):
-        name, options = state
-        self.options = options
-        self._name = name
+        name, card_kwargs, options = state
+        Surface.__init__(self, name, **card_kwargs, **options)
 
 
 def internalize_ort(v: np.ndarray) -> tuple[np.ndarray, bool]:
@@ -368,6 +373,8 @@ def internalize_ort(v: np.ndarray) -> tuple[np.ndarray, bool]:
 
 # noinspection PyProtectedMember
 class RCC(Surface, _RCC):
+    __slots__ = (*CARD_SLOTS, "_hash", "options")
+
     def __init__(self, center, direction, radius, **options):
         center = np.array(center)
         direction = np.array(direction)
@@ -463,12 +470,16 @@ class RCC(Surface, _RCC):
 
     def copy(self):
         center, direction, radius = self.get_params()
-        return RCC(center, direction, radius, name=self._name, **self.options)
+        return RCC(
+            center, direction, radius, name=self._name, **self.options, **self._card_options()
+        )
 
 
 # noinspection PyProtectedMember
 class BOX(Surface, _BOX):
     """Macrobody BOX surface."""
+
+    __slots__ = (*CARD_SLOTS, "_hash", "options")
 
     def __init__(self, center, dir_x, dir_y, dir_z, **options):
         dir_x = np.array(dir_x)
@@ -600,7 +611,9 @@ class BOX(Surface, _BOX):
 
     def copy(self):
         center, dir_x, dir_y, dir_z = self.get_params()
-        return BOX(center, dir_x, dir_y, dir_z, name=self._name, **self.options)
+        return BOX(
+            center, dir_x, dir_y, dir_z, name=self._name, **self.options, **self._card_options()
+        )
 
 
 class Plane(Surface, _Plane):
@@ -613,6 +626,8 @@ class Plane(Surface, _Plane):
     options:  Dictionary of surface's options. Possible values:
               transform = transformation to be applied to this plane.
     """
+
+    __slots__ = (*CARD_SLOTS, "_k_digits", "_v_digits", "options")
 
     def __init__(self, normal: ArrayLike, offset: float, **options: Any) -> None:
         v = np.asarray(normal, dtype=np.float64)
@@ -648,7 +663,7 @@ class Plane(Surface, _Plane):
         )
         k = round_scalar(result._k, k_digits)
         v = round_array(result._v, v_digits)
-        return Plane(v, k, name=self._name, **result.options)
+        return Plane(v, k, name=self._name, **result.options, **result._card_options())
 
     def copy(self) -> Plane:
         """Create a copy of self.
@@ -664,7 +679,7 @@ class Plane(Surface, _Plane):
         instance._k_digits = self._k_digits
         instance._v_digits = self._v_digits
         options = filter_dict(self.options)
-        Surface.__init__(instance, self._name, **options)
+        Surface.__init__(instance, self._name, **options, **self._card_options())
         _Plane.__init__(instance, self._v, self._k)
         return instance
 
@@ -747,8 +762,8 @@ class Plane(Surface, _Plane):
 
     def __setstate__(self, state):
         v, k, surf_state = state
-        name, options = surf_state
-        self.__init__(v, k, name=name, **options)
+        name, card_kwargs, options = surf_state
+        self.__init__(v, k, name=name, **card_kwargs, **options)
 
     def __repr__(self):
         return f"Plane({self._v}, {self._k}, {self.options or ''})"
@@ -776,6 +791,8 @@ class Sphere(Surface, _Sphere):
                              created. Transformation instance.
     """
 
+    __slots__ = (*CARD_SLOTS, "_center_digits", "_radius_digits", "options")
+
     def __init__(self, center: npt.NDArray[np.float64], radius: float, **options: Any) -> None:
         tr: Transformation | None = options.pop("transform", None)
         center = tr.apply2point(center) if tr else np.asarray(center, dtype=float)
@@ -794,14 +811,14 @@ class Sphere(Surface, _Sphere):
 
     def __setstate__(self, state):
         c, r, surf_state = state
-        name, options = surf_state
-        self.__init__(c, r, name=name, **options)
+        name, card_kwargs, options = surf_state
+        self.__init__(c, r, name=name, **card_kwargs, **options)
 
     def copy(self):
         instance = Sphere.__new__(Sphere)
         instance._center_digits = self._center_digits
         instance._radius_digits = self._radius_digits
-        Surface.__init__(instance, self._name, **self.options)
+        Surface.__init__(instance, self._name, **self.options, **self._card_options())
         _Sphere.__init__(instance, self._center, self._radius)
         return instance
 
@@ -868,7 +885,14 @@ class Sphere(Surface, _Sphere):
         return round_scalar(self._radius, self._radius_digits)
 
     def transform(self, tr):
-        return Sphere(self._center, self._radius, transform=tr, name=self._name, **self.options)
+        return Sphere(
+            self._center,
+            self._radius,
+            transform=tr,
+            name=self._name,
+            **self.options,
+            **self._card_options(),
+        )
 
     def mcnp_words(self, pretty: bool = False):
         words = Surface.mcnp_words(self)
@@ -922,6 +946,8 @@ class Cylinder(Surface, _Cylinder):
                              created. Transformation instance.
     """
 
+    __slots__ = (*CARD_SLOTS, "_axis_digits", "_pt_digits", "_radius_digits", "options")
+
     def __init__(
         self,
         pt: ArrayLike,
@@ -959,7 +985,7 @@ class Cylinder(Surface, _Cylinder):
         instance._axis_digits = self._axis_digits
         instance._pt_digits = self._pt_digits
         instance._radius_digits = self._radius_digits
-        Surface.__init__(instance, self._name, **self.options)
+        Surface.__init__(instance, self._name, **self.options, **self._card_options())
         _Cylinder.__init__(instance, self._pt, self._axis, self._radius)
         return instance
 
@@ -1012,7 +1038,13 @@ class Cylinder(Surface, _Cylinder):
 
     def transform(self, tr):
         return Cylinder(
-            self._pt, self._axis, self._radius, transform=tr, name=self._name, **self.options
+            self._pt,
+            self._axis,
+            self._radius,
+            transform=tr,
+            name=self._name,
+            **self.options,
+            **self._card_options(),
         )
 
     def mcnp_words(self, pretty: bool = False):
@@ -1068,7 +1100,9 @@ class Cylinder(Surface, _Cylinder):
             v = np.zeros(3)
             k = -(self._radius**2)
             m, v, k = Transformation(translation=self._pt).apply2gq(m, v, k)
-            return GQuadratic(m, v, k, name=self._name, **self.options).mcnp_repr()
+            return GQuadratic(
+                m, v, k, name=self._name, **self.options, **self._card_options()
+            ).mcnp_repr()
         words.append(" ")
         v = self._get_radius()
         p = self._radius_digits
@@ -1098,8 +1132,8 @@ class Cylinder(Surface, _Cylinder):
 
     def __setstate__(self, state):
         pt, axis, radius, surf_state = state
-        name, options = surf_state
-        self.__init__(pt, axis, radius, name=name, **options)
+        name, card_kwargs, options = surf_state
+        self.__init__(pt, axis, radius, name=name, **card_kwargs, **options)
 
 
 # noinspection PyProtectedMember,PyUnresolvedReferences,DuplicatedCode,PyTypeChecker
@@ -1121,6 +1155,8 @@ class Cone(Surface, _Cone):
             transform = transformation to be applied to the cone being
                              created. Transformation instance.
     """
+
+    __slots__ = (*CARD_SLOTS, "_axis_digits", "_apex_digits", "_t2_digits", "options")
 
     def __init__(
         self,
@@ -1176,7 +1212,7 @@ class Cone(Surface, _Cone):
         instance._axis_digits = self._axis_digits
         instance._apex_digits = self._apex_digits
         instance._t2_digits = self._t2_digits
-        Surface.__init__(instance, self._name, **self.options)
+        Surface.__init__(instance, self._name, **self.options, **self._card_options())
         _Cone.__init__(instance, self._apex, self._axis, t2, self._sheet)
         return instance
 
@@ -1188,8 +1224,8 @@ class Cone(Surface, _Cone):
 
     def __setstate__(self, state):
         apex, axis, t2, sheet, surf_state = state
-        name, options = surf_state
-        self.__init__(apex, axis, t2, sheet, name=name, **options)
+        name, card_kwargs, options = surf_state
+        self.__init__(apex, axis, t2, sheet, name=name, **card_kwargs, **options)
 
     def __hash__(self):
         result = hash(self._get_t2()) ^ hash(self._sheet)
@@ -1233,6 +1269,7 @@ class Cone(Surface, _Cone):
             transform=tr,
             name=self._name,
             **self.options,
+            **self._card_options(),
         )
         if self._sheet != 0:
             plane = Plane(self._axis, -np.dot(self._axis, self._apex), name=1, transform=tr)
@@ -1291,7 +1328,9 @@ class Cone(Surface, _Cone):
             v = np.zeros(3)
             k = 0
             m, v, k = Transformation(translation=self._apex).apply2gq(m, v, k)
-            return GQuadratic(m, v, k, name=self._name, **self.options).mcnp_words()
+            return GQuadratic(
+                m, v, k, name=self._name, **self.options, **self._card_options()
+            ).mcnp_words()
         words.append(" ")
         v = self._t2
         p = self._t2_digits
@@ -1334,6 +1373,8 @@ class GQuadratic(Surface, _GQuadratic):
                              created. Transformation instance.
     """
 
+    __slots__ = (*CARD_SLOTS, "_m_digits", "_v_digits", "_k_digits", "options")
+
     def __init__(self, m: ArrayLike, v: ArrayLike, k: float, **options):
         m = np.asarray(m, dtype=np.float64)
         v = np.asarray(v, dtype=np.float64)
@@ -1359,7 +1400,7 @@ class GQuadratic(Surface, _GQuadratic):
         instance._m_digits = self._m_digits
         instance._v_digits = self._v_digits
         instance._k_digits = self._k_digits
-        Surface.__init__(instance, self._name, **self.options)
+        Surface.__init__(instance, self._name, **self.options, **self._card_options())
         _GQuadratic.__init__(instance, self._m, self._v, self._k, self._factor)
         return instance
 
@@ -1396,11 +1437,19 @@ class GQuadratic(Surface, _GQuadratic):
 
     def __setstate__(self, state) -> None:
         m, v, k, surf_state = state
-        name, options = surf_state
-        GQuadratic.__init__(self, m, v, k, name=name, **options)
+        name, card_kwargs, options = surf_state
+        GQuadratic.__init__(self, m, v, k, name=name, **card_kwargs, **options)
 
     def transform(self, tr) -> GQuadratic:
-        return GQuadratic(self._m, self._v, self._k, transform=tr, name=self._name, **self.options)
+        return GQuadratic(
+            self._m,
+            self._v,
+            self._k,
+            transform=tr,
+            name=self._name,
+            **self.options,
+            **self._card_options(),
+        )
 
     def mcnp_words(self, pretty: bool = False) -> list[str]:
         words = Surface.mcnp_words(self)
@@ -1474,6 +1523,16 @@ class Torus(Surface, _Torus):
                              created. Transformation instance.
     """
 
+    __slots__ = (
+        *CARD_SLOTS,
+        "_axis_digits",
+        "_center_digits",
+        "_R_digits",
+        "_a_digits",
+        "_b_digits",
+        "options",
+    )
+
     def __init__(
         self, center: ArrayLike, axis: ArrayLike, r: float, a: float, b: float, **options
     ) -> None:
@@ -1506,7 +1565,7 @@ class Torus(Surface, _Torus):
         instance._R_digits = self._R_digits
         instance._a_digits = self._a_digits
         instance._b_digits = self._b_digits
-        Surface.__init__(instance, self._name, **self.options)
+        Surface.__init__(instance, self._name, **self.options, **self._card_options())
         _Torus.__init__(instance, self._center, self._axis, self._R, self._a, self._b)
         return instance
 
@@ -1553,8 +1612,8 @@ class Torus(Surface, _Torus):
 
     def __setstate__(self, state):
         center, axis, R, a, b, surf_state = state
-        name, options = surf_state
-        self.__init__(center, axis, R, a, b, name=name, **options)
+        name, card_kwargs, options = surf_state
+        self.__init__(center, axis, R, a, b, name=name, **card_kwargs, **options)
 
     def transform(self, tr: Transformation) -> Torus:
         return Torus(
@@ -1566,6 +1625,7 @@ class Torus(Surface, _Torus):
             transform=tr,
             name=self._name,
             **self.options,
+            **self._card_options(),
         )
 
     def mcnp_words(self, pretty: bool = False) -> list[str]:

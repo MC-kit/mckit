@@ -12,7 +12,7 @@ from numpy import dtype, float64, ndarray
 # pyright: reportMissingModuleSource=false
 from mckit.geometry import ORIGIN
 
-from .card import Card
+from .card import CARD_SLOTS, Card
 from .utils import compute_hash
 from .utils.tolerance import DEFAULT_TOLERANCE_ESTIMATOR, EstimatorType, MaybeClose
 
@@ -78,6 +78,8 @@ class Transformation(Card, MaybeClose):
         Reverses this transformation, and returns the result.
     """
 
+    __slots__ = (*CARD_SLOTS, "_t", "_u", "_hash", "options")
+
     def __init__(
         self,
         translation: ArrayLike = ORIGIN,
@@ -87,7 +89,8 @@ class Transformation(Card, MaybeClose):
         name: Name | int | None = None,
         **options: Any,
     ) -> None:
-        Card.__init__(self, name, **options)
+        Card.__init__(self, name, **Card._split_options(options))
+        self.options = options
         translation = _get_translation_as_array(translation)
         self._u = self._setup_rotation(rotation, indegrees)
         self._setup_translation(inverted, translation)

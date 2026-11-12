@@ -40,7 +40,7 @@ def parse(text: str, transformations: Index | None = None) -> Surface:
     text, _comments, trailing_comments = extract_comments(text)
     result = _parse_surface(text, transformations)
     if trailing_comments:
-        result.options["comment"] = trailing_comments
+        result.comment = trailing_comments
     return result
 
 

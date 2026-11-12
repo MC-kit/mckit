@@ -137,7 +137,7 @@ def parse_section[T: Card](
         except (ValueError, ParseError) as ex:
             raise ValueError(f"Failed to parse card '{text_card}'") from ex
         if comment:
-            card.options["comment_above"] = comment
+            card.comment_above = comment
         # card.options['original'] = text_card.text
         yield card
 
@@ -203,8 +203,8 @@ def parse_cells(
                 new_cells_to_process.append(i)
                 continue
             if comment:
-                card.options["comment_above"] = comment
-            card.options["original"] = text_card.text
+                card.comment_above = comment
+            card.original = text_card.text
             cells[i] = card
             cells_index[card.name()] = card
         if cells_to_process_length == len(new_cells_to_process):
