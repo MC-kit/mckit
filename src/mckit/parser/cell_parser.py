@@ -10,7 +10,7 @@ from lark.exceptions import LarkError
 
 import mckit.parser.common.utils as cmn
 
-from mckit.body import Body, Shape
+from mckit.body import Body, Filler, Shape
 from mckit.material import Material
 from mckit.parser.common import (
     CellStrictIndex,
@@ -19,7 +19,6 @@ from mckit.parser.common import (
     TransformationStrictIndex,
 )
 from mckit.transformation import Transformation
-from mckit.utils import filter_dict
 from mckit.utils.indexes import Index
 
 CELL_WORDS = {"U", "MAT", "LAT", "TMP", "RHO", "VOL", "PMT", "FCL"}
@@ -85,7 +84,10 @@ def parse(
     if like_match := _LIKE_HEADER_PATTERN.match(text, pos):
         # noinspection unresolved-references
         reference_body = cells[int(like_match.group("reference"))]
-        options = filter_dict(reference_body.options, "original", "comment", "comment_above")
+        options = reference_body._cell_options()
+        if (fill := options.get("FILL")) is not None:
+            # The reference body keeps its fill, so give the new cell its own Filler instance.
+            options["FILL"] = Filler(universe=fill.universe, transformation=fill.transformation)
         options.update(_collect_attributes(text, like_match.end(), transformations))
         geometry: list[Any] | Body = reference_body
     else:
@@ -246,8 +248,8 @@ def _fill_attribute(_key: str, segment: str, star: bool, transformations: Index)
             transformation = transformations[int(numbers[0][0])]
         else:
             transformation = _build_transformation(numbers, star)
-        return {"FILL": {"universe": universe, "transform": transformation}}
-    return {"FILL": {"universe": universe}}
+        return {"FILL": Filler(universe=universe, transformation=transformation)}
+    return {"FILL": Filler(universe=universe)}
 
 
 def _build_transformation(numbers: list[tuple[float, bool]], in_degrees: bool) -> Transformation:
@@ -390,14 +392,12 @@ _PARAMS_PARENS_PATTERN = re.compile(r"[\s=,]*\((?P<params>[^()]*)\)")
 _ROTATION_LENGTHS = frozenset({3, 5, 6, 9})
 
 
-# noinspection PyUnusedLocal
 def _like_misplaced(
     _key: str, _segment: str, _star: bool, _transformations: Index
 ) -> dict[str, Any]:
     raise cmn.ParseError("Misplaced 'LIKE' keyword: a cell can not have both geometry and LIKE")
 
 
-# noinspection PyUnusedLocal
 def _but_misplaced(
     _key: str, _segment: str, _star: bool, _transformations: Index
 ) -> dict[str, Any]:

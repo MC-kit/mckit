@@ -82,10 +82,6 @@ class Card(ABC):
             result["comment_above"] = self._comment_above
         return result
 
-    def _options_state(self) -> dict[str, Any]:
-        """Transitional: the options, which are not card-level attributes yet, for equality."""
-        return {}
-
     @override
     def __str__(self):
         return f'{self.name()}: "{self._extra or {}}"'
@@ -188,7 +184,6 @@ class Card(ABC):
                 and self._comment == other._comment
                 and self._comment_above == other._comment_above
                 and self._extra == other._extra
-                and self._options_state() == other._options_state()
             )
         )
 

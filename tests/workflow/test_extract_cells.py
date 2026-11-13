@@ -65,7 +65,6 @@ def test_filter_compositions(select1, select2, select_not, expected, universe1) 
     assert set(map_names(actual)) == set(expected)
 
 
-# noinspection SpellCheckingInspection
 @pytest.mark.parametrize(
     "select,expected",
     [
@@ -81,7 +80,6 @@ def test_extract_by_surface_number(select, expected, universe1) -> None:
     assert list(map_names(new_universe)) == expected
 
 
-# noinspection SpellCheckingInspection
 @pytest.mark.parametrize(
     "select,expected",
     [
@@ -98,7 +96,6 @@ def test_extract_by_shared_surfaces(select: int, expected: list[int], universe1:
     assert list(map_names(new_universe)) == expected
 
 
-# noinspection SpellCheckingInspection
 @pytest.mark.parametrize(
     "select,expected",
     [

@@ -31,7 +31,7 @@ def get_default_output_directory(source):
 def move_universe_attribute_to_comments(universe):
     no = universe.name()
     for cell in universe:
-        cell.options.pop("U", None)
+        cell.universe = None
         cell.add_comment(f"U={no}")
 
 
@@ -56,11 +56,12 @@ def decompose(output, fill_descriptor_path, source, override, encoding):
         "created": datetime.now(),
     }
     for c in model:
-        fill = c.options.pop("FILL", None)
-        if fill:
-            universe = fill["universe"]
+        fill = c.fill
+        c.fill = None
+        if fill is not None:
+            universe = fill.universe
             words = [f"FILL={universe.name()}"]
-            transform = fill.get("transform", None)
+            transform = fill.transformation
             if transform:
                 words[0] = "*" + words[0]
                 words.append("(")

@@ -617,6 +617,70 @@ def _verify_opc(opc, *args):
         raise ValueError("Operands are expected.")
 
 
+class Filler:
+    """Represents the FILL option of a cell: the filling universe
+    and, optionally, a transformation to be applied to the filling universe.
+    """
+
+    __slots__ = ("_universe", "_transformation")
+
+    def __init__(
+        self,
+        universe: Universe | int | None = None,
+        transformation: Transformation | None = None,
+    ) -> None:
+        """Initialize a Filler.
+
+        Parameters
+        ----------
+        universe
+            The filling universe or its name. If None, the universe
+            is to be attached later.
+
+        transformation
+            Transformation to be applied to the filling universe.
+        """
+        self._universe = universe
+        self._transformation = transformation
+
+    @property
+    def universe(self) -> Universe | int | None:
+        """The filling universe or its name."""
+        return self._universe
+
+    @universe.setter
+    def universe(self, universe: Universe | int | None) -> None:
+        self._universe = universe
+
+    @property
+    def transformation(self) -> Transformation | None:
+        """Transformation to be applied to the filling universe."""
+        return self._transformation
+
+    @transformation.setter
+    def transformation(self, transformation: Transformation | None) -> None:
+        self._transformation = transformation
+
+    def __eq__(self, other) -> bool:
+        return (
+            isinstance(other, Filler)
+            and self._universe == other._universe
+            and self._transformation == other._transformation
+        )
+
+    def __repr__(self) -> str:
+        return f"Filler(universe={self._universe}, transformation={self._transformation})"
+
+
+def _normalize_fill(fill: "Filler | dict[str, Any] | None") -> Filler | None:
+    """Convert the legacy FILL options value to a Filler instance."""
+    if fill is None or isinstance(fill, Filler):
+        return fill
+    if isinstance(fill, dict):
+        return Filler(universe=fill.get("universe"), transformation=fill.get("transform"))
+    raise TypeError(f"Invalid type of the FILL option value: {type(fill)}")
+
+
 class Body(Card):
     """Represents MCNP cell.
 
@@ -642,7 +706,18 @@ class Body(Card):
         Returns a union of this cell with the other.
     """
 
-    __slots__ = (*CARD_SLOTS, "_shape", "options")
+    __slots__ = (
+        *CARD_SLOTS,
+        "_shape",
+        "_mat",
+        "_u",
+        "_fill",
+        "_trcl",
+        "_vol",
+        "_imp_n",
+        "_imp_p",
+        "_imp_e",
+    )
 
     def __init__(self, geometry: TGeometry, name: Name | int | None = None, **options) -> None:
         if isinstance(geometry, list):
@@ -651,17 +726,48 @@ class Body(Card):
             geometry = geometry.shape
         elif not isinstance(geometry, Shape):
             raise TypeError("Geometry list or Shape is expected.")
+        self._mat = options.pop("MAT", None)
+        self._u = options.pop("U", None)
+        self._fill = _normalize_fill(options.pop("FILL", None))
+        self._trcl = options.pop("TRCL", None)
+        self._vol = options.pop("VOL", None)
+        self._imp_n = options.pop("IMPN", None)
+        self._imp_p = options.pop("IMPP", None)
+        self._imp_e = options.pop("IMPE", None)
         Card.__init__(self, name, **Card._split_options(options))
-        self.options = options
         self._shape = geometry
 
-    def _options_state(self) -> dict[str, Any]:
-        """Transitional: options compared on equality until they get explicit attributes."""
-        return self.options
+    def _cell_options(self) -> dict[str, Any]:
+        """Transitional: the cell-level attributes in the legacy options dictionary form.
+
+        Used to propagate the cell-level attributes to derived objects
+        the way the whole options dictionary was propagated before.
+        """
+        result: dict[str, Any] = {}
+        if self._mat is not None:
+            result["MAT"] = self._mat
+        if self._u is not None:
+            result["U"] = self._u
+        if self._fill is not None:
+            result["FILL"] = self._fill
+        if self._trcl is not None:
+            result["TRCL"] = self._trcl
+        if self._vol is not None:
+            result["VOL"] = self._vol
+        if self._imp_n is not None:
+            result["IMPN"] = self._imp_n
+        if self._imp_p is not None:
+            result["IMPP"] = self._imp_p
+        if self._imp_e is not None:
+            result["IMPE"] = self._imp_e
+        if self._extra:
+            result.update(self._extra)
+        return result
 
     def __repr__(self):
-        options = str(self.options) if self.options else ""
-        return f"Body({self._shape}, {options})"
+        options = self._cell_options()
+        options_str = str(options) if options else ""
+        return f"Body({self._shape}, {options_str})"
 
     def __iter__(self):
         return iter(self._shape)
@@ -670,7 +776,19 @@ class Body(Card):
         return Card.__hash__(self) ^ hash(self._shape)
 
     def __eq__(self, other) -> bool:
-        return isinstance(other, Body) and Card.__eq__(self, other) and self._shape == other._shape
+        return (
+            isinstance(other, Body)
+            and Card.__eq__(self, other)
+            and self._shape == other._shape
+            and self._mat == other._mat
+            and self._u == other._u
+            and self._fill == other._fill
+            and self._trcl == other._trcl
+            and self._vol == other._vol
+            and self._imp_n == other._imp_n
+            and self._imp_p == other._imp_p
+            and self._imp_e == other._imp_e
+        )
 
     @property
     def shape(self) -> Shape:
@@ -678,9 +796,36 @@ class Body(Card):
         return self._shape
 
     @property
+    def mat(self) -> mm.Material | None:
+        """The material of this cell (the MAT option)."""
+        return self._mat
+
+    @mat.setter
+    def mat(self, mat: mm.Material | None) -> None:
+        self._mat = mat
+
+    @property
+    def universe(self) -> "Universe | int | None":
+        """The universe this cell belongs to (the U option)."""
+        return self._u
+
+    @universe.setter
+    def universe(self, universe: "Universe | int | None") -> None:
+        self._u = universe
+
+    @property
+    def fill(self) -> Filler | None:
+        """The filling universe specification (the FILL option)."""
+        return self._fill
+
+    @fill.setter
+    def fill(self, fill: Filler | None) -> None:
+        self._fill = fill
+
+    @property
     def transformation(self) -> Transformation | None:
         """Get this cell transformation."""
-        return self.options.get("TRCL")
+        return self._trcl
 
     @property
     def is_empty(self) -> bool:
@@ -718,15 +863,16 @@ class Body(Card):
         -------
         The importance value, if specified, zero otherwise.
         """
-        return self.options.get(f"IMP{particle}", 0.0)
+        value = {"N": self._imp_n, "P": self._imp_p, "E": self._imp_e}.get(particle)
+        return 0.0 if value is None else value
 
     def is_equivalent_to(self, other):
         result = self.shape == other.shape
-        if result and "FILL" in self.options:
-            if "FILL" not in other.options:
+        if result and self._fill is not None:
+            if other._fill is None:
                 return False
-            my = self.options["FILL"]["universe"]
-            their = other.options["FILL"]["universe"]
+            my = self._fill.universe
+            their = other._fill.universe
             return my.has_equivalent_cells(their)
         return result
 
@@ -734,10 +880,10 @@ class Body(Card):
     # TODO @dvp: in that case we could just return original text if available
     def mcnp_words(self, pretty=False) -> list[str]:
         words = [str(self.name()), " "]
-        if "MAT" in self.options:
-            words.append(str(self.options["MAT"].composition.name()))
+        if self._mat is not None:
+            words.append(str(self._mat.composition.name()))
             words.append(" ")
-            words.append(str(-self.options["MAT"].density))
+            words.append(str(-self._mat.density))
             words.append(" ")
         else:
             words.append("0")
@@ -757,9 +903,10 @@ class Body(Card):
         For __str__ method.
         """
         text = []
+        options = self._cell_options()
         for key in CELL_OPTIONS:
-            if key in self.options:
-                text.extend(print_option(key, self.options[key]))
+            if key in options:
+                text.extend(print_option(key, options[key]))
                 text.append(" ")
         text.append("\n")
         return text
@@ -775,7 +922,7 @@ class Body(Card):
         ------
         ValueError: if type of material object is not Material
         """
-        composition = self.options.get("MAT")
+        composition = self._mat
         if composition is None or isinstance(composition, mm.Material):
             return composition
         msg = f"Unexpected type of composition: {type(composition)}"
@@ -799,7 +946,7 @@ class Body(Card):
             geometry,
             name=self._name,
             **self._card_options(drop_original=True),
-            **self.options,
+            **self._cell_options(),
         )
 
     def union(self, other: Body) -> Body:
@@ -819,7 +966,7 @@ class Body(Card):
             geometry,
             name=self._name,
             **self._card_options(drop_original=True),
-            **self.options,
+            **self._cell_options(),
         )
 
     def simplify(
@@ -856,7 +1003,7 @@ class Body(Card):
             variants[0],
             name=self._name,
             **self._card_options(drop_original=True),
-            **self.options,
+            **self._cell_options(),
         )
 
     def split(self, box: Box = GLOBAL_BOX, min_volume: float = MIN_BOX_VOLUME) -> list[Body]:
@@ -873,7 +1020,7 @@ class Body(Card):
                 shape,
                 name=self._name,
                 **self._card_options(),
-                **self.options,
+                **self._cell_options(),
             )
             for shape in shape_groups
         ]
@@ -919,9 +1066,9 @@ class Body(Card):
             The list of resulting cells.
         """
         if universe is None:
-            if "FILL" in self.options:
-                universe = cast("Universe", self.options["FILL"]["universe"])
-                tr = self.options["FILL"].get("transform", None)
+            if self._fill is not None:
+                universe = cast("Universe", self._fill.universe)
+                tr = self._fill.transformation
                 if tr:
                     universe = universe.transform(tr)
             else:
@@ -945,8 +1092,8 @@ class Body(Card):
         for c in source_cells:
             new_cell = c.intersection(self)  # because properties like MAT, etc
             # must be as in filling cell.
-            if "U" in self.options:
-                new_cell.options["U"] = self.options["U"]  # except universe.
+            if self._u is not None:
+                new_cell.universe = self._u  # except universe.
             if simplify:
                 new_cell = new_cell.simplify(
                     split_disjoint=split_disjoint, min_volume=min_volume, trim_size=trim_size
@@ -969,13 +1116,13 @@ class Body(Card):
             geometry,
             name=self._name,
             **self._card_options(drop_original=True),
-            **self.options,
+            **self._cell_options(),
         )
-        fill = cell.options.get("FILL", None)
+        fill = cell._fill
         if fill is not None:
-            tr_in = fill.get("transform")
+            tr_in = fill.transformation
             new_tr = transformation if tr_in is None else transformation.apply2transform(tr_in)
-            fill["transform"] = new_tr
+            fill.transformation = new_tr
         return cell
 
     def apply_transformation(self) -> Body:
@@ -985,16 +1132,16 @@ class Body(Card):
             geometry,
             name=self._name,
             **self._card_options(drop_original=True),
-            **self.options,
+            **self._cell_options(),
         )
-        fill = cell.options.get("FILL")
+        fill = cell._fill
         if fill is not None:
-            tr_in = fill.get("transform")
-            filling_universe = fill["universe"]
+            tr_in = fill.transformation
+            filling_universe = fill.universe
             new_filling_universe = (
                 deepcopy(filling_universe).transform(tr_in).apply_transformation()
             )
-            cell.options["FILL"] = {"universe": new_filling_universe}
+            cell.fill = Filler(universe=new_filling_universe)
             # TODO dvp: this should create a lot of cell clashes on complex models with multiple filling with
             #           one universe. Should be resolved before saving.
         return cell

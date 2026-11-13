@@ -91,8 +91,8 @@ def print_option(option: str, value: Any) -> list[str]:
     if option == "U":
         return [f"U={value.name()}"]
     if option == "FILL":
-        universe = value["universe"]
-        tr = value.get("transform", None)
+        universe = value.universe
+        tr = value.transformation
         words = [f"FILL={universe.name()}"]
         if tr:
             tr_name = tr.name()

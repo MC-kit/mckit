@@ -5,7 +5,6 @@ from __future__ import annotations
 import numpy as np
 
 __all__ = [
-    "DROP_OPTIONS",
     "FLOAT_TOLERANCE",
     "MIN_BOX_VOLUME",
     "RESOLUTION",
@@ -17,5 +16,3 @@ MIN_BOX_VOLUME = 0.001
 RESOLUTION = np.finfo(float).resolution
 
 FLOAT_TOLERANCE = 1.0e-12
-
-DROP_OPTIONS = frozenset(["original", "transform", "comment", "trailing_comment", "comment_above"])

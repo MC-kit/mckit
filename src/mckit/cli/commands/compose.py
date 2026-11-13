@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import tomllib
 
 from functools import reduce
@@ -14,9 +12,9 @@ import numpy as np
 import mckit as mk
 
 from mckit import Transformation
+from mckit.body import Filler
 from mckit.cli._logging import logger
 from mckit.parser.mcnp_input_parser import ParseResult, from_file
-from mckit.utils import filter_dict
 
 from .common import save_mcnp
 
@@ -50,9 +48,9 @@ def compose(output, fill_descriptor_path, source, override, encoding: str = "utf
         universe, transformation = spec
         universe.set_common_materials(common)
         cell = cells_index[i]
-        cell.options = filter_dict(cell.options, "original")
-        fill_options: dict[str, Any] = {"universe": universe}
-        cell.options["FILL"] = fill_options
+        cell.drop_original()
+        fill = Filler(universe=universe)
+        cell.fill = fill
         if transformation is not None:
             # if isinstance(transformation, tk_items.Array):
             if isinstance(transformation, list):
@@ -69,14 +67,14 @@ def compose(output, fill_descriptor_path, source, override, encoding: str = "utf
                     raise ValueError(
                         f"Failed to process FILL transformation in cell #{cell.name()} of universe #{universe.name()}"
                     ) from ex
-                fill_options["transform"] = transformation2
+                fill.transformation = transformation2
             # elif isinstance(transformation, tk_items.Integer):
             elif isinstance(transformation, int):
                 assert named_transformations is not None, (
                     "There are no named transformations in the fill descriptor file"
                 )
                 transformation1 = named_transformations[int(transformation)]
-                fill_options["transform"] = transformation1
+                fill.transformation = transformation1
             else:
                 raise NotImplementedError(
                     f"Unexpected type of transformation parameter {type(transformation)}"

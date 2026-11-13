@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Final, Literal, SupportsIndex, cast
+from typing import TYPE_CHECKING, Final, Literal, SupportsIndex, cast
 
 import sys
 
@@ -20,7 +20,7 @@ import numpy as np
 
 from click import progressbar
 
-from .body import Body, Shape
+from .body import Body, Filler, Shape
 from .box import GLOBAL_BOX, Box
 from .material import Composition, Material
 from .surface import Plane, Surface
@@ -271,8 +271,8 @@ class Universe:
             new_cell = Body(
                 new_shape,
                 cell.name(),
-                **cell.options,
                 **cell._card_options(),
+                **cell._cell_options(),
             )
             mat = new_cell.material()
 
@@ -287,7 +287,7 @@ class Universe:
                         "Material",
                     ),
                 )
-                new_cell.options["MAT"] = Material(composition=new_comp, density=mat.density)
+                new_cell.mat = Material(composition=new_comp, density=mat.density)
 
             if name_rule == "keep" and cell.name() in cell_names:
                 msg = f"Cell name clash: {cell.name()}"
@@ -298,7 +298,7 @@ class Universe:
                 new_cell.rename(cast(Name, new_name))
 
             cell_names.add(cast(Name, new_cell.name()))
-            new_cell.options["U"] = self
+            new_cell.universe = self
             self._cells.append(new_cell)
 
     def set_common_materials(self, common_materials):
@@ -328,7 +328,7 @@ class Universe:
             if mat:
                 comp = mat.composition
                 if comp in common_materials:
-                    c.options["MAT"] = Material(composition=cmd[comp], density=mat.density)
+                    c.mat = Material(composition=cmd[comp], density=mat.density)
 
     @staticmethod
     def _get_cell_replaced_shape(
@@ -393,8 +393,7 @@ class Universe:
     @staticmethod
     def _fill_check(predicate: Callable[[Body], bool]) -> Callable[[Body], bool]:
         def _predicate(cell):
-            fill = cell.options.get("FILL", None)
-            if fill:
+            if cell.fill is not None:
                 return predicate(cell)
             return False
 
@@ -410,8 +409,9 @@ class Universe:
         cells = []
 
         for c in self:
-            options = {k: v for k, v in c.options.items() if k != "FILL"}
-            cells.append(Body(c.shape, c.name(), **options, **c._card_options()))
+            options = c._cell_options()
+            options.pop("FILL", None)
+            cells.append(Body(c.shape, c.name(), **c._card_options(), **options))
 
         return Universe(cells)
 
@@ -449,7 +449,7 @@ class Universe:
                     universe = universe.name()
 
                 def _predicate(_c: Body, /) -> bool:
-                    return cast(int, _c.options["FILL"]["universe"].name()) == universe
+                    return cast("Universe", _c.fill.universe).name() == universe
             else:
 
                 def _predicate(_c: Body, /) -> bool:
@@ -570,8 +570,8 @@ class Universe:
         """
         for c in self:
             yield from c.shape.scan_surfaces()
-            if inner and "FILL" in c.options:
-                yield from c.options["FILL"]["universe"].scan_surfaces(inner=inner)
+            if inner and c.fill is not None:
+                yield from cast("Universe", c.fill.universe).scan_surfaces(inner=inner)
 
     def get_surfaces_list(self, inner: bool = False):
         return list(self.scan_surfaces(inner=inner))
@@ -604,8 +604,8 @@ class Universe:
         """
         universes: set[Universe] = {self}
         for c in self:
-            if "FILL" in c.options:
-                u = c.options["FILL"]["universe"]
+            if c.fill is not None:
+                u = cast("Universe", c.fill.universe)
                 universes.update(u.get_universes())
         return universes
 
@@ -788,10 +788,10 @@ class Universe:
         taken_ids = set()
         for c in self:
             portion = selector(c)
-            if inner:
-                u = c.options.get("FILL", {}).get("universe")
+            if inner and c.fill is not None:
+                u = c.fill.universe
                 if u is not None:
-                    portion.extend(u.select(selector, True))
+                    portion.extend(cast("Universe", u).select(selector, True))
             for item in portion:
                 if id(item) not in taken_ids:
                     taken_ids.add(id(item))
@@ -940,17 +940,16 @@ def produce_universes(cells: Iterable[Body]) -> Universe:
     """
     groups: dict[Name, _UniverseCellsGroup] = {}
     for c in cells:
-        universe_no: Name = cast(Name, c.options.get("U", 0))
+        universe_no: Name = cast(Name, 0 if c.universe is None else c.universe)
         if universe_no in groups:
             groups[universe_no].cells.append(c)
         else:
             new_group = _UniverseCellsGroup(universe=Universe([], universe_no), cells=[c])
             groups[universe_no] = new_group
     for c in cells:
-        fill: dict[str, Any] | None = c.options.get("FILL")
+        fill: Filler | None = c.fill
         if fill is not None:
-            fill_universe_no = fill["universe"]
-            fill["universe"] = groups[fill_universe_no].universe
+            fill.universe = groups[fill.universe].universe
     for group in groups.values():
         group.universe.add_cells(group.cells, name_rule="keep")
     top_universe = groups[ZERO_NAME].universe
@@ -1006,10 +1005,10 @@ def collect_transformations(universe: Universe, recursive: bool = True) -> set[T
         if body_transformation and body_transformation.name():
             aggregator.add(body_transformation)
         if recursive:
-            fill = b.options.get("FILL")
-            if fill:
-                fill_universe = fill["universe"]
-                fill_transformation = fill.get("transform")
+            fill = b.fill
+            if fill is not None:
+                fill_universe = fill.universe
+                fill_transformation = fill.transformation
                 if fill_transformation and fill_transformation.name():
                     aggregator.add(fill_transformation)
                 aggregator.update(collect_transformations(fill_universe))

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import TYPE_CHECKING, Final, cast
 
 import collections
 import collections.abc
@@ -173,24 +173,6 @@ def _(where: collections.abc.Callable, x) -> bool:
 @is_in.register
 def _(where: collections.abc.Container, x) -> bool:
     return x in where
-
-
-def filter_dict(
-    a: dict[Any, Any],
-    *drop_items,
-) -> dict[Any, Any]:
-    """Create copy of a dictionary omitting some keys."""
-    res = {}
-    for k, v in a.items():
-        if drop_items and is_in(drop_items, k):
-            pass
-        elif isinstance(v, dict):
-            res[k] = filter_dict(v, *drop_items)
-        elif issubclass(type(v), collections.abc.Collection):
-            res[k] = deepcopy(v)
-        else:
-            res[k] = v
-    return res
 
 
 @functools.singledispatch
