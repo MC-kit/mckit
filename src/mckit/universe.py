@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, SupportsIndex, cast
+from typing import TYPE_CHECKING, Any, Final, Literal, SupportsIndex, cast
 
 import sys
 
@@ -43,7 +43,7 @@ __all__ = [
 from .utils.indexes import IndexOfNamed, StatisticsCollector
 from .utils.named import Name, default_name_key, map_names
 
-ZERO_NAME = cast(Name, 0)
+ZERO_NAME: Final[Name] = Name(0)
 
 _LOG = getLogger("mckit.universe")
 

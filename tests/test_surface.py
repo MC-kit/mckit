@@ -39,6 +39,13 @@ def assert_mcnp_repr(desc, answer):
         assert desc == answer
 
 
+def assert_same_state(left, right):
+    """The surfaces carry the same non-geometry state."""
+    assert left.transformation == right.transformation
+    assert left.modifier == right.modifier
+    assert left._extra == right._extra
+
+
 @pytest.mark.parametrize(
     "cls, kind, params, expected",
     [
@@ -533,7 +540,7 @@ class TestPlane:
             surf_un.is_close_to(surf)
             np.testing.assert_array_almost_equal(surf._v, surf_un._v)
             np.testing.assert_almost_equal(surf._k, surf_un._k)
-        assert surf.options == surf_un.options
+        assert_same_state(surf, surf_un)
 
     surfs: Final = [
         create_surface("PX", 5.0, name=1),  # 0
@@ -757,7 +764,7 @@ class TestSphere:
         surf_un = pass_through_pickle(surf)
         np.testing.assert_array_almost_equal(surf._center, surf_un._center)
         np.testing.assert_almost_equal(surf._radius, surf_un._radius)
-        assert surf.options == surf_un.options
+        assert_same_state(surf, surf_un)
 
     surfs: Final = [
         create_surface("SO", 1.0, name=1),  # 0
@@ -988,7 +995,7 @@ class TestCylinder:
         np.testing.assert_array_almost_equal(surf._pt, surf_un._pt)
         np.testing.assert_array_almost_equal(surf._axis, surf_un._axis)
         np.testing.assert_almost_equal(surf._radius, surf_un._radius)
-        assert surf.options == surf_un.options
+        assert_same_state(surf, surf_un)
 
     surfs: Final = [
         create_surface("CX", 1.0, name=1),  # 0
@@ -1369,7 +1376,7 @@ class TestCone:
         np.testing.assert_array_almost_equal(ans_surf._axis, surf_tr._axis)
         np.testing.assert_almost_equal(ans_surf._t2, surf_tr._t2)
         assert ans_surf._sheet == surf_tr._sheet
-        assert ans_surf.options == surf_tr.options
+        assert_same_state(ans_surf, surf_tr)
 
     @pytest.mark.parametrize(
         "apex, axis, t2, sheet, options",
@@ -2668,7 +2675,7 @@ class TestTorus:
         np.testing.assert_almost_equal(ans_surf._R, surf_tr._R)
         np.testing.assert_almost_equal(ans_surf._a, surf_tr._a)
         np.testing.assert_almost_equal(ans_surf._b, surf_tr._b)
-        assert surf_tr.options == ans_surf.options
+        assert_same_state(surf_tr, ans_surf)
 
     @pytest.mark.parametrize(
         "point, axis, radius, a, b, options",
@@ -2883,7 +2890,7 @@ class TestGQuadratic:
         # np.testing.assert_array_almost_equal(ans_surf._v, surf_tr._v)
         # np.testing.assert_almost_equal(ans_surf._k, surf_tr._k)
         assert surf_tr == ans_surf
-        assert surf_tr.options == ans_surf.options
+        assert_same_state(surf_tr, ans_surf)
         # TODO dvp: move out of class and generalize for all the surfaces
 
     @pytest.mark.parametrize(
@@ -3071,7 +3078,7 @@ class TestBOX:
         np.testing.assert_array_almost_equal(dirx, adx)
         np.testing.assert_array_almost_equal(diry, ady)
         np.testing.assert_array_almost_equal(dirz, adz)
-        assert surf.options == surf_un.options
+        assert_same_state(surf, surf_un)
 
     surfs: Final = [
         create_surface("RPP", -1, 1, -2, 2, -3, 3, name=1),  # 0
@@ -3234,7 +3241,7 @@ class TestRCC:
         np.testing.assert_array_almost_equal(center, ac)
         np.testing.assert_array_almost_equal(axis, ax)
         np.testing.assert_almost_equal(radius, r)
-        assert surf.options == surf_un.options
+        assert_same_state(surf, surf_un)
 
     surfs: Final = [
         create_surface("RCC", -1, 1, -2, 2, 0, 0, 4, name=1),  # 0
@@ -3327,15 +3334,15 @@ def test_plane_is_close(a: Plane, b: Plane, expected: bool) -> None:
     assert b.is_close_to(a) == expected
 
 
-#  Model surfaces with the transformation delayed in options:
-#  __init__ of every surface kind applies its "transform" kwarg immediately and pops it,
+#  Model surfaces with the transformation delayed in the `transformation` attribute:
+#  __init__ of every surface kind applies its "transform" kwarg immediately and doesn't store it,
 #  so `apply_transformation`/`combine_transformations`/`is_close_to` see it only then.
 _tr_1 = Transformation(translation=[0, 1, 0])
 _tr_2 = Transformation(translation=[0, 2, 0])
 
 
 def _delayed_transform(surface, tr):
-    surface.options["transform"] = tr
+    surface.transformation = tr
     return surface
 
 
@@ -3439,11 +3446,11 @@ def test_surfaces_is_close(a, b, expected):
 def test_apply_transformation_of_delayed_transform(factory):
     tr = Transformation(translation=[0, 1, 0])
     surface = factory()
-    surface.options["transform"] = tr
+    surface.transformation = tr
     transformed = surface.apply_transformation()
     expected = factory(transform=tr)
     assert transformed == expected
-    assert "transform" not in transformed.options
+    assert transformed.transformation is None
 
 
 @pytest.mark.parametrize(
@@ -3466,9 +3473,9 @@ def test_apply_transformation_by_default(factory):
 
 def test_rcc_apply_transformation():
     rcc = RCC([-1, 1, -2], [2, 0, 0], 4.0)
-    rcc.options["transform"] = _tr_1
+    rcc.transformation = _tr_1
     assert rcc.apply_transformation() is rcc
-    assert rcc.options["transform"] is _tr_1
+    assert rcc.transformation is _tr_1
 
 
 @pytest.mark.parametrize(
@@ -3493,9 +3500,25 @@ def test_combine_transformations():
     plain = create_surface("PX", 5.0)
     assert plain.combine_transformations(_tr_1) is _tr_1
     plane = create_surface("PX", 5.0)
-    plane.options["transform"] = _tr_1
+    plane.transformation = _tr_1
     combined = plane.combine_transformations(_tr_2)
     assert combined.mcnp_repr() == _tr_2.apply2transform(_tr_1).mcnp_repr()
+
+
+def test_surface_modifier_accessor():
+    surface = create_surface("PX", 5.0)
+    assert surface.modifier is None
+    surface.modifier = "*"
+    assert surface.modifier == "*"
+    surface.modifier = None
+    assert surface.modifier is None
+
+
+def test_surface_state_propagation():
+    """The modifier and extra data propagate to derived surfaces."""
+    surface = create_surface("PX", 5.0, modifier="*", comments=["abc"])
+    assert_same_state(surface, surface.copy())
+    assert_same_state(surface, surface.transform(_tr_1))
 
 
 def test_macrobody_surface_index_error():

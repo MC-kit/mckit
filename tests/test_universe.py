@@ -1261,7 +1261,7 @@ def test_apply_fill_by_universe_object(universe) -> None:
 def test_bounding_box_skips_graveyard_cells(universe) -> None:
     u = universe(2)
     bb = u.bounding_box(skip_graveyard_cells=True)
-    u_without_graveyard = Universe([c for c in u if not c.is_graveyard], name=0)
+    u_without_graveyard = Universe([c for c in u if not c.is_graveyard])
     expected = u_without_graveyard.bounding_box()
     np.testing.assert_allclose(bb.center, expected.center)
     np.testing.assert_allclose(bb.dimensions, expected.dimensions)
@@ -1279,7 +1279,6 @@ def test_simplify_drops_cells_that_become_empty() -> None:
             Body(Shape("U", Shape("S", s30), Shape("S", s40)), name=5),
             Body(Shape("S", s0), name=6),
         ],
-        name=0,
     )
     assert [c.name() for c in u] == [5, 6]
     u.simplify(box=Box([0, 0, 0], 20, 20, 20), min_volume=0.1, verbose=False)
@@ -1305,13 +1304,13 @@ def test_collect_transformations_of_named_surface_and_body_transformations() -> 
     """Named transformations of surfaces and cells are collected too."""
     surface_tr = Transformation([1, 1, 1], name=1)
     surface = create_surface("PX", 0, name=21)
-    surface.options["transform"] = surface_tr
+    surface.transformation = surface_tr
     body_tr = Transformation([-1, -1, -1], name=2)
     s1 = create_surface("PX", 0, name=1)
     cells = [
         Body(Shape("S", surface), name=1),
         Body(Shape("S", s1), name=2, TRCL=body_tr),
     ]
-    u = Universe(cells, name=0)
+    u = Universe(cells)
     actual = sorted(map(int, map(Card.name, collect_transformations(u))))
     assert actual == [1, 2]

@@ -91,6 +91,7 @@ def test_are_equal(a, b, expected):
         ({"a": 1, "b": 2, "c": 3}, frozenset(("b", "c")), {"a": 1}),
         ({"a": 1, "b": {"c": 3}}, "c", {"a": 1, "b": {}}),
         ({"a": 1, "b": {"c": 3}}, lambda x: x == "a", {"b": {"c": 3}}),
+        ({"a": [1, 2], "b": "s"}, "c", {"a": [1, 2], "b": "s"}),
     ],
 )
 def test_deep_copy_dict(dictionary, drop_items, expected):

@@ -47,7 +47,7 @@ def test_good_path(text, expected):
 def test_absent_transformation_with_ignore_strategy(text, expected):
     actual = srp.parse(text, transformations=IgnoringIndex())
     assert actual == expected
-    assert "transform" not in actual.options
+    assert actual.transformation is None
 
 
 @pytest.mark.parametrize("text,msg_contains", [("1 2 PX 0", 2)])
