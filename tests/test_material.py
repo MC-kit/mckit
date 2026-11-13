@@ -1546,7 +1546,46 @@ class TestComposition:
         comp = compositions[case_no]
         assert comp.name() == name
         for key, value in expected_kw.items():
-            assert comp.options[key] == value
+            assert comp._extra[key] == value
+
+    def test_option_defaults(self):
+        comp = Composition(atomic=[("H", 1)])
+        for attr in ("nlib", "plib", "pnlib", "elib", "gas", "estep", "cond"):
+            assert getattr(comp, attr) is None
+
+    def test_options(self):
+        comp = Composition(atomic=[("H", 1)], nlib="21c", gas=1)
+        assert comp.nlib == "21c"
+        assert comp.gas == 1
+        comp.plib = "p"
+        comp.pnlib = "pn"
+        comp.elib = "e"
+        comp.estep = 2
+        comp.cond = 3
+        assert (comp.plib, comp.pnlib, comp.elib, comp.estep, comp.cond) == ("p", "pn", "e", 2, 3)
+        comp.nlib = "50c"
+        comp.gas = 0
+        comp.plib = None
+        comp.pnlib = None
+        comp.elib = None
+        comp.estep = None
+        comp.cond = None
+        assert (comp.nlib, comp.gas) == ("50c", 0)
+        assert (comp.plib, comp.pnlib, comp.elib, comp.estep, comp.cond) == (None,) * 5
+
+    def test_state_propagation(self):
+        comp = Composition(atomic=[("H", 1)], name=1, nlib="21c", gas=1, lib="x", comment=["c"])
+        assert comp._extra == {"lib": "x"}
+        for derived in (comp.copy(), comp.expand()):
+            assert derived is not comp
+            assert (derived.nlib, derived.gas) == ("21c", 1)
+            assert derived._extra == {"lib": "x"}
+            assert derived.comment == ["c"]
+        natural = comp.expand().natural()
+        assert natural is not None
+        assert (natural.nlib, natural.gas) == ("21c", 1)
+        assert natural._extra == {"lib": "x"}
+        assert natural.comment == ["c"]
 
     @pytest.mark.parametrize(
         "mix_components, ans_index",

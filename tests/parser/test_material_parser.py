@@ -69,7 +69,7 @@ c something
                 weight=[(Element(1001, lib="21c"), 1.0)],
                 name=1000,
                 # comment=["trailing comment1", "trailing comment2"],
-                GAS=1,
+                gas=1,
             ),
         ),
         (
@@ -78,7 +78,7 @@ c something
         ),
         (
             "m3 1001 0.1 1002 0.9 gas=1",
-            Composition(atomic=[(1001, 0.1), (1002, 0.9)], name=3, GAS=1),
+            Composition(atomic=[(1001, 0.1), (1002, 0.9)], name=3, gas=1),
         ),
     ],
 )
@@ -86,7 +86,24 @@ def test_composition_parser(text, expected):
     result = mp.parse(text)
     assert isinstance(result, Composition), "Parser should create instance of Composition"
     assert result == expected
-    assert result.options == expected.options
+    assert (
+        result.nlib,
+        result.plib,
+        result.pnlib,
+        result.elib,
+        result.gas,
+        result.estep,
+        result.cond,
+    ) == (
+        expected.nlib,
+        expected.plib,
+        expected.pnlib,
+        expected.elib,
+        expected.gas,
+        expected.estep,
+        expected.cond,
+    )
+    assert result._extra == expected._extra
 
 
 def test_material_with_ampersand(data):

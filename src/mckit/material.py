@@ -61,7 +61,18 @@ class Composition(Card):
     _tolerance = 1.0e-3
     """Relative composition element concentration equality tolerance."""
 
-    __slots__ = (*CARD_SLOTS, "_composition", "_molar_mass", "options")
+    __slots__ = (
+        *CARD_SLOTS,
+        "_composition",
+        "_molar_mass",
+        "_nlib",
+        "_plib",
+        "_pnlib",
+        "_elib",
+        "_gas",
+        "_estep",
+        "_cond",
+    )
 
     # TODO dvp: are there specs using both atomic and weight definitions?
     def __init__(
@@ -69,8 +80,16 @@ class Composition(Card):
         atomic: TFractions | None = None,
         weight: TFractions | None = None,
         name: Name | int | None = None,
-        **options: Any,
-    ):
+        *,
+        nlib: str | None = None,
+        plib: str | None = None,
+        pnlib: str | None = None,
+        elib: str | None = None,
+        gas: int | None = None,
+        estep: int | None = None,
+        cond: int | None = None,
+        **extra: Any,
+    ) -> None:
         """Initialize a Composition.
 
         Args:
@@ -78,10 +97,24 @@ class Composition(Card):
                     The elements can be specified as `int` zid, `str` name or `Element` object.
             weight: the list for weight fractions, the content is same as `atomic`
             name: the optional name of the composition, e.g. material number.
-            options: Dictionary of composition options.
+            nlib: the neutron data library, like '21c'.
+            plib: the photon data library.
+            pnlib: the coupled neutron-photon data library.
+            elib: the electron data library.
+            gas: the MCNP GAS option (estep and cond are the other MCNP material switches).
+            estep: the MCNP ESTEP option.
+            cond: the MCNP COND option.
+            extra: Rare arbitrary data (see `Card`).
         """
-        Card.__init__(self, name, **Card._split_options(options))
-        self.options = options
+        card_kwargs = Card._split_options(extra)
+        Card.__init__(self, name, **card_kwargs, **extra)
+        self._nlib = nlib
+        self._plib = plib
+        self._pnlib = pnlib
+        self._elib = elib
+        self._gas = gas
+        self._estep = estep
+        self._cond = cond
         self._composition: dict[Element, float] = {}
         elem_w = []
         frac_w = []
@@ -132,7 +165,14 @@ class Composition(Card):
         return Composition(
             atomic=cast(TFractions, self._composition.items()),
             name=self._name,
-            **self.options,
+            nlib=self._nlib,
+            plib=self._plib,
+            pnlib=self._pnlib,
+            elib=self._elib,
+            gas=self._gas,
+            estep=self._estep,
+            cond=self._cond,
+            **(self._extra or {}),
             **self._card_options(),
         )
 
@@ -245,6 +285,69 @@ class Composition(Card):
         """Gets composition's effective molar mass [g / mol]."""
         return self._molar_mass
 
+    @property
+    def nlib(self) -> str | None:
+        """The neutron data library, like '21c'."""
+        return self._nlib
+
+    @nlib.setter
+    def nlib(self, value: str | None) -> None:
+        self._nlib = value
+
+    @property
+    def plib(self) -> str | None:
+        """The photon data library."""
+        return self._plib
+
+    @plib.setter
+    def plib(self, value: str | None) -> None:
+        self._plib = value
+
+    @property
+    def pnlib(self) -> str | None:
+        """The coupled neutron-photon data library."""
+        return self._pnlib
+
+    @pnlib.setter
+    def pnlib(self, value: str | None) -> None:
+        self._pnlib = value
+
+    @property
+    def elib(self) -> str | None:
+        """The electron data library."""
+        return self._elib
+
+    @elib.setter
+    def elib(self, value: str | None) -> None:
+        self._elib = value
+
+    @property
+    def gas(self) -> int | None:
+        """The MCNP GAS option."""
+        return self._gas
+
+    @gas.setter
+    def gas(self, value: int | None) -> None:
+        self._gas = value
+
+    @property
+    def estep(self) -> int | None:
+        """The MCNP ESTEP option."""
+        return self._estep
+
+    @estep.setter
+    def estep(self, value: int | None) -> None:
+        self._estep = value
+
+    @property
+    def cond(self) -> int | None:
+        """The MCNP COND option."""
+        return self._cond
+
+    @cond.setter
+    def cond(self, value: int | None) -> None:
+        self._cond = value
+
     def expand(self) -> Composition:
         """Expands elements with natural abundances into detailed isotope composition.
 
@@ -266,7 +369,14 @@ class Composition(Card):
         return Composition(
             atomic=composition.items(),
             name=self._name,
-            **self.options,
+            nlib=self._nlib,
+            plib=self._plib,
+            pnlib=self._pnlib,
+            elib=self._elib,
+            gas=self._gas,
+            estep=self._estep,
+            cond=self._cond,
+            **(self._extra or {}),
             **self._card_options(),
         )
 
@@ -320,7 +430,14 @@ class Composition(Card):
         return Composition(
             atomic=cast(TFractions, composition.items()),
             name=self._name,
-            **self.options,
+            nlib=self._nlib,
+            plib=self._plib,
+            pnlib=self._pnlib,
+            elib=self._elib,
+            gas=self._gas,
+            estep=self._estep,
+            cond=self._cond,
+            **(self._extra or {}),
             **self._card_options(),
         )
 

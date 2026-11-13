@@ -102,14 +102,14 @@ def test_parser_basic_functionality(text: str, expected: TExpected):
                         },
                         3: {
                             "atomic": [(1001, {}, 0.1), (1002, {}, 0.9)],
-                            "GAS": 1,
+                            "gas": 1,
                             "name": 3,
                         },
                         4: {
                             "atomic": [(1001, {}, 0.1)],
                             "weight": [(1002, {}, 0.9)],
-                            "GAS": 1,
-                            "NLIB": "50C",
+                            "gas": 1,
+                            "nlib": "50C",
                             "name": 4,
                         },
                     },
