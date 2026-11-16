@@ -7,7 +7,6 @@ from mckit.utils import (
     FLOAT_TOLERANCE,
     are_equal,
     compute_hash,
-    filter_dict,
     get_decades,
     is_in,
     is_sorted,
@@ -81,21 +80,6 @@ def test_significant_digits(value, reltol, resolution, expected):
 )
 def test_are_equal(a, b, expected):
     actual = are_equal(a, b)
-    assert actual == expected
-
-
-@pytest.mark.parametrize(
-    "dictionary, drop_items, expected",
-    [
-        ({"a": 1, "b": 2}, "b", {"a": 1}),
-        ({"a": 1, "b": 2, "c": 3}, frozenset(("b", "c")), {"a": 1}),
-        ({"a": 1, "b": {"c": 3}}, "c", {"a": 1, "b": {}}),
-        ({"a": 1, "b": {"c": 3}}, lambda x: x == "a", {"b": {"c": 3}}),
-        ({"a": [1, 2], "b": "s"}, "c", {"a": [1, 2], "b": "s"}),
-    ],
-)
-def test_deep_copy_dict(dictionary, drop_items, expected):
-    actual = filter_dict(dictionary, drop_items)
     assert actual == expected
 
 

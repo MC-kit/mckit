@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
+
 from mckit.utils._resource import path_resolver
 from mckit.utils._text import match_comment
 from mckit.utils.accept import TVisitor, accept, on_unknown_acceptor
@@ -9,7 +11,6 @@ from mckit.utils.misc import (
     MAX_DIGITS,
     are_equal,
     compute_hash,
-    deepcopy,
     get_decades,
     is_in,
     is_sorted,

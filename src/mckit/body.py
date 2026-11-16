@@ -618,11 +618,16 @@ def _verify_opc(opc, *args):
 
 
 class Filler:
-    """Represents the FILL option of a cell: the filling universe
-    and, optionally, a transformation to be applied to the filling universe.
+    """Represents the FILL option of a cell.
+
+    The filling universe and, optionally, a transformation to be applied
+    to the filling universe.
+
+    Note: the `fill` method of `Body` is an operation, not an accessor -
+    the FILL option is accessed with the `filling` property.
     """
 
-    __slots__ = ("_universe", "_transformation")
+    __slots__ = ("_transformation", "_universe")
 
     def __init__(
         self,
@@ -668,11 +673,14 @@ class Filler:
             and self._transformation == other._transformation
         )
 
+    def __hash__(self) -> int:
+        return hash((self._universe, self._transformation))
+
     def __repr__(self) -> str:
         return f"Filler(universe={self._universe}, transformation={self._transformation})"
 
 
-def _normalize_fill(fill: "Filler | dict[str, Any] | None") -> Filler | None:
+def _normalize_fill(fill: Filler | dict[str, Any] | None) -> Filler | None:
     """Convert the legacy FILL options value to a Filler instance."""
     if fill is None or isinstance(fill, Filler):
         return fill
@@ -734,7 +742,8 @@ class Body(Card):
         self._imp_n = options.pop("IMPN", None)
         self._imp_p = options.pop("IMPP", None)
         self._imp_e = options.pop("IMPE", None)
-        Card.__init__(self, name, **Card._split_options(options))
+        card_options = Card._split_options(options)
+        Card.__init__(self, name, **card_options, **options)
         self._shape = geometry
 
     def _cell_options(self) -> dict[str, Any]:
@@ -805,22 +814,22 @@ class Body(Card):
         self._mat = mat
 
     @property
-    def universe(self) -> "Universe | int | None":
+    def universe(self) -> Universe | int | None:
         """The universe this cell belongs to (the U option)."""
         return self._u
 
     @universe.setter
-    def universe(self, universe: "Universe | int | None") -> None:
+    def universe(self, universe: Universe | int | None) -> None:
         self._u = universe
 
     @property
-    def fill(self) -> Filler | None:
+    def filling(self) -> Filler | None:
         """The filling universe specification (the FILL option)."""
         return self._fill
 
-    @fill.setter
-    def fill(self, fill: Filler | None) -> None:
-        self._fill = fill
+    @filling.setter
+    def filling(self, filling: Filler | None) -> None:
+        self._fill = filling
 
     @property
     def transformation(self) -> Transformation | None:
@@ -871,8 +880,8 @@ class Body(Card):
         if result and self._fill is not None:
             if other._fill is None:
                 return False
-            my = self._fill.universe
-            their = other._fill.universe
+            my = cast("Universe", self._fill.universe)
+            their = cast("Universe", other._fill.universe)
             return my.has_equivalent_cells(their)
         return result
 
@@ -1069,7 +1078,7 @@ class Body(Card):
             if self._fill is not None:
                 universe = cast("Universe", self._fill.universe)
                 tr = self._fill.transformation
-                if tr:
+                if tr is not None:
                     universe = universe.transform(tr)
             else:
                 return [self]
@@ -1137,11 +1146,13 @@ class Body(Card):
         fill = cell._fill
         if fill is not None:
             tr_in = fill.transformation
-            filling_universe = fill.universe
+            filling_universe = cast("Universe", fill.universe)
             new_filling_universe = (
-                deepcopy(filling_universe).transform(tr_in).apply_transformation()
+                deepcopy(filling_universe)
+                .transform(cast("Transformation", tr_in))
+                .apply_transformation()
             )
-            cell.fill = Filler(universe=new_filling_universe)
+            cell.filling = Filler(universe=new_filling_universe)
             # TODO dvp: this should create a lot of cell clashes on complex models with multiple filling with
             #           one universe. Should be resolved before saving.
         return cell

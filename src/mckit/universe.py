@@ -393,7 +393,7 @@ class Universe:
     @staticmethod
     def _fill_check(predicate: Callable[[Body], bool]) -> Callable[[Body], bool]:
         def _predicate(cell):
-            if cell.fill is not None:
+            if cell.filling is not None:
                 return predicate(cell)
             return False
 
@@ -449,7 +449,8 @@ class Universe:
                     universe = universe.name()
 
                 def _predicate(_c: Body, /) -> bool:
-                    return cast("Universe", _c.fill.universe).name() == universe
+                    fill = cast("Filler", _c.filling)
+                    return cast("Universe", fill.universe).name() == universe
             else:
 
                 def _predicate(_c: Body, /) -> bool:
@@ -570,8 +571,8 @@ class Universe:
         """
         for c in self:
             yield from c.shape.scan_surfaces()
-            if inner and c.fill is not None:
-                yield from cast("Universe", c.fill.universe).scan_surfaces(inner=inner)
+            if inner and c.filling is not None:
+                yield from cast("Universe", c.filling.universe).scan_surfaces(inner=inner)
 
     def get_surfaces_list(self, inner: bool = False):
         return list(self.scan_surfaces(inner=inner))
@@ -604,8 +605,8 @@ class Universe:
         """
         universes: set[Universe] = {self}
         for c in self:
-            if c.fill is not None:
-                u = cast("Universe", c.fill.universe)
+            if c.filling is not None:
+                u = cast("Universe", c.filling.universe)
                 universes.update(u.get_universes())
         return universes
 
@@ -788,9 +789,9 @@ class Universe:
         taken_ids = set()
         for c in self:
             portion = selector(c)
-            if inner and c.fill is not None:
-                u = c.fill.universe
-                if u is not None:
+            if inner and c.filling is not None:
+                u = c.filling.universe
+                if u is not None:  # pragma: no branch - the filler universe is always set
                     portion.extend(cast("Universe", u).select(selector, True))
             for item in portion:
                 if id(item) not in taken_ids:
@@ -947,9 +948,9 @@ def produce_universes(cells: Iterable[Body]) -> Universe:
             new_group = _UniverseCellsGroup(universe=Universe([], universe_no), cells=[c])
             groups[universe_no] = new_group
     for c in cells:
-        fill: Filler | None = c.fill
+        fill: Filler | None = c.filling
         if fill is not None:
-            fill.universe = groups[fill.universe].universe
+            fill.universe = groups[cast("Name", fill.universe)].universe
     for group in groups.values():
         group.universe.add_cells(group.cells, name_rule="keep")
     top_universe = groups[ZERO_NAME].universe
@@ -1005,9 +1006,9 @@ def collect_transformations(universe: Universe, recursive: bool = True) -> set[T
         if body_transformation and body_transformation.name():
             aggregator.add(body_transformation)
         if recursive:
-            fill = b.fill
+            fill = b.filling
             if fill is not None:
-                fill_universe = fill.universe
+                fill_universe = cast("Universe", fill.universe)
                 fill_transformation = fill.transformation
                 if fill_transformation and fill_transformation.name():
                     aggregator.add(fill_transformation)

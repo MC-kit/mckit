@@ -56,8 +56,8 @@ def decompose(output, fill_descriptor_path, source, override, encoding):
         "created": datetime.now(),
     }
     for c in model:
-        fill = c.fill
-        c.fill = None
+        fill = c.filling
+        c.filling = None
         if fill is not None:
             universe = fill.universe
             words = [f"FILL={universe.name()}"]

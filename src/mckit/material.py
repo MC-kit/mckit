@@ -569,6 +569,8 @@ class Material:
         self._options = options
 
     def __eq__(self, other):
+        if not isinstance(other, Material):
+            return NotImplemented
         if not math.isclose(self._n, other.concentration, rel_tol=self._tolerance):
             return False
         return self._composition == other.composition

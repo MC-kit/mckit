@@ -50,7 +50,7 @@ def compose(output, fill_descriptor_path, source, override, encoding: str = "utf
         cell = cells_index[i]
         cell.drop_original()
         fill = Filler(universe=universe)
-        cell.fill = fill
+        cell.filling = fill
         if transformation is not None:
             # if isinstance(transformation, tk_items.Array):
             if isinstance(transformation, list):

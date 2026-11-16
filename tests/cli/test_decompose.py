@@ -74,7 +74,7 @@ def test_when_only_source_is_specified(runner, source, expected, data):
         assert p.exists(), f"Should store the file {p} in the default directory {output!r}"
         model = from_file(p).universe
         for cell in model:
-            assert "U" not in cell.options or cell.options["U"].name() == 0
+            assert cell.universe is None or cell.universe.name() == 0
 
 
 @pytest.mark.parametrize(

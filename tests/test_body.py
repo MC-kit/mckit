@@ -8,7 +8,7 @@ import sys
 import numpy as np
 import pytest
 
-from mckit.body import Body, Shape, Simplifier, simplify, simplify_mp, simplify_mpp
+from mckit.body import Body, Filler, Shape, Simplifier, simplify, simplify_mp, simplify_mpp
 from mckit.box import Box
 from mckit.material import Material
 from mckit.surface import create_surface
@@ -2064,13 +2064,18 @@ class TestShape:
 def assert_options(body: Body, options: dict) -> None:
     """Assert options of a body.
 
-    The name moved from the options dictionary to the explicit `name` attribute.
+    The name moved from the options dictionary to the explicit `name` attribute,
+    and the cell-level options are stored in explicit attributes now.
     """
     for k, v in options.items():
         if k == "name":
             assert body.name() == v
+        elif k == "MAT":
+            assert body.mat == v
+        elif k == "U":
+            assert body.universe == v
         else:
-            assert body.options[k] == v
+            assert body._cell_options()[k] == v
 
 
 class TestBody:
@@ -2298,7 +2303,7 @@ class TestBody:
 
         new_body = body.transform(tr)
         if fill_tr:
-            points2 = new_body.options["FILL"]["transform"].apply2point(points)
+            points2 = new_body.filling.transformation.apply2point(points)
         else:
             points2 = tr.apply2point(points)
         new_results = new_body.shape.test_points(points2)
@@ -2327,7 +2332,7 @@ class TestFill:
 
     def test_fill_without_universe_and_fill_option(self):
         cell, _, _ = _make_fill_envelope()
-        assert cell.options.get("FILL") is None
+        assert cell.filling is None
         result = cell.fill()
         assert result == [cell]
         assert result[0] is cell
@@ -2343,7 +2348,7 @@ class TestFill:
     def test_fill_from_fill_option(self):
         cell, py0, py2 = _make_fill_envelope()
         universe, px0, px2 = _make_fill_universe()
-        cell.options["FILL"] = {"universe": universe}
+        cell.filling = Filler(universe=universe)
         result = cell.fill()
         assert len(result) == 1
         expected = Shape("I", Shape("S", px0), Shape("C", px2), Shape("S", py0), Shape("C", py2))
@@ -2352,10 +2357,10 @@ class TestFill:
     def test_fill_with_transform(self):
         cell, py0, py2 = _make_fill_envelope()
         universe, _, _ = _make_fill_universe()
-        cell.options["FILL"] = {
-            "universe": universe,
-            "transform": Transformation(translation=[1, 0, 0]),
-        }
+        cell.filling = Filler(
+            universe=universe,
+            transformation=Transformation(translation=[1, 0, 0]),
+        )
         result = cell.fill()
         assert len(result) == 1
         px1 = create_surface("PX", 1)
@@ -2369,10 +2374,10 @@ class TestFill:
         px0 = create_surface("PX", 0, name=1)
         px2 = create_surface("PX", 2, name=2)
         mid = Body(Shape("I", px0, Shape("C", px2)), name=8)
-        mid.options["FILL"] = {"universe": u_deep}
+        mid.filling = Filler(universe=u_deep)
         u_mid = Universe([mid], name=6)
         cell, py0, py2 = _make_fill_envelope()
-        cell.options["FILL"] = {"universe": u_mid}
+        cell.filling = Filler(universe=u_mid)
         expected = Shape("I", Shape("S", px0), Shape("C", px2), Shape("S", py0), Shape("C", py2))
         # Without the recurrent flag the deep universe is not expanded.
         result = cell.fill()
@@ -2394,22 +2399,22 @@ class TestFill:
     def test_fill_propagates_universe_option(self):
         cell, _py0, _py2 = _make_fill_envelope()
         universe, _, _ = _make_fill_universe()
-        cell.options["FILL"] = {"universe": universe}
-        cell.options["U"] = 8
+        cell.filling = Filler(universe=universe)
+        cell.universe = 8
         result = cell.fill()
         assert len(result) == 1
-        assert result[0].options.get("U") == 8
+        assert result[0].universe == 8
 
     def test_fill_simplify(self):
         cell, py0, py2 = _make_fill_envelope()
         universe, px0, px2 = _make_fill_universe()
-        cell.options["FILL"] = {"universe": universe}
+        cell.filling = Filler(universe=universe)
         result = cell.fill(universe=universe, simplify=True)
         assert len(result) == 1
         expected = Shape("I", Shape("S", px0), Shape("C", px2), Shape("S", py0), Shape("C", py2))
         assert result[0].shape == expected
         # The 'U' option is inherited from the filling cell, not from the envelope.
-        assert result[0].options.get("U") is universe
+        assert result[0].universe is universe
 
 
 def _axes():
@@ -2547,6 +2552,94 @@ class TestBodyInternals:
         filled = Body(shape, FILL={"universe": "u"})
         assert not filled.is_equivalent_to(Body(shape))
         assert Body(shape).is_equivalent_to(Body(shape))
+
+    def test_equality_covers_cell_attributes(self):
+        px, py, _pz = _axes()
+        shape = Shape("I", px, py)
+        base = Body(shape, name=1, IMPN=1.0)
+        assert base == Body(shape, name=1, IMPN=1.0)
+        assert base != Body(shape, name=1, IMPN=2.0)
+        assert base != Body(shape, name=2, IMPN=1.0)
+        assert Body(shape, name=1, U=5) == Body(shape, name=1, U=5)
+        assert Body(shape, name=1, U=5) != base
+        assert Body(shape, name=1, VOL=2.0) == Body(shape, name=1, VOL=2.0)
+        assert Body(shape, name=1, VOL=2.0) != base
+        assert Body(shape, name=1, IMPP=1.0, IMPE=0.5) == Body(shape, name=1, IMPP=1.0, IMPE=0.5)
+        assert Body(shape, name=1, IMPP=1.0, IMPE=0.5) != base
+        material = Material(atomic=[("C-12", 1)], density=1.0)
+        assert Body(shape, name=1, MAT=material) == Body(shape, name=1, MAT=material)
+        assert Body(shape, name=1, MAT=material) != base
+        transformation = Transformation(translation=[1, 0, 0])
+        transformed = Body(shape, name=1, TRCL=transformation)
+        assert transformed == Body(shape, name=1, TRCL=transformation)
+        assert transformed != base
+        filled = Body(shape, name=1, FILL=Filler(universe=5))
+        assert filled == Body(shape, name=1, FILL=Filler(universe=5))
+        assert filled != Body(shape, name=1, FILL=Filler(universe=6))
+        assert filled != base
+
+    def test_cell_options_roundtrip(self):
+        """A body with all the cell attributes survives the legacy options-dictionary roundtrip."""
+        px, py, _pz = _axes()
+        shape = Shape("I", px, py)
+        material = Material(atomic=[("C-12", 1)], density=2.5)
+        transformation = Transformation(translation=[1, 0, 0])
+        body = Body(
+            shape,
+            name=7,
+            MAT=material,
+            U=3,
+            FILL=Filler(universe=5, transformation=transformation),
+            TRCL=transformation,
+            VOL=2.0,
+            IMPN=1.0,
+            IMPP=0.5,
+            IMPE=0.25,
+            TMP=300.0,
+        )
+        options = body._cell_options()
+        assert set(options) == {
+            "MAT",
+            "U",
+            "FILL",
+            "TRCL",
+            "VOL",
+            "IMPN",
+            "IMPP",
+            "IMPE",
+            "TMP",
+        }
+        clone = Body(shape, name=7, **body._card_options(), **options)
+        assert clone == body
+        assert clone.filling == body.filling
+
+    def test_filling_accessors(self):
+        px, py, _pz = _axes()
+        body = Body(Shape("I", px, py), name=1)
+        assert body.filling is None
+        filler = Filler(universe=5)
+        body.filling = filler
+        assert body.filling is filler
+        body.filling = None
+        assert body.filling is None
+
+    def test_filler(self):
+        transformation = Transformation(translation=[1, 0, 0])
+        filler = Filler(universe=5, transformation=transformation)
+        assert filler.universe == 5
+        assert filler.transformation is transformation
+        assert filler == Filler(universe=5, transformation=transformation)
+        assert filler != Filler(universe=6, transformation=transformation)
+        assert filler != Filler(universe=5)
+        filler.universe = 7
+        filler.transformation = None
+        assert filler == Filler(universe=7)
+        assert hash(filler) == hash(Filler(universe=7))
+        assert repr(filler) == "Filler(universe=7, transformation=None)"
+
+    def test_fill_rejects_unexpected_type(self):
+        with pytest.raises(TypeError, match="Invalid type of the FILL option value"):
+            Body(Shape("E"), FILL=5)
 
     def test_material_rejects_unexpected_type(self):
         px, py, _pz = _axes()

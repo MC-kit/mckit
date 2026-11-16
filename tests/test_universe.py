@@ -360,7 +360,7 @@ def test_add_cells(universe, case, cells, name_rule, new_name, new_surfs, new_co
             assert added_cell.shape == cell.shape
             assert added_cell is not cell
             assert added_cell.name() == name
-            assert added_cell.options["U"] is u
+            assert added_cell.universe is u
             if cell.material() is not None:
                 assert added_cell.material().composition == cell.material().composition
 
@@ -392,7 +392,7 @@ def test_add_cells_neg(universe, case, cells, shapes):
         assert added_cell.shape == shape
         assert added_cell is not cell
         assert added_cell.name() == cell.name()
-        assert added_cell.options["U"] is u
+        assert added_cell.universe is u
         if cell.material() is not None:
             assert added_cell.material().composition == cell.material().composition
 
@@ -865,7 +865,7 @@ def test_set_common_materials(universe, case, common_mat):
         (2, {"universe": 2}, 1012, Box([0, 0, 0], 20, 20, 20)),
         (
             2,
-            {"predicate": lambda c: "transform" in c.options["FILL"]},
+            {"predicate": lambda c: c.filling.transformation is not None},
             1022,
             Box([0, 0, 0], 20, 20, 20),
         ),
@@ -990,7 +990,7 @@ def test_alone(universe, case):
         assert cc is not c
         assert c.name() == cc.name()
         assert c.shape == cc.shape
-        assert "FILL" not in cc.options
+        assert cc.filling is None
     surfs = {s.name(): s for s in u.get_surfaces()}
     current_universe_surfs = {s.name(): s for s in current_universe.get_surfaces()}
     assert surfs == current_universe_surfs

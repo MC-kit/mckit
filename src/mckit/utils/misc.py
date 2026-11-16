@@ -9,8 +9,6 @@ import collections.abc
 import functools
 import itertools
 
-from copy import deepcopy
-
 import numpy as np
 
 from numpy import ndarray
