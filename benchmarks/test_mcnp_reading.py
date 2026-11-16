@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from mckit.parser.mcnp_input_parser import ParseResult
 
 
-def test_sly_mcnp_reading(benchmark, clite_text) -> None:
+def test_mcnp_reading(benchmark, clite_text) -> None:
     """Benchmark parsing MCNP model using SLY package."""
     result: ParseResult = benchmark(from_text, clite_text)
     assert result.title == "C-LITE VERSION 1 RELEASE 131031 ISSUED 31/10/2013 - Halloween edition"
