@@ -376,6 +376,14 @@ def test_set_item(trtr, tr_no, options):
         assert tr[k] == v
 
 
+def test_get_item_default():
+    """A fresh transformation has no extras, so the subscript read gives None."""
+    tr = Transformation(translation=[1, 0, 0])
+    assert tr["anything"] is None
+    tr["anything"] = 42
+    assert tr["anything"] == 42
+
+
 def test_eq():
     """Transformation equality follows the geometry, not the name or comment."""
     tr1 = Transformation(translation=[1, 0, 0], name=1, comment=["a note"])

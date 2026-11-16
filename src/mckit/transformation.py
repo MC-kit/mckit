@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Final
 
-# noinspection PyPackageRequirements
 import numpy as np
 
 from numpy import dtype, float64, ndarray
@@ -58,8 +57,8 @@ class Transformation(Card, MaybeClose):
         of local coordinate system defined in the global one. Otherwise - the
         origin of global coordinate system defined in the local one.
         Default: False
-    options
-        Other options, like name, comment, etc.
+    extra
+        Rare arbitrary data (see `Card`).
 
     Methods
     -------
@@ -78,7 +77,7 @@ class Transformation(Card, MaybeClose):
         Reverses this transformation, and returns the result.
     """
 
-    __slots__ = (*CARD_SLOTS, "_t", "_u", "_hash", "options")
+    __slots__ = (*CARD_SLOTS, "_t", "_u", "_hash")
 
     def __init__(
         self,
@@ -87,10 +86,10 @@ class Transformation(Card, MaybeClose):
         indegrees: bool = False,
         inverted: bool = False,
         name: Name | int | None = None,
-        **options: Any,
+        **extra: Any,
     ) -> None:
-        Card.__init__(self, name, **Card._split_options(options))
-        self.options = options
+        card_kwargs = Card._split_options(extra)
+        Card.__init__(self, name, **card_kwargs, **extra)
         translation = _get_translation_as_array(translation)
         self._u = self._setup_rotation(rotation, indegrees)
         self._setup_translation(inverted, translation)
@@ -313,10 +312,12 @@ class Transformation(Card, MaybeClose):
         return f"Transformation(translation={self._t}, rotation={self._u})"
 
     def __getitem__(self, key):
-        return self.options.get(key, None)
+        return self._extra.get(key, None) if self._extra else None
 
     def __setitem__(self, key, value):
-        self.options[key] = value
+        if self._extra is None:
+            self._extra = {}
+        self._extra[key] = value
 
 
 def _get_translation_as_array(translation: ArrayLike) -> NPFloatArray:
@@ -326,7 +327,7 @@ def _get_translation_as_array(translation: ArrayLike) -> NPFloatArray:
 
 
 def calc_z_rotation(theta: float) -> NPFloatArray:
-    """Compute matirix for rotation around z-axis.
+    """Compute matrix for rotation around z-axis.
 
     Parameters
     ----------
