@@ -697,8 +697,11 @@ class Body(Card):
     geometry : list or Shape
         Geometry expression. It is either a list of Surface instances and
         operations (reverse Polish notation is used) or Shape object.
-    options :
-        A set of cell's options.
+    name :
+        The cell name (number).
+    Keyword arguments :
+        The cell-level options (MAT, U, FILL, TRCL, VOL, IMPN, IMPP, IMPE),
+        stored in explicit attributes, and rare arbitrary data (see `Card`).
 
     Methods
     -------
@@ -747,10 +750,9 @@ class Body(Card):
         self._shape = geometry
 
     def _cell_options(self) -> dict[str, Any]:
-        """Transitional: the cell-level attributes in the legacy options dictionary form.
+        """The cell-level attributes in the keyword-arguments form.
 
-        Used to propagate the cell-level attributes to derived objects
-        the way the whole options dictionary was propagated before.
+        Used to propagate the cell-level attributes to derived objects.
         """
         result: dict[str, Any] = {}
         if self._mat is not None:

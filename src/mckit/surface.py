@@ -86,10 +86,9 @@ def create_surface(kind: str, *_params: float, **options) -> Surface:
         Surface kind designator. See MCNP manual.
     _params
         List of surface parameters.
-    options
-        Dictionary of surface's options.
-        In particular, transform  - transformation instance
-        to be applied to the surface being created.
+    Keyword arguments
+        The surface options; in particular, transform - transformation
+        instance to be applied to the surface being created.
 
     Returns
     -------
@@ -380,10 +379,9 @@ class Surface(Card, MaybeClose):
         """Returns rounded version of self."""
 
     def _surface_options(self) -> dict[str, Any]:
-        """Transitional: the surface-level attributes in the legacy options dictionary form.
+        """The surface-level attributes in the keyword-arguments form.
 
-        Used to propagate the surface-level attributes to derived objects
-        the way the whole options dictionary was propagated before.
+        Used to propagate the surface-level attributes to derived objects.
         """
         result: dict[str, Any] = {}
         if self._modifier is not None:

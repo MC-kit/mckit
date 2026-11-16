@@ -1931,6 +1931,20 @@ class TestMaterial:
         with pytest.raises(KeyError):
             _ = mat["density"]
 
+    def test_correct_propagates_extras(self):
+        """The corrected material keeps the extras of the source one."""
+        comp = Composition(atomic=[("N", 1)])
+        mat = Material(composition=comp, density=1.0, name=5)
+        new_mat = mat.correct(factor=2.0)
+        assert new_mat.composition is comp
+        assert new_mat["name"] == 5
+
+    def test_getitem_on_no_extras(self):
+        mat = Material(atomic=[("N", 1)], density=1.251e-3)
+        assert mat._extra is None
+        with pytest.raises(KeyError):
+            _ = mat["name"]
+
     @pytest.mark.parametrize(
         "kwargs, msg",
         [({}, "'old_vol' is not specified"), ({"old_vol": 2.0}, "'new_vol' is not specified")],

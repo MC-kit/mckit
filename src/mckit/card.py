@@ -60,18 +60,17 @@ class Card(ABC):
 
     @staticmethod
     def _split_options(options: dict[str, Any]) -> dict[str, Any]:
-        """Extract the card-level attributes from a transitional options dictionary.
+        """Extract the card-level attributes from the derived class keyword arguments.
 
         The popped keys are to be forwarded to `Card.__init__` as keyword arguments,
-        the rest of the options stay with the derived class.
+        the rest of the arguments stay with the derived class as arbitrary data.
         """
         return {key: options.pop(key) for key in _CARD_OPTION_KEYS if key in options}
 
     def _card_options(self, *, drop_original: bool = False) -> dict[str, Any]:
-        """Transitional: the card-level attributes in the legacy options dictionary form.
+        """The card-level attributes in the keyword-arguments form.
 
-        Used to propagate the card-level attributes to derived objects
-        the way the whole options dictionary was propagated before.
+        Used to propagate the card-level attributes to derived objects.
         """
         result: dict[str, Any] = {}
         if not drop_original and self._original is not None:

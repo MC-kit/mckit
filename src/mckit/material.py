@@ -516,8 +516,8 @@ class Material:
         concentration
             Sets the atomic concentration (1 / cc). It is incompatible with density
             parameter.
-        options
-            Extra options.
+        extra
+            Rare arbitrary data, forwarded to the created composition.
 
     Properties
     ----------
@@ -541,7 +541,7 @@ class Material:
         composition: Composition | None = None,
         density: float | None = None,
         concentration: float | None = None,
-        **options,
+        **extra,
     ):
         # Attributes: _n - atomic density (concentration)
         if isinstance(composition, Composition):
@@ -551,7 +551,7 @@ class Material:
                 )
             self._composition = composition
         elif weight or atomic:
-            self._composition = Composition(atomic=atomic, weight=weight, **options)
+            self._composition = Composition(atomic=atomic, weight=weight, **extra)
         else:
             raise ValueError(
                 "Neither 'composition', nor 'atomic' or 'weight' parameters are specified."
@@ -566,7 +566,7 @@ class Material:
                 raise ValueError("Both concentration and density are specified")
             self._n = concentration
 
-        self._options = options
+        self._extra = extra or None
 
     def __eq__(self, other):
         if not isinstance(other, Material):
@@ -579,12 +579,14 @@ class Material:
         return hash(self._composition)
 
     def __getitem__(self, key: str) -> Any:
-        """Gets specific option.
+        """Gets specific extra data item.
 
         Args:
-            key: an option name
+            key: an item name
         """
-        return self._options[key]
+        if self._extra:
+            return self._extra[key]
+        raise KeyError(key)
 
     @property
     def density(self):
@@ -635,7 +637,7 @@ class Material:
         return Material(
             composition=self._composition,
             concentration=self._n * factor,
-            **self._options,
+            **(self._extra or {}),
         )
 
     @staticmethod
