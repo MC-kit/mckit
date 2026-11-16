@@ -1,0 +1,9 @@
+test using complementary cell (like #6535 in C-lite)
+1 0 -10 #2  imp:n=1  $ cell intersecting with complement
+2 0 -20     imp:n=1  $ cell to complement from
+3 0 10 20 -30 imp:n=1  $graveyard-in
+4 0 30      imp:n=0  $graveyard
+
+10 so 11
+20 sx 5  11
+30 sx 31

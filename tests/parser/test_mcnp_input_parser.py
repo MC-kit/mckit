@@ -4,6 +4,9 @@ from typing import NamedTuple
 
 import re
 
+from pathlib import Path
+
+import numpy as np
 import pytest
 
 from mckit.parser.mcnp_input_parser import (
@@ -43,6 +46,7 @@ def test_parser_basic_functionality(text: str, expected: TExpected):
     assert expected.cells == actual_cells
     actual_cells = [c.name() for c in result.universe.cells]
     assert expected.cells == actual_cells
+    assert result.surfaces is not None
     actual_surfaces = [s.name() for s in result.surfaces]
     assert expected.surfaces == actual_surfaces
 
@@ -330,3 +334,33 @@ def test_missed_cells_error(text: str) -> None:
 def test_forward_cell_reference_resolved_in_second_pass() -> None:
     result = from_text("test\n1 LIKE 2 BUT imp:n=1\n2 0 1 imp:n=1\n\n1 so 10\n")
     assert [c.name() for c in result.cells] == [1, 2]
+
+
+def test_complementary_cell_reference_resolved_in_second_pass(data, cd_tmpdir) -> None:
+    inp = data / "parser/complementary-cell.mcnp"
+    result = from_file(inp)
+    assert [c.name() for c in result.cells] == [1, 2, 3, 4]
+    out = Path("complementary-cell-saved.mcnp")
+    result.universe.save(out)
+    # save() normalizes the text (drops the title and comments, adds U=0,
+    # reorders the geometry), so compare the models semantically.
+    result2 = from_file(out)
+    assert [c.name() for c in result2.cells] == [1, 2, 3, 4]
+    points = np.linspace([-40, -40, -40], [40, 40, 40], 100)
+    np.testing.assert_array_equal(
+        result.universe.test_points(points), result2.universe.test_points(points)
+    )
+    out_text = out.read_text(encoding="utf-8")
+    first_cell_spec = out_text.split("\n", maxsplit=3)[1]
+    assert re.match(r"^1\s+0\s+-10\s+20$", first_cell_spec), (
+        "#-marked cell is to be added as inverted CSG expression"
+        # TODO @dvp: revise current implementation:
+        #   complementary Body is expanded and inverted at the end of Shape._clean_args()
+        #   Check if keeping "#" expression with the body number is more consistent (robust, safe)
+        #   If yes, then:
+        #      1) simplify Shape._clean_args() by principles from  "Five Rows" book
+        #      2) allow Body to be assigned to Shape.args[0]
+        #      2) stop expansion of Bodies in _clean_args or its simplified part
+        #   The desired result is to be
+        #   ..., r"^1\s+0\s+-10\s#2$", "#-marked cell is to be printed in the cell 1 spec"
+    )

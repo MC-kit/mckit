@@ -4,6 +4,8 @@ from typing import Any
 
 import re
 
+from dataclasses import dataclass
+
 # noinspection PyPackageRequirements
 from lark import Lark, Token, Transformer, v_args
 from lark.exceptions import LarkError
@@ -48,7 +50,7 @@ def parse(
         Cell specification.
     cells
         Should be one of CellStrictIndex, CellDummyIndex, IgnoringIndex.
-        It is used to treat cell complements, like body.
+        It is used to resolve cell complements, like '#2'.
     surfaces
         Should be one of SurfaceStrictIndex, SurfaceDummyIndex, IgnoringIndex.
     transformations
@@ -144,7 +146,22 @@ def _extract_geometry(text: str, pos: int, surfaces: Index, cells: Index) -> tup
     geometry_text = text[pos:geometry_end]
     if not geometry_text.strip():
         raise cmn.ParseError(f"Cell specification must define geometry, got '{text.strip()}'")
-    return _parse_geometry(geometry_text, surfaces, cells), geometry_end
+    geometry = _parse_geometry(geometry_text, surfaces)
+    return _resolve_cell_complements(geometry, cells), geometry_end
+
+
+def _resolve_cell_complements(geometry: list[Any], cells: Index) -> list[Any]:
+    """Replace cell complement placeholders with the referenced cells.
+
+    The cells are looked up in the `cells` index, so a reference to a cell
+    defined later in the input file (a forward reference) raises
+    CellNotFoundError here, directly - and the caller can retry the cell
+    in the second pass.
+    """
+    return [
+        Shape("C", cells[ref.number]) if isinstance(ref, _CellComplementRef) else ref
+        for ref in geometry
+    ]
 
 
 def _collect_attributes(text: str, pos: int, transformations: Index) -> dict[str, Any]:
@@ -171,7 +188,6 @@ def _collect_attributes(text: str, pos: int, transformations: Index) -> dict[str
     return options
 
 
-# noinspection PyUnusedLocal
 def _int_attribute(key: str, segment: str, _star: bool, _transformations: Index) -> dict[str, Any]:
     match = _INT_VALUE_PATTERN.match(segment)
     if match is None:
@@ -179,7 +195,6 @@ def _int_attribute(key: str, segment: str, _star: bool, _transformations: Index)
     return {intern_cell_word(key): int(match.group(1))}
 
 
-# noinspection PyUnusedLocal
 def _float_attribute(
     key: str, segment: str, _star: bool, _transformations: Index
 ) -> dict[str, Any]:
@@ -189,7 +204,6 @@ def _float_attribute(
     return {intern_cell_word(key): float(match.group(1))}
 
 
-# noinspection PyUnusedLocal
 def _fcl_attribute(_key: str, segment: str, _star: bool, _transformations: Index) -> dict[str, Any]:
     #
     #  FCL card: Forced Collision
@@ -303,19 +317,33 @@ def _clean_number(raw: str) -> tuple[float, bool]:
     return value, _PURE_INTEGER_PATTERN.match(raw) is not None
 
 
+@dataclass(frozen=True)
+class _CellComplementRef:
+    """Placeholder for a cell complement element.
+
+    The referenced cell can be defined later in the input file,
+    so the number is kept as is and resolved against the cells index
+    after the parse tree is transformed (see `_resolve_cell_complements`).
+    """
+
+    number: int
+
+
 # noinspection method-may-be-static
 @v_args(inline=True)
 class GeometryTransformer(Transformer):
     """Builds reverse Polish notation for a cell geometry specification.
 
-    The elements are Shape objects wrapping surfaces or bodies,
-    operations are 'I' for intersection, 'U' for union and 'C' for complement.
+    The elements are Shape objects wrapping surfaces,
+    cell complement elements are kept as _CellComplementRef placeholders
+    with the referenced cell numbers, to be resolved after the tree
+    is transformed (see `_resolve_cell_complements`).
+    Operations are 'I' for intersection, 'U' for union and 'C' for complement.
     """
 
-    def __init__(self, surfaces: Index, cells: Index):
+    def __init__(self, surfaces: Index):
         super().__init__()
         self._surfaces = surfaces
-        self._cells = cells
 
     def element_num(self, token: Token) -> list[Any]:
         number = int(token)
@@ -323,7 +351,9 @@ class GeometryTransformer(Transformer):
         return [Shape(opc, self._surfaces[abs(number)])]
 
     def element_complement_num(self, token: Token) -> list[Any]:
-        return [Shape("C", self._cells[int(token)])]
+        # The referenced cell can be defined later in the input file,
+        # so keep the number and resolve it against the cells index later.
+        return [_CellComplementRef(int(token))]
 
     def element_complement(self, geometry: list[Any]) -> list[Any]:
         return [*geometry, "C"]
@@ -360,14 +390,14 @@ _GEOMETRY_LARK = Lark.open_from_package(
 )
 
 
-def _parse_geometry(geometry_text: str, surfaces: Index, cells: Index) -> list[Any]:
+def _parse_geometry(geometry_text: str, surfaces: Index) -> list[Any]:
     try:
         tree = _GEOMETRY_LARK.parse(geometry_text)
     except LarkError as ex:
         raise cmn.ParseError(
             f"Could not parse cell geometry specification '{geometry_text.strip()}'"
         ) from ex
-    return GeometryTransformer(surfaces, cells).transform(tree)
+    return GeometryTransformer(surfaces).transform(tree)
 
 
 _CELL_NAME_PATTERN = re.compile(r"\s*(?P<name>\d+)")
