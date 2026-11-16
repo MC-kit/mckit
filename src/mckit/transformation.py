@@ -311,14 +311,6 @@ class Transformation(Card, MaybeClose):
     def __repr__(self):
         return f"Transformation(translation={self._t}, rotation={self._u})"
 
-    def __getitem__(self, key):
-        return self._extra.get(key, None) if self._extra else None
-
-    def __setitem__(self, key, value):
-        if self._extra is None:
-            self._extra = {}
-        self._extra[key] = value
-
 
 def _get_translation_as_array(translation: ArrayLike) -> NPFloatArray:
     if translation is ORIGIN:

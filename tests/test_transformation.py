@@ -8,43 +8,38 @@ from mckit.transformation import IDENTITY_ROTATION, Transformation, calc_z_rotat
 
 
 @pytest.mark.parametrize(
-    "args, rot, offset, options",
+    "args, rot, offset",
     [
-        ({}, IDENTITY_ROTATION, ORIGIN, {}),
-        ({"indegrees": True}, IDENTITY_ROTATION, ORIGIN, {}),
-        ({"indegrees": False}, IDENTITY_ROTATION, ORIGIN, {}),
-        ({"inverted": True}, IDENTITY_ROTATION, ORIGIN, {}),
-        ({"inverted": False}, IDENTITY_ROTATION, ORIGIN, {}),
-        ({"translation": [1, 0, 0]}, IDENTITY_ROTATION, np.array([1, 0, 0]), {}),
+        ({}, IDENTITY_ROTATION, ORIGIN),
+        ({"indegrees": True}, IDENTITY_ROTATION, ORIGIN),
+        ({"indegrees": False}, IDENTITY_ROTATION, ORIGIN),
+        ({"inverted": True}, IDENTITY_ROTATION, ORIGIN),
+        ({"inverted": False}, IDENTITY_ROTATION, ORIGIN),
+        ({"translation": [1, 0, 0]}, IDENTITY_ROTATION, np.array([1, 0, 0])),
         (
             {"translation": [1, 0, 0], "inverted": True},
             IDENTITY_ROTATION,
             np.array([-1, 0, 0]),
-            {},
         ),
         (
             {"translation": [1, 2, 3], "inverted": True},
             IDENTITY_ROTATION,
             np.array([-1, -2, -3]),
-            {},
         ),
         (
             {"translation": [1, 2, 3], "inverted": True, "name": 1},
             IDENTITY_ROTATION,
             np.array([-1, -2, -3]),
-            {"name": 1},
         ),
         (
             {"rotation": np.cos(np.array([30, 60, 90, 120, 30, 90, 90, 90, 0]) * np.pi / 180)},
             np.cos(np.array([[30, 120, 90], [60, 30, 90], [90, 90, 0]]) * np.pi / 180),
             ORIGIN,
-            {},
         ),
         (
             {"rotation": [30, 60, 90, 120, 30, 90, 90, 90, 0], "indegrees": True},
             np.cos(np.array([[30, 120, 90], [60, 30, 90], [90, 90, 0]]) * np.pi / 180),
             ORIGIN,
-            {},
         ),
         (
             {
@@ -54,7 +49,6 @@ from mckit.transformation import IDENTITY_ROTATION, Transformation, calc_z_rotat
             },
             np.cos(np.array([[30, 120, 90], [60, 30, 90], [90, 90, 0]]) * np.pi / 180),
             np.array([1, 2, 3]),
-            {},
         ),
         (
             {
@@ -65,19 +59,13 @@ from mckit.transformation import IDENTITY_ROTATION, Transformation, calc_z_rotat
             },
             np.cos(np.array([[30, 120, 90], [60, 30, 90], [90, 90, 0]]) * np.pi / 180),
             np.array([-(np.sqrt(3) - 2) / 2, -(2 * np.sqrt(3) + 1) / 2, -3]),
-            {},
         ),
     ],
 )
-def test_creation(args, rot, offset, options):
+def test_creation(args, rot, offset):
     tr = Transformation(**args)
     np.testing.assert_array_almost_equal(tr._u, rot)
     np.testing.assert_array_almost_equal(tr._t, offset)
-    for k, v in options.items():
-        if k == "name":
-            assert tr.name() == v
-        else:
-            assert tr[k] == v
 
 
 @pytest.mark.parametrize(
@@ -132,20 +120,16 @@ def test_words(args, answer):
 
 
 @pytest.mark.parametrize(
-    "args, options, answer",
+    "args, name, answer",
     [
-        (
-            {"rotation": [30, 60, 90, 120, 30, 90, 90, 90, 0], "indegrees": True},
-            {},
-            None,
-        ),
+        ({"rotation": [30, 60, 90, 120, 30, 90, 90, 90, 0], "indegrees": True}, None, None),
         (
             {
                 "rotation": [30, 60, 90, 120, 30, 90, 90, 90, 0],
                 "indegrees": True,
                 "translation": [1, 2, 3],
             },
-            {"name": 1},
+            1,
             1,
         ),
         (
@@ -154,7 +138,7 @@ def test_words(args, answer):
                 "indegrees": True,
                 "translation": [1, 2, 3],
             },
-            {"name": 2},
+            2,
             2,
         ),
         (
@@ -163,13 +147,13 @@ def test_words(args, answer):
                 "indegrees": True,
                 "translation": [1, 2, 3],
             },
-            {"name": 3},
+            3,
             3,
         ),
     ],
 )
-def test_name(args, options, answer):
-    tr = Transformation(**args, **options)
+def test_name(args, name, answer):
+    tr = Transformation(**args, name=name)
     assert tr.name() == answer
 
 
@@ -362,26 +346,6 @@ def test_reverse(transforms, p1, p):
     tr_inv = transforms.reverse()
     result = tr_inv.apply2point(p)
     np.testing.assert_array_almost_equal(result, p1)
-
-
-@pytest.mark.parametrize(
-    "options", [{"name": 1, "comment": "abcdef"}, {"name": 1}, {"comment": "rrreee"}]
-)
-@pytest.mark.parametrize("tr_no", range(len(tr_tr_cases)))
-def test_set_item(trtr, tr_no, options):
-    tr = trtr[tr_no]
-    for k, v in options.items():
-        tr[k] = v
-    for k, v in options.items():
-        assert tr[k] == v
-
-
-def test_get_item_default():
-    """A fresh transformation has no extras, so the subscript read gives None."""
-    tr = Transformation(translation=[1, 0, 0])
-    assert tr["anything"] is None
-    tr["anything"] = 42
-    assert tr["anything"] == 42
 
 
 def test_eq():
