@@ -3199,7 +3199,7 @@ class TestRCC:
         [
             ([-2, 0, 0], [4, 0, 0], 0.5, 0),
             ([-2, 0, 0], [4, 0, 0], 3, -1),
-            ([-0.75, 0, 0], [1.5, 0, 0], 0.75, 0),
+            ([-0.75, 0, 0], [1.5, 0, 0], 0.75, 0),  # TODO @dvp: known flaky test, make it strict
             ([-2, 6, 0], [4, 0, 0], 3, +1),
         ],
     )
@@ -3603,3 +3603,45 @@ def test_create_surface_by_points(params, answer):
     #  spec handler, which makes create_surface fall back to the by-points logic
     #  (see TODO "test and document the following code" in surface.py)
     assert create_surface("QZ", *params).mcnp_repr() == answer
+
+
+@pytest.mark.parametrize(
+    "factory, message",
+    [
+        (lambda: Sphere([0, 0, 0], -1.0), "Sphere radius must be positive"),
+        (lambda: Sphere([0, 0, 0], 0.0), "Sphere radius must be positive"),
+        (lambda: Cylinder([0, 0, 0], [1, 0, 0], -2.0), "Cylinder radius must be positive"),
+        (lambda: Cylinder([0, 0, 0], [1, 0, 0], 0.0), "Cylinder radius must be positive"),
+        (lambda: Cone([0, 0, 0], [1, 0, 0], 0.0, 1), "Cone angle tangent must be positive"),
+        (lambda: Torus([0, 0, 0], [1, 0, 0], 2.0, 0.0, 1.0), "Torus minor radii must be positive"),
+        (lambda: Torus([0, 0, 0], [1, 0, 0], 2.0, 1.0, -1.0), "Torus minor radii must be positive"),
+    ],
+    ids=[
+        "sphere-negative-radius",
+        "sphere-zero-radius",
+        "cylinder-negative-radius",
+        "cylinder-zero-radius",
+        "cone-zero-tangent",
+        "torus-zero-a",
+        "torus-negative-b",
+    ],
+)
+def test_surface_rejects_non_positive_geometric_parameters(factory, message):
+    """Validation lives in the C++ surface constructors."""
+    with pytest.raises(ValueError, match=message):
+        factory()
+
+
+@pytest.mark.parametrize(
+    "kind, params, message",
+    [
+        ("SO", (-1.0,), "Sphere radius must be positive"),
+        ("RCC", (0, 0, 0, 0, 0, 1, 0), "Cylinder radius must be positive"),
+        ("KZ", (0, 0), "Cone angle tangent must be positive"),
+        ("TX", (0, 0, 0, 2, 0, 0.5), "Torus minor radii must be positive"),
+    ],
+    ids=["sphere", "rcc", "cone", "torus"],
+)
+def test_create_surface_rejects_non_positive_geometric_parameters(kind, params, message):
+    with pytest.raises(ValueError, match=message):
+        create_surface(kind, *params)

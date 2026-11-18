@@ -12,8 +12,7 @@ TEST_CASE("Test box init", "[box]")
     const double wx{2.0};
     const double wy{2.0};
     const double wz{2.0};
-    Box b;
-    box_init(&b, center, ex, ey, ez, wx, wy, wz);
+    Box b(center, ex, ey, ez, wx, wy, wz);
     // std::array<const double, NDIM> expected_lb {-1.0,-1.0,-1.0};
     const double expected_lb[NDIM] = {-1.0, -1.0, -1.0};
     // std::span aa {a};

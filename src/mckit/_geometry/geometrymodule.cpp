@@ -12,6 +12,11 @@
 #include <string.h>
 #include <structmember.h>
 
+#include <array>
+#include <exception>
+#include <new>
+#include <span>
+#include <utility>
 #include <vector>
 
 #include "numpy/arrayobject.h"
@@ -69,6 +74,19 @@ static int convert_to_dbl_vec_array(PyObject *obj, PyObject **addr)
 error:
     Py_DECREF(arr);
     return 0;
+}
+
+/// Wraps the data of a 3-element double array as a C++ span.
+static std::span<const double, NDIM> as_dbl_vec(PyObject *obj)
+{
+    return std::span<const double, NDIM>(static_cast<const double *>(PyArray_DATA((const PyArrayObject *)obj)), NDIM);
+}
+
+/// Wraps the data of a 3x3 double array as a C++ span.
+static std::span<const double, NDIM * NDIM> as_dbl_mat(PyObject *obj)
+{
+    return std::span<const double, NDIM * NDIM>(static_cast<const double *>(PyArray_DATA((const PyArrayObject *)obj)),
+                                                NDIM * NDIM);
 }
 
 // ==========================================================================================
@@ -184,10 +202,7 @@ static int boxobj_init(BoxObject *self, PyObject *args, PyObject *kwds)
         Py_INCREF(ez);
     }
 
-    box_init(&self->box, (double *)PyArray_DATA((const PyArrayObject *)cent),
-             (double *)PyArray_DATA((const PyArrayObject *)ex), (double *)PyArray_DATA((const PyArrayObject *)ey),
-             (double *)PyArray_DATA((const PyArrayObject *)ez), xdim, ydim, zdim);
-
+    new (&self->box) Box(as_dbl_vec(cent), as_dbl_vec(ex), as_dbl_vec(ey), as_dbl_vec(ez), xdim, ydim, zdim);
     Py_DECREF(cent);
     Py_DECREF(ex);
     Py_DECREF(ey);
@@ -201,7 +216,7 @@ static PyObject *boxobj_copy(BoxObject *self)
     BoxObject *box = (BoxObject *)PyType_GenericNew(&BoxType, NULL, NULL);
     if (box == NULL)
         return NULL;
-    box_copy(&box->box, &self->box);
+    new (&box->box) Box(self->box);
     return (PyObject *)box;
 }
 
@@ -296,15 +311,9 @@ static PyObject *boxobj_split(BoxObject *self, PyObject *args, PyObject *kwds)
         Py_XDECREF(box2);
         return NULL;
     }
-    int status = box_split(&self->box, &box1->box, &box2->box, direct, ratio);
-
-    if (status == BOX_FAILURE)
-    {
-        PyErr_SetString(PyExc_MemoryError, "Could not create new boxes.");
-        Py_XDECREF(box1);
-        Py_XDECREF(box2);
-        return NULL;
-    }
+    auto [first, second] = box_split(self->box, direct, ratio);
+    new (&box1->box) Box(std::move(first));
+    new (&box2->box) Box(std::move(second));
     return Py_BuildValue("(OO)", box1, box2);
 }
 
@@ -510,6 +519,13 @@ static PyMethodDef surfobj_methods[] = {{"test_box", (PyCFunction)surfobj_test_b
                                         {"test_points", (PyCFunction)surfobj_test_points, METH_O, SURF_TEST_POINTS_DOC},
                                         {NULL}};
 
+/// Reports a C++ exception as a Python ValueError.
+static int report_value_error(const std::exception &e)
+{
+    PyErr_SetString(PyExc_ValueError, e.what());
+    return -1;
+}
+
 static int planeobj_init(PlaneObject *self, PyObject *args, PyObject *kwds)
 {
     PyObject *norm;
@@ -517,9 +533,17 @@ static int planeobj_init(PlaneObject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTuple(args, "O&d", convert_to_dbl_vec, &norm, &offset))
         return -1;
 
-    plane_init(&self->surf, (double *)PyArray_DATA((const PyArrayObject *)norm), offset);
+    int status = 0;
+    try
+    {
+        new (&self->surf) Plane(as_dbl_vec(norm), offset);
+    }
+    catch (const std::exception &e)
+    {
+        status = report_value_error(e);
+    }
     Py_DECREF(norm);
-    return 0;
+    return status;
 }
 
 static int sphereobj_init(SphereObject *self, PyObject *args, PyObject *kwds)
@@ -529,9 +553,17 @@ static int sphereobj_init(SphereObject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTuple(args, "O&d", convert_to_dbl_vec, &center, &radius))
         return -1;
 
-    sphere_init(&self->surf, (double *)PyArray_DATA((const PyArrayObject *)center), radius);
+    int status = 0;
+    try
+    {
+        new (&self->surf) Sphere(as_dbl_vec(center), radius);
+    }
+    catch (const std::exception &e)
+    {
+        status = report_value_error(e);
+    }
     Py_DECREF(center);
-    return 0;
+    return status;
 }
 
 static int cylinderobj_init(CylinderObject *self, PyObject *args, PyObject *kwds)
@@ -541,11 +573,18 @@ static int cylinderobj_init(CylinderObject *self, PyObject *args, PyObject *kwds
     if (!PyArg_ParseTuple(args, "O&O&d", convert_to_dbl_vec, &point, convert_to_dbl_vec, &axis, &radius))
         return -1;
 
-    cylinder_init(&self->surf, (double *)PyArray_DATA((const PyArrayObject *)point),
-                  (double *)PyArray_DATA((const PyArrayObject *)axis), radius);
+    int status = 0;
+    try
+    {
+        new (&self->surf) Cylinder(as_dbl_vec(point), as_dbl_vec(axis), radius);
+    }
+    catch (const std::exception &e)
+    {
+        status = report_value_error(e);
+    }
     Py_DECREF(point);
     Py_DECREF(axis);
-    return 0;
+    return status;
 }
 
 static int coneobj_init(ConeObject *self, PyObject *args, PyObject *kwds)
@@ -556,11 +595,18 @@ static int coneobj_init(ConeObject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTuple(args, "O&O&di", convert_to_dbl_vec, &apex, convert_to_dbl_vec, &axis, &ta, &sheet))
         return -1;
 
-    cone_init(&self->surf, (double *)PyArray_DATA((const PyArrayObject *)apex),
-              (double *)PyArray_DATA((const PyArrayObject *)axis), ta, sheet);
+    int status = 0;
+    try
+    {
+        new (&self->surf) Cone(as_dbl_vec(apex), as_dbl_vec(axis), ta, sheet);
+    }
+    catch (const std::exception &e)
+    {
+        status = report_value_error(e);
+    }
     Py_DECREF(apex);
     Py_DECREF(axis);
-    return 0;
+    return status;
 }
 
 static int torusobj_init(TorusObject *self, PyObject *args, PyObject *kwds)
@@ -570,11 +616,18 @@ static int torusobj_init(TorusObject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTuple(args, "O&O&ddd", convert_to_dbl_vec, &center, convert_to_dbl_vec, &axis, &r, &a, &b))
         return -1;
 
-    int status = torus_init(&self->surf, (double *)PyArray_DATA((const PyArrayObject *)center),
-                            (double *)PyArray_DATA((const PyArrayObject *)axis), r, a, b);
+    int status = 0;
+    try
+    {
+        new (&self->surf) Torus(as_dbl_vec(center), as_dbl_vec(axis), r, a, b);
+    }
+    catch (const std::exception &e)
+    {
+        status = report_value_error(e);
+    }
     Py_DECREF(center);
     Py_DECREF(axis);
-    return 0;
+    return status;
 }
 
 static int gqobj_init(GQuadraticObject *self, PyObject *args, PyObject *kwds)
@@ -584,12 +637,18 @@ static int gqobj_init(GQuadraticObject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTuple(args, "O&O&dd", convert_to_dbl_vec_array, &m, convert_to_dbl_vec, &v, &k, &f))
         return -1;
 
-    gq_init(&self->surf, (double *)PyArray_DATA((const PyArrayObject *)m),
-            (double *)PyArray_DATA((const PyArrayObject *)v), k, f);
-
+    int status = 0;
+    try
+    {
+        new (&self->surf) GQuadratic(as_dbl_mat(m), as_dbl_vec(v), k, f);
+    }
+    catch (const std::exception &e)
+    {
+        status = report_value_error(e);
+    }
     Py_DECREF(m);
     Py_DECREF(v);
-    return 0;
+    return status;
 }
 
 static PyTypeObject SurfaceType = {
@@ -728,7 +787,6 @@ static int rccobj_init(RCCObject *self, PyObject *args, PyObject *kwds)
         return -1;
     }
 
-    int status;
     PyObject *cyl, *top, *bot;
     cyl = PyTuple_GetItem(args, 0);
     if (!PyObject_TypeCheck(cyl, &CylinderType))
@@ -751,21 +809,21 @@ static int rccobj_init(RCCObject *self, PyObject *args, PyObject *kwds)
     Py_INCREF(cyl);
     Py_INCREF(top);
     Py_INCREF(bot);
-    status =
-        RCC_init(&self->surf, &((CylinderObject *)cyl)->surf, &((PlaneObject *)top)->surf, &((PlaneObject *)bot)->surf);
-    if (status != SURFACE_SUCCESS)
-        return -1;
+    new (&self->surf) RCC(&((CylinderObject *)cyl)->surf, &((PlaneObject *)top)->surf, &((PlaneObject *)bot)->surf);
     return 0;
 }
 
 static void rccobj_dealloc(RCCObject *self)
 {
-    PyObject *cyl = parent_pyobject(CylinderObject, surf, self->surf.cyl);
-    Py_DECREF(cyl);
-    PyObject *top = parent_pyobject(PlaneObject, surf, self->surf.top);
-    Py_DECREF(top);
-    PyObject *bot = parent_pyobject(PlaneObject, surf, self->surf.bot);
-    Py_DECREF(bot);
+    if (self->surf.cyl != nullptr)
+    {
+        PyObject *cyl = parent_pyobject(CylinderObject, surf, self->surf.cyl);
+        Py_DECREF(cyl);
+        PyObject *top = parent_pyobject(PlaneObject, surf, self->surf.top);
+        Py_DECREF(top);
+        PyObject *bot = parent_pyobject(PlaneObject, surf, self->surf.bot);
+        Py_DECREF(bot);
+    }
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -806,7 +864,6 @@ static int mboxobj_init(BOXObject *self, PyObject *args, PyObject *kwds)
         return -1;
     }
 
-    int status;
     PyObject *planes[BOX_PLANE_NUM];
     for (int i = 0; i < BOX_PLANE_NUM; ++i)
     {
@@ -817,25 +874,26 @@ static int mboxobj_init(BOXObject *self, PyObject *args, PyObject *kwds)
             return -1;
         }
     }
-    Plane *planes_ref[BOX_PLANE_NUM];
+    std::array<Plane *, BOX_PLANE_NUM> planes_ref;
     for (int i = 0; i < BOX_PLANE_NUM; ++i)
     {
         planes_ref[i] = &((PlaneObject *)planes[i])->surf;
         Py_INCREF(planes[i]);
     }
 
-    status = BOX_init(&self->surf, planes_ref);
-    if (status != SURFACE_SUCCESS)
-        return -1;
+    new (&self->surf) BOX(planes_ref);
     return 0;
 }
 
 static void mboxobj_dealloc(BOXObject *self)
 {
-    for (int i = 0; i < BOX_PLANE_NUM; ++i)
+    if (self->surf.planes[0] != nullptr)
     {
-        PyObject *p = parent_pyobject(PlaneObject, surf, self->surf.planes[i]);
-        Py_DECREF(p);
+        for (int i = 0; i < BOX_PLANE_NUM; ++i)
+        {
+            PyObject *p = parent_pyobject(PlaneObject, surf, self->surf.planes[i]);
+            Py_DECREF(p);
+        }
     }
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
@@ -1119,70 +1177,76 @@ static int shapeobj_init(ShapeObject *self, PyObject *args, PyObject *kwds)
         return -1;
     }
 
-    int status;
-    if (opc == IDENTITY || opc == COMPLEMENT)
+    try
     {
-        PyObject *surf = PyTuple_GetItem(args, 1);
-        if (surf == NULL || !PyObject_TypeCheck(surf, &SurfaceType))
+        if (opc == IDENTITY || opc == COMPLEMENT)
         {
-            PyErr_SetString(PyExc_TypeError, "Surface instance is expected...");
-            return -1;
-        }
-        Py_INCREF(surf);
-        status = shape_init(&self->shape, opc, 1, &((SurfaceObject *)surf)->surf);
-    }
-    else if (opc == UNIVERSE || opc == EMPTY)
-    {
-        status = shape_init(&self->shape, opc, 0, NULL);
-    }
-    else
-    {
-        size_t i, alen = arglen - 1;
-        if (alen <= 1)
-        {
-            PyErr_SetString(PyExc_ValueError, "More than one shape object is expected");
-            return -1;
-        }
-        PyObject *item;
-        std::vector<Shape *> operands(alen);
-        for (i = 0; i < alen; ++i)
-        {
-            item = PyTuple_GetItem(args, i + 1);
-            if (PyObject_TypeCheck(item, &ShapeType))
+            PyObject *surf = PyTuple_GetItem(args, 1);
+            if (surf == NULL || !PyObject_TypeCheck(surf, &SurfaceType))
             {
-                operands[i] = (Shape *)&((ShapeObject *)item)->shape;
-                Py_INCREF(item);
-            }
-            else
-            {
-                PyErr_SetString(PyExc_TypeError, "Shape instance is expected");
+                PyErr_SetString(PyExc_TypeError, "Surface instance is expected...");
                 return -1;
             }
+            new (&self->shape) Shape(opc, &((SurfaceObject *)surf)->surf);
+            Py_INCREF(surf);
         }
-        status = shape_init(&self->shape, opc, alen, operands.data());
+        else if (opc == UNIVERSE || opc == EMPTY)
+        {
+            new (&self->shape) Shape(opc);
+        }
+        else
+        {
+            size_t i, alen = arglen - 1;
+            if (alen <= 1)
+            {
+                PyErr_SetString(PyExc_ValueError, "More than one shape object is expected");
+                return -1;
+            }
+            std::vector<Shape *> operands(alen);
+            for (i = 0; i < alen; ++i)
+            {
+                PyObject *item = PyTuple_GetItem(args, i + 1);
+                if (!PyObject_TypeCheck(item, &ShapeType))
+                {
+                    PyErr_SetString(PyExc_TypeError, "Shape instance is expected");
+                    return -1;
+                }
+                operands[i] = &((ShapeObject *)item)->shape;
+            }
+            new (&self->shape) Shape(opc, operands);
+            for (i = 0; i < alen; ++i)
+                Py_INCREF(parent_pyobject(ShapeObject, shape, operands[i]));
+        }
     }
-    if (status != SHAPE_SUCCESS)
+    catch (const std::bad_alloc &)
+    {
+        PyErr_NoMemory();
         return -1;
+    }
     return 0;
 }
 
 static void shapeobj_dealloc(ShapeObject *self)
 {
-    if (self->shape.opc == COMPLEMENT || self->shape.opc == IDENTITY)
+    // 'stats' is set last by the constructor, so it marks a fully constructed shape.
+    if (self->shape.stats != nullptr)
     {
-        PyObject *pysurf = parent_pyobject(SurfaceObject, surf, self->shape.args.surface);
-        Py_DECREF(pysurf);
-    }
-    else if (self->shape.opc == UNION || self->shape.opc == INTERSECTION)
-    {
-        PyObject *pyshape;
-        for (int i = 0; i < self->shape.alen; ++i)
+        if (self->shape.opc == COMPLEMENT || self->shape.opc == IDENTITY)
         {
-            pyshape = parent_pyobject(ShapeObject, shape, self->shape.args.shapes[i]);
-            Py_DECREF(pyshape);
+            PyObject *pysurf = parent_pyobject(SurfaceObject, surf, self->shape.args.surface);
+            Py_DECREF(pysurf);
         }
+        else if (self->shape.opc == UNION || self->shape.opc == INTERSECTION)
+        {
+            PyObject *pyshape;
+            for (int i = 0; i < self->shape.alen; ++i)
+            {
+                pyshape = parent_pyobject(ShapeObject, shape, self->shape.args.shapes[i]);
+                Py_DECREF(pyshape);
+            }
+        }
+        self->shape.~Shape();
     }
-    shape_dealloc(&self->shape);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -1501,9 +1565,8 @@ PyMODINIT_FUNC PyInit_geometry(void)
     *((double *)PyArray_DATA((const PyArrayObject *)ez) + 2) = 1.0;
 
     global_box = (BoxObject *)PyType_GenericNew(&BoxType, NULL, NULL);
-    box_init(&global_box->box, (double *)PyArray_DATA((const PyArrayObject *)origin),
-             (double *)PyArray_DATA((const PyArrayObject *)ex), (double *)PyArray_DATA((const PyArrayObject *)ey),
-             (double *)PyArray_DATA((const PyArrayObject *)ez), MAX_DIM, MAX_DIM, MAX_DIM);
+    new (&global_box->box)
+        Box(as_dbl_vec(origin), as_dbl_vec(ex), as_dbl_vec(ey), as_dbl_vec(ez), MAX_DIM, MAX_DIM, MAX_DIM);
 
     PyModule_AddObject(m, ORIGIN, (PyObject *)origin);
     PyModule_AddObject(m, EX, (PyObject *)ex);

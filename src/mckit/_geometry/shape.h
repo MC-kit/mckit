@@ -5,6 +5,7 @@
 #ifndef MCKIT_SHAPE_H
 #define MCKIT_SHAPE_H
 
+#include <span>
 #include <stddef.h>
 #include <vector>
 
@@ -19,8 +20,6 @@
 
 #define SHAPE_SUCCESS 0
 #define SHAPE_FAILURE -1
-#define SHAPE_NO_MEMORY -2
-#define SHAPE_WRONG_ARGLENGTH -3
 
 #define invert_opc(opc) ((opc + 3) % 6)
 
@@ -42,6 +41,17 @@ enum Operation
 /// Shapes
 struct Shape
 {
+    /// Creates a final shape (complement or identity) over the given surface.
+    Shape(char opc, Surface *surface);
+
+    /// Creates a void shape (empty or universe) without arguments.
+    explicit Shape(char opc);
+
+    /// Creates a composite shape (union or intersection) over the given shapes.
+    Shape(char opc, std::span<Shape *> shapes);
+
+    ~Shape();
+
     char opc;    ///< Code of operation applied to arguments (see enum Operation)
     size_t alen; ///< Length of arguments
     union {
@@ -53,15 +63,6 @@ struct Shape
     int last_box_result; ///< Result of last test_box call.
     StatsMap *stats;     ///< Statistics about argument results.
 };
-
-/// Initializes Shape struct/
-int shape_init(Shape *shape,    ///< Pointer to struct to be initialized
-               char opc,        ///< Operation code
-               size_t alen,     ///< Length of arguments
-               const void *args ///< Argument array.
-);
-
-void shape_dealloc(Shape *shape);
 
 /// Tests box location with respect to the shape.
 ///
@@ -86,7 +87,7 @@ int shape_ultimate_test_box(Shape *shape,   ///< Pointer to shape
 
 /// Tests whether points belong to this shape.
 ///
-/// @return status - SHAPE_SUCCESS | SHAPE_NO_MEMORY
+/// @return SHAPE_SUCCESS
 int shape_test_points(const Shape *shape,   ///< test shape
                       size_t npts,          ///< the number of points
                       const double *points, ///< array of points - NDIM * npts

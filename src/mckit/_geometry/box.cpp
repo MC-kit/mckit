@@ -22,34 +22,18 @@ static inline char high_bit(uint64_t value)
     return result;
 }
 
-int box_init(Box *box, const double *center, const double *ex, const double *ey, const double *ez, double xdim,
-             double ydim, double zdim)
+Box::Box(std::span<const double, NDIM> center, std::span<const double, NDIM> ex, std::span<const double, NDIM> ey,
+         std::span<const double, NDIM> ez, double xdim, double ydim, double zdim)
+    : center{}, ex{}, ey{}, ez{}, dims{xdim, ydim, zdim}, lb{}, ub{}, corners{}, volume(xdim * ydim * zdim),
+      subdiv(1) // Means that it is the most outer box for now.
 {
-    if (!box || !center || !ex || !ey || !ez)
-    {
-        return BOX_FAILURE;
-    }
-
-    int i;
-    for (i = 0; i < NDIM; ++i)
-        box->center[i] = center[i];
-
-    box->dims[0] = xdim;
-    box->dims[1] = ydim;
-    box->dims[2] = zdim;
-
-    box->volume = xdim * ydim * zdim;
-
-    // basis vectors.
-    for (i = 0; i < NDIM; ++i)
-    {
-        box->ex[i] = ex[i];
-        box->ey[i] = ey[i];
-        box->ez[i] = ez[i];
-    }
+    vec_copy(center, this->center);
+    vec_copy(ex, this->ex);
+    vec_copy(ey, this->ey);
+    vec_copy(ez, this->ez);
 
     // Finding coordinates of box's corners
-    for (i = 0; i < NCOR; ++i)
+    for (int i = 0; i < NCOR; ++i)
     {
         // @dvp: analysis of the algorithm
         // daxpy( N, alpha, x, strideX, y, strideY )
@@ -61,37 +45,26 @@ int box_init(Box *box, const double *center, const double *ex, const double *ey,
         // .* - element wise multiplication
         // then
         // corner[i] =  A . (perm[i] .* w) + center
-        std::span corner_row = box->corners[i];
-        vec_copy(box->center, corner_row);
-        vec_axpy(0.5 * perm[i][0] * box->dims[0], box->ex, corner_row);
-        vec_axpy(0.5 * perm[i][1] * box->dims[1], box->ey, corner_row);
-        vec_axpy(0.5 * perm[i][2] * box->dims[2], box->ez, corner_row);
+        std::span corner_row = corners[i];
+        vec_copy(center, corner_row);
+        vec_axpy(0.5 * perm[i][0] * dims[0], ex, corner_row);
+        vec_axpy(0.5 * perm[i][1] * dims[1], ey, corner_row);
+        vec_axpy(0.5 * perm[i][2] * dims[2], ez, corner_row);
     }
 
     // Finding lower and upper bounds
-    vec_copy(box->corners[0], box->lb);
-    vec_copy(box->corners[0], box->ub);
+    vec_copy(corners[0], lb);
+    vec_copy(corners[0], ub);
     for (int i = 1; i < NCOR; ++i)
     {
         for (int j = 0; j < NDIM; ++j)
         {
-            if (box->corners[i][j] < box->lb[j])
-                box->lb[j] = box->corners[i][j];
-            if (box->corners[i][j] > box->ub[j])
-                box->ub[j] = box->corners[i][j];
+            if (corners[i][j] < lb[j])
+                lb[j] = corners[i][j];
+            if (corners[i][j] > ub[j])
+                ub[j] = corners[i][j];
         }
     }
-
-    box->subdiv = 1; // Means that it is the most outer box for now.
-
-    return BOX_SUCCESS;
-}
-
-void box_copy(Box *dst, const Box *src)
-{
-    box_init(dst, src->center.data(), src->ex.data(), src->ey.data(), src->ez.data(), src->dims[0], src->dims[1],
-             src->dims[2]);
-    dst->subdiv = src->subdiv;
 }
 
 void box_generate_random_points(const Box *box, size_t npts, double *points)
@@ -136,55 +109,49 @@ void box_test_points(const Box *box, size_t npts, const double *points, int *res
     }
 }
 
-int box_split(const Box *box, Box *box1, Box *box2, int dir, double ratio)
+std::pair<Box, Box> box_split(const Box &box, int dir, double ratio)
 {
     // Find splitting direction
     if (dir == BOX_SPLIT_AUTODIR)
-        dir = (int)vec_argmax_abs(box->dims);
+        dir = (int)vec_argmax_abs(box.dims);
 
     double center1[NDIM], center2[NDIM], dims1[NDIM], dims2[NDIM];
-    const std::span<const double> basis[NDIM] = {box->ex, box->ey, box->ez};
+    const std::span<const double> basis[NDIM] = {box.ex, box.ey, box.ez};
 
     // find new dimensions
-    vec_copy(box->dims, dims1);
-    vec_copy(box->dims, dims2);
+    vec_copy(box.dims, dims1);
+    vec_copy(box.dims, dims2);
     dims1[dir] *= ratio;
     dims2[dir] *= 1 - ratio;
 
     // find new centers.
-    vec_copy(box->center, center1);
-    vec_copy(box->center, center2);
+    vec_copy(box.center, center1);
+    vec_copy(box.center, center2);
 
     vec_axpy(-0.5 * dims2[dir], basis[dir], center1);
     vec_axpy(0.5 * dims1[dir], basis[dir], center2);
 
     // subdivision index.
-    char hb = high_bit(box->subdiv);
+    char hb = high_bit(box.subdiv);
     uint64_t ones = ~0;
     uint64_t mask = (ones) >> (BIT_LEN - 1) << (hb - 1);
     uint64_t start_bit = mask << 1;
     // create new boxes.
-    int status;
-    status = box_init(box1, center1, box->ex.data(), box->ey.data(), box->ez.data(), dims1[0], dims1[1], dims1[2]);
-    if (status == BOX_FAILURE)
-        return BOX_FAILURE;
+    Box box1(center1, box.ex, box.ey, box.ez, dims1[0], dims1[1], dims1[2]);
+    Box box2(center2, box.ex, box.ey, box.ez, dims2[0], dims2[1], dims2[2]);
 
-    status = box_init(box2, center2, box->ex.data(), box->ey.data(), box->ez.data(), dims2[0], dims2[1], dims2[2]);
-    if (status == BOX_FAILURE)
-        return BOX_FAILURE;
-
-    if (box->subdiv & HIGHEST_BIT)
+    if (box.subdiv & HIGHEST_BIT)
     {
-        box1->subdiv = box->subdiv;
-        box2->subdiv = box->subdiv;
+        box1.subdiv = box.subdiv;
+        box2.subdiv = box.subdiv;
     }
     else
     {
-        box1->subdiv = box->subdiv & (~mask) | start_bit;
-        box2->subdiv = box->subdiv | start_bit;
+        box1.subdiv = box.subdiv & (~mask) | start_bit;
+        box2.subdiv = box.subdiv | start_bit;
     }
 
-    return BOX_SUCCESS;
+    return {box1, box2};
 }
 
 extern "C" void box_ieqcons(unsigned int m, double *result, unsigned int n, const double *x, double *grad, void *f_data)

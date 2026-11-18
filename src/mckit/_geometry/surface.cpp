@@ -1,6 +1,7 @@
 #include "surface.h"
 #include "nlopt.h"
 #include <math.h>
+#include <stdexcept>
 #include <stdlib.h>
 
 #include "vecops.h"
@@ -12,10 +13,6 @@
 #ifdef max
 #undef max
 #endif
-
-#define surface_INIT(surf)                                                                                             \
-    (surf)->last_box = 0;                                                                                              \
-    (surf)->last_box_result = 0;
 
 static double _max(double a, double b)
 {
@@ -239,133 +236,76 @@ extern "C" double surface_func(unsigned int n,  // Space dimension (NDIM)
     return fval;
 }
 
-int plane_init(Plane *surf, const double *norm, double offset)
+Plane::Plane(std::span<const double, NDIM> norm, double offset) : base(PLANE), norm{}, offset(offset)
 {
-    int i;
-    surface_INIT((Surface *)surf) surf->base.type = PLANE;
-    surf->offset = offset;
-    for (i = 0; i < NDIM; ++i)
-    {
-        surf->norm[i] = norm[i];
-    }
-    return SURFACE_SUCCESS;
+    vec_copy(norm, this->norm);
 }
 
-int sphere_init(Sphere *surf, const double *center, double radius)
+Sphere::Sphere(std::span<const double, NDIM> center, double radius) : base(SPHERE), center{}, radius(radius)
 {
     if (radius <= 0)
-        return SURFACE_FAILURE;
-    int i;
-    surface_INIT((Surface *)surf);
-    surf->base.type = SPHERE;
-    surf->radius = radius;
-    for (i = 0; i < NDIM; ++i)
-    {
-        surf->center[i] = center[i];
-    }
-    return SURFACE_SUCCESS;
+        throw std::invalid_argument("Sphere radius must be positive.");
+    vec_copy(center, this->center);
 }
 
-int cylinder_init(Cylinder *surf, const double *point, const double *axis, double radius)
+Cylinder::Cylinder(std::span<const double, NDIM> point, std::span<const double, NDIM> axis, double radius)
+    : base(CYLINDER), point{}, axis{}, radius(radius)
 {
     if (radius <= 0)
-        return SURFACE_FAILURE;
-    int i;
-    surface_INIT((Surface *)surf);
-    surf->base.type = CYLINDER;
-    surf->radius = radius;
-    for (i = 0; i < NDIM; ++i)
-    {
-        surf->point[i] = point[i];
-        surf->axis[i] = axis[i];
-    }
-    return SURFACE_SUCCESS;
+        throw std::invalid_argument("Cylinder radius must be positive.");
+    vec_copy(point, this->point);
+    vec_copy(axis, this->axis);
 }
 
-int RCC_init(RCC *surf, Cylinder *cyl, Plane *top, Plane *bot)
+RCC::RCC(Cylinder *cyl, Plane *top, Plane *bot) : base(MRCC), cyl(cyl), top(top), bot(bot)
 {
-    surface_INIT((Surface *)surf);
-    surf->base.type = MRCC;
-    surf->cyl = cyl;
-    surf->top = top;
-    surf->bot = bot;
-    return SURFACE_SUCCESS;
 }
 
-int BOX_init(BOX *surf, Plane **planes)
+BOX::BOX(std::span<Plane *, BOX_PLANE_NUM> planes) : base(MBOX), planes{}
 {
-    surface_INIT((Surface *)surf);
-    surf->base.type = MBOX;
     for (int i = 0; i < BOX_PLANE_NUM; ++i)
-    {
-        surf->planes[i] = planes[i];
-    }
-    return SURFACE_SUCCESS;
+        this->planes[i] = planes[i];
 }
 
-int cone_init(Cone *surf, const double *apex, const double *axis, double ta, int sheet)
+Cone::Cone(std::span<const double, NDIM> apex, std::span<const double, NDIM> axis, double ta, int sheet)
+    : base(CONE), apex{}, axis{}, ta(ta), sheet(sheet)
 {
     if (ta <= 0)
-        return SURFACE_FAILURE;
-    int i;
-    surface_INIT((Surface *)surf);
-    surf->base.type = CONE;
-    surf->ta = ta;
-    surf->sheet = sheet;
-    for (i = 0; i < NDIM; ++i)
-    {
-        surf->apex[i] = apex[i];
-        surf->axis[i] = axis[i];
-    }
-    return SURFACE_SUCCESS;
+        throw std::invalid_argument("Cone angle tangent must be positive.");
+    vec_copy(apex, this->apex);
+    vec_copy(axis, this->axis);
 }
 
-int torus_init(Torus *surf, const double *center, const double *axis, double radius, double a, double b)
+Torus::Torus(std::span<const double, NDIM> center, std::span<const double, NDIM> axis, double radius, double a,
+             double b)
+    : base(TORUS), center{}, axis{}, radius(radius), a(a), b(b), degenerate(0), specpts{}
 {
     if (a <= 0 || b <= 0)
-        return SURFACE_FAILURE;
-    int i;
-    surface_INIT((Surface *)surf);
-    surf->base.type = TORUS;
-    surf->radius = radius;
-    surf->a = a;
-    surf->b = b;
-    for (i = 0; i < NDIM; ++i)
+        throw std::invalid_argument("Torus minor radii must be positive.");
+    vec_copy(center, this->center);
+    vec_copy(axis, this->axis);
+    if (b > radius)
     {
-        surf->center[i] = center[i];
-        surf->axis[i] = axis[i];
+        degenerate = 1;
+        const double offset = a * sqrt(1 - pow(radius / b, 2));
+        std::span<double, NDIM> top = specpts[0];
+        std::span<double, NDIM> bottom = specpts[1];
+        vec_copy(center, top);
+        vec_copy(center, bottom);
+        vec_axpy(offset, axis, top);
+        vec_axpy(-offset, axis, bottom);
     }
-    if (surf->b > surf->radius)
-    {
-        surf->degenerate = 1;
-        double offset = a * sqrt(1 - pow(radius / b, 2));
-        std::span<double, NDIM> top = surf->specpts[0];
-        std::span<double, NDIM> bottom = surf->specpts[1];
-        vec_copy(std::span<const double, NDIM>(center, NDIM), top);
-        // TODO @dvp: duplicate span of center creation
-        vec_copy(std::span<const double, NDIM>(center, NDIM), bottom);
-        vec_axpy(offset, std::span(axis, NDIM), top);
-        vec_axpy(-offset, std::span(axis, NDIM), bottom);
-    }
-    else
-        surf->degenerate = 0;
-    return SURFACE_SUCCESS;
 }
 
-int gq_init(GQuadratic *surf, const double *m, const double *v, double k, double factor)
+GQuadratic::GQuadratic(std::span<const double, NDIM * NDIM> m, std::span<const double, NDIM> v, double k, double factor)
+    : base(GQUADRATIC), m{}, v{}, k(k), factor(factor)
 {
-    int i, j;
-    surface_INIT((Surface *)surf);
-    surf->base.type = GQUADRATIC;
-    surf->k = k;
-    surf->factor = factor;
-    for (i = 0; i < NDIM; ++i)
+    for (int i = 0; i < NDIM; ++i)
     {
-        surf->v[i] = v[i];
-        for (j = 0; j < NDIM; ++j)
-            surf->m[i * NDIM + j] = m[i * NDIM + j];
+        this->v[i] = v[i];
+        for (int j = 0; j < NDIM; ++j)
+            this->m[i * NDIM + j] = m[i * NDIM + j];
     }
-    return SURFACE_SUCCESS;
 }
 
 void surface_test_points(const Surface *surf, size_t npts, const double *points, char *result)

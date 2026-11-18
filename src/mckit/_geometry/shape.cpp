@@ -4,7 +4,8 @@
 
 #include "shape.h"
 #include "surface.h"
-#include <new>
+#include <algorithm>
+#include <memory>
 #include <vector>
 
 #define is_final(opc) (opc == COMPLEMENT || opc == IDENTITY)
@@ -18,54 +19,48 @@ char geom_intersection(const char *args, size_t n, size_t inc);
 char geom_union(const char *args, size_t n, size_t inc);
 
 /**
-  Initializes Shape struct.
+  Creates a final shape over a surface.
 
-  @param shape Pointer to struct to be initialized
-  @param opc   Operation code
-  @param alen  Length of arguments
-  @param args  A surface or an array of Shapes
-
-  @return SHAPE_NO_MEMORY on memory allocation failure, SHAPE_SUCCESS otherwise
+  @param opc   Operation code (complement or identity)
+  @param surface Surface to apply the operation to
  */
-int shape_init(Shape *shape, char opc, size_t alen, const void *args)
+Shape::Shape(char opc, Surface *surface)
+    : opc(opc), alen(1), args{}, last_box(0), last_box_result(0), stats(new StatsMap())
 {
-    shape->opc = opc;
-    shape->alen = alen;
-    delete shape->stats; // Drop statistics left from a previous initialization, if any.
-    shape->stats = new (std::nothrow) StatsMap();
-    if (shape->stats == nullptr)
-        return SHAPE_NO_MEMORY;
-    shape->last_box = 0;
-    shape->last_box_result = 0;
-    if (is_final(opc))
-    {
-        shape->args.surface = (Surface *)args;
-    }
-    else if (is_void(opc))
-    {
-        shape->args.surface = nullptr;
-    }
-    else
-    {
-        shape->args.shapes = new (std::nothrow) Shape *[alen];
-
-        if (shape->args.shapes == nullptr)
-            return SHAPE_NO_MEMORY;
-
-        size_t i;
-
-        for (i = 0; i < alen; ++i)
-            shape->args.shapes[i] = ((Shape **)args)[i];
-    }
-    return SHAPE_SUCCESS;
+    args.surface = surface;
 }
 
-void shape_dealloc(Shape *shape)
+/**
+  Creates a void shape.
+
+  @param opc   Operation code (empty or universe)
+ */
+Shape::Shape(char opc) : opc(opc), alen(0), args{}, last_box(0), last_box_result(0), stats(new StatsMap())
 {
-    if (is_composite(shape->opc))
-        delete[] shape->args.shapes;
-    delete shape->stats;
-    shape->stats = nullptr;
+    args.surface = nullptr;
+}
+
+/**
+  Creates a composite shape.
+
+  @param opc    Operation code (union or intersection)
+  @param shapes Shapes to combine
+ */
+Shape::Shape(char opc, std::span<Shape *> shapes)
+    : opc(opc), alen(shapes.size()), args{}, last_box(0), last_box_result(0), stats(nullptr)
+{
+    std::unique_ptr<StatsMap> stats_holder(new StatsMap());
+    args.shapes = new Shape *[alen];
+    std::copy(shapes.begin(), shapes.end(), args.shapes);
+    stats = stats_holder.release();
+}
+
+Shape::~Shape()
+{
+    if (is_composite(opc))
+        delete[] args.shapes;
+    delete stats;
+    stats = nullptr;
 }
 
 /**
@@ -224,8 +219,7 @@ int shape_ultimate_test_box(Shape *shape,   // Pointer to shape
     }
     if (result == BOX_CAN_INTERSECT_SHAPE && box->volume > min_vol)
     {
-        Box box1, box2;
-        box_split(box, &box1, &box2, BOX_SPLIT_AUTODIR, 0.5);
+        auto [box1, box2] = box_split(*box, BOX_SPLIT_AUTODIR, 0.5);
         int result1 = shape_ultimate_test_box(shape, &box1, min_vol, collect);
         int result2 = shape_ultimate_test_box(shape, &box2, min_vol, collect);
         if (result1 != BOX_CAN_INTERSECT_SHAPE && result2 != BOX_CAN_INTERSECT_SHAPE)
@@ -236,7 +230,7 @@ int shape_ultimate_test_box(Shape *shape,   // Pointer to shape
 }
 
 // Tests whether points belong to this shape.
-// Returns status - SHAPE_SUCCESS | SHAPE_NO_MEMORY
+// Returns SHAPE_SUCCESS.
 //
 int shape_test_points(const Shape *shape,   // test shape
                       size_t npts,          // the number of points
@@ -292,18 +286,17 @@ int shape_bounding_box(Shape *shape, Box *box, double tol)
     double lower, upper, ratio;
     int dim, tl;
     double min_vol = tol * tol * tol;
-    Box box1, box2;
     for (dim = 0; dim < NDIM; ++dim)
     {
         lower = 0;
         while (box->dims[dim] - lower > tol)
         {
             ratio = 0.5 * (lower + box->dims[dim]) / box->dims[dim];
-            box_split(box, &box1, &box2, dim, ratio);
+            auto [box1, box2] = box_split(*box, dim, ratio);
             shape_reset_cache(shape);
             tl = shape_ultimate_test_box(shape, &box2, min_vol, 0);
             if (tl == -1)
-                box_copy(box, &box1);
+                *box = box1;
             else
                 lower = box1.dims[dim];
         }
@@ -311,11 +304,11 @@ int shape_bounding_box(Shape *shape, Box *box, double tol)
         while (box->dims[dim] - upper > tol)
         {
             ratio = 0.5 * (box->dims[dim] - upper) / box->dims[dim];
-            box_split(box, &box1, &box2, dim, ratio);
+            auto [box1, box2] = box_split(*box, dim, ratio);
             shape_reset_cache(shape);
             tl = shape_ultimate_test_box(shape, &box1, min_vol, 0);
             if (tl == -1)
-                box_copy(box, &box2);
+                *box = box2;
             else
                 upper = box2.dims[dim];
         }
@@ -345,8 +338,7 @@ double shape_volume(Shape *shape, const Box *box, double min_vol)
 
     if (box->volume > min_vol)
     { // Shape intersects the box
-        Box box1, box2;
-        box_split(box, &box1, &box2, BOX_SPLIT_AUTODIR, 0.5);
+        auto [box1, box2] = box_split(*box, BOX_SPLIT_AUTODIR, 0.5);
         double vol1 = shape_volume(shape, &box1, min_vol);
         double vol2 = shape_volume(shape, &box2, min_vol);
         return vol1 + vol2;
@@ -412,8 +404,7 @@ size_t shape_contour(Shape *shape,   // Shape
         return 0;
     if (box->volume > min_vol)
     {
-        Box box1, box2;
-        box_split(box, &box1, &box2, BOX_SPLIT_AUTODIR, 0.5);
+        auto [box1, box2] = box_split(*box, BOX_SPLIT_AUTODIR, 0.5);
         int n1 = shape_contour(shape, &box1, min_vol, buffer);
         int n2 = shape_contour(shape, &box2, min_vol, buffer + n1 * NDIM);
         return n1 + n2;

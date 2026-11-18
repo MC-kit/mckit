@@ -2,13 +2,12 @@
 #define MCKIT_BOX_H
 
 #include <array>
+#include <span>
 #include <stdint.h>
 #include <stdlib.h>
+#include <utility>
 
 #include "common.h"
-
-#define BOX_SUCCESS 0
-#define BOX_FAILURE (-1)
 
 #define BOX_SPLIT_X 0
 #define BOX_SPLIT_Y 1
@@ -32,21 +31,17 @@ struct Box
     std::array<std::array<double, NDIM>, NCOR> corners; /// corners
     double volume;                                      /// volume
     uint64_t subdiv;                                    /// Box location. The most outer (parent) box
+
+    /// Creates a box from its center, basis vectors and edge lengths.
+    Box(std::span<const double, NDIM> center, /// Center of the box
+        std::span<const double, NDIM> ex,     ///
+        std::span<const double, NDIM> ey,     /// Directions of box's edges
+        std::span<const double, NDIM> ez,     ///
+        double xdim,                          ///
+        double ydim,                          /// Dimensions of the box
+        double zdim                           ///
+    );
 };
-
-/// Initializes box structure.
-int box_init(Box *box,             /// Pointer to box structure being initialized
-             const double *center, /// Center of the box
-             const double *ex,     ///
-             const double *ey,     /// Directions of box's edges
-             const double *ez,     ///
-             double xdim,          ///
-             double ydim,          /// Dimensions of the box
-             double zdim           ///
-);
-
-/// Copies content of src box to the dst box.
-void box_copy(Box *dst, const Box *src);
 
 /// Generates random points inside the box.
 void box_generate_random_points(const Box *box,
@@ -65,13 +60,11 @@ void box_generate_random_points(const Box *box,
 void box_test_points(const Box *box, size_t npts, const double *points, int *result);
 
 /// Splits box into two parts.
-int box_split(const Box *box, // Box to be split
-              Box *box1,      // First part box - with smaller coordinates.
-              Box *box2,      // Second part box - with greater coordinates.
-              int dir,        // Direction along which the box must be split. BOX_SPLIT_X,
-              // BOX_SPLIT_Y, BOX_SPLIT_Z, BOX_SPLIT_AUTODIR - split along
-              // dimension with maximal length.
-              double ratio // Ratio of splitting along splitting direction. 0 < ratio < 1.
+std::pair<Box, Box> box_split(const Box &box, // Box to be split
+                              int dir,        // Direction along which the box must be split. BOX_SPLIT_X,
+                              // BOX_SPLIT_Y, BOX_SPLIT_Z, BOX_SPLIT_AUTODIR - split along
+                              // dimension with maximal length.
+                              double ratio // Ratio of splitting along splitting direction. 0 < ratio < 1.
 );
 
 /**

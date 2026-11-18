@@ -4,11 +4,9 @@
 #include "box.h"
 #include "common.h"
 #include <array>
+#include <span>
 #include <stddef.h>
 #include <stdint.h>
-
-#define SURFACE_SUCCESS 0
-#define SURFACE_FAILURE -1
 
 #define BOX_PLANE_NUM 6
 
@@ -37,6 +35,10 @@ enum SurfType
 /// surface common data
 struct Surface
 {
+    explicit Surface(char type) : type(type), last_box(0), last_box_result(0)
+    {
+    }
+
     char type;           ///< surface type
     uint64_t last_box;   ///< subdivision code of last tested box
     int last_box_result; ///< last test_box result
@@ -44,6 +46,8 @@ struct Surface
 
 struct Plane
 {
+    Plane(std::span<const double, NDIM> norm, double offset);
+
     Surface base;
     std::array<double, NDIM> norm;
     double offset;
@@ -51,6 +55,8 @@ struct Plane
 
 struct Sphere
 {
+    Sphere(std::span<const double, NDIM> center, double radius);
+
     Surface base;
     std::array<double, NDIM> center;
     double radius;
@@ -58,6 +64,8 @@ struct Sphere
 
 struct Cylinder
 {
+    Cylinder(std::span<const double, NDIM> point, std::span<const double, NDIM> axis, double radius);
+
     Surface base;
     std::array<double, NDIM> point;
     std::array<double, NDIM> axis;
@@ -66,6 +74,8 @@ struct Cylinder
 
 struct Cone
 {
+    Cone(std::span<const double, NDIM> apex, std::span<const double, NDIM> axis, double ta, int sheet);
+
     Surface base;
     std::array<double, NDIM> apex;
     std::array<double, NDIM> axis;
@@ -75,6 +85,8 @@ struct Cone
 
 struct Torus
 {
+    Torus(std::span<const double, NDIM> center, std::span<const double, NDIM> axis, double radius, double a, double b);
+
     Surface base;
     std::array<double, NDIM> center;
     std::array<double, NDIM> axis;
@@ -87,6 +99,8 @@ struct Torus
 
 struct GQuadratic
 {
+    GQuadratic(std::span<const double, NDIM * NDIM> m, std::span<const double, NDIM> v, double k, double factor);
+
     Surface base;
     std::array<double, NDIM * NDIM> m;
     std::array<double, NDIM> v;
@@ -96,6 +110,8 @@ struct GQuadratic
 
 struct RCC
 {
+    RCC(Cylinder *cyl, Plane *top, Plane *bot);
+
     Surface base;
     Cylinder *cyl;
     Plane *top;
@@ -104,27 +120,13 @@ struct RCC
 
 struct BOX
 {
+    explicit BOX(std::span<Plane *, BOX_PLANE_NUM> planes);
+
     Surface base;
     Plane *planes[BOX_PLANE_NUM];
 };
 
 // Methods //
-
-int plane_init(Plane *surf, const double *norm, double offset);
-
-int sphere_init(Sphere *surf, const double *center, double radius);
-
-int cylinder_init(Cylinder *surf, const double *point, const double *axis, double radius);
-
-int cone_init(Cone *surf, const double *apex, const double *axis, double ta, int sheet);
-
-int torus_init(Torus *surf, const double *center, const double *axis, double radius, double a, double b);
-
-int gq_init(GQuadratic *surf, const double *m, const double *v, double k, double factor);
-
-int RCC_init(RCC *surf, Cylinder *cyl, Plane *top, Plane *bot);
-
-int BOX_init(BOX *surf, Plane **planes);
 
 /**
  * Interface to all surface functions. Decides, which function to apply.
