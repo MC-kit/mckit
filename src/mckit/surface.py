@@ -76,7 +76,7 @@ __all__ = [
 
 
 # noinspection PyPep8Naming
-def create_surface(kind: str, *_params: float, **options) -> Surface:
+def create_surface(kind: str, *_params: float, modifier: str | None = None, **options) -> Surface:
     """Create new surface.
 
     Parameters
@@ -85,6 +85,8 @@ def create_surface(kind: str, *_params: float, **options) -> Surface:
         Surface kind designator. See MCNP manual.
     _params
         List of surface parameters.
+    modifier
+        Surface modifier, like '*' or '+'.
     Keyword arguments
         The surface options; in particular, transform - transformation
         instance to be applied to the surface being created.
@@ -108,7 +110,7 @@ def create_surface(kind: str, *_params: float, **options) -> Surface:
         axis = EZ
     else:
         axis = None
-    surface = _create_surface_by_spec(axis, kind, options, params)
+    surface = _create_surface_by_spec(axis, kind, options, params, modifier)
 
     if surface:
         return surface
@@ -120,95 +122,101 @@ def create_surface(kind: str, *_params: float, **options) -> Surface:
 
     # @dvp: is this code to create some sketch models?
     if len(params) == 2:
-        return Plane(axis, -params[0], **options)  # TODO @dvp: check what is params[1] here?
+        return Plane(
+            axis, -params[0], modifier=modifier, **options
+        )  # TODO @dvp: check what is params[1] here?
     if len(params) == 4:
         # TODO: Use special classes instead of GQ
         h1, r1, h2, r2 = params
         if abs(h2 - h1) < constants.RESOLUTION * max(abs(h1), abs(h2)):
-            return Plane(axis, -0.5 * (h1 + h2), **options)
+            return Plane(axis, -0.5 * (h1 + h2), modifier=modifier, **options)
         if abs(r2 - r1) < constants.RESOLUTION * max(abs(r2), abs(r1)):
             R = 0.5 * (abs(r1) + abs(r2))
-            return Cylinder(np.array([0, 0, 0], dtype=float), axis, R, **options)
+            return Cylinder(np.array([0, 0, 0], dtype=float), axis, R, modifier=modifier, **options)
         if r1 * r2 < 0:
             msg = "Points must belong to the one sheet."
             raise ValueError(msg)
         h0 = (abs(r1) * h2 - abs(r2) * h1) / (abs(r1) - abs(r2))
         t2 = ((r1 - r2) / (h1 - h2)) ** 2
         s = round((h1 - h0) / abs(h1 - h0))
-        return Cone(axis * h0, axis, t2, sheet=s, **options)
+        return Cone(axis * h0, axis, t2, sheet=s, modifier=modifier, **options)
     # TODO: Implement creation of surface by 3 points.
     raise NotImplementedError
 
 
-def _create_surface_by_spec(axis, kind, options, params) -> Surface | None:  # noqa: PLR0911
+def _create_surface_by_spec(  # noqa: PLR0911
+    axis, kind, options, params, modifier: str | None = None
+) -> Surface | None:
     # -------- Plane -------------------
     if kind[0] == "P":
-        return _create_plane(axis, kind, options, params)
+        return _create_plane(axis, kind, options, params, modifier)
     # -------- SQ -------------------
     if kind == "SQ":
-        return _create_sq(options, params)
+        return _create_sq(options, params, modifier)
     # -------- Sphere ------------------
     if kind[0] == "S":
-        return _create_sphere(axis, kind, options, params)
+        return _create_sphere(axis, kind, options, params, modifier)
     # -------- Cylinder ----------------
     if kind[0] == "C":
-        return _create_cylinder(axis, kind, options, params)
+        return _create_cylinder(axis, kind, options, params, modifier)
     # -------- Cone ---------------
     if kind[0] == "K":
-        return _create_cone(axis, kind, options, params)
+        return _create_cone(axis, kind, options, params, modifier)
     # ---------- GQ -----------------
     if kind == "GQ":
-        return _create_gquadratic(options, params)
+        return _create_gquadratic(options, params, modifier)
     # ---------- Torus ---------------------
     if kind[0] == "T":
-        return _create_torus(axis, options, params)
+        return _create_torus(axis, options, params, modifier)
     # ---------- Macro bodies --------------
     if kind == "RPP":
-        return _create_rpp(options, params)
+        return _create_rpp(options, params, modifier)
     if kind == "BOX":
-        return _create_box(options, params)
+        return _create_box(options, params, modifier)
     if kind == "RCC":
-        return _create_rcc(options, params)
+        return _create_rcc(options, params, modifier)
     return None
 
 
-def _create_rcc(options, params) -> RCC:
+def _create_rcc(options, params, modifier: str | None = None) -> RCC:
     center = params[:3]
     axis = params[3:6]
     radius = params[6]
-    return RCC(center, axis, radius, **options)
+    return RCC(center, axis, radius, modifier=modifier, **options)
 
 
-def _create_box(options, params) -> BOX:
+def _create_box(options, params, modifier: str | None = None) -> BOX:
     center = params[:3]
     dir_x = params[3:6]
     dir_y = params[6:9]
     dir_z = params[9:]
-    return BOX(center, dir_x, dir_y, dir_z, **options)
+    return BOX(center, dir_x, dir_y, dir_z, modifier=modifier, **options)
 
 
-def _create_rpp(options, params) -> BOX:
+def _create_rpp(options, params, modifier: str | None = None) -> BOX:
     x_min, x_max, y_min, y_max, z_min, z_max = params
     center = [x_min, y_min, z_min]
     dir_x = [x_max - x_min, 0, 0]
     dir_y = [0, y_max - y_min, 0]
     dir_z = [0, 0, z_max - z_min]
-    return BOX(center, dir_x, dir_y, dir_z, **options)
+    return BOX(center, dir_x, dir_y, dir_z, modifier=modifier, **options)
 
 
-def _create_torus(axis: ArrayLike, options: dict[str, Any], params: list[float]) -> Torus:
+def _create_torus(
+    axis: ArrayLike, options: dict[str, Any], params: list[float], modifier: str | None = None
+) -> Torus:
     x0, y0, z0, R, a, b = params
-    return Torus([x0, y0, z0], axis, R, a, b, **options)
+    return Torus([x0, y0, z0], axis, R, a, b, modifier=modifier, **options)
 
 
-def _create_gquadratic(options, params) -> GQuadratic:
+def _create_gquadratic(options, params, modifier: str | None = None) -> GQuadratic:
     A, B, C, D, E, F, G, H, J, k = params
     m = np.array([[A, 0.5 * D, 0.5 * F], [0.5 * D, B, 0.5 * E], [0.5 * F, 0.5 * E, C]])
     v = np.array([G, H, J])
-    return GQuadratic(m, v, k, **options)
+    return GQuadratic(m, v, k, modifier=modifier, **options)
 
 
-def _create_cone(axis, kind, options, params) -> Cone:
+def _create_cone(axis, kind, options, params, modifier: str | None = None) -> Cone:
     if kind[1] == "/":
         r0 = np.array(params[:3], dtype=float)
         ta = params[3]
@@ -216,10 +224,10 @@ def _create_cone(axis, kind, options, params) -> Cone:
         r0 = params[0] * axis
         ta = params[1]
     sheet = 0 if len(params) % 2 == 0 else int(params[-1])
-    return Cone(r0, axis, ta, sheet, **options)
+    return Cone(r0, axis, ta, sheet, modifier=modifier, **options)
 
 
-def _create_cylinder(axis, kind, options, params) -> Cylinder:
+def _create_cylinder(axis, kind, options, params, modifier: str | None = None) -> Cylinder:
     A = 1 - axis
     if kind[1] == "/":
         Ax, Az = np.dot(A, EX), np.dot(A, EZ)
@@ -227,10 +235,10 @@ def _create_cylinder(axis, kind, options, params) -> Cylinder:
     else:
         r0 = ORIGIN
     R = params[-1]
-    return Cylinder(r0, axis, R, **options)
+    return Cylinder(r0, axis, R, modifier=modifier, **options)
 
 
-def _create_sphere(axis, kind, options, params) -> Sphere:
+def _create_sphere(axis, kind, options, params, modifier: str | None = None) -> Sphere:
     if kind == "S":
         r0 = np.array(params[:3])
     elif kind == "SO":
@@ -238,15 +246,17 @@ def _create_sphere(axis, kind, options, params) -> Sphere:
     else:
         r0 = axis * params[0]
     R = params[-1]
-    return Sphere(r0, R, **options)
+    return Sphere(r0, R, modifier=modifier, **options)
 
 
-def _create_sq(options: dict[str, Any], params: NPFloatArray) -> GQuadratic:
+def _create_sq(
+    options: dict[str, Any], params: NPFloatArray, modifier: str | None = None
+) -> GQuadratic:
     A, B, C, D, E, F, G, x0, y0, z0 = params
     m = np.diag([A, B, C])
     v = 2 * np.array([D - A * x0, E - B * y0, F - C * z0], dtype=np.float64)
     k = A * x0**2 + B * y0**2 + C * z0**2 - 2 * (D * x0 + E * y0 + F * z0) + G
-    return GQuadratic(m, v, k, **options)
+    return GQuadratic(m, v, k, modifier=modifier, **options)
 
 
 def _create_plane(
@@ -254,10 +264,11 @@ def _create_plane(
     kind: str,
     options: dict[str, Any],
     params: NPFloatArray,
+    modifier: str | None = None,
 ) -> Plane:
     if len(kind) == 2:
-        return Plane(axis, -params[0], **options)
-    return Plane(params[:3], -params[3], **options)
+        return Plane(axis, -params[0], modifier=modifier, **options)
+    return Plane(params[:3], -params[3], modifier=modifier, **options)
 
 
 class Surface(Card, MaybeClose):
@@ -376,18 +387,6 @@ class Surface(Card, MaybeClose):
     @abstractmethod
     def round(self) -> Surface:
         """Returns rounded version of self."""
-
-    def _surface_options(self) -> dict[str, Any]:
-        """The surface-level attributes in the keyword-arguments form.
-
-        Used to propagate the surface-level attributes to derived objects.
-        """
-        result: dict[str, Any] = {}
-        if self._modifier is not None:
-            result["modifier"] = self._modifier
-        if self._extra:
-            result.update(self._extra)
-        return result
 
     def mcnp_words(self, pretty: bool = False) -> list[str]:
         words = []
@@ -531,7 +530,8 @@ class RCC(Surface, _RCC):
             radius,
             name=self._name,
             transform=self._transformation,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
             **self._card_options(),
         )
 
@@ -679,7 +679,8 @@ class BOX(Surface, _BOX):
             dir_z,
             name=self._name,
             transform=self._transformation,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
             **self._card_options(),
         )
 
@@ -731,7 +732,14 @@ class Plane(Surface, _Plane):
         )
         k = round_scalar(result._k, k_digits)
         v = round_array(result._v, v_digits)
-        return Plane(v, k, name=self._name, **result._surface_options(), **result._card_options())
+        return Plane(
+            v,
+            k,
+            name=self._name,
+            modifier=result._modifier,
+            **(result._extra or {}),
+            **result._card_options(),
+        )
 
     def copy(self) -> Plane:
         """Create a copy of self.
@@ -750,7 +758,8 @@ class Plane(Surface, _Plane):
             instance,
             self._name,
             transformation=self._transformation,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
             **self._card_options(),
         )
         _Plane.__init__(instance, self._v, self._k)
@@ -761,7 +770,7 @@ class Plane(Surface, _Plane):
         if tr is None:
             return self
         v, k = tr.apply2plane(self._v, self._k)
-        return Plane(v, k, name=self._name, **self._surface_options())
+        return Plane(v, k, name=self._name, modifier=self._modifier, **(self._extra or {}))
 
     def transform(self, tr: Transformation) -> Plane:
         if tr is None:
@@ -772,7 +781,8 @@ class Plane(Surface, _Plane):
             self._k,
             name=self._name,
             transform=tr,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
         )
 
     def reverse(self):
@@ -780,7 +790,7 @@ class Plane(Surface, _Plane):
         instance = Plane.__new__(Plane)
         instance._k_digits = self._k_digits
         instance._v_digits = self._v_digits
-        Surface.__init__(instance, self._name, **self._surface_options())
+        Surface.__init__(instance, self._name, modifier=self._modifier, **(self._extra or {}))
         _Plane.__init__(instance, -self._v, -self._k)
         return instance
 
@@ -901,7 +911,8 @@ class Sphere(Surface, _Sphere):
             instance,
             self._name,
             transformation=self._transformation,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
             **self._card_options(),
         )
         _Sphere.__init__(instance, self._center, self._radius)
@@ -952,14 +963,18 @@ class Sphere(Surface, _Sphere):
             resolution=constants.FLOAT_TOLERANCE,
         )
         radius = round_scalar(temp._radius, radius_digits)
-        return Sphere(center, radius, name=temp._name, **temp._surface_options())
+        return Sphere(
+            center, radius, name=temp._name, modifier=temp._modifier, **(temp._extra or {})
+        )
 
     def apply_transformation(self) -> Sphere:
         tr = self.transformation
         if tr is None:
             return self
         center = tr.apply2point(self._center)
-        return Sphere(center, self._radius, name=self._name, **self._surface_options())
+        return Sphere(
+            center, self._radius, name=self._name, modifier=self._modifier, **(self._extra or {})
+        )
 
     def _get_center(self):
         return round_array(self._center, self._center_digits)
@@ -973,7 +988,8 @@ class Sphere(Surface, _Sphere):
             self._radius,
             transform=tr,
             name=self._name,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
             **self._card_options(),
         )
 
@@ -1072,7 +1088,8 @@ class Cylinder(Surface, _Cylinder):
             instance,
             self._name,
             transformation=self._transformation,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
             **self._card_options(),
         )
         _Cylinder.__init__(instance, self._pt, self._axis, self._radius)
@@ -1132,7 +1149,8 @@ class Cylinder(Surface, _Cylinder):
             self._radius,
             transform=tr,
             name=self._name,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
             **self._card_options(),
         )
 
@@ -1195,7 +1213,8 @@ class Cylinder(Surface, _Cylinder):
                 k,
                 name=self._name,
                 transform=self._transformation,
-                **self._surface_options(),
+                modifier=self._modifier,
+                **(self._extra or {}),
                 **self._card_options(),
             ).mcnp_repr()
         words.append(" ")
@@ -1209,7 +1228,9 @@ class Cylinder(Surface, _Cylinder):
         pt = round_array(temp._pt)
         axis = round_array(temp._axis)
         radius = round_scalar(temp._radius)
-        return Cylinder(pt, axis, radius, name=self._name, **self._surface_options())
+        return Cylinder(
+            pt, axis, radius, name=self._name, modifier=self._modifier, **(self._extra or {})
+        )
 
     def apply_transformation(self) -> Cylinder:
         tr = self.transformation
@@ -1218,7 +1239,9 @@ class Cylinder(Surface, _Cylinder):
         pt = tr.apply2point(self._pt)
         axis = tr.apply2vector(self._axis)
         # TODO dvp: actually may create Generic Quadratic. Should we use __new__() for this?
-        return Cylinder(pt, axis, self._radius, name=self._name, **self._surface_options())
+        return Cylinder(
+            pt, axis, self._radius, name=self._name, modifier=self._modifier, **(self._extra or {})
+        )
 
     def __getstate__(self):
         return self._pt, self._axis, self._radius, Surface.__getstate__(self)
@@ -1295,7 +1318,15 @@ class Cone(Surface, _Cone):
         apex = tr.apply2point(self._apex)
         axis = tr.apply2vector(self._axis)
         sheet = self._sheet
-        return Cone(apex, axis, self._t2, sheet, name=self._name, **self._surface_options())
+        return Cone(
+            apex,
+            axis,
+            self._t2,
+            sheet,
+            name=self._name,
+            modifier=self._modifier,
+            **(self._extra or {}),
+        )
 
     def round(self) -> Cone:
         res = self.apply_transformation()
@@ -1303,7 +1334,9 @@ class Cone(Surface, _Cone):
         axis = round_array(res._axis)
         t2 = round_scalar(self._t2)
         sheet = self._sheet
-        return Cone(apex, axis, t2, sheet, name=self._name, **self._surface_options())
+        return Cone(
+            apex, axis, t2, sheet, name=self._name, modifier=self._modifier, **(self._extra or {})
+        )
 
     def copy(self):
         t2 = self._t2
@@ -1315,7 +1348,8 @@ class Cone(Surface, _Cone):
             instance,
             self._name,
             transformation=self._transformation,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
             **self._card_options(),
         )
         _Cone.__init__(instance, self._apex, self._axis, t2, self._sheet)
@@ -1382,7 +1416,8 @@ class Cone(Surface, _Cone):
             sheet=0,
             transform=tr,
             name=self._name,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
             **self._card_options(),
         )
         if self._sheet != 0:
@@ -1448,7 +1483,8 @@ class Cone(Surface, _Cone):
                 k,
                 name=self._name,
                 transform=self._transformation,
-                **self._surface_options(),
+                modifier=self._modifier,
+                **(self._extra or {}),
                 **self._card_options(),
             ).mcnp_words()
         words.append(" ")
@@ -1524,7 +1560,8 @@ class GQuadratic(Surface, _GQuadratic):
             instance,
             self._name,
             transformation=self._transformation,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
             **self._card_options(),
         )
         _GQuadratic.__init__(instance, self._m, self._v, self._k, self._factor)
@@ -1582,7 +1619,8 @@ class GQuadratic(Surface, _GQuadratic):
             self._k,
             transform=tr,
             name=self._name,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
             **self._card_options(),
         )
 
@@ -1607,14 +1645,14 @@ class GQuadratic(Surface, _GQuadratic):
         if tr is None:
             return self
         m, v, k = tr.apply2gq(self._m, self._v, self._k)
-        return GQuadratic(m, v, k, name=self._name, **self._surface_options())
+        return GQuadratic(m, v, k, name=self._name, modifier=self._modifier, **(self._extra or {}))
 
     def round(self) -> GQuadratic:
         temp = self.apply_transformation()
         m, v = map(round_array, [temp._m, temp._v])
         k = round_scalar(temp._k)
         # TODO dvp: handle cases when the surface can be represented with specialized quadratic surface: Cone etc.
-        return GQuadratic(m, v, k, name=self._name, **self._surface_options())
+        return GQuadratic(m, v, k, name=self._name, modifier=self._modifier, **(self._extra or {}))
 
     def __repr__(self) -> str:
         options = str(self._extra) if self._extra else ""
@@ -1702,7 +1740,8 @@ class Torus(Surface, _Torus):
             instance,
             self._name,
             transformation=self._transformation,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
             **self._card_options(),
         )
         _Torus.__init__(instance, self._center, self._axis, self._R, self._a, self._b)
@@ -1773,7 +1812,8 @@ class Torus(Surface, _Torus):
             self._b,
             transform=tr,
             name=self._name,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
             **self._card_options(),
         )
 
@@ -1801,7 +1841,9 @@ class Torus(Surface, _Torus):
             return round_scalar(x, significant_digits(x, FLOAT_TOLERANCE))
 
         r, a, b = map(r, [temp._R, temp._a, temp._b])  # type: ignore[attr-defined]
-        return Torus(center, axis, r, a, b, name=self._name, **self._surface_options())
+        return Torus(
+            center, axis, r, a, b, name=self._name, modifier=self._modifier, **(self._extra or {})
+        )
 
     def apply_transformation(self) -> Torus:
         tr = self.transformation
@@ -1817,7 +1859,8 @@ class Torus(Surface, _Torus):
             self._a,
             self._b,
             name=self._name,
-            **self._surface_options(),
+            modifier=self._modifier,
+            **(self._extra or {}),
         )
 
     def is_close_to(

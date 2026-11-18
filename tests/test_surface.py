@@ -3518,6 +3518,7 @@ def test_surface_state_propagation():
     """The modifier and extra data propagate to derived surfaces."""
     surface = create_surface("PX", 5.0, modifier="*", comments=["abc"])
     assert_same_state(surface, surface.copy())
+    assert_same_state(surface, surface.round())
     assert_same_state(surface, surface.transform(_tr_1))
 
 
