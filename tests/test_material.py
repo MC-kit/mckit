@@ -4,7 +4,6 @@ from typing import Any, Final
 
 from copy import deepcopy
 
-# noinspection PyPackageRequirements
 import pytest
 
 from mckit.material import Composition, Element, Material, mixture_by_volume
@@ -1770,7 +1769,9 @@ class TestMaterial:
         data = case.copy()
         atomic = data.pop("atomic", ())
         weight = data.pop("weight", ())
-        comp = Composition(atomic=atomic, weight=weight)
+        name = data.pop("name", None)
+        lib = data.pop("lib", None)
+        comp = Composition(atomic=atomic, weight=weight, name=name, lib=lib)
         mat2 = Material(composition=comp, **data)
         assert mat1.composition == comp
         assert mat2.composition == comp
@@ -1924,26 +1925,18 @@ class TestMaterial:
         mix = Material.mixture(*materials, fraction_type=fraction_type)
         assert ans_mat == mix
 
-    def test_getitem(self):
-        """Options are accessed by key, but derived values like density are not options."""
+    def test_extra_kwargs_forwarded_to_composition(self):
+        """Extra keyword arguments are passed to the composition being created."""
         mat = Material(atomic=[("N", 1)], density=1.251e-3, name=5)
-        assert mat["name"] == 5
-        with pytest.raises(KeyError):
-            _ = mat["density"]
+        assert mat.composition.name() == 5
 
-    def test_correct_propagates_extras(self):
-        """The corrected material keeps the extras of the source one."""
+    def test_extra_kwargs_with_explicit_composition(self):
+        """There is no place to forward extra keyword arguments when the composition is explicit."""
         comp = Composition(atomic=[("N", 1)])
-        mat = Material(composition=comp, density=1.0, name=5)
-        new_mat = mat.correct(factor=2.0)
-        assert new_mat.composition is comp
-        assert new_mat["name"] == 5
-
-    def test_getitem_on_no_extras(self):
-        mat = Material(atomic=[("N", 1)], density=1.251e-3)
-        assert mat._extra is None
-        with pytest.raises(KeyError):
-            _ = mat["name"]
+        with pytest.raises(
+            TypeError, match="'composition' is specified along with other keyword parameters: name"
+        ):
+            Material(composition=comp, density=1.0, name=5)
 
     @pytest.mark.parametrize(
         "kwargs, msg",

@@ -517,7 +517,8 @@ class Material:
             Sets the atomic concentration (1 / cc). It is incompatible with density
             parameter.
         extra
-            Rare arbitrary data, forwarded to the created composition.
+            Keyword arguments for the composition created from `atomic` or `weight`.
+            It is an error to specify them together with an explicit `composition`.
 
     Properties
     ----------
@@ -549,6 +550,11 @@ class Material:
                 raise ValueError(
                     "'composition is specified along with 'atomic' or 'weight' parameters."
                 )
+            if extra:
+                raise TypeError(
+                    "'composition' is specified along with other keyword parameters: "
+                    + ", ".join(extra)
+                )
             self._composition = composition
         elif weight or atomic:
             self._composition = Composition(atomic=atomic, weight=weight, **extra)
@@ -566,8 +572,6 @@ class Material:
                 raise ValueError("Both concentration and density are specified")
             self._n = concentration
 
-        self._extra = extra or None
-
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Material):
             return False
@@ -577,16 +581,6 @@ class Material:
 
     def __hash__(self):
         return hash(self._composition)
-
-    def __getitem__(self, key: str) -> Any:
-        """Gets specific extra data item.
-
-        Args:
-            key: an item name
-        """
-        if self._extra:
-            return self._extra[key]
-        raise KeyError(key)
 
     @property
     def density(self):
@@ -637,7 +631,6 @@ class Material:
         return Material(
             composition=self._composition,
             concentration=self._n * factor,
-            **(self._extra or {}),
         )
 
     @staticmethod
@@ -680,7 +673,10 @@ class Material:
         return Material(composition=new_comp, concentration=factor / norm)
 
     @staticmethod
-    def _define_mixture_method_and_norm(fraction_type: Literal["weight", "volume", "atomic"], materials: tuple[tuple[Material, float | int], ...]) ->   tuple[Callable[[Material, float], float], float]:
+    def _define_mixture_method_and_norm(
+        fraction_type: Literal["weight", "volume", "atomic"],
+        materials: tuple[tuple[Material, float | int], ...],
+    ) -> tuple[Callable[[Material, float], float], float]:
         if fraction_type == "weight":
 
             def fun(m, _f):
