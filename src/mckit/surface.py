@@ -55,8 +55,7 @@ SURFACE_SLOTS = (*CARD_SLOTS, "_transformation", "_modifier")
 so the surface classes shadow the surface-level attributes with their own slots.
 """
 
-
-# noinspection PyUnresolvedReferences,PyPackageRequirements
+# noinspection PyUnresolvedReferences
 __all__ = [
     "BOX",
     "EX",
@@ -163,7 +162,7 @@ def _create_surface_by_spec(axis, kind, options, params) -> Surface | None:  # n
     # ---------- Torus ---------------------
     if kind[0] == "T":
         return _create_torus(axis, options, params)
-    # ---------- Macrobodies ---------------
+    # ---------- Macro bodies --------------
     if kind == "RPP":
         return _create_rpp(options, params)
     if kind == "BOX":
@@ -291,10 +290,10 @@ class Surface(Card, MaybeClose):
         Parameters
         ----------
         name
-            name of the `Surface` card, if any.
+            ... of the `Surface` card, if any.
 
         transformation
-            Transformation, attached to the surface after its construction.
+            ... attached to the surface after its construction.
 
         modifier
             Surface modifier, like '*' or '+'.
@@ -317,7 +316,7 @@ class Surface(Card, MaybeClose):
 
         Transformations, passed to surface constructors, are applied to
         the geometry immediately and are not stored here.
-        In future, transformations won't be applied on surface initialization,
+        In the future, transformations won't be applied on surface initialization,
         but stored here and kept intact until a cell, referring to the surface,
         is modified.
         """
@@ -430,6 +429,11 @@ class RCC(Surface, _RCC):
         center = np.array(center)
         direction = np.array(direction)
         opt_surf = options.copy()
+        # TODO @dvp: assigning the names 1,2,3 to the surfaces looks like solution for a protype.
+        #    we'd better to keep these surfaces anonymous and assign the names on output, when necessary.
+        #    Necessary cases:
+        #      1) if the RCC is intersected with some other shape
+        #      2) find other cases
         opt_surf["name"] = 1
         norm = np.array(direction) / np.linalg.norm(direction)
         cyl = Cylinder(center, norm, radius, **opt_surf).apply_transformation()
@@ -733,7 +737,7 @@ class Plane(Surface, _Plane):
         """Create a copy of self.
 
         Skips Plane.__init__ (directly calls _Plane.__init__) to avoid time-consuming
-        significant digits computation.
+        computation of significant digits .
 
         Returns
         -------

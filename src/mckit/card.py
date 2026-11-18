@@ -29,7 +29,6 @@ so the derived classes shadow the card-level attributes with their own slots.
 """
 
 
-# noinspection PyPropertyDefinition
 class Card(ABC):
     """Features, common for all cards.
 

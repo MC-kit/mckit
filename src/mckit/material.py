@@ -5,11 +5,10 @@ from typing import TYPE_CHECKING, Any, Literal, Union, cast
 import importlib.resources as rs
 import math
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from functools import reduce
 from operator import xor
 
-# noinspection PyPackageRequirements
 import numpy as np
 
 from .card import CARD_SLOTS, Card
@@ -75,6 +74,7 @@ class Composition(Card):
     )
 
     # TODO dvp: are there specs using both atomic and weight definitions?
+    # noinspection shadowing-names
     def __init__(
         self,
         atomic: TFractions | None = None,
@@ -496,7 +496,7 @@ def mixture_by_volume(
 
 
 class Material:
-    """Represents material - association Body -> Composition, with specfic density.
+    """Represents material - association Body -> Composition, with specific density.
 
     If only one of `weight` or `atomic` parameters is specified, then
     there's no need to normalize the Material.
@@ -504,14 +504,14 @@ class Material:
     Parameters
     ----------
         atomic
-            Atomic fractions. New composition will be created.
+            ... Atomic fractions. New composition will be created.
         weight
-            Weight fractions of isotopes. In this case, density or concentration must present.
+            ... Weight fractions of isotopes. In this case, density or concentration must present.
         composition
-            Composition instance. If it is specified, then this composition will be
+            ... Composition instance. If it is specified, then this composition will be
             used. Neither atomic nor weight must be present.
         density
-            Density of the material (g/cc). It is incompatible with concentration
+            ... Density of the material (g/cc). It is incompatible with concentration
             parameter.
         concentration
             Sets the atomic concentration (1 / cc). It is incompatible with density
@@ -522,9 +522,9 @@ class Material:
     Properties
     ----------
         density
-            Density of the material [g/cc].
+            ... of the material [g/cc].
         concentration
-            Concentration of the material [atoms/cc].
+            ... of the material [atoms/cc].
         composition
             Material's composition.
         molar_mass
@@ -568,9 +568,9 @@ class Material:
 
         self._extra = extra or None
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Material):
-            return NotImplemented
+            return False
         if not math.isclose(self._n, other.concentration, rel_tol=self._tolerance):
             return False
         return self._composition == other.composition
@@ -653,14 +653,17 @@ class Material:
         the effect of compression is taking place. But for weight and atomic fractions
         normalization will be done anyway.
 
-        Args:
-            materials: An Iterable of pairs material-fraction. material must be a Material class
-                instance because for mixture not only composition but density is
-                important.
-            fraction_type: Indicate how fraction should be interpreted.
-                'weight' - weight fractions (default);
-                'volume' - volume fractions;
-                'atomic' - atomic fractions.
+        Parameters
+        ----------
+        materials
+            An Iterable of pairs material-fraction. material must be a Material class
+            instance because for mixture not only composition but density is
+            important.
+        fraction_type
+            Indicate how fraction should be interpreted.
+            'weight' - weight fractions (default);
+            'volume' - volume fractions;
+            'atomic' - atomic fractions.
 
         Returns
         -------
@@ -668,6 +671,16 @@ class Material:
         """
         if not materials:
             raise ValueError("At least one material must be specified.")
+        fun, norm = Material._define_mixture_method_and_norm(fraction_type, materials)
+
+        factor = sum([fun(m, _f) for m, _f in materials])
+        compositions = [(m.composition, fun(m, _f) / factor) for m, _f in materials]
+        new_comp = Composition.mixture(*compositions)
+
+        return Material(composition=new_comp, concentration=factor / norm)
+
+    @staticmethod
+    def _define_mixture_method_and_norm(fraction_type: Literal["weight", "volume", "atomic"], materials: tuple[tuple[Material, float | int], ...]) ->   tuple[Callable[[Material, float], float], float]:
         if fraction_type == "weight":
 
             def fun(m, _f):
@@ -687,13 +700,9 @@ class Material:
 
             norm = sum(fun(m, _f) / m.concentration for m, _f in materials)
         else:
-            raise ValueError("Unknown fraction type")
+            raise ValueError(f"Unknown fraction type '{fraction_type}'.")
 
-        factor = sum([fun(m, _f) for m, _f in materials])
-        compositions = [(m.composition, fun(m, _f) / factor) for m, _f in materials]
-        new_comp = Composition.mixture(*compositions)
-
-        return Material(composition=new_comp, concentration=factor / norm)
+        return fun, norm
 
 
 # noinspection PyPep8Naming
@@ -759,7 +768,7 @@ class Element:
     def __hash__(self) -> int:
         return self._charge * (self._mass_number + 1) * (self._isomer + 1)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Element):
             return False
         return (
@@ -874,6 +883,7 @@ class Element:
             result[self] = 1.0
         elif self._mass_number == 0:
             for at_num, frac in _NATURAL_ABUNDANCE[self._charge].items():
+                # TODO @dvp: do we need this back conversion to string? Why not to use integer ZAI on element init?
                 elem_name = f"{self._charge:d}{at_num:03d}"
                 result[Element(elem_name, lib=self._lib)] = frac
         return result
