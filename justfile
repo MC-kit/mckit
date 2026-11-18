@@ -16,7 +16,7 @@ alias t := test
 alias c := check
 set dotenv-load
 
-default_python := "3.14"
+default_python := "3.15"
 TITLE := `uv version`
 VERSION := `uv version --short`
 log := "warn"
@@ -32,7 +32,7 @@ export JUST_LOG := log
 
 # create venv, if not exists
 [group('dev')]
-@venv *args="--python {{default_python}}":
+@venv *args=f"--python {{default_python}}":
     #!/bin/bash
     [ -d .venv ] || uv venv {{ args }}
 
