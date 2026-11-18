@@ -323,7 +323,7 @@ int surface_test_box(Surface *surf, const Box *box)
 {
     if (surf->last_box != 0)
     {
-        int bc = box_is_in(box, surf->last_box);
+        int bc = box->is_in(surf->last_box);
         // if it is the box already tested (bc == 0) then returns cached result;
         // if it is inner box - then returns cached result only if it is not 0.
         // For inner box result may be different.
@@ -359,7 +359,7 @@ int surface_test_box(Surface *surf, const Box *box)
         if (surf->type == TORUS && ((Torus *)surf)->degenerate)
         {
             int test_res[2];
-            box_test_points(box, 2, ((Torus *)surf)->specpts[0].data(), test_res);
+            box->test_points(2, ((Torus *)surf)->specpts[0].data(), test_res);
             if (test_res[0] == 1 || test_res[1] == 1)
                 return 0;
         }

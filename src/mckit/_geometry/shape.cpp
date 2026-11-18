@@ -76,7 +76,7 @@ int shape_test_box(Shape *shape, const Box *box, char collect, int *zero_surface
 {
     if (shape->last_box != 0)
     {
-        int bc = box_is_in(box, shape->last_box);
+        int bc = box->is_in(shape->last_box);
         // if it is the box already tested (bc == 0) then returns cached result;
         // if it is inner box - then returns cached result only if it is not 0.
         // For inner box result may be different.
@@ -219,7 +219,7 @@ int shape_ultimate_test_box(Shape *shape,   // Pointer to shape
     }
     if (result == BOX_CAN_INTERSECT_SHAPE && box->volume > min_vol)
     {
-        auto [box1, box2] = box_split(*box, BOX_SPLIT_AUTODIR, 0.5);
+        auto [box1, box2] = box->split(BOX_SPLIT_AUTODIR, 0.5);
         int result1 = shape_ultimate_test_box(shape, &box1, min_vol, collect);
         int result2 = shape_ultimate_test_box(shape, &box2, min_vol, collect);
         if (result1 != BOX_CAN_INTERSECT_SHAPE && result2 != BOX_CAN_INTERSECT_SHAPE)
@@ -292,7 +292,7 @@ int shape_bounding_box(Shape *shape, Box *box, double tol)
         while (box->dims[dim] - lower > tol)
         {
             ratio = 0.5 * (lower + box->dims[dim]) / box->dims[dim];
-            auto [box1, box2] = box_split(*box, dim, ratio);
+            auto [box1, box2] = box->split(dim, ratio);
             shape_reset_cache(shape);
             tl = shape_ultimate_test_box(shape, &box2, min_vol, 0);
             if (tl == -1)
@@ -304,7 +304,7 @@ int shape_bounding_box(Shape *shape, Box *box, double tol)
         while (box->dims[dim] - upper > tol)
         {
             ratio = 0.5 * (box->dims[dim] - upper) / box->dims[dim];
-            auto [box1, box2] = box_split(*box, dim, ratio);
+            auto [box1, box2] = box->split(dim, ratio);
             shape_reset_cache(shape);
             tl = shape_ultimate_test_box(shape, &box1, min_vol, 0);
             if (tl == -1)
@@ -338,7 +338,7 @@ double shape_volume(Shape *shape, const Box *box, double min_vol)
 
     if (box->volume > min_vol)
     { // Shape intersects the box
-        auto [box1, box2] = box_split(*box, BOX_SPLIT_AUTODIR, 0.5);
+        auto [box1, box2] = box->split(BOX_SPLIT_AUTODIR, 0.5);
         double vol1 = shape_volume(shape, &box1, min_vol);
         double vol2 = shape_volume(shape, &box2, min_vol);
         return vol1 + vol2;
@@ -404,7 +404,7 @@ size_t shape_contour(Shape *shape,   // Shape
         return 0;
     if (box->volume > min_vol)
     {
-        auto [box1, box2] = box_split(*box, BOX_SPLIT_AUTODIR, 0.5);
+        auto [box1, box2] = box->split(BOX_SPLIT_AUTODIR, 0.5);
         int n1 = shape_contour(shape, &box1, min_vol, buffer);
         int n2 = shape_contour(shape, &box2, min_vol, buffer + n1 * NDIM);
         return n1 + n2;

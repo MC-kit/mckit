@@ -47,9 +47,9 @@ Box::Box(std::span<const double, NDIM> center, std::span<const double, NDIM> ex,
         // corner[i] =  A . (perm[i] .* w) + center
         std::span corner_row = corners[i];
         vec_copy(center, corner_row);
-        vec_axpy(0.5 * perm[i][0] * dims[0], ex, corner_row);
-        vec_axpy(0.5 * perm[i][1] * dims[1], ey, corner_row);
-        vec_axpy(0.5 * perm[i][2] * dims[2], ez, corner_row);
+        vec_axpy(0.5 * perm[i][0] * xdim, ex, corner_row);
+        vec_axpy(0.5 * perm[i][1] * ydim, ey, corner_row);
+        vec_axpy(0.5 * perm[i][2] * zdim, ez, corner_row);
     }
 
     // Finding lower and upper bounds
@@ -67,9 +67,12 @@ Box::Box(std::span<const double, NDIM> center, std::span<const double, NDIM> ex,
     }
 }
 
-void box_generate_random_points(const Box *box, size_t npts, double *points)
+void Box::generate_random_points(size_t npts, double *points) const
 {
     Xoshiro256ss &rng = thread_local_rng();
+    const double dx = dims[0];
+    const double dy = dims[1];
+    const double dz = dims[2];
     double d[NDIM];
 
     for (size_t i = 0; i < npts; ++i)
@@ -78,15 +81,18 @@ void box_generate_random_points(const Box *box, size_t npts, double *points)
             d[j] = rng.next_double() - 0.5;
 
         std::span<double, NDIM> point_row(points + i * NDIM, NDIM);
-        vec_copy(box->center, point_row);
-        vec_axpy(d[0] * box->dims[0], box->ex, point_row);
-        vec_axpy(d[1] * box->dims[1], box->ey, point_row);
-        vec_axpy(d[2] * box->dims[2], box->ez, point_row);
+        vec_copy(center, point_row);
+        vec_axpy(d[0] * dx, ex, point_row);
+        vec_axpy(d[1] * dy, ey, point_row);
+        vec_axpy(d[2] * dz, ez, point_row);
     }
 }
 
-void box_test_points(const Box *box, size_t npts, const double *points, int *result)
+void Box::test_points(size_t npts, const double *points, int *result) const
 {
+    const double dx = dims[0];
+    const double dy = dims[1];
+    const double dz = dims[2];
     double delta[NDIM];
     double x, y, z;
     int i;
@@ -94,10 +100,10 @@ void box_test_points(const Box *box, size_t npts, const double *points, int *res
     for (i = 0; i < npts; ++i)
     {
         vec_copy(std::span<const double, NDIM>(points + i * NDIM, NDIM), delta);
-        vec_axpy(-1, box->center, delta);
-        x = vec_dot(delta, box->ex) / box->dims[0];
-        y = vec_dot(delta, box->ey) / box->dims[1];
-        z = vec_dot(delta, box->ez) / box->dims[2];
+        vec_axpy(-1, center, delta);
+        x = vec_dot(delta, ex) / dx;
+        y = vec_dot(delta, ey) / dy;
+        z = vec_dot(delta, ez) / dz;
         if (x > -0.5 && x < 0.5 && y > -0.5 && y < 0.5 && z > -0.5 && z < 0.5)
         {
             result[i] = 1;
@@ -109,46 +115,46 @@ void box_test_points(const Box *box, size_t npts, const double *points, int *res
     }
 }
 
-std::pair<Box, Box> box_split(const Box &box, int dir, double ratio)
+std::pair<Box, Box> Box::split(int dir, double ratio) const
 {
     // Find splitting direction
     if (dir == BOX_SPLIT_AUTODIR)
-        dir = (int)vec_argmax_abs(box.dims);
+        dir = (int)vec_argmax_abs(dims);
 
     double center1[NDIM], center2[NDIM], dims1[NDIM], dims2[NDIM];
-    const std::span<const double> basis[NDIM] = {box.ex, box.ey, box.ez};
+    const std::span<const double> basis[NDIM] = {ex, ey, ez};
 
     // find new dimensions
-    vec_copy(box.dims, dims1);
-    vec_copy(box.dims, dims2);
+    vec_copy(dims, dims1);
+    vec_copy(dims, dims2);
     dims1[dir] *= ratio;
     dims2[dir] *= 1 - ratio;
 
     // find new centers.
-    vec_copy(box.center, center1);
-    vec_copy(box.center, center2);
+    vec_copy(center, center1);
+    vec_copy(center, center2);
 
     vec_axpy(-0.5 * dims2[dir], basis[dir], center1);
     vec_axpy(0.5 * dims1[dir], basis[dir], center2);
 
     // subdivision index.
-    char hb = high_bit(box.subdiv);
+    char hb = high_bit(subdiv);
     uint64_t ones = ~0;
     uint64_t mask = (ones) >> (BIT_LEN - 1) << (hb - 1);
     uint64_t start_bit = mask << 1;
     // create new boxes.
-    Box box1(center1, box.ex, box.ey, box.ez, dims1[0], dims1[1], dims1[2]);
-    Box box2(center2, box.ex, box.ey, box.ez, dims2[0], dims2[1], dims2[2]);
+    Box box1(center1, ex, ey, ez, dims1[0], dims1[1], dims1[2]);
+    Box box2(center2, ex, ey, ez, dims2[0], dims2[1], dims2[2]);
 
-    if (box.subdiv & HIGHEST_BIT)
+    if (subdiv & HIGHEST_BIT)
     {
-        box1.subdiv = box.subdiv;
-        box2.subdiv = box.subdiv;
+        box1.subdiv = subdiv;
+        box2.subdiv = subdiv;
     }
     else
     {
-        box1.subdiv = box.subdiv & (~mask) | start_bit;
-        box2.subdiv = box.subdiv | start_bit;
+        box1.subdiv = subdiv & (~mask) | start_bit;
+        box2.subdiv = subdiv | start_bit;
     }
 
     return {box1, box2};
@@ -216,15 +222,15 @@ int box_check_intersection(const Box *box1, const Box *box2)
 
     vec_copy(box1->center, x);
     opt_result = nlopt_optimize(opt, x, &opt_val);
-    box_test_points(box2, 1, x, &result);
+    box2->test_points(1, x, &result);
     nlopt_destroy(opt);
     return result;
 }
 
-int box_is_in(const Box *in_box, uint64_t out_subdiv)
+int Box::is_in(uint64_t out_subdiv) const
 {
     uint64_t out = out_subdiv;
-    uint64_t in = in_box->subdiv;
+    uint64_t in = subdiv;
 
     if (out == in)
         return 0;

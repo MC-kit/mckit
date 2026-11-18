@@ -41,31 +41,39 @@ struct Box
         double ydim,                          /// Dimensions of the box
         double zdim                           ///
     );
+
+    /// Generates random points inside the box.
+    void generate_random_points(size_t npts,   ///< IN: the number of points to be generated
+                                double *points ///< OUT: generated points
+    ) const;
+
+    /// Checks if points lie inside the box.
+    ///
+    /// @param npts the number of points
+    /// @param points Points to be checked
+    /// @param result array of results: 1 point lies inside the box; 0 - otherwise.
+    void test_points(size_t npts, const double *points, int *result) const;
+
+    /// Splits the box into two parts.
+    ///
+    /// @param dir Direction along which the box must be split (BOX_SPLIT_X, BOX_SPLIT_Y, BOX_SPLIT_Z,
+    ///            BOX_SPLIT_AUTODIR - split along the dimension with maximal length).
+    /// @param ratio Ratio of splitting along splitting direction. 0 < ratio < 1.
+    std::pair<Box, Box> split(int dir, double ratio) const;
+
+    /// Compares this box position with the one denoted by a subdivision code.
+    ///
+    /// subdiv denotes subdivision. It is 64 bit integer value. The elder bit marks the number of
+    /// subdivision generations. 0 means first half of the box, 1 - second half. Only the code is
+    /// used because the outer box itself may not exist when the check is needed (cache purposes).
+    ///
+    /// @param out_subdiv the code of subdivisions of outer box.
+    ///
+    /// @return     +1 if this box lies actually inside the out_box;
+    ///              0 if this box equals out_box;
+    ///             -1 if this box lies outside of the out_box;
+    int is_in(uint64_t out_subdiv) const;
 };
-
-/// Generates random points inside the box.
-void box_generate_random_points(const Box *box,
-                                size_t npts,   /// IN: the number of points to be generated
-                                double *points /// OUT: generated points
-);
-
-/**
- * Checks if points lie inside the box.
- *
- * @param box
- * @param npts the number of points
- * @param points Points to be checked
- * @param result array of results: 1 point lies inside the box; 0 - otherwise.
- */
-void box_test_points(const Box *box, size_t npts, const double *points, int *result);
-
-/// Splits box into two parts.
-std::pair<Box, Box> box_split(const Box &box, // Box to be split
-                              int dir,        // Direction along which the box must be split. BOX_SPLIT_X,
-                              // BOX_SPLIT_Y, BOX_SPLIT_Z, BOX_SPLIT_AUTODIR - split along
-                              // dimension with maximal length.
-                              double ratio // Ratio of splitting along splitting direction. 0 < ratio < 1.
-);
 
 /**
  * Boundary conditions for surface test_box methods.
@@ -76,7 +84,7 @@ std::pair<Box, Box> box_split(const Box &box, // Box to be split
  * @param x Point to be tested
  * @param grad Gradient of constraint function - only if not NULL.
  * @param f_data Box structure
- *
+ *x
  * The function is passed as a callback to the C NLopt library,
  * so it must have C linkage.
  */
@@ -91,25 +99,5 @@ extern "C" void box_ieqcons(unsigned int m, double *result, unsigned int n, cons
  * @return
  */
 int box_check_intersection(const Box *box1, const Box *box2);
-
-/**
- * Compare two boxes.
- *
- * subdiv denotes subdivision. It is 64 bit integer value. The elder bit marks
- * the number of subdivision generations. 0 means first half of the box, 1 -
- * second half.
- *
- *
- * @param in_box
- * @param out_subdiv the code of subdivisions of outer box. The box struct
- * itself is not used because box itself may not exist when check is needed
- * (because of cache purposes).
- *
- * @return     +1 if in_box lies actually inside the out_box;
- *              0 if in_box equals out_box;
- *             -1 if in_box lies outside of the out_box;
- *
- */
-int box_is_in(const Box *in_box, uint64_t out_subdiv);
 
 #endif

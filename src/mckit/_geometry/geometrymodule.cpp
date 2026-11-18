@@ -234,7 +234,7 @@ static PyObject *boxobj_generate_random_points(BoxObject *self, PyObject *npts)
     if (points == NULL)
         return NULL;
 
-    box_generate_random_points(&self->box, n, (double *)PyArray_DATA((const PyArrayObject *)points));
+    self->box.generate_random_points(n, (double *)PyArray_DATA((const PyArrayObject *)points));
     return points;
 }
 
@@ -254,8 +254,8 @@ static PyObject *boxobj_test_points(BoxObject *self, PyObject *points)
         return NULL;
     }
 
-    box_test_points(&self->box, npts, (double *)PyArray_DATA((const PyArrayObject *)pts),
-                    (int *)PyArray_DATA((const PyArrayObject *)result));
+    self->box.test_points(npts, (double *)PyArray_DATA((const PyArrayObject *)pts),
+                          (int *)PyArray_DATA((const PyArrayObject *)result));
     Py_DECREF(pts);
     return result;
 }
@@ -311,7 +311,7 @@ static PyObject *boxobj_split(BoxObject *self, PyObject *args, PyObject *kwds)
         Py_XDECREF(box2);
         return NULL;
     }
-    auto [first, second] = box_split(self->box, direct, ratio);
+    auto [first, second] = self->box.split(direct, ratio);
     new (&box1->box) Box(std::move(first));
     new (&box2->box) Box(std::move(second));
     return Py_BuildValue("(OO)", box1, box2);
