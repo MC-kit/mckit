@@ -166,13 +166,7 @@ class Shape(_Shape):
         if self.opc == "S":
             words.append(f"{cast(Surface, self.args[0]).name()}")
         elif self.opc == "C":
-            sub_obj = self.args[0]
-            if isinstance(sub_obj, Surface):
-                words.append(f"-{sub_obj.name()}")
-            else:
-                raise TypeError()
-            # elif isinstance(sub_obj, Body):
-            #     words.append(f"#{cast(Body, sub_obj).name()}")
+            words.append(f"-{cast(Surface, self.args[0]).name()}")
         elif self.opc == "E":
             words.append("EMPTY_SET")
         elif self.opc == "R":
