@@ -9,13 +9,12 @@ from typing import TYPE_CHECKING, Any
 from abc import abstractmethod
 from collections.abc import Callable
 
-# noinspection PyPackageRequirements
 import numpy as np
 
 import mckit
 
 
-# noinspection PyUnresolvedReferences,PyPackageRequirements
+# noinspection PyUnresolvedReferences
 from mckit.geometry import BOX as _BOX
 from mckit.geometry import EX, EY, EZ, ORIGIN
 from mckit.geometry import RCC as _RCC
@@ -55,7 +54,6 @@ SURFACE_SLOTS = (*CARD_SLOTS, "_transformation", "_modifier")
 so the surface classes shadow the surface-level attributes with their own slots.
 """
 
-# noinspection PyUnresolvedReferences
 __all__ = [
     "BOX",
     "EX",
