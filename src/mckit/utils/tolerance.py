@@ -17,14 +17,14 @@ from numpy import ndarray
 from mckit.constants import FLOAT_TOLERANCE
 
 
-class MaybeClose(ABC):
+class MaybeClose:
     """Interface to be implemented by objects supporting the "closeness" estimation."""
 
     __slots__ = ()
 
-    @abstractmethod
     def is_close_to(self, other: Any, estimator: EstimatorType) -> bool:
         """Objects can be estimated as close with some estimator."""
+        raise NotImplementedError
 
 
 ComparableType = Iterable | ndarray | float | int | MaybeClose | None

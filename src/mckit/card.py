@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, override
 
-from abc import ABC, abstractmethod
 from collections.abc import Callable
 
 from mckit.utils.named import Name
@@ -29,7 +28,7 @@ so the derived classes shadow the card-level attributes with their own slots.
 """
 
 
-class Card(ABC):
+class Card:
     """Features, common for all cards.
 
     NOTE: `Card` must not declare `__slots__` with data entries.
@@ -138,9 +137,9 @@ class Card(ABC):
         self.drop_original()
         return self
 
-    @abstractmethod
     def mcnp_words(self, pretty=False) -> list[str]:
         """Gets a list of card words."""
+        raise NotImplementedError
 
     def mcnp_repr(self, pretty: bool = False) -> str:
         """Get string representation of the card.
