@@ -84,7 +84,6 @@ export JUST_LOG := log
         find src/mckit -type f -name "$f" -exec rm -f {} +
     done
     # pixi clean
-    coverage erase
     #pyreverse files
     find . -type f -name "*.puml" -delete
 
