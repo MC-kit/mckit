@@ -13,17 +13,14 @@
 #include "stats.h"
 #include "surface.h"
 
-#define BOX_INSIDE_SHAPE +1
-#define BOX_CAN_INTERSECT_SHAPE 0
-#define BOX_OUTSIDE_SHAPE -1
-#define COLLECT_STAT 1
+constexpr int BOX_INSIDE_SHAPE = +1;
+constexpr int BOX_CAN_INTERSECT_SHAPE = 0;
+constexpr int BOX_OUTSIDE_SHAPE = -1;
 
-#define SHAPE_SUCCESS 0
-#define SHAPE_FAILURE -1
-
-#define invert_opc(opc) ((opc + 3) % 6)
-
-typedef struct Shape Shape;
+constexpr int invert_opc(int opc)
+{
+    return (opc + 3) % 6;
+}
 
 enum Operation
 {
@@ -52,6 +49,59 @@ struct Shape
 
     ~Shape();
 
+    /// Tests box location with respect to the shape.
+    ///
+    /// @return BOX_INSIDE_SHAPE | BOX_CAN_INTERSECT_SHAPE | BOX_OUTSIDE_SHAPE
+    int test_box(const Box &box, char collect, int *zero_surfaces);
+
+    /// Tests box location with respect to a Shape.
+    ///
+    /// It tries to find out if the box really intersects the shape with desired
+    /// accuracy.
+    ///
+    /// @return BOX_INSIDE_SHAPE | BOX_CAN_INTERSECT_SHAPE | BOX_OUTSIDE_SHAPE
+    int ultimate_test_box(const Box &box, double min_vol, char collect);
+
+    /// Tests whether points belong to this shape.
+    void test_points(size_t npts, const double *points, char *result) const;
+
+    /// Gets bounding box, that bounds the shape.
+    ///
+    /// @param box INOUT: Start box. It is modified to obtain bounding box.
+    /// @param tol Absolute tolerance. When change of box dimensions become
+    ///            smaller than tol the process of box reduction finishes.
+    void bounding_box(Box &box, double tol);
+
+    /// Gets volume of the shape.
+    ///
+    /// @param box Box from which the process of volume finding starts.
+    /// @param min_vol Minimum volume - when volume of the box become smaller
+    ///                than min_vol the process of box splitting finishes.
+    double volume(const Box &box, double min_vol);
+
+    /// Gets shape's contour.
+    ///
+    /// @param box Box, where contour is needed.
+    /// @param min_vol Size of volume to be considered as point.
+    /// @param buffer Buffer, where points are put.
+    size_t contour(const Box &box, double min_vol, double *buffer);
+
+    /// Resets collected statistics.
+    void reset_stat();
+
+    /// Resets cache of shape and all objects involved.
+    void reset_cache();
+
+    /// Collects statistics about shapes.
+    ///
+    /// @param box Global box, where statistics is collected.
+    /// @param min_vol minimal volume, when splitting process stops.
+    void collect_statistics(const Box &box, double min_vol);
+
+    /// Gets statistics table as a row-major char matrix
+    /// with `nrows` rows and `ncols` columns.
+    std::vector<char> get_stat_table(size_t &nrows, size_t &ncols) const;
+
     char opc;    ///< Code of operation applied to arguments (see enum Operation)
     size_t alen; ///< Length of arguments
     union {
@@ -62,77 +112,10 @@ struct Shape
     uint64_t last_box;   ///< Subdivision code of last tested box
     int last_box_result; ///< Result of last test_box call.
     StatsMap *stats;     ///< Statistics about argument results.
+
+  private:
+    /// Collects pointers to surfaces, which were tested at the given subdivision.
+    int set_zero_surface_pointers(int n, Surface **zs, uint64_t subdiv) const;
 };
-
-/// Tests box location with respect to the shape.
-///
-/// @return BOX_INSIDE_SHAPE | BOX_CAN_INTERSECT_SHAPE | BOX_OUTSIDE_SHAPE
-int shape_test_box(Shape *shape,      ///< Shape to test.
-                   const Box *box,    ///< Box to test.
-                   char collect,      ///< Collect statistics about results.
-                   int *zero_surfaces ///< The number of surfaces that was tested to be zero.
-);
-
-/// Tests box location with respect to a Shape.
-///
-/// It tries to find out if the box really intersects the shape with desired
-/// accuracy.
-///
-/// @return BOX_INSIDE_SHAPE | BOX_CAN_INTERSECT_SHAPE | BOX_OUTSIDE_SHAPE
-int shape_ultimate_test_box(Shape *shape,   ///< Pointer to shape
-                            const Box *box, ///< box
-                            double min_vol, ///< minimal volume until which splitting process goes.
-                            char collect    ///< Whether to collect statistics about results.
-);
-
-/// Tests whether points belong to this shape.
-///
-/// @return SHAPE_SUCCESS
-int shape_test_points(const Shape *shape,   ///< test shape
-                      size_t npts,          ///< the number of points
-                      const double *points, ///< array of points - NDIM * npts
-                      char *result          ///< Result - +1 if point belongs to shape,
-                                            ///< -1 otherwise. It must have length npts.
-);
-
-/// Gets bounding box, that bounds the shape.
-int shape_bounding_box(Shape *shape, ///< Shape to de bound
-                       Box *box,     ///< INOUT: Start box. It is modified to obtain bounding box.
-                       double tol    ///< Absolute tolerance. When change of box dimensions become
-                                     ///< smaller than tol the process of box reduction finishes.
-);
-
-/// Gets volume of the shape
-double shape_volume(Shape *shape,   ///< Shape
-                    const Box *box, ///< Box from which the process of volume finding starts
-                    double min_vol  ///< Minimum volume - when volume of the box become smaller
-                                    ///< than min_vol the process of box splitting finishes.
-);
-
-/// Gets shape's contour
-size_t shape_contour(Shape *shape,   ///< Shape
-                     const Box *box, ///< Box, where contour is needed.
-                     double min_vol, ///< Size of volume to be considered as point
-                     double *buffer  ///< Buffer, where points are put.
-);
-
-/// Resets collected statistics or initializes statistics storage
-void shape_reset_stat(Shape *shape);
-
-/// Resets cache of shape and all objects involved.
-void shape_reset_cache(Shape *shape);
-
-/// Collects statistics about shapes.
-void shape_collect_statistics(Shape *shape,   ///< Shape
-                              const Box *box, ///< Global box, where statistics is collected
-                              double min_vol  ///< minimal volume, when splitting process stops.
-);
-
-/// Gets statistics table as a row-major char matrix
-/// with `*nrows` rows and `*ncols` columns.
-std::vector<char> shape_get_stat_table(Shape *shape,  ///< Shape
-                                       size_t *nrows, ///< number of rows
-                                       size_t *ncols  ///< number of columns
-);
 
 #endif // MCKIT_SHAPE_H

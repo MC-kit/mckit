@@ -1268,8 +1268,8 @@ static PyObject *shapeobj_test_box(ShapeObject *self, PyObject *args, PyObject *
         return NULL;
     }
 
-    shape_reset_cache(&self->shape);
-    int result = shape_test_box(&self->shape, &((BoxObject *)box)->box, 0, NULL);
+    self->shape.reset_cache();
+    int result = self->shape.test_box(((BoxObject *)box)->box, 0, NULL);
     return Py_BuildValue("i", result);
 }
 
@@ -1294,8 +1294,8 @@ static PyObject *shapeobj_ultimate_test_box(ShapeObject *self, PyObject *args, P
         return NULL;
     }
 
-    shape_reset_cache(&self->shape);
-    int result = shape_ultimate_test_box(&self->shape, &((BoxObject *)box)->box, min_vol, collect);
+    self->shape.reset_cache();
+    int result = self->shape.ultimate_test_box(((BoxObject *)box)->box, min_vol, collect);
     return Py_BuildValue("i", result);
 }
 
@@ -1315,8 +1315,8 @@ static PyObject *shapeobj_test_points(ShapeObject *self, PyObject *points)
         return NULL;
     }
 
-    shape_test_points(&self->shape, npts, (double *)PyArray_DATA((const PyArrayObject *)pts),
-                      (char *)PyArray_DATA((const PyArrayObject *)result));
+    self->shape.test_points(npts, (double *)PyArray_DATA((const PyArrayObject *)pts),
+                            (char *)PyArray_DATA((const PyArrayObject *)result));
     Py_DECREF(pts);
     return result;
 }
@@ -1325,7 +1325,6 @@ static PyObject *shapeobj_bounding_box(ShapeObject *self, PyObject *args, PyObje
 {
     PyObject *start_box = NULL;
     double tol = 100.0;
-    int status = SHAPE_FAILURE;
 
     static char *kwlist[] = {const_cast<char *>("tol"), const_cast<char *>("box"), NULL};
 
@@ -1347,8 +1346,8 @@ static PyObject *shapeobj_bounding_box(ShapeObject *self, PyObject *args, PyObje
 
     Py_BEGIN_ALLOW_THREADS
 
-        shape_reset_cache(&self->shape);
-    status = shape_bounding_box(&self->shape, &box->box, tol);
+        self->shape.reset_cache();
+    self->shape.bounding_box(box->box, tol);
 
     // In multithreading mode caller should create deepcopy of self object
     // TODO dvp: revise architecture to have Shape, Surface and Box object immutable
@@ -1356,12 +1355,7 @@ static PyObject *shapeobj_bounding_box(ShapeObject *self, PyObject *args, PyObje
 
     Py_END_ALLOW_THREADS
 
-        if (status == SHAPE_SUCCESS) return (PyObject *)box;
-    else
-    {
-        Py_DECREF(box);
-        return NULL;
-    }
+        return (PyObject *)box;
 }
 
 static PyObject *shapeobj_volume(ShapeObject *self, PyObject *args, PyObject *kwds)
@@ -1389,8 +1383,8 @@ static PyObject *shapeobj_volume(ShapeObject *self, PyObject *args, PyObject *kw
 
     Py_BEGIN_ALLOW_THREADS
 
-        shape_reset_cache(&self->shape);
-    vol = shape_volume(&self->shape, &((BoxObject *)box)->box, min_vol);
+        self->shape.reset_cache();
+    vol = self->shape.volume(((BoxObject *)box)->box, min_vol);
 
     Py_END_ALLOW_THREADS
 
@@ -1440,7 +1434,7 @@ shapeobj_contour(ShapeObject * self, PyObject * args, PyObject * kwds)
         &box,
         (double *) PyArray_DATA(origin), ex_d, ey_d, ez_d, width, height, delta
     );
-    // size_t ntps = shape_contour(&self->shape, &box, delta * delta * delta, )
+    // size_t ntps = self->shape.contour(box, delta * delta * delta, )
 
 }
 */
@@ -1458,15 +1452,15 @@ static PyObject *shapeobj_collect_statistics(ShapeObject *self, PyObject *args)
         return NULL;
     }
 
-    shape_reset_cache(&self->shape);
-    shape_collect_statistics(&self->shape, &((BoxObject *)box)->box, min_vol);
+    self->shape.reset_cache();
+    self->shape.collect_statistics(((BoxObject *)box)->box, min_vol);
     Py_RETURN_NONE;
 }
 
 static PyObject *shapeobj_get_stat_table(ShapeObject *self)
 {
     size_t nrows = 0, ncols = 0;
-    const std::vector<char> table_data = shape_get_stat_table(&self->shape, &nrows, &ncols);
+    const std::vector<char> table_data = self->shape.get_stat_table(nrows, ncols);
     // Copy the data into a numpy owned array, so the table buffer can be
     // released right away and the array stays valid on further statistics
     // updates.
