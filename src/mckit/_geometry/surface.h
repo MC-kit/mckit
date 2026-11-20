@@ -32,62 +32,83 @@ enum SurfType
     MBOX
 };
 
-/// surface common data
+/// Base class of all surfaces.
+///
+/// The concrete surface type is still available as `type`, because some
+/// algorithms (box tests, caching) need cheap type checks. The geometry
+/// function itself is virtual, so algorithms do not need a type switch.
 struct Surface
 {
-    explicit Surface(char type) : type(type), last_box(0), last_box_result(0)
+    explicit Surface(SurfType type) : type(type)
     {
     }
 
-    char type;           ///< surface type
+    Surface(const Surface &) = delete;
+    Surface &operator=(const Surface &) = delete;
+
+    virtual ~Surface() = default;
+
+    /// Deviation of the point x from the surface.
+    ///
+    /// @param n Space dimension (must be NDIM).
+    /// @param x Point to be checked.
+    /// @param grad Gradient - calculated if not nullptr.
+    virtual double func(unsigned int n, const double *x, double *grad) const = 0;
+
+    SurfType type;       ///< surface type
     uint64_t last_box;   ///< subdivision code of last tested box
     int last_box_result; ///< last test_box result
 };
 
-struct Plane
+struct Plane : Surface
 {
     Plane(std::span<const double, NDIM> norm, double offset);
 
-    Surface base;
+    double func(unsigned int n, const double *x, double *grad) const override;
+
     std::array<double, NDIM> norm;
     double offset;
 };
 
-struct Sphere
+struct Sphere : Surface
 {
     Sphere(std::span<const double, NDIM> center, double radius);
 
-    Surface base;
+    double func(unsigned int n, const double *x, double *grad) const override;
+
     std::array<double, NDIM> center;
     double radius;
 };
 
-struct Cylinder
+struct Cylinder : Surface
 {
     Cylinder(std::span<const double, NDIM> point, std::span<const double, NDIM> axis, double radius);
 
-    Surface base;
+    double func(unsigned int n, const double *x, double *grad) const override;
+
     std::array<double, NDIM> point;
     std::array<double, NDIM> axis;
     double radius;
 };
 
-struct Cone
+struct Cone : Surface
 {
     Cone(std::span<const double, NDIM> apex, std::span<const double, NDIM> axis, double ta, int sheet);
 
-    Surface base;
+    double func(unsigned int n, const double *x, double *grad) const override;
+
     std::array<double, NDIM> apex;
     std::array<double, NDIM> axis;
     double ta;
     int sheet;
 };
 
-struct Torus
+struct Torus : Surface
 {
     Torus(std::span<const double, NDIM> center, std::span<const double, NDIM> axis, double radius, double a, double b);
 
-    Surface base;
+    double func(unsigned int n, const double *x, double *grad) const override;
+
     std::array<double, NDIM> center;
     std::array<double, NDIM> axis;
     double radius;
@@ -97,32 +118,37 @@ struct Torus
     std::array<std::array<double, NDIM>, 2> specpts; ///< Special points, if present.
 };
 
-struct GQuadratic
+struct GQuadratic : Surface
 {
     GQuadratic(std::span<const double, NDIM * NDIM> m, std::span<const double, NDIM> v, double k, double factor);
 
-    Surface base;
+    double func(unsigned int n, const double *x, double *grad) const override;
+
     std::array<double, NDIM * NDIM> m;
     std::array<double, NDIM> v;
     double k;
     double factor;
 };
 
-struct RCC
+/// Right circular cylinder macrobody: a cylinder clipped by two planes.
+struct RCC : Surface
 {
     RCC(Cylinder *cyl, Plane *top, Plane *bot);
 
-    Surface base;
+    double func(unsigned int n, const double *x, double *grad) const override;
+
     Cylinder *cyl;
     Plane *top;
     Plane *bot;
 };
 
-struct BOX
+/// Box macrobody: an intersection of six planes.
+struct BOX : Surface
 {
     explicit BOX(std::span<Plane *, BOX_PLANE_NUM> planes);
 
-    Surface base;
+    double func(unsigned int n, const double *x, double *grad) const override;
+
     Plane *planes[BOX_PLANE_NUM];
 };
 

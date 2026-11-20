@@ -7,7 +7,6 @@ from typing import Any, cast
 import itertools
 import math
 
-from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 
 import numpy as np

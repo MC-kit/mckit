@@ -106,24 +106,10 @@ format(geometry_objs src/mckit/_geometry)
 # when ctest testing coverage reaches at least 80% include(ClangTidy)
 # AddClangTidy(geometry_objs)
 
-python_add_library(
-    geometry
-    MODULE
-    src/mckit/_geometry/geometrymodule.cpp
-    WITH_SOABI
-)
-# target_include_directories( geometry PRIVATE
-# ${CMAKE_CURRENT_SOURCE_DIR}/_geometry/mckit/_geometry
-# ${Python_NumPy_INCLUDE_DIRS} )
+nanobind_add_module(geometry src/mckit/_geometry/geometrymodule.cpp)
 target_link_libraries(geometry PUBLIC geometry_objs)
-if(WIN32)
-    target_link_libraries(geometry PUBLIC Python::Module)
-else()
+if(NOT WIN32)
     target_link_libraries(geometry PUBLIC pthread m dl)
-endif()
-# Обработка специфичных флагов для abi3t (free-threaded)
-if(Py_TARGET_ABI3T)
-    target_compile_definitions(geometry PRIVATE Py_TARGET_ABI3T=0x030f0000)
 endif()
 
 # fix rpath

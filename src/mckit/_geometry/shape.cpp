@@ -6,25 +6,11 @@
 #include "surface.h"
 #include <algorithm>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 namespace
 {
-bool is_final(char opc)
-{
-    return opc == COMPLEMENT || opc == IDENTITY;
-}
-
-bool is_void(char opc)
-{
-    return opc == EMPTY || opc == UNIVERSE;
-}
-
-bool is_composite(char opc)
-{
-    return opc == UNION || opc == INTERSECTION;
-}
-
 /// Applies the AND operation to strided result codes.
 char geom_intersection(const char *args, size_t n, size_t inc)
 {
@@ -54,49 +40,52 @@ char geom_union(const char *args, size_t n, size_t inc)
 }
 } // namespace
 
-/**
-  Creates a final shape over a surface.
-
-  @param opc   Operation code (complement or identity)
-  @param surface Surface to apply the operation to
- */
-Shape::Shape(char opc, Surface *surface)
-    : opc(opc), alen(1), args{}, last_box(0), last_box_result(0), stats(new StatsMap())
+int opc_from_char(char opc)
 {
-    args.surface = surface;
+    switch (opc)
+    {
+    case 'I':
+        return INTERSECTION;
+    case 'C':
+        return COMPLEMENT;
+    case 'E':
+        return EMPTY;
+    case 'U':
+        return UNION;
+    case 'S':
+        return IDENTITY;
+    case 'R':
+        return UNIVERSE;
+    default:
+        return -1;
+    }
 }
 
-/**
-  Creates a void shape.
-
-  @param opc   Operation code (empty or universe)
- */
-Shape::Shape(char opc) : opc(opc), alen(0), args{}, last_box(0), last_box_result(0), stats(new StatsMap())
+const char *opc_name(int opc)
 {
-    args.surface = nullptr;
+    switch (opc)
+    {
+    case INTERSECTION:
+        return "I";
+    case COMPLEMENT:
+        return "C";
+    case EMPTY:
+        return "E";
+    case UNION:
+        return "U";
+    case IDENTITY:
+        return "S";
+    case UNIVERSE:
+        return "R";
+    default:
+        return "";
+    }
 }
 
-/**
-  Creates a composite shape.
+// --- FinalShape ------------------------------------------------------------
 
-  @param opc    Operation code (union or intersection)
-  @param shapes Shapes to combine
- */
-Shape::Shape(char opc, std::span<Shape *> shapes)
-    : opc(opc), alen(shapes.size()), args{}, last_box(0), last_box_result(0), stats(nullptr)
+FinalShape::FinalShape(int opc, Surface *surface) : Shape(opc), surf(surface)
 {
-    std::unique_ptr<StatsMap> stats_holder(new StatsMap());
-    args.shapes = new Shape *[alen];
-    std::copy(shapes.begin(), shapes.end(), args.shapes);
-    stats = stats_holder.release();
-}
-
-Shape::~Shape()
-{
-    if (is_composite(opc))
-        delete[] args.shapes;
-    delete stats;
-    stats = nullptr;
 }
 
 /**
@@ -107,17 +96,155 @@ Shape::~Shape()
  * @param zero_surfaces The number of surfaces that was tested to be zero.
  * @return  BOX_INSIDE_SHAPE | BOX_CAN_INTERSECT_SHAPE | BOX_OUTSIDE_SHAPE
  */
+int FinalShape::do_test_box(const Box &box, char collect, int *zero_surfaces)
+{
+    char already = (box.subdiv == surf->last_box);
+
+    int result = surface_test_box(surf, &box);
+
+    if (opc_ == COMPLEMENT)
+        result = -result;
+
+    if (collect > 0 && result == 0 && !already)
+        ++(*zero_surfaces);
+
+    return result;
+}
+
+void FinalShape::do_test_points(size_t npts, const double *points, char *result) const
+{
+    surface_test_points(surf, npts, points, result);
+    if (opc_ == COMPLEMENT)
+        for (size_t i = 0; i < npts; ++i)
+            result[i] = -result[i];
+}
+
+void FinalShape::do_reset_cache()
+{
+    surf->last_box = 0;
+}
+
+int FinalShape::set_zero_surface_pointers(int n, Surface **zs, uint64_t subdiv) const
+{
+    if (surf->last_box == subdiv && surf->last_box_result == 0)
+    {
+        bool already = false;
+        for (int i = 0; i < n; ++i)
+        {
+            if (zs[i] == surf)
+            {
+                already = true;
+                break;
+            }
+        }
+        if (!already)
+            zs[n++] = surf;
+    }
+    return n;
+}
+
+// --- VoidShape -------------------------------------------------------------
+
+VoidShape::VoidShape(int opc) : Shape(opc)
+{
+}
+
+int VoidShape::do_test_box(const Box & /*box*/, char /*collect*/, int * /*zero_surfaces*/)
+{
+    return opc_ == UNIVERSE ? BOX_INSIDE_SHAPE : BOX_OUTSIDE_SHAPE;
+}
+
+void VoidShape::do_test_points(size_t npts, const double * /*points*/, char *result) const
+{
+    std::fill(result, result + npts, static_cast<char>(opc_ == UNIVERSE ? 1 : -1));
+}
+
+// --- CompositeShape --------------------------------------------------------
+
+CompositeShape::CompositeShape(int opc, std::span<Shape *const> args) : Shape(opc), args(args.begin(), args.end())
+{
+}
+
+int CompositeShape::do_test_box(const Box &box, char collect, int *zero_surfaces)
+{
+    std::vector<char> sub(args.size());
+
+    for (size_t i = 0; i < args.size(); ++i)
+    {
+        sub[i] = args[i]->test_box(box, collect, zero_surfaces);
+    }
+
+    int result =
+        opc_ == INTERSECTION ? geom_intersection(sub.data(), sub.size(), 1) : geom_union(sub.data(), sub.size(), 1);
+
+    // TODO: Review statistics collection
+    if (collect != 0 && result != 0)
+    {
+        // On a duplicate key the first recorded volume is kept -
+        // the new entry is discarded, as the former rbtree did.
+        stat_entries.entries.emplace(std::move(sub), box.volume);
+    }
+    return result;
+}
+
+void CompositeShape::do_test_points(size_t npts, const double *points, char *result) const
+{
+    const size_t n = args.size();
+    std::vector<char> sub(n * npts);
+
+    for (size_t i = 0; i < n; ++i)
+    {
+        args[i]->test_points(npts, points, sub.data() + i * npts);
+    }
+
+    char (*op)(const char *arg, size_t n, size_t inc) = opc_ == INTERSECTION ? geom_intersection : geom_union;
+    for (size_t i = 0; i < npts; ++i)
+        result[i] = op(sub.data() + i, n * npts, npts);
+}
+
+void CompositeShape::do_reset_cache()
+{
+    for (Shape *arg : args)
+    {
+        arg->reset_cache();
+    }
+}
+
+void CompositeShape::do_reset_stat()
+{
+    stat_entries.entries.clear();
+    if (!args.empty())
+    {
+        for (Shape *arg : args)
+        {
+            if (arg != nullptr)
+                arg->reset_stat();
+        }
+    }
+}
+
+int CompositeShape::set_zero_surface_pointers(int n, Surface **zs, uint64_t subdiv) const
+{
+    for (const Shape *arg : args)
+    {
+        n = arg->set_zero_surface_pointers(n, zs, subdiv);
+    }
+    return n;
+}
+
+// --- Common algorithms -----------------------------------------------------
+
 int Shape::test_box(const Box &box, char collect, int *zero_surfaces)
 {
-    if (last_box != 0)
+    if (last_box_ != 0)
     {
-        int bc = box.is_in(last_box);
+        int bc = box.is_in(last_box_);
         // if it is the box already tested (bc == 0) then returns cached result;
         // if it is inner box - then returns cached result only if it is not 0.
         // For inner box result may be different.
 
         // It is inner box and test result is not 0: -1 or +1 i.e. won't change.
-        char use_cache = (bc > 0 && last_box_result != BOX_CAN_INTERSECT_SHAPE);
+        char use_cache = (bc > 0 && last_box_result_ != BOX_CAN_INTERSECT_SHAPE);
 
         // If collect < 0 - it means that we try to test different
         // combinations of the remaining surfaces. In this case caching is not
@@ -125,93 +252,18 @@ int Shape::test_box(const Box &box, char collect, int *zero_surfaces)
         use_cache = use_cache || (bc == 0 && collect >= 0);
 
         if (use_cache)
-            return last_box_result;
+            return last_box_result_;
     }
 
-    int result;
+    int result = do_test_box(box, collect, zero_surfaces);
 
-    if (is_final(opc))
-    {
-        char already = (box.subdiv == args.surface->last_box);
-
-        result = surface_test_box(args.surface, &box);
-
-        if (opc == COMPLEMENT)
-            result = -result;
-
-        if (collect > 0 && result == 0 && !already)
-            ++(*zero_surfaces);
-    }
-    else if (opc == UNIVERSE)
-    {
-        result = BOX_INSIDE_SHAPE;
-    }
-    else if (opc == EMPTY)
-    {
-        result = BOX_OUTSIDE_SHAPE;
-    }
-    else
-    {
-        std::vector<char> sub(alen);
-
-        for (size_t i = 0; i < alen; ++i)
-        {
-            sub[i] = args.shapes[i]->test_box(box, collect, zero_surfaces);
-        }
-
-        if (opc == INTERSECTION)
-        {
-            result = geom_intersection(sub.data(), alen, 1);
-        }
-        else
-        {
-            result = geom_union(sub.data(), alen, 1);
-        }
-
-        // TODO: Review statistics collection
-        if (collect != 0 && result != 0)
-        {
-            // On a duplicate key the first recorded volume is kept -
-            // the new entry is discarded, as the former rbtree did.
-            stats->entries.emplace(sub, box.volume);
-        }
-    }
     // Cache test result;
     if (collect >= 0 && !(box.subdiv & HIGHEST_BIT))
     {
-        last_box = box.subdiv;
-        last_box_result = result;
+        last_box_ = box.subdiv;
+        last_box_result_ = result;
     }
     return result;
-}
-
-int Shape::set_zero_surface_pointers(int n, Surface **zs, uint64_t subdiv) const
-{
-    if (is_final(opc))
-    {
-        if (args.surface->last_box == subdiv && args.surface->last_box_result == 0)
-        {
-            bool already = false;
-            for (int i = 0; i < n; ++i)
-            {
-                if (zs[i] == args.surface)
-                {
-                    already = true;
-                    break;
-                }
-            }
-            if (!already)
-                zs[n++] = args.surface;
-        }
-    }
-    else if (is_composite(opc))
-    {
-        for (size_t i = 0; i < alen; ++i)
-        {
-            n = args.shapes[i]->set_zero_surface_pointers(n, zs, subdiv);
-        }
-    }
-    return n;
 }
 
 // Tests box location with respect to the shape. It tries to find out
@@ -263,31 +315,7 @@ int Shape::ultimate_test_box(const Box &box, double min_vol, char collect)
 // Tests whether points belong to this shape.
 void Shape::test_points(size_t npts, const double *points, char *result) const
 {
-    if (is_final(opc))
-    {
-        surface_test_points(args.surface, npts, points, result);
-        if (opc == COMPLEMENT)
-            for (size_t i = 0; i < npts; ++i)
-                result[i] = -result[i];
-    }
-    else if (is_void(opc))
-    {
-        std::fill(result, result + npts, static_cast<char>(opc == UNIVERSE ? 1 : -1));
-    }
-    else
-    {
-        const size_t n = alen;
-        std::vector<char> sub(n * npts);
-
-        for (size_t i = 0; i < n; ++i)
-        {
-            args.shapes[i]->test_points(npts, points, sub.data() + i * npts);
-        }
-
-        char (*op)(const char *arg, size_t n, size_t inc) = opc == INTERSECTION ? geom_intersection : geom_union;
-        for (size_t i = 0; i < npts; ++i)
-            result[i] = op(sub.data() + i, n * npts, npts);
-    }
+    do_test_points(npts, points, result);
 }
 
 /**
@@ -331,12 +359,12 @@ void Shape::bounding_box(Box &box, double tol)
 }
 
 /**
- Compute volume of a shape.
+  Compute volume of a shape.
 
- @param box Box from which the process of volume finding starts
- @param min_vol Minimum volume - when volume of the box become smaller than
- min_vol the process of box splitting finishes.
- @return computed volume
+  @param box Box from which the process of volume finding starts
+  @param min_vol Minimum volume - when volume of the box become smaller than
+  min_vol the process of box splitting finishes.
+  @return computed volume
  */
 double Shape::volume(const Box &box, double min_vol)
 {
@@ -359,23 +387,13 @@ double Shape::volume(const Box &box, double min_vol)
 }
 
 /**
- Resets cache of shape and all objects involved: last_box in a surface or
- underlying shapes.
+  Resets cache of shape and all objects involved: last_box in a surface or
+  underlying shapes.
  */
 void Shape::reset_cache()
 {
-    last_box = 0;
-    if (is_final(opc))
-    {
-        args.surface->last_box = 0;
-    }
-    else if (is_composite(opc))
-    {
-        for (size_t i = 0; i < alen; ++i)
-        {
-            args.shapes[i]->reset_cache();
-        }
-    }
+    last_box_ = 0;
+    do_reset_cache();
 }
 
 /**
@@ -383,17 +401,8 @@ void Shape::reset_cache()
  */
 void Shape::reset_stat()
 {
-    if (stats != nullptr)
-        stats->entries.clear();
-    last_box = 0;
-    if (is_composite(opc) && args.shapes != nullptr)
-    {
-        for (size_t i = 0; i < alen; ++i)
-        {
-            if (args.shapes[i] != nullptr)
-                args.shapes[i]->reset_stat();
-        }
-    }
+    last_box_ = 0;
+    do_reset_stat();
 }
 
 // Gets shape's contour. Returns the number of points in the contour.
@@ -424,16 +433,77 @@ void Shape::collect_statistics(const Box &box, double min_vol)
 // Gets statistics table
 std::vector<char> Shape::get_stat_table(size_t &nrows, size_t &ncols) const
 {
-    nrows = stats->entries.size();
-    ncols = alen;
+    const StatsMap *stat = stats();
+    ncols = alen();
+    nrows = stat == nullptr ? 0 : stat->entries.size();
     std::vector<char> table(nrows * ncols, '\0');
     size_t i = 0;
-    for (const auto &entry : stats->entries)
+    if (stat != nullptr)
     {
-        const std::vector<char> &key = entry.first;
-        for (size_t j = 0; j < ncols; ++j)
-            table[i * ncols + j] = key[j];
-        ++i;
+        for (const auto &entry : stat->entries)
+        {
+            const std::vector<char> &key = entry.first;
+            for (size_t j = 0; j < ncols; ++j)
+                table[i * ncols + j] = key[j];
+            ++i;
+        }
     }
     return table;
+}
+
+// --- Factory ---------------------------------------------------------------
+
+std::unique_ptr<Shape> make_shape(int opc, Surface *surface)
+{
+    switch (opc)
+    {
+    case IDENTITY:
+    case COMPLEMENT:
+        if (surface == nullptr)
+            throw std::invalid_argument("Surface instance is expected.");
+        return std::make_unique<FinalShape>(opc, surface);
+    default:
+        throw std::invalid_argument("A surface can only define an S or C shape.");
+    }
+}
+
+std::unique_ptr<Shape> make_shape(int opc, std::span<Shape *const> args)
+{
+    switch (opc)
+    {
+    case EMPTY:
+    case UNIVERSE:
+        if (!args.empty())
+            throw std::invalid_argument("No arguments are expected.");
+        return std::make_unique<VoidShape>(opc);
+
+    case IDENTITY:
+    case COMPLEMENT:
+        if (args.size() != 1)
+            throw std::invalid_argument("Only one operand is expected.");
+        if (args[0] == nullptr)
+            throw std::invalid_argument("Shape instance is expected.");
+        return std::make_unique<FinalShape>(opc, args[0]->surface());
+
+    case INTERSECTION:
+    case UNION:
+        if (args.size() < 2)
+            throw std::invalid_argument("More than one shape object is expected");
+        for (Shape *arg : args)
+        {
+            if (arg == nullptr)
+                throw std::invalid_argument("Shape instance is expected.");
+        }
+        return std::make_unique<CompositeShape>(opc, args);
+
+    default:
+        throw std::invalid_argument("Unknown operation");
+    }
+}
+
+std::unique_ptr<Shape> make_shape(int opc)
+{
+    if (opc != EMPTY && opc != UNIVERSE)
+        throw std::invalid_argument("No arguments are expected.");
+    return std::make_unique<VoidShape>(opc);
 }

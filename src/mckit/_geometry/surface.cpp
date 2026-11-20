@@ -25,58 +25,52 @@ static double _max(double a, double b)
  */
 
 /// Calculates deviation of point x from the plane.
-double plane_func(unsigned int n,  // Space dimension (must be NDIM)
-                  const double *x, // Point to be checked
-                  double *grad,    // Gradient - calculated if not NULL
-                  void *f_data     // Surface data - parameters of the function.
-)
+double Plane::func(unsigned int n,     // Space dimension (must be NDIM)
+                   const double *x,    // Point to be checked
+                   double *grad) const // Gradient - calculated if not NULL
 {
-    Plane *data = (Plane *)f_data;
     if (grad != nullptr)
     {
-        vec_copy(data->norm, std::span<double, NDIM>(grad, NDIM));
+        vec_copy(norm, std::span<double, NDIM>(grad, NDIM));
     }
-    return vec_dot(std::span(x, NDIM), data->norm) + data->offset;
+    return vec_dot(std::span(x, NDIM), norm) + offset;
 }
 
 /// Calculates deviation of point x from the sphere.
-double sphere_func(unsigned int n, const double *x, double *grad, void *f_data)
+double Sphere::func(unsigned int n, const double *x, double *grad) const
 {
-    Sphere *data = (Sphere *)f_data;
     const std::span<const double, NDIM> x_span(x, NDIM);
     if (grad != nullptr)
     {
         std::span<double, NDIM> grad_span(grad, NDIM);
         vec_copy(x_span, grad_span);
-        vec_axpy(-1, data->center, grad_span);
+        vec_axpy(-1, center, grad_span);
         vec_scale(2, grad_span);
     }
     double delta[NDIM];
     vec_copy(x_span, delta);
-    vec_axpy(-1, data->center, delta);
-    return vec_dot(delta, delta) - pow(data->radius, 2);
+    vec_axpy(-1, center, delta);
+    return vec_dot(delta, delta) - pow(radius, 2);
 }
 
-double cylinder_func(unsigned int n, const double *x, double *grad, void *f_data)
+double Cylinder::func(unsigned int n, const double *x, double *grad) const
 {
-    Cylinder *data = (Cylinder *)f_data;
     double a[NDIM];
     vec_copy(std::span<const double, NDIM>(x, NDIM), a);
-    vec_axpy(-1, data->point, a);
-    double an = vec_dot(a, data->axis);
+    vec_axpy(-1, point, a);
+    double an = vec_dot(a, axis);
     if (grad != nullptr)
     {
         std::span<double, NDIM> grad_span(grad, NDIM);
         vec_copy(a, grad_span);
-        vec_axpy(-an, data->axis, grad_span);
+        vec_axpy(-an, axis, grad_span);
         vec_scale(2, grad_span);
     }
-    return vec_dot(a, a) - pow(an, 2) - pow(data->radius, 2);
+    return vec_dot(a, a) - pow(an, 2) - pow(radius, 2);
 }
 
-double RCC_func(unsigned int n, const double *x, double *grad, void *f_data)
+double RCC::func(unsigned int n, const double *x, double *grad) const
 {
-    RCC *data = (RCC *)f_data;
     double gcyl[NDIM];
     double gtop[NDIM];
     double gbot[NDIM];
@@ -86,15 +80,14 @@ double RCC_func(unsigned int n, const double *x, double *grad, void *f_data)
         gtop[i] = 0;
         gbot[i] = 0;
     }
-    double cyl_obj = cylinder_func(n, x, gcyl, data->cyl);
-    double top_obj = plane_func(n, x, gtop, data->top);
-    double bot_obj = plane_func(n, x, gbot, data->bot);
+    double cyl_obj = cyl->func(n, x, gcyl);
+    double top_obj = top->func(n, x, gtop);
+    double bot_obj = bot->func(n, x, gbot);
 
     double tot_wgt = fabs(top_obj + bot_obj);
     double top_wgt = fabs(top_obj) / tot_wgt;
     double bot_wgt = fabs(bot_obj) / tot_wgt;
 
-    double h = fabs(data->top->offset + data->bot->offset);
     if (grad != nullptr)
     {
         std::span grad_span(grad, NDIM);
@@ -105,9 +98,8 @@ double RCC_func(unsigned int n, const double *x, double *grad, void *f_data)
     return _max(cyl_obj, _max(top_obj, bot_obj));
 }
 
-double BOX_func(unsigned int n, const double *x, double *grad, void *f_data)
+double BOX::func(unsigned int n, const double *x, double *grad) const
 {
-    BOX *data = (BOX *)f_data;
     double gp[NDIM * BOX_PLANE_NUM];
     double result[BOX_PLANE_NUM];
     for (int i = 0; i < NDIM * BOX_PLANE_NUM; ++i)
@@ -116,7 +108,7 @@ double BOX_func(unsigned int n, const double *x, double *grad, void *f_data)
     int index = 0;
     for (int i = 0; i < BOX_PLANE_NUM; ++i)
     {
-        result[i] = plane_func(n, x, gp + i * NDIM, data->planes[i]);
+        result[i] = planes[i]->func(n, x, gp + i * NDIM);
         if (result[i] > result[index])
             index = i;
     }
@@ -129,40 +121,38 @@ double BOX_func(unsigned int n, const double *x, double *grad, void *f_data)
     return result[index];
 }
 
-double cone_func(unsigned int n, const double *x, double *grad, void *f_data)
+double Cone::func(unsigned int n, const double *x, double *grad) const
 {
-    Cone *data = (Cone *)f_data;
     double a[NDIM];
     vec_copy(std::span<const double, NDIM>(x, NDIM), a);
-    vec_axpy(-1, data->apex, a);
-    double an = vec_dot(a, data->axis);
-    if (data->sheet != 0 && data->sheet * an < 0)
+    vec_axpy(-1, apex, a);
+    double an = vec_dot(a, axis);
+    if (sheet != 0 && sheet * an < 0)
         an = 0;
     if (grad != nullptr)
     {
         std::span<double, NDIM> grad_span(grad, NDIM);
         vec_copy(a, grad_span);
-        vec_axpy(-an * (1 + data->ta), data->axis, grad_span);
+        vec_axpy(-an * (1 + ta), axis, grad_span);
         vec_scale(2, grad_span);
     }
-    return vec_dot(a, a) - pow(an, 2) * (1 + data->ta);
+    return vec_dot(a, a) - pow(an, 2) * (1 + ta);
 }
 
-double gq_func(unsigned int n, const double *x, double *grad, void *f_data)
+double GQuadratic::func(unsigned int n, const double *x, double *grad) const
 {
-    GQuadratic *data = (GQuadratic *)f_data;
     const std::span x_span(x, NDIM);
     if (grad != nullptr)
     {
         std::span<double, NDIM> grad_span(grad, NDIM);
-        vec_copy(data->v, grad_span);
-        mat_vec_add(2, data->m, x_span, grad_span);
-        vec_scale(data->factor, grad_span);
+        vec_copy(v, grad_span);
+        mat_vec_add(2, m, x_span, grad_span);
+        vec_scale(factor, grad_span);
     }
     double y[NDIM];
-    vec_copy(data->v, y);
-    mat_vec_add(1, data->m, x_span, y);
-    return (vec_dot(y, x_span) + data->k) * data->factor;
+    vec_copy(v, y);
+    mat_vec_add(1, m, x_span, y);
+    return (vec_dot(y, x_span) + k) * factor;
 }
 
 double clip_negative_values(double value)
@@ -170,28 +160,27 @@ double clip_negative_values(double value)
     return (value > 0.0) ? value : 0.0;
 }
 
-double torus_func(unsigned int n, const double *x, double *grad, void *f_data)
+double Torus::func(unsigned int n, const double *x, double *grad) const
 {
-    Torus *data = (Torus *)f_data;
     double p[NDIM];
     vec_copy(std::span<const double, NDIM>(x, NDIM), p);
-    vec_axpy(-1, data->center, p);
-    double pn = vec_dot(p, data->axis);
+    vec_axpy(-1, center, p);
+    double pn = vec_dot(p, axis);
     double pp = vec_dot(p, p);
     double sq = sqrt(clip_negative_values(pp - pow(pn, 2)));
     if (grad != nullptr)
     {
         double add = 0;
         if (sq > 1.e-100)
-            add = data->radius / sq;
+            add = radius / sq;
         std::span<double, NDIM> grad_span(grad, NDIM);
         vec_copy(p, grad_span);
-        vec_axpy(-pn, data->axis, grad_span);
-        vec_scale((1 - add) / pow(data->b, 2), grad_span);
-        vec_axpy(pn / pow(data->a, 2), data->axis, grad_span);
+        vec_axpy(-pn, axis, grad_span);
+        vec_scale((1 - add) / pow(b, 2), grad_span);
+        vec_axpy(pn / pow(a, 2), axis, grad_span);
         vec_scale(2, grad_span);
     }
-    return pow(pn / data->a, 2) + pow((sq - data->radius) / data->b, 2) - 1;
+    return pow(pn / a, 2) + pow((sq - radius) / b, 2) - 1;
 }
 
 // Interface to all surface functions. Decides, which function to apply.
@@ -201,47 +190,16 @@ extern "C" double surface_func(unsigned int n,  // Space dimension (NDIM)
                                void *f_data     // Surface data
 )
 {
-    Surface *surf = (Surface *)f_data;
-    double fval;
-    switch (surf->type)
-    {
-    case PLANE:
-        fval = plane_func(n, x, grad, f_data);
-        break;
-    case SPHERE:
-        fval = sphere_func(n, x, grad, f_data);
-        break;
-    case CYLINDER:
-        fval = cylinder_func(n, x, grad, f_data);
-        break;
-    case CONE:
-        fval = cone_func(n, x, grad, f_data);
-        break;
-    case TORUS:
-        fval = torus_func(n, x, grad, f_data);
-        break;
-    case GQUADRATIC:
-        fval = gq_func(n, x, grad, f_data);
-        break;
-    case MRCC:
-        fval = RCC_func(n, x, grad, f_data);
-        break;
-    case MBOX:
-        fval = BOX_func(n, x, grad, f_data);
-        break;
-    default:
-        fval = 0;
-        break;
-    }
-    return fval;
+    const Surface *surf = static_cast<const Surface *>(f_data);
+    return surf->func(n, x, grad);
 }
 
-Plane::Plane(std::span<const double, NDIM> norm, double offset) : base(PLANE), norm{}, offset(offset)
+Plane::Plane(std::span<const double, NDIM> norm, double offset) : Surface(PLANE), norm{}, offset(offset)
 {
     vec_copy(norm, this->norm);
 }
 
-Sphere::Sphere(std::span<const double, NDIM> center, double radius) : base(SPHERE), center{}, radius(radius)
+Sphere::Sphere(std::span<const double, NDIM> center, double radius) : Surface(SPHERE), center{}, radius(radius)
 {
     if (radius <= 0)
         throw std::invalid_argument("Sphere radius must be positive.");
@@ -249,7 +207,7 @@ Sphere::Sphere(std::span<const double, NDIM> center, double radius) : base(SPHER
 }
 
 Cylinder::Cylinder(std::span<const double, NDIM> point, std::span<const double, NDIM> axis, double radius)
-    : base(CYLINDER), point{}, axis{}, radius(radius)
+    : Surface(CYLINDER), point{}, axis{}, radius(radius)
 {
     if (radius <= 0)
         throw std::invalid_argument("Cylinder radius must be positive.");
@@ -257,18 +215,18 @@ Cylinder::Cylinder(std::span<const double, NDIM> point, std::span<const double, 
     vec_copy(axis, this->axis);
 }
 
-RCC::RCC(Cylinder *cyl, Plane *top, Plane *bot) : base(MRCC), cyl(cyl), top(top), bot(bot)
+RCC::RCC(Cylinder *cyl, Plane *top, Plane *bot) : Surface(MRCC), cyl(cyl), top(top), bot(bot)
 {
 }
 
-BOX::BOX(std::span<Plane *, BOX_PLANE_NUM> planes) : base(MBOX), planes{}
+BOX::BOX(std::span<Plane *, BOX_PLANE_NUM> planes) : Surface(MBOX), planes{}
 {
     for (int i = 0; i < BOX_PLANE_NUM; ++i)
         this->planes[i] = planes[i];
 }
 
 Cone::Cone(std::span<const double, NDIM> apex, std::span<const double, NDIM> axis, double ta, int sheet)
-    : base(CONE), apex{}, axis{}, ta(ta), sheet(sheet)
+    : Surface(CONE), apex{}, axis{}, ta(ta), sheet(sheet)
 {
     if (ta <= 0)
         throw std::invalid_argument("Cone angle tangent must be positive.");
@@ -278,7 +236,7 @@ Cone::Cone(std::span<const double, NDIM> apex, std::span<const double, NDIM> axi
 
 Torus::Torus(std::span<const double, NDIM> center, std::span<const double, NDIM> axis, double radius, double a,
              double b)
-    : base(TORUS), center{}, axis{}, radius(radius), a(a), b(b), degenerate(0), specpts{}
+    : Surface(TORUS), center{}, axis{}, radius(radius), a(a), b(b), degenerate(0), specpts{}
 {
     if (a <= 0 || b <= 0)
         throw std::invalid_argument("Torus minor radii must be positive.");
@@ -298,7 +256,7 @@ Torus::Torus(std::span<const double, NDIM> center, std::span<const double, NDIM>
 }
 
 GQuadratic::GQuadratic(std::span<const double, NDIM * NDIM> m, std::span<const double, NDIM> v, double k, double factor)
-    : base(GQUADRATIC), m{}, v{}, k(k), factor(factor)
+    : Surface(GQUADRATIC), m{}, v{}, k(k), factor(factor)
 {
     for (int i = 0; i < NDIM; ++i)
     {
@@ -314,7 +272,7 @@ void surface_test_points(const Surface *surf, size_t npts, const double *points,
     double fval;
     for (i = 0; i < npts; ++i)
     {
-        fval = surface_func(NDIM, points + NDIM * i, nullptr, (void *)surf);
+        fval = surf->func(NDIM, points + NDIM * i, nullptr);
         result[i] = (int)copysign(1, fval);
     }
 }
@@ -356,10 +314,10 @@ int surface_test_box(Surface *surf, const Box *box)
     if (sign != 0 && surf->type != PLANE)
     {
         // Additional tests for degenerate torus.
-        if (surf->type == TORUS && ((Torus *)surf)->degenerate)
+        if (surf->type == TORUS && static_cast<const Torus *>(surf)->degenerate)
         {
             int test_res[2];
-            box->test_points(2, ((Torus *)surf)->specpts[0].data(), test_res);
+            box->test_points(2, static_cast<const Torus *>(surf)->specpts[0].data(), test_res);
             if (test_res[0] == 1 || test_res[1] == 1)
                 return 0;
         }
